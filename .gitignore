@@ -10,3 +10,4 @@ obj/
 .vscode/
 .idea/
 appsettings.Development.json
+_source/
