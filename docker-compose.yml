@@ -1,0 +1,73 @@
+# VeggieBook2 stack.
+#
+# Replaces the ad-hoc `docker run` commands used to bring up the first
+# containers. Everything about how the stack runs now lives in the repo, so a
+# rebuilt server reproduces it with one command instead of shell history.
+#
+#   cd ~/VeggieBook2
+#   docker compose up -d
+#
+# The api service is commented out until the project exists. Uncommenting it is
+# the only change needed once api/ is scaffolded.
+#
+# PORT BINDINGS. Only web is published on 0.0.0.0, because the Cloudflare
+# Tunnel points at it. db is bound to 127.0.0.1 so the LAN cannot reach it:
+# ufw does NOT block Docker published ports, so the bind address is the only
+# thing protecting it. Services reach each other by name over the internal
+# network regardless of what is published.
+
+name: veggiebook2
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    container_name: veggiebook-db
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  web:
+    image: nginx:alpine
+    container_name: veggiebook-web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./images:/usr/share/nginx/html/images:ro
+
+  # Uncomment once api/ contains a project with a Dockerfile.
+  #
+  # api:
+  #   build:
+  #     context: ./api
+  #   container_name: veggiebook-api
+  #   restart: unless-stopped
+  #   env_file: .env
+  #   environment:
+  #     # Host is the service name, not localhost: inside the network,
+  #     # localhost means the api container itself.
+  #     ConnectionStrings__Default: "Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+  #     ASPNETCORE_ENVIRONMENT: Production
+  #   ports:
+  #     - "127.0.0.1:5000:8080"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+
+volumes:
+  pgdata:
+    # Matches the volume created by hand on 09-04, so the existing data is
+    # picked up rather than a new empty volume being created.
+    name: veggiebook-pgdata
+    external: true
