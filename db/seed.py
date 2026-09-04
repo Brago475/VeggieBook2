@@ -289,7 +289,11 @@ def main():
     r_rows = []
     for r in t["qhmobile_recipe"]:
         r_rows.append([
-            r["recipeId"], r["rid"], display_code.get(r["recipeId"]),
+            # 66 recipes have a blank rid. Emit NULL, not an empty string:
+            # rid is UNIQUE, and Postgres treats '' as a real value that
+            # collides, while NULLs are distinct.
+            r["recipeId"], (r["rid"] or "").strip() or None,
+            display_code.get(r["recipeId"]),
             r["foodStuff_id"], bool(r["isActive"]),
             en(r["title_id"]), es(r["title_id"]),
             en(r["storyLine_id"]) if r["storyLine_id"] else None,
