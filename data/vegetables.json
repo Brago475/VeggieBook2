@@ -1,0 +1,92 @@
+[
+  {
+    "id": "BROCCOLI",
+    "name": {
+      "en": "Broccoli",
+      "es": "Brócoli"
+    },
+    "active": true,
+    "image": "recipe/BR-209/photo1.jpg"
+  },
+  {
+    "id": "CABBAGE",
+    "name": {
+      "en": "Cabbage",
+      "es": "Repollo"
+    },
+    "active": true,
+    "image": "img/Brocc_Veg_Marin_Salad.jpg"
+  },
+  {
+    "id": "CARROT",
+    "name": {
+      "en": "Carrots",
+      "es": "Zanahorias"
+    },
+    "active": true,
+    "image": "recipe/BR-211/photo1.jpg"
+  },
+  {
+    "id": "CAULIFLOWER",
+    "name": {
+      "en": "Cauliflower",
+      "es": "Coliflor"
+    },
+    "active": true,
+    "image": "recipe/BR-212/photo1.jpg"
+  },
+  {
+    "id": "GREENBEAN",
+    "name": {
+      "en": "Green Beans",
+      "es": "Ejotes"
+    },
+    "active": true,
+    "image": "img/Broccoli_with_Lemon_Topping-Photo.jpg"
+  },
+  {
+    "id": "ONION",
+    "name": {
+      "en": "Onions",
+      "es": "Cebollas"
+    },
+    "active": true,
+    "image": "recipe/BR-214/photo1.jpg"
+  },
+  {
+    "id": "POTATO",
+    "name": {
+      "en": "Potatoes",
+      "es": "Papas"
+    },
+    "active": true,
+    "image": "recipe/BR-215/photo1.jpg"
+  },
+  {
+    "id": "ROOTVEGETABLE",
+    "name": {
+      "en": "Root Vegetables",
+      "es": "Hortalizas Tipo Raíz"
+    },
+    "active": true,
+    "image": "recipe/BR-216/photo1.jpg"
+  },
+  {
+    "id": "SWEETPOTATO",
+    "name": {
+      "en": "Sweet Potatoes",
+      "es": "Camotes"
+    },
+    "active": true,
+    "image": "recipe/BR-217/photo1.jpg"
+  },
+  {
+    "id": "ZUCCHINI",
+    "name": {
+      "en": "Zucchini",
+      "es": "Calabacitas"
+    },
+    "active": true,
+    "image": "recipe/BR-217/photo2.jpg"
+  }
+]
