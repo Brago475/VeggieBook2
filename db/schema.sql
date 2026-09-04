@@ -1,22 +1,27 @@
 -- VeggieBook2 schema, PostgreSQL 16
--- Derived from the original app's structure (Dump20201109.sql), rebuilt with
--- inline bilingual columns instead of a central string table.
+-- Rebuilt from the original app (Dump20201109.sql) with two deliberate changes.
 --
--- Design notes:
+-- CHANGE 1: bilingual text inline instead of a central strings table.
+--   The original routed every piece of text through qhmobile_string, so a
+--   single recipe read joined that table nine times (title, storyLine,
+--   timeToPrepare, timeToCook, servings, canBeMadeAhead, canBeFrozen,
+--   goodForLeftovers) plus once per ingredient and step. That design fits
+--   incremental authoring and translation. Our content is complete and frozen,
+--   so inline *_en / *_es columns are correct here.
+--   Trade-off: a third language becomes a migration, not just new rows.
 --
--- 1. Bilingual text is stored as *_en / *_es column pairs on each entity rather
---    than through a shared strings table. The original used a strings table
---    because content was authored incrementally; our translations are complete
---    and frozen, so inline columns remove a join from every single query.
+-- CHANGE 2: the OR-requirement layer is removed.
+--   The original had qhmobile_orrequirement (a table with one column, id) and
+--   qhmobile_orrequirement_attributes joining it to attributes. All 26
+--   requirements wrap exactly one attribute. Not one OR group is used. Content
+--   now points at attributes directly.
+--   Trade-off: "matches if the user picked A or B" needs a schema change.
+--   Given the content never used it and the question set is fixed by the study
+--   design, that is the right trade.
 --
--- 2. Targeting lives in real tables, not application code. A piece of content
---    can carry several requirements. Each requirement is satisfied when the
---    user selected ANY of its attributes. Content matches when ALL of its
---    requirements are satisfied. That is an AND of ORs, and it is expressible
---    as one query (see the bottom of this file).
---
--- 3. Intro strings contain a %s placeholder for the vegetable name.
---    Rendering substitutes it per selected vegetable.
+-- What is NOT changed: the content itself, the 12-tips-per-vegetable grid, and
+-- the question structure. Those were validated with pantry clients across
+-- several published studies. They are the intervention, not implementation.
 
 BEGIN;
 
@@ -25,8 +30,8 @@ BEGIN;
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE vegetable (
-    code         varchar(24) PRIMARY KEY,   -- BROCCOLI, CABBAGE, ...
-    short_code   varchar(4)  NOT NULL,      -- BR, CB, ... matches image folders
+    code         varchar(24) PRIMARY KEY,      -- BROCCOLI, CABBAGE, ...
+    short_code   varchar(4)  NOT NULL UNIQUE,  -- BR, CB, ... matches image dirs
     name_en      text        NOT NULL,
     name_es      text        NOT NULL,
     image_path   text,
@@ -35,11 +40,15 @@ CREATE TABLE vegetable (
 );
 
 CREATE TABLE attribute (
-    name         varchar(64) PRIMARY KEY    -- HasMicrowave, AgreeSoup, ...
+    name         varchar(64) PRIMARY KEY   -- HasMicrowave, AgreeSoup, Storage...
 );
 
 -- ---------------------------------------------------------------------------
 -- Self-profiling questions
+--
+-- 6 questions, 23 choices. One is hidden (mnemonic HIDDEN, qtype H) and
+-- supplies ALL_USERS and Serving, which target content shown to everyone.
+-- Intro text contains a %s placeholder for the vegetable name.
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE question (
@@ -65,95 +74,141 @@ CREATE TABLE question_choice (
     sort_order     int         NOT NULL DEFAULT 0
 );
 
-CREATE INDEX ON question_choice (question_id);
-
--- ---------------------------------------------------------------------------
--- Targeting rules
--- ---------------------------------------------------------------------------
-
--- A requirement is a named OR group. It is satisfied when the user has
--- selected at least one of its attributes.
-CREATE TABLE requirement (
-    id           int PRIMARY KEY,
-    note         text            -- optional human label, for admin clarity
-);
-
-CREATE TABLE requirement_attribute (
-    requirement_id int         NOT NULL REFERENCES requirement(id) ON DELETE CASCADE,
-    attribute      varchar(64) NOT NULL REFERENCES attribute(name),
-    PRIMARY KEY (requirement_id, attribute)
-);
+CREATE INDEX ON question_choice (question_id, sort_order);
 
 -- ---------------------------------------------------------------------------
 -- Recipes
+--
+-- 258 rows. Original PK was recipeId; AUTO_INCREMENT sat at 271, so some
+-- recipes were deleted over the app's life. Keep the original ids so the
+-- published research can be traced back to specific recipes.
 -- ---------------------------------------------------------------------------
 
+-- Two identifiers, because the original had two and they do not align.
+--   rid           the five-digit internal number (10202, 10203, ...)
+--   display_code  the human-readable code (BR-201), which exists only in the
+--                 photo paths and is what the image directories are named
+--                 after. Recipe rid 10202 lives in folder BR-201.
 CREATE TABLE recipe (
-    id              int         PRIMARY KEY,
-    code            varchar(16) NOT NULL UNIQUE,  -- BR-201, CA-215, ...
-    vegetable_code  varchar(24) NOT NULL REFERENCES vegetable(code),
-    title_en        text        NOT NULL,
-    title_es        text        NOT NULL,
-    servings_en     text,
-    servings_es     text,
-    active          boolean     NOT NULL DEFAULT true
+    id                    int         PRIMARY KEY,   -- original recipeId
+    rid                   varchar(6)  UNIQUE,
+    display_code          varchar(12) UNIQUE,
+    vegetable_code        varchar(24) NOT NULL REFERENCES vegetable(code),
+    active                boolean     NOT NULL DEFAULT true,
+
+    title_en              text NOT NULL,
+    title_es              text NOT NULL,
+    story_line_en         text,          -- nullable in the original
+    story_line_es         text,
+    time_to_prepare_en    text NOT NULL,
+    time_to_prepare_es    text NOT NULL,
+    time_to_cook_en       text NOT NULL,
+    time_to_cook_es       text NOT NULL,
+    servings_en           text NOT NULL,
+    servings_es           text NOT NULL,
+    can_be_made_ahead_en  text NOT NULL,
+    can_be_made_ahead_es  text NOT NULL,
+    can_be_frozen_en      text NOT NULL,
+    can_be_frozen_es      text NOT NULL,
+    good_for_leftovers_en text NOT NULL,
+    good_for_leftovers_es text NOT NULL
 );
 
-CREATE INDEX ON recipe (vegetable_code);
+CREATE INDEX ON recipe (vegetable_code) WHERE active;
 
 CREATE TABLE recipe_ingredient (
     id          bigserial PRIMARY KEY,
     recipe_id   int  NOT NULL REFERENCES recipe(id) ON DELETE CASCADE,
     position    int  NOT NULL,
     text_en     text NOT NULL,
-    text_es     text NOT NULL
+    text_es     text NOT NULL,
+    UNIQUE (recipe_id, position)
 );
-
-CREATE INDEX ON recipe_ingredient (recipe_id, position);
 
 CREATE TABLE recipe_step (
     id          bigserial PRIMARY KEY,
     recipe_id   int  NOT NULL REFERENCES recipe(id) ON DELETE CASCADE,
     position    int  NOT NULL,
     text_en     text NOT NULL,
-    text_es     text NOT NULL
+    text_es     text NOT NULL,
+    UNIQUE (recipe_id, position)
 );
-
-CREATE INDEX ON recipe_step (recipe_id, position);
 
 CREATE TABLE recipe_photo (
     id          bigserial PRIMARY KEY,
     recipe_id   int  NOT NULL REFERENCES recipe(id) ON DELETE CASCADE,
     position    int  NOT NULL,
-    image_path  text NOT NULL
+    image_path  text NOT NULL,
+    UNIQUE (recipe_id, position)
 );
 
-CREATE INDEX ON recipe_photo (recipe_id, position);
-
--- A recipe shows only when ALL of its requirements are satisfied.
-CREATE TABLE recipe_requirement (
-    recipe_id      int NOT NULL REFERENCES recipe(id) ON DELETE CASCADE,
-    requirement_id int NOT NULL REFERENCES requirement(id),
-    PRIMARY KEY (recipe_id, requirement_id)
+-- 17 rows across 258 recipes. Genuinely occasional notes.
+CREATE TABLE recipe_note (
+    id          bigserial PRIMARY KEY,
+    recipe_id   int  NOT NULL REFERENCES recipe(id) ON DELETE CASCADE,
+    position    int,
+    text_en     text NOT NULL,
+    text_es     text NOT NULL
 );
+
+CREATE INDEX ON recipe_note (recipe_id, position);
+
+-- ---------------------------------------------------------------------------
+-- Annotations
+--
+-- 4 annotations, 167 recipe links. These are the colored badges on a recipe
+-- card ("Latino Flavors", "Kid Friendly" in the published screenshots). Each
+-- carries its own display condition, so a badge appears only when the user
+-- selected the matching attribute. Images differ by language because text is
+-- baked into the artwork.
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE annotation (
+    id              int         PRIMARY KEY,
+    displayed_if    varchar(64) NOT NULL REFERENCES attribute(name),
+    text_en         text        NOT NULL,
+    text_es         text        NOT NULL,
+    image_path_en   text,
+    image_path_es   text,
+    color           char(6)     NOT NULL   -- hex, no leading #
+);
+
+CREATE TABLE recipe_annotation (
+    recipe_id     int NOT NULL REFERENCES recipe(id) ON DELETE CASCADE,
+    annotation_id int NOT NULL REFERENCES annotation(id),
+    PRIMARY KEY (recipe_id, annotation_id)
+);
+
+-- A recipe shows only when the user selected EVERY attribute listed here.
+-- 360 rows across 258 recipes, roughly 1.4 conditions each.
+CREATE TABLE recipe_attribute (
+    recipe_id   int         NOT NULL REFERENCES recipe(id) ON DELETE CASCADE,
+    attribute   varchar(64) NOT NULL REFERENCES attribute(name),
+    PRIMARY KEY (recipe_id, attribute)
+);
+
+CREATE INDEX ON recipe_attribute (attribute);
 
 -- ---------------------------------------------------------------------------
 -- Tips
+--
+-- 121 rows, 12 per vegetable (13 for broccoli). Each carries exactly one
+-- attribute, so no join table is needed on this side.
 -- ---------------------------------------------------------------------------
 
--- 121 rows: roughly 12 per vegetable, one per topic.
 CREATE TABLE tip (
     id              int         PRIMARY KEY,
     vegetable_code  varchar(24) NOT NULL REFERENCES vegetable(code),
-    requirement_id  int         NOT NULL REFERENCES requirement(id),
+    attribute       varchar(64) NOT NULL REFERENCES attribute(name),
     heading_en      text        NOT NULL,
     heading_es      text        NOT NULL,
-    fs_index        int         NOT NULL   -- order within the vegetable
+    sort_order      int         NOT NULL,   -- was fsIndex
+    UNIQUE (vegetable_code, sort_order)
 );
 
-CREATE INDEX ON tip (vegetable_code, fs_index);
+CREATE INDEX ON tip (vegetable_code, attribute);
 
--- 277 rows: ordered body blocks, 19 of which carry an illustration.
+-- 277 rows. Only 19 carry an image, so tips are text-first.
 CREATE TABLE tip_block (
     id          int  PRIMARY KEY,
     tip_id      int  NOT NULL REFERENCES tip(id) ON DELETE CASCADE,
@@ -169,54 +224,62 @@ CREATE INDEX ON tip_block (tip_id, position);
 -- Secrets
 -- ---------------------------------------------------------------------------
 
+-- 5 rows: Breakfast, Lunch, Dinner, Snacks, Shopping. Each color-coded.
 CREATE TABLE secret_category (
-    id        int  PRIMARY KEY,
-    name_en   text NOT NULL,   -- Breakfast, Lunch, Dinner, Snacks, Shopping
-    name_es   text NOT NULL,
-    image_path text,
-    sort_order int NOT NULL DEFAULT 0
+    id          int     PRIMARY KEY,
+    name_en     text    NOT NULL,
+    name_es     text    NOT NULL,
+    image_path  text,
+    color       char(6) NOT NULL,   -- hex, no leading #
+    sort_order  int     NOT NULL DEFAULT 0
 );
 
+-- 79 rows. Note that images and attachments are per-language: the Secrets
+-- illustrations have text baked into the artwork, so English and Spanish are
+-- different files rather than the same file with different captions.
 CREATE TABLE secret (
-    id           int  PRIMARY KEY,
-    category_id  int  NOT NULL REFERENCES secret_category(id),
-    headline_en  text NOT NULL,
-    headline_es  text NOT NULL,
-    body_en      text,          -- the "Why It Works" panel
-    body_es      text,
-    image_path   text,
-    sort_order   int  NOT NULL DEFAULT 0
+    id                int  PRIMARY KEY,
+    display_number    int  NOT NULL,   -- was secret_id, the number within a category
+    category_id       int  NOT NULL REFERENCES secret_category(id),
+    active            boolean NOT NULL DEFAULT true,
+
+    headline_en       text NOT NULL,
+    headline_es       text NOT NULL,
+    why_it_works_en   text NOT NULL,
+    why_it_works_es   text NOT NULL,
+
+    image_path_en     text,
+    image_path_es     text,
+    cover_image_en    text,
+    cover_image_es    text,
+    attachment_en     text,
+    attachment_es     text
 );
 
-CREATE INDEX ON secret (category_id, sort_order);
+CREATE INDEX ON secret (category_id, display_number);
 
-CREATE TABLE secret_attachment (
-    id          bigserial PRIMARY KEY,
-    secret_id   int  NOT NULL REFERENCES secret(id) ON DELETE CASCADE,
-    file_path   text NOT NULL,
-    label_en    text,
-    label_es    text
-);
-
+-- 57 rows. A secret can carry different links per language.
 CREATE TABLE secret_link (
-    id          bigserial PRIMARY KEY,
-    secret_id   int  NOT NULL REFERENCES secret(id) ON DELETE CASCADE,
-    url         text NOT NULL,
+    id          bigserial  PRIMARY KEY,
+    secret_id   int        NOT NULL REFERENCES secret(id) ON DELETE CASCADE,
+    language    char(2)    NOT NULL,
+    url         text       NOT NULL,
     label_en    text,
     label_es    text
 );
+
+CREATE INDEX ON secret_link (secret_id, language);
 
 -- ---------------------------------------------------------------------------
--- Participant responses
+-- Participant sessions
 --
--- Kept deliberately thin and free of personal identifiers. The IRB decision on
--- where participant data lives has not been made, so the API writes through an
--- interface and this is only the default implementation. Swapping the store
--- later should not require touching anything above this line.
+-- Deliberately thin and free of personal identifiers. The IRB decision on
+-- where participant data lives is not made, so the API writes through an
+-- interface and this is only the default implementation.
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE book_session (
-    id              uuid PRIMARY KEY,
+    id              uuid        PRIMARY KEY,
     created_at      timestamptz NOT NULL DEFAULT now(),
     language        char(2)     NOT NULL DEFAULT 'en',
     vegetable_code  varchar(24) REFERENCES vegetable(code)
@@ -229,68 +292,86 @@ CREATE TABLE book_session_attribute (
 );
 
 CREATE TABLE book_session_selection (
-    session_id   uuid    NOT NULL REFERENCES book_session(id) ON DELETE CASCADE,
-    content_type varchar(8) NOT NULL,   -- 'recipe' | 'tip' | 'secret'
-    content_id   int     NOT NULL,
-    kept         boolean NOT NULL,
+    session_id   uuid       NOT NULL REFERENCES book_session(id) ON DELETE CASCADE,
+    content_type varchar(8) NOT NULL CHECK (content_type IN ('recipe','tip','secret')),
+    content_id   int        NOT NULL,
+    kept         boolean    NOT NULL,
     PRIMARY KEY (session_id, content_type, content_id)
 );
 
 COMMIT;
 
 -- ---------------------------------------------------------------------------
--- The matching query
+-- The matching engine, now two plain queries
 --
--- Given a vegetable and the set of attributes a user selected, return the
--- recipes that match. A recipe matches when every one of its requirements has
--- at least one attribute in the selected set. Recipes with no requirements
--- always match.
---
--- Parameters: $1 = vegetable code, $2 = text[] of selected attribute names
+-- $1 = vegetable code, $2 = text[] of attributes the user selected
+-- (always include 'ALL_USERS' in $2)
 -- ---------------------------------------------------------------------------
 
+-- Recipes: every attribute the recipe requires must be in the selected set.
+--
 -- SELECT r.*
 -- FROM recipe r
 -- WHERE r.vegetable_code = $1
 --   AND r.active
 --   AND NOT EXISTS (
---         SELECT 1
---         FROM recipe_requirement rr
---         WHERE rr.recipe_id = r.id
---           AND NOT EXISTS (
---                 SELECT 1
---                 FROM requirement_attribute ra
---                 WHERE ra.requirement_id = rr.requirement_id
---                   AND ra.attribute = ANY($2)
---           )
+--         SELECT 1 FROM recipe_attribute ra
+--         WHERE ra.recipe_id = r.id
+--           AND NOT (ra.attribute = ANY($2))
 --   )
--- ORDER BY r.code;
+-- ORDER BY r.display_code;
 
--- The same shape works for tips, which carry exactly one requirement each:
+-- Tips: one attribute each, so it is a single membership test.
 --
 -- SELECT t.*
 -- FROM tip t
 -- WHERE t.vegetable_code = $1
---   AND EXISTS (
---         SELECT 1
---         FROM requirement_attribute ra
---         WHERE ra.requirement_id = t.requirement_id
---           AND ra.attribute = ANY($2)
---   )
--- ORDER BY t.fs_index;
+--   AND t.attribute = ANY($2)
+-- ORDER BY t.sort_order;
 
 -- ---------------------------------------------------------------------------
--- Still to verify against the dump before the seeder is written
+-- Original tables deliberately not carried over
 -- ---------------------------------------------------------------------------
 --
--- 1. recipe columns. The recipe table above is a reasonable shape but the
---    original qhmobile_recipe columns have not been inspected. Confirm what
---    fields exist (servings? notes? annotations?) before finalizing.
--- 2. qhmobile_recipe_annotations and qhmobile_recipeannotation. Not yet
---    examined. Annotations may be the "see Cutting Tip" cross-references that
---    appear inside ingredient text.
--- 3. qhmobile_secret columns, and how secret attachments and external links
---    attach. qhmobile_externallink exists and has data.
--- 4. Whether short_code (BR, CB) exists in the data or must be derived from
---    the image folder names.
--- 5. FULL vs REDUCED image variants: resolution only, or different content.
+-- qhmobile_orrequirement, qhmobile_orrequirement_attributes
+--     Collapsed into direct attribute references. See CHANGE 2 above.
+-- qhmobile_string
+--     Inlined as *_en / *_es columns. See CHANGE 1 above.
+-- qhmobile_tipdoc
+--     Empty in the dump. A document-generation feature that was never used.
+-- qhmobile_recipeannotation
+--     One row, one column (name). A leftover type marker with no function.
+-- qhmobile_booktype, qhmobile_choicequestion, qhmobile_multiplechoicequestion,
+-- qhmobile_singlechoicequestion
+--     Django model-inheritance scaffolding with no rows of their own.
+-- qhmobile_foodpantry, easy_maps_address
+--     Pantry locations, part of the original field trial. Out of scope for v1.
+-- qhmobile_quickhelpuser, qhmobile_userprofile, auth_*, django_*, celery_*,
+-- djcelery_*, south_migrationhistory
+--     Framework and account tables from the Django app. Not applicable.
+-- qhmobile_viewingdata, qhmobile_librarydata
+--     Analytics from the original trial. If faculty want usage analytics,
+--     that is a separate design conversation, not a table to port.
+-- qhmobile_recipebook*, qhmobile_secretbook*
+--     The original booklet-creation feature. Booklet is deferred from v1, and
+--     book_session above is the replacement design when it returns.
+
+-- ---------------------------------------------------------------------------
+-- Still open
+-- ---------------------------------------------------------------------------
+--
+-- 1. short_code (BR, CB, ...) does not appear in qhmobile_foodstuff, whose PK
+--    is the long form (BROCCOLI). The short codes are used in image directory
+--    names and recipe rids. Derive them from rid prefixes during seeding and
+--    verify all ten map cleanly.
+-- 2. FULL vs REDUCED image variants: resolution only, or different content.
+--    Compare file sizes and dimensions for one vegetable before deciding
+--    whether both need storing.
+-- 3. 13 broccoli tips against 12 for every other vegetable. Check whether the
+--    extra one is intentional or a duplicate.
+-- 4. Secret display_number (original column secret_id) is assumed to be the
+--    number within a category. Verify against the image filenames, which run
+--    Breakfast-1 through Breakfast-22.
+-- 5. The four annotations' displayed_if values need checking. The column is an
+--    int FK in the original, pointing at orrequirement; after collapsing, it
+--    should resolve to a single attribute name.
