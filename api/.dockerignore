@@ -1,0 +1,12 @@
+# Keeps the build context small and, more importantly, keeps local secrets out
+# of the image. appsettings.Development.json holds the database password on the
+# development machine; it must never be copied into a container.
+
+appsettings.Development.json
+
+bin/
+obj/
+*.user
+.vs/
+.vscode/
+.idea/

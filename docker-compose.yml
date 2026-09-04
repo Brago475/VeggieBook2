@@ -42,6 +42,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:80"
+    depends_on:
+      - api
     volumes:
       # Mounted as siblings, not nested. Mounting images inside the read-only
       # web mount fails: Docker has to create the mountpoint directory, and it
@@ -50,24 +52,24 @@ services:
       - ./images:/srv/images:ro
       - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
-  # Uncomment once api/ contains a project with a Dockerfile.
-  #
-  # api:
-  #   build:
-  #     context: ./api
-  #   container_name: veggiebook-api
-  #   restart: unless-stopped
-  #   env_file: .env
-  #   environment:
-  #     # Host is the service name, not localhost: inside the network,
-  #     # localhost means the api container itself.
-  #     ConnectionStrings__Default: "Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
-  #     ASPNETCORE_ENVIRONMENT: Production
-  #   ports:
-  #     - "127.0.0.1:5000:8080"
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+  api:
+    build:
+      context: ./api
+    container_name: veggiebook-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Host is the service name, not localhost: inside the container network,
+      # localhost means the api container itself.
+      ConnectionStrings__Default: "Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      # Localhost only. nginx reaches it by service name over the internal
+      # network; this binding exists for debugging from the server shell.
+      - "127.0.0.1:5000:8080"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:
