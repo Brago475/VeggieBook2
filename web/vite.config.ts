@@ -1,15 +1,23 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// The dev server proxies /api to the local API and /images to the live site,
-// so the browser sees one origin and never makes a cross-origin request. That
-// matches production, where nginx serves the built app and proxies /api to the
-// api container. Proxying images avoids copying 136 MB into the dev setup.
+// Dev server config.
+//
+// The proxy forwards any request starting with /api to the live stack on
+// veggiebook2.com. That way the React code calls fetch('/api/vegetables')
+// with no host in the URL, exactly as it will in production, and nothing
+// has to change when the app is eventually built and served by nginx.
+//
+// changeOrigin rewrites the Host header to match the target. Without it
+// Cloudflare sees a request for localhost and rejects it.
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:5143',
+      '/api': {
+        target: 'https://veggiebook2.com',
+        changeOrigin: true,
+      },
       '/images': {
         target: 'https://veggiebook2.com',
         changeOrigin: true,
