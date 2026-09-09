@@ -121,7 +121,6 @@ export default function App() {
         <QuestionScreen
           vegetable={vegetable}
           question={question}
-          isLast={step === questions.length - 1}
           picked={picked}
           onToggle={toggle}
           onNext={advanceQuestion}

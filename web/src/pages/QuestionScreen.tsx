@@ -14,7 +14,6 @@ function fillName(text: string, name: string) {
 type Props = {
   vegetable: Vegetable
   question: Question
-  isLast: boolean
   picked: Set<string>
   onToggle: (attribute: string) => void
   onNext: () => void
@@ -23,7 +22,6 @@ type Props = {
 export function QuestionScreen({
   vegetable,
   question,
-  isLast,
   picked,
   onToggle,
   onNext,
