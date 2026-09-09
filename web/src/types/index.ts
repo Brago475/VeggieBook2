@@ -64,3 +64,24 @@ export type MatchResult = {
   tipCount: number
   recipes: RecipeSummary[]
 }
+
+// Full recipe from GET /api/recipes/{id}. The match response returns only a
+// summary; this is what the card needs.
+
+export type RecipeDetail = {
+  id: number
+  code: string
+  vegetable: string
+  title: string
+  storyLine: string
+  timeToPrepare: string
+  timeToCook: string
+  servings: string
+  canBeMadeAhead: string
+  canBeFrozen: string
+  goodForLeftovers: string
+  ingredients: string[]
+  steps: string[]
+  notes: string[]
+  photos: string[]
+}

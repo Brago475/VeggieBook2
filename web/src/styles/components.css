@@ -1,5 +1,5 @@
 /* Shared component styles.
-   Page-specific styles live in their own files under styles/. */
+   Page-specific styles live in pages.css. */
 
 /* App shell */
 
@@ -11,49 +11,50 @@
 }
 
 /* Masthead */
+
 .masthead {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--sp-2) var(--pad-x);
   background: var(--green);
-  padding: 8px var(--pad-x);
 }
+
 /* Absolute so the logo stays centered whether or not the button is there.
    Given a visible border and label because a bare chevron on a web page
    reads as decoration rather than navigation. */
 .masthead-back {
   position: absolute;
-  left: 8px;
+  left: var(--sp-2);
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px 11px;
-  font-size: var(--font-label);
+  gap: var(--sp-1);
+  padding: 6px 12px;
+  font-size: var(--font-small);
   font-weight: 600;
   line-height: 1;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 0;
+  border-radius: 999px;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.masthead-back:active {
-  background: rgba(255, 255, 255, 0.8);
+.masthead-back:hover {
+  background: rgba(255, 255, 255, 0.85);
 }
 
 .masthead-back span {
-  font-size: 18px;
+  font-size: 17px;
 }
 
-/* 170px rather than the asset's native 300px. Smaller keeps the vegetable
-   photos and questions as the focus of the screen. */
 .masthead-logo {
   width: 100%;
-  max-width: 170px;
+  max-width: 220px;
   height: auto;
 }
 
@@ -61,43 +62,54 @@
 
 .screen-label {
   margin: 0;
-  padding: 6px var(--pad-x);
-  font-size: var(--font-label);
-  color: var(--text-label);
+  padding: var(--sp-3) var(--pad-x);
+  font-size: var(--font-small);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
   background: var(--surface-alt);
-  border-bottom: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line);
 }
 
 /* Bottom navigation */
 
 .nav {
   display: flex;
-  gap: 12px;
-  padding: 20px var(--pad-x) 32px;
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--pad-x) var(--sp-6);
 }
 
 .nav-btn {
   flex: 1;
-  padding: 14px;
+  padding: var(--sp-4);
   font-size: var(--font-row);
   font-weight: 600;
   color: var(--text);
   background: var(--surface-alt);
   border: 1px solid var(--line-strong);
-  border-radius: 6px;
+  border-radius: var(--r-md);
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.05s ease;
+}
+
+.nav-btn:hover {
+  background: var(--surface-press);
 }
 
 .nav-btn:active {
-  background: var(--surface-press);
+  transform: translateY(1px);
 }
 
 .nav-btn-primary {
   background: var(--green);
   border-color: var(--green-dark);
+  box-shadow: var(--shadow-sm);
 }
 
-.nav-btn-primary:active {
+.nav-btn-primary:hover {
   background: var(--green-dark);
 }
 
@@ -105,7 +117,7 @@
 
 .message {
   margin: 0;
-  padding: 12px var(--pad-x);
+  padding: var(--sp-3) var(--pad-x);
   font-size: var(--font-label);
   color: var(--text-muted);
 }
@@ -123,20 +135,23 @@
   border-bottom: 1px solid var(--line);
   text-align: left;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.veg-row:active {
-  background: var(--surface-press);
+.veg-row:hover {
+  background: var(--green-tint);
 }
 
-/* Fixed box with object-fit so photos of different shapes all sit the same.
-   The source images vary a lot: some square, some wide, some shot on
-   countertops. contain keeps the whole vegetable visible. */
+/* Fixed box with object-fit so photos of different shapes sit the same.
+   The source images vary: some square, some wide, some shot on countertops.
+   cover fills the box; the rounded corner keeps it from looking pasted in. */
 .veg-thumb {
   flex: 0 0 auto;
   width: var(--thumb-w);
   height: var(--thumb-h);
-  object-fit: contain;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  background: var(--surface-alt);
 }
 
 .veg-name {
@@ -150,10 +165,26 @@
 .choice-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--line);
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-3);
+  margin-bottom: var(--sp-2);
+  background: var(--surface-alt);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.choice-row:hover {
+  background: var(--green-tint);
+}
+
+/* :has lets the whole row show its checked state, not just the box. */
+.choice-row:has(:checked) {
+  background: var(--green-tint);
+  border-color: var(--green);
 }
 
 .choice-box {
@@ -183,14 +214,14 @@
   object-position: center 30%;
 }
 
-/* Darkens the bottom third so white text stays readable over a photo whose
-   lower edge could be any color. */
+/* Darkens the lower band so white text stays readable over a photo whose
+   bottom edge could be any color. */
 .hero::after {
   content: '';
   position: absolute;
   inset: auto 0 0 0;
-  height: 90px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.45), transparent);
+  height: 110px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
   pointer-events: none;
 }
 
@@ -198,10 +229,196 @@
   position: absolute;
   z-index: 1;
   left: var(--pad-x);
-  bottom: 10px;
+  bottom: var(--sp-3);
   margin: 0;
   font-size: var(--font-hero);
-  font-weight: 400;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--text-invert);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Recipe card */
+
+.recipe {
+  padding: var(--sp-4) var(--pad-x) 0;
+}
+
+.recipe-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-2);
+}
+
+.recipe-badge {
+  padding: 4px 10px;
+  font-size: var(--font-small);
+  font-weight: 600;
+  color: var(--text-invert);
+  border-radius: 999px;
+}
+
+.recipe-title {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--font-title);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.recipe-photo-frame {
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--surface-alt);
+  box-shadow: var(--shadow-md);
+}
+
+.recipe-photo {
+  width: 100%;
+  height: auto;
+}
+
+/* Sections are plain cards now rather than tabbed outlines: the tab was an
+   Android convention that reads as dated on the web. */
+.recipe-section {
+  margin-top: var(--sp-5);
+}
+
+.recipe-section-tab {
+  display: block;
+  margin-bottom: var(--sp-2);
+  font-size: var(--font-section);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--green-dark);
+}
+
+.recipe-summary {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  align-items: center;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface-alt);
+  border-radius: var(--r-md);
+}
+
+.recipe-summary-key {
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) 0;
+  font-size: var(--font-small);
+  color: var(--text-muted);
+}
+
+.recipe-summary-val {
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) 0;
+  font-size: var(--font-small);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.recipe-list {
+  margin: 0;
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--surface-alt);
+  border-radius: var(--r-md);
+}
+
+.recipe-list li {
+  padding: var(--sp-3) 0;
+  font-size: var(--font-label);
+  line-height: 1.5;
+  color: var(--text);
+  border-bottom: 1px solid var(--line);
+}
+
+.recipe-list li:last-child {
+  border-bottom: 0;
+}
+
+/* Steps are numbered, so they need back the marker and indent that the
+   base reset strips from every list. */
+.recipe-steps {
+  padding-left: var(--sp-6);
+  list-style: decimal;
+}
+
+.recipe-steps li {
+  padding-left: var(--sp-1);
+}
+
+.recipe-steps::marker {
+  color: var(--green-dark);
+}
+
+/* Sits above the card as a progress marker rather than a footnote, so the
+   reader knows where they are before reading. */
+.recipe-counter {
+  display: inline-block;
+  margin: 0 0 var(--sp-3);
+  padding: 4px 12px;
+  font-size: var(--font-small);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--green-dark);
+  background: var(--green-tint);
+  border-radius: 999px;
+}
+
+/* Loading skeletons.
+   Grey bars shaped like the sections they stand in for, so the card keeps
+   its height and does not jump when the real content arrives. */
+
+.recipe-loading {
+  margin-top: var(--sp-5);
+}
+
+.skeleton {
+  background: var(--surface-alt);
+  border-radius: var(--r-sm);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-tab {
+  width: 110px;
+  height: 20px;
+  margin: var(--sp-5) 0 var(--sp-2);
+}
+
+.skeleton-line {
+  height: 15px;
+  margin-bottom: var(--sp-3);
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Available to screen readers, hidden visually. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
 }

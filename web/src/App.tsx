@@ -3,15 +3,18 @@ import { Masthead } from './components/Masthead'
 import { useMatch } from './hooks/useMatch'
 import { useSavedBooks } from './hooks/useSavedBooks'
 import { useVeggieBookData } from './hooks/useVeggieBookData'
+import { ExtraCopies } from './pages/ExtraCopies'
 import { HomeLibrary } from './pages/HomeLibrary'
 import { QuestionScreen } from './pages/QuestionScreen'
+import { RecipeReview } from './pages/RecipeReview'
 import { Transition } from './pages/Transition'
 import { VegetablePicker } from './pages/VegetablePicker'
-import type { Vegetable } from './types'
+import type { RecipeSummary, Vegetable } from './types'
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
 import './styles/pages.css'
+import './styles/responsive.css'
 
 // Flow state lives here; each screen is a page component.
 //
@@ -20,8 +23,17 @@ import './styles/pages.css'
 //   quiz       -> five questions, one per screen
 //   transition -> explains KEEP and DROP
 //   review     -> the matched recipes, one card at a time
+//   copies     -> mark kept recipes for an extra printed copy
+//   done       -> temporary summary; becomes the cover chooser
 
-type Screen = 'home' | 'pick' | 'quiz' | 'transition' | 'review'
+type Screen =
+  | 'home'
+  | 'pick'
+  | 'quiz'
+  | 'transition'
+  | 'review'
+  | 'copies'
+  | 'done'
 
 export default function App() {
   const { vegetables, questions, error, loading } = useVeggieBookData()
@@ -32,6 +44,8 @@ export default function App() {
   const [vegetable, setVegetable] = useState<Vegetable | null>(null)
   const [step, setStep] = useState(0)
   const [picked, setPicked] = useState<Set<string>>(new Set())
+  const [kept, setKept] = useState<RecipeSummary[]>([])
+  const [extraCopies, setExtraCopies] = useState<number[]>([])
 
   function toggle(attribute: string) {
     setPicked((prev) => {
@@ -47,6 +61,8 @@ export default function App() {
     setVegetable(null)
     setStep(0)
     setPicked(new Set())
+    setKept([])
+    setExtraCopies([])
     match.reset()
   }
 
@@ -116,17 +132,49 @@ export default function App() {
         <Transition onNext={() => setScreen('review')} />
       )}
 
-      {/* Temporary: confirms the match ran. Becomes the recipe card. */}
       {screen === 'review' && (
         <>
           {match.running && <p className="message">Loading recipes...</p>}
           {match.error && <p className="message">Match failed: {match.error}</p>}
           {match.result && (
-            <p className="message">
-              {match.result.recipeCount} recipes and {match.result.tipCount}{' '}
-              tips matched for {match.result.vegetable.name}.
-            </p>
+            <RecipeReview
+              recipes={match.result.recipes}
+              onFinish={(recipes) => {
+                setKept(recipes)
+                setScreen('copies')
+              }}
+            />
           )}
+        </>
+      )}
+
+      {screen === 'copies' && (
+        <ExtraCopies
+          recipes={kept}
+          onNext={(ids) => {
+            setExtraCopies(ids)
+            setScreen('done')
+          }}
+        />
+      )}
+
+      {/* Temporary end of flow. Becomes the cover chooser. */}
+      {screen === 'done' && (
+        <>
+          <p className="message">
+            You kept {kept.length} of {match.result?.recipes.length ?? 0}{' '}
+            recipes.
+          </p>
+          <p className="message">
+            Extra copies requested: {extraCopies.length}
+          </p>
+          <ul>
+            {kept.map((recipe) => (
+              <li key={recipe.id} className="message">
+                {recipe.title}
+              </li>
+            ))}
+          </ul>
           <div className="nav">
             <button type="button" className="nav-btn" onClick={goHome}>
               Start over

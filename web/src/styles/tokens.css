@@ -1,41 +1,72 @@
 /* Design tokens.
-   Every color, spacing, and font size used across the app resolves to one of
-   these. Changing the brand green or the row height happens here, once, not
-   in a dozen rules.
+   Every color, spacing, and font size resolves to one of these, so a change
+   to the brand green or the spacing rhythm happens here, once.
 
-   Text colors are deliberately high contrast. */
+   Text colors are deliberately high contrast: this gets used on phones,
+   sometimes in poor light. */
 
 :root {
+  /* Brand */
   --green: #8cc63e;
   --green-dark: #6fa32c;
+  --green-tint: #f4f9ec;
 
-  --text: #000;
-  --text-muted: #333;
-  --text-label: #000;
+  /* Text */
+  --text: #14140f;
+  --text-muted: #4a4a42;
+  --text-label: #14140f;
   --text-invert: #fff;
 
+  /* Surfaces */
   --surface: #fff;
-  --surface-alt: #f1f1f1;
-  --surface-press: #f3f3f3;
+  --surface-alt: #f6f6f2;
+  --surface-press: #ecece6;
 
-  --line: #e4e4e4;
-  --line-strong: #ddd;
+  /* Lines */
+  --line: #e6e6df;
+  --line-strong: #d5d5cc;
 
-  --pad-x: 16px;
-  --row-pad-y: 10px;
-  --gap: 20px;
+  /* Spacing scale. Everything is a multiple of 4, which keeps vertical
+     rhythm consistent without hand-tuning each screen. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
 
-  --font-title: 28px;
-  --font-hero: 34px;
-  --font-row: 18px;
-  --font-label: 14px;
-  --font-small: 12px;
+  --pad-x: var(--sp-4);
+  --row-pad-y: var(--sp-3);
+  --gap: var(--sp-5);
 
-  --thumb-w: 84px;
-  --thumb-h: 64px;
-  --hero-h: 180px;
+  /* Type scale */
+  --font-hero: 32px;
+  --font-title: 24px;
+  --font-section: 17px;
+  --font-row: 17px;
+  --font-label: 15px;
+  --font-small: 13px;
 
-  --app-max: 480px;
+  /* Radii */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
 
-  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Shadows. Kept soft: this is a content tool, not a dashboard. */
+  --shadow-sm: 0 1px 2px rgba(20, 20, 15, 0.06);
+  --shadow-md: 0 2px 8px rgba(20, 20, 15, 0.08);
+
+  /* Sizes */
+  --thumb-w: 88px;
+  --thumb-h: 68px;
+  --hero-h: 240px;
+
+  /* Layout widths. The phone width stays the base; wider screens get more
+     room only where extra room actually helps. */
+  --app-max: 520px;
+  --app-max-wide: 900px;
+
+  --sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }

@@ -1,77 +1,65 @@
 /* Page-specific styles. */
 
-/* Question screen */
-
-.question {
-  padding: 16px var(--pad-x) 8px;
-}
-
-.question-intro {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--text);
-}
-
-/* The original rendered the hint in small italic green caps. */
-.question-sub {
-  margin: 4px 0 0;
-  font-size: var(--font-label);
-  font-style: italic;
-  font-weight: 600;
-  color: var(--green-dark);
-}
-
 /* Home library */
 
 .create-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px var(--pad-x);
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--pad-x);
 }
 
 .create-btn {
   width: 100%;
-  padding: 14px;
-  font-size: 20px;
-  font-weight: 600;
+  padding: var(--sp-4);
+  font-size: var(--font-row);
+  font-weight: 700;
   color: var(--text);
   background: var(--green);
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.05s ease;
 }
 
-.create-btn:active {
+.create-btn:hover {
   background: var(--green-dark);
 }
 
-.create-btn:disabled {
-  background: var(--surface-alt);
-  color: var(--text-muted);
-  cursor: default;
+.create-btn:active {
+  transform: translateY(1px);
 }
 
-/* Saved book cards.
-   Large photo with the book's name overlaid at the bottom left, matching
-   the original app's home screen. */
+.create-btn:disabled {
+  color: var(--text-muted);
+  background: var(--surface-alt);
+  box-shadow: none;
+  cursor: default;
+  transform: none;
+}
+
+/* Saved book cards. Large photo with the book's name overlaid. */
 
 .book-card {
   position: relative;
   display: block;
   width: 100%;
+  margin-bottom: var(--sp-3);
   padding: 0;
+  overflow: hidden;
   background: none;
   border: 0;
-  border-bottom: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
   cursor: pointer;
 }
 
 .book-card-img {
   width: 100%;
-  height: 150px;
+  height: 160px;
   object-fit: cover;
   object-position: center 30%;
 }
@@ -80,8 +68,8 @@
   content: '';
   position: absolute;
   inset: auto 0 0 0;
-  height: 80px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+  height: 90px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
   pointer-events: none;
 }
 
@@ -89,10 +77,38 @@
   position: absolute;
   z-index: 1;
   left: var(--pad-x);
-  bottom: 10px;
-  font-size: 30px;
+  bottom: var(--sp-3);
+  font-size: var(--font-title);
+  font-weight: 600;
   color: var(--text-invert);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Question screen */
+
+.question {
+  padding: var(--sp-5) var(--pad-x) var(--sp-2);
+}
+
+.question-intro {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.question-sub {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--font-small);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--green-dark);
+}
+
+.choice-list {
+  margin-top: var(--sp-4);
 }
 
 /* Transition screen */
@@ -101,31 +117,31 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 28px var(--pad-x) 8px;
+  padding: var(--sp-7) var(--pad-x) var(--sp-2);
 }
 
 .transition-line {
   align-self: flex-start;
-  margin: 0 0 18px;
-  font-size: var(--font-row);
+  margin: 0 0 var(--sp-5);
+  font-size: 19px;
   font-weight: 600;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--text);
 }
 
 .transition-cue {
-  margin: 30px 0 16px;
+  margin: var(--sp-6) 0 var(--sp-4);
   font-size: var(--font-row);
   font-weight: 700;
   color: var(--green-dark);
 }
 
-/* Outlined arrow pointing at the NEXT button. A shaft and a triangular head,
-   drawn with clip-path so it stays sharp at any size and ships no image. */
+/* Outlined arrow pointing at the NEXT button: a shaft and a triangular head
+   drawn with clip-path, so it stays sharp at any size and ships no image. */
 .transition-arrow {
-  width: 46px;
-  height: 130px;
-  background: var(--green-dark);
+  width: 44px;
+  height: 110px;
+  background: var(--green);
   clip-path: polygon(
     38% 0%,
     62% 0%,
@@ -135,4 +151,152 @@
     0% 72%,
     38% 72%
   );
+}
+
+/* KEEP / DROP bar */
+
+.decide {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+  padding: var(--sp-3) var(--pad-x) var(--sp-4);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.decide-btn {
+  flex: 1;
+  padding: var(--sp-4);
+  font-size: var(--font-row);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.05s ease;
+}
+
+.decide-btn:active {
+  transform: translateY(1px);
+}
+
+/* KEEP is the affirmative action, so it carries the brand color; DROP is
+   present but quieter. */
+.decide-btn:first-child {
+  color: var(--text);
+  background: var(--green);
+  border: 1px solid var(--green-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.decide-btn:first-child:hover {
+  background: var(--green-dark);
+}
+
+.decide-btn:last-child {
+  color: var(--text-muted);
+  background: var(--surface-alt);
+  border: 1px solid var(--line-strong);
+}
+
+.decide-btn:last-child:hover {
+  background: var(--surface-press);
+}
+
+/* Extra copy selection */
+
+.intro-text {
+  padding: var(--sp-4) var(--pad-x);
+  background: var(--surface-alt);
+}
+
+.intro-text p {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--font-label);
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.intro-text p:last-child {
+  margin-bottom: 0;
+}
+
+.copy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--pad-x);
+}
+
+.copy-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: var(--surface-alt);
+  border: 2px solid transparent;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.copy-tile[aria-pressed='true'] {
+  border-color: var(--green);
+}
+
+.copy-tile-img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+}
+
+/* Title sits over the photo on a dark scrim rather than a green band: the
+   scrim keeps it readable whether or not the photo loaded. */
+.copy-tile-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: var(--sp-2) 38px var(--sp-3) var(--sp-3);
+  font-size: var(--font-small);
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-invert);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.65),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+.copy-tile-box {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+  width: 22px;
+  height: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+}
+
+.copy-tile-box.is-checked {
+  background: var(--green);
+  border-color: var(--green-dark);
+}
+
+.copy-tile-box.is-checked::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+  border: solid var(--text);
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
 }

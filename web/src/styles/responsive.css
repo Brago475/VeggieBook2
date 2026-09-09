@@ -1,0 +1,49 @@
+/* Wide-screen adjustments.
+   The phone layout is the base and stays untouched below 720px. Above that
+   the column widens and the copy grid gains a third across. The recipe stays
+   a single column on purpose: it is a document, and documents read better as
+   one comfortable column than split into panels. */
+
+@media (min-width: 720px) {
+  .app {
+    max-width: 680px;
+  }
+
+  .app:has(.copy-grid) {
+    max-width: var(--app-max-wide);
+  }
+
+  .recipe-title {
+    font-size: 28px;
+  }
+
+  .copy-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .copy-tile-img {
+    height: 150px;
+  }
+
+  /* The decide bar spans the container but its buttons should not stretch
+     to absurd widths. */
+  .decide {
+    justify-content: center;
+  }
+
+  .decide-btn {
+    flex: 0 1 260px;
+  }
+}
+
+/* A soft page background on very wide screens so the app column reads as a
+   surface rather than blending into the browser. */
+@media (min-width: 1024px) {
+  body {
+    background: var(--surface-alt);
+  }
+
+  .app {
+    box-shadow: var(--shadow-md);
+  }
+}
