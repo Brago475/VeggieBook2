@@ -54,7 +54,7 @@ export function QuestionScreen({
       </div>
 
       <NavBar
-        primaryLabel={isLast ? 'MAKE MY BOOK' : 'NEXT'}
+                primaryLabel="NEXT"
         onPrimary={onNext}
       />
     </>

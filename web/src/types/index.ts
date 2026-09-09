@@ -38,3 +38,29 @@ export type SavedBook = {
   attributes: string[]
   createdAt: string
 }
+
+// Recipe summary as returned by POST /api/match. Ingredients and
+// instructions are not included here; those come from /api/recipes/{id}.
+
+export type Badge = {
+  text: string
+  color: string
+}
+
+export type RecipeSummary = {
+  id: number
+  code: string
+  title: string
+  timeToPrepare: string
+  timeToCook: string
+  servings: string
+  photo: string
+  badges: Badge[]
+}
+
+export type MatchResult = {
+  vegetable: { code: string; name: string }
+  recipeCount: number
+  tipCount: number
+  recipes: RecipeSummary[]
+}

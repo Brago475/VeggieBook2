@@ -94,3 +94,45 @@
   color: var(--text-invert);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
+
+/* Transition screen */
+
+.transition {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px var(--pad-x) 8px;
+}
+
+.transition-line {
+  align-self: flex-start;
+  margin: 0 0 18px;
+  font-size: var(--font-row);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.transition-cue {
+  margin: 30px 0 16px;
+  font-size: var(--font-row);
+  font-weight: 700;
+  color: var(--green-dark);
+}
+
+/* Outlined arrow pointing at the NEXT button. A shaft and a triangular head,
+   drawn with clip-path so it stays sharp at any size and ships no image. */
+.transition-arrow {
+  width: 46px;
+  height: 130px;
+  background: var(--green-dark);
+  clip-path: polygon(
+    38% 0%,
+    62% 0%,
+    62% 72%,
+    100% 72%,
+    50% 100%,
+    0% 72%,
+    38% 72%
+  );
+}
