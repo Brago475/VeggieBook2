@@ -34,7 +34,8 @@ services:
       start_period: 30s
 
   web:
-    image: nginx:alpine
+    build:
+      context: ./web
     container_name: veggiebook-web
     restart: unless-stopped
     ports:
@@ -42,17 +43,14 @@ services:
     depends_on:
       - api
     volumes:
-      # Serves deploy/placeholder, NOT web/. web/ is React source: its
-      # index.html loads /src/main.tsx and needs the Vite dev server or a
-      # build to mean anything, so nginx cannot serve it directly. Local
-      # development runs `npm run dev` in web/ and proxies /api/ to this
-      # stack. When the real UI is ready to show faculty, this service gains
-      # a build: stage that compiles web/ and serves the output instead.
+      # The site now comes from the image, built from web/ by its Dockerfile.
+      # Only the images and the nginx config are still mounted from the host.
+      # deploy/placeholder is no longer served but is kept in the repo as a
+      # fallback if the build ever needs to be bypassed.
       #
-      # Mounted as siblings, not nested. Mounting images inside the read-only
+      # Mounted as siblings, not nested. Mounting images inside a read-only
       # web mount fails: Docker has to create the mountpoint directory, and it
       # cannot create anything inside a read-only mount.
-      - ./deploy/placeholder:/usr/share/nginx/html:ro
       - ./images:/srv/images:ro
       - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
