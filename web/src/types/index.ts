@@ -25,3 +25,16 @@ export type Question = {
   subIntro: string
   choices: Choice[]
 }
+
+// A saved book. Shape mirrors the book_session tables so moving this to the
+// API later is a change in one storage module, not a change to the app.
+
+export type SavedBook = {
+  id: string
+  kind: 'veggie' | 'secrets'
+  title: string
+  image: string
+  vegetableCode: string | null
+  attributes: string[]
+  createdAt: string
+}
