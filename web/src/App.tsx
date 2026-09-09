@@ -1,82 +1,87 @@
-import { useEffect, useState } from 'react'
-import './App.css'
+import { useState } from 'react'
+import { Masthead } from './components/Masthead'
+import { useVeggieBookData } from './hooks/useVeggieBookData'
+import { QuestionScreen } from './pages/QuestionScreen'
+import { VegetablePicker } from './pages/VegetablePicker'
+import type { Vegetable } from './types'
+import './styles/tokens.css'
+import './styles/base.css'
+import './styles/components.css'
+import './styles/pages.css'
 
-// Vegetable picker.
+// Flow state lives here; each screen is a page component.
 //
-// Matches the original app's "Select VeggieBook" screen: a scrolling list of
-// rows, each a stock photo and a name. Selecting one eventually starts the
-// question flow; for now it just records the choice so the wiring can be
-// seen working.
+//   no vegetable          -> picker
+//   vegetable + question  -> question screen
+//   vegetable, no more    -> temporary summary, becomes the recipe review
 
-type Vegetable = {
-  code: string
-  shortCode: string
-  name: string
-  image: string
-  recipeCount: number
-}
+export default function App() {
+  const { vegetables, questions, error, loading } = useVeggieBookData()
 
-function App() {
-  const [vegetables, setVegetables] = useState<Vegetable[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [selected, setSelected] = useState<Vegetable | null>(null)
+  const [vegetable, setVegetable] = useState<Vegetable | null>(null)
+  const [step, setStep] = useState(0)
+  const [picked, setPicked] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
-    fetch('/api/vegetables')
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json()
-      })
-      .then(setVegetables)
-      .catch((err) => setError(String(err)))
-  }, [])
+  function toggle(attribute: string) {
+    setPicked((prev) => {
+      const next = new Set(prev)
+      if (next.has(attribute)) next.delete(attribute)
+      else next.add(attribute)
+      return next
+    })
+  }
+
+  function restart() {
+    setVegetable(null)
+    setStep(0)
+    setPicked(new Set())
+  }
+
+  const question = questions[step]
 
   return (
     <div className="app">
-      {/* The negative logo is the one built for a colored background, which
-          is why it sits on the green bar. Files live in public/brand/ and are
-          referenced by absolute path, not imported, so swapping the Spanish
-          version later is a string change rather than a new import. */}
-      <header className="masthead">
-        <img
-          className="masthead-logo"
-                    src="/brand/logo-negative-en.png"
-          alt="VeggieBook, Quick Help for Meals"
+           <Masthead
+        onBack={
+          !vegetable
+            ? undefined
+            : step === 0
+              ? restart
+              : () => setStep(step - 1)
+        }
+      />
+
+      {error && <p className="message">Could not load: {error}</p>}
+
+      {!vegetable && (
+        <VegetablePicker
+          vegetables={vegetables}
+          loading={loading}
+          onSelect={setVegetable}
         />
-      </header>
+      )}
 
-      <p className="screen-label">Select VeggieBook</p>
+      {vegetable && question && (
+        <QuestionScreen
+          vegetable={vegetable}
+          question={question}
+          isLast={step === questions.length - 1}
+          picked={picked}
+          onToggle={toggle}
+          onNext={() => setStep(step + 1)}
+        />
+      )}
 
-      {error && <p className="message">Could not load vegetables: {error}</p>}
-      {!error && vegetables.length === 0 && <p className="message">Loading...</p>}
-
-      <ul className="veg-list">
-        {vegetables.map((veg) => (
-          <li key={veg.code}>
-            <button
-              type="button"
-              className="veg-row"
-              onClick={() => setSelected(veg)}
-            >
-              <img
-                className="veg-thumb"
-                src={`/images/${veg.image}`}
-                alt=""
-                loading="lazy"
-              />
-              <span className="veg-name">{veg.name}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {selected && (
-        <p className="message">
-          Selected: {selected.name} ({selected.recipeCount} recipes)
-        </p>
+      {vegetable && !question && questions.length > 0 && (
+        <>
+          <p className="message">
+            Selected attributes: {[...picked].join(', ') || 'none'}
+          </p>
+          <button type="button" className="nav-btn" onClick={restart}>
+            Start over
+          </button>
+        </>
       )}
     </div>
   )
 }
-
-export default App

@@ -1,0 +1,207 @@
+/* Shared component styles.
+   Page-specific styles live in their own files under styles/. */
+
+/* App shell */
+
+.app {
+  max-width: var(--app-max);
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--surface);
+}
+
+/* Masthead */
+.masthead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green);
+  padding: 8px var(--pad-x);
+}
+/* Absolute so the logo stays centered whether or not the button is there.
+   Given a visible border and label because a bare chevron on a web page
+   reads as decoration rather than navigation. */
+.masthead-back {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  font-size: var(--font-label);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.masthead-back:active {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.masthead-back span {
+  font-size: 18px;
+}
+
+/* 170px rather than the asset's native 300px. Smaller keeps the vegetable
+   photos and questions as the focus of the screen. */
+.masthead-logo {
+  width: 100%;
+  max-width: 170px;
+  height: auto;
+}
+
+/* Screen label strip */
+
+.screen-label {
+  margin: 0;
+  padding: 6px var(--pad-x);
+  font-size: var(--font-label);
+  color: var(--text-label);
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+/* Bottom navigation */
+
+.nav {
+  display: flex;
+  gap: 12px;
+  padding: 20px var(--pad-x) 32px;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: 14px;
+  font-size: var(--font-row);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface-alt);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.nav-btn:active {
+  background: var(--surface-press);
+}
+
+.nav-btn-primary {
+  background: var(--green);
+  border-color: var(--green-dark);
+}
+
+.nav-btn-primary:active {
+  background: var(--green-dark);
+}
+
+/* Status and debug text */
+
+.message {
+  margin: 0;
+  padding: 12px var(--pad-x);
+  font-size: var(--font-label);
+  color: var(--text-muted);
+}
+
+/* Vegetable rows */
+
+.veg-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  width: 100%;
+  padding: var(--row-pad-y) var(--pad-x);
+  background: var(--surface);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  cursor: pointer;
+}
+
+.veg-row:active {
+  background: var(--surface-press);
+}
+
+/* Fixed box with object-fit so photos of different shapes all sit the same.
+   The source images vary a lot: some square, some wide, some shot on
+   countertops. contain keeps the whole vegetable visible. */
+.veg-thumb {
+  flex: 0 0 auto;
+  width: var(--thumb-w);
+  height: var(--thumb-h);
+  object-fit: contain;
+}
+
+.veg-name {
+  font-size: var(--font-row);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Choice rows */
+
+.choice-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.choice-box {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  accent-color: var(--green-dark);
+  cursor: pointer;
+}
+
+.choice-text {
+  font-size: var(--font-row);
+  color: var(--text);
+}
+
+/* Question hero */
+
+.hero {
+  position: relative;
+  background: var(--surface-alt);
+}
+
+.hero-img {
+  width: 100%;
+  height: var(--hero-h);
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+/* Darkens the bottom third so white text stays readable over a photo whose
+   lower edge could be any color. */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 90px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.45), transparent);
+  pointer-events: none;
+}
+
+.hero-name {
+  position: absolute;
+  z-index: 1;
+  left: var(--pad-x);
+  bottom: 10px;
+  margin: 0;
+  font-size: var(--font-hero);
+  font-weight: 400;
+  color: var(--text-invert);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}

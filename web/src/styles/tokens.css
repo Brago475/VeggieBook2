@@ -3,9 +3,7 @@
    these. Changing the brand green or the row height happens here, once, not
    in a dozen rules.
 
-   Text colors are deliberately high contrast. The audience reaches this on
-   phones, often outdoors and often with aging eyes, so gray-on-white is not
-   acceptable. */
+   Text colors are deliberately high contrast. */
 
 :root {
   --green: #8cc63e;
@@ -14,6 +12,7 @@
   --text: #000;
   --text-muted: #333;
   --text-label: #000;
+  --text-invert: #fff;
 
   --surface: #fff;
   --surface-alt: #f1f1f1;
@@ -27,46 +26,16 @@
   --gap: 20px;
 
   --font-title: 28px;
+  --font-hero: 34px;
   --font-row: 18px;
   --font-label: 14px;
   --font-small: 12px;
 
   --thumb-w: 84px;
   --thumb-h: 64px;
+  --hero-h: 180px;
 
   --app-max: 480px;
 
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Base.
-   Mobile first: the audience reaches this on phones through SNAP-Ed pantry
-   distribution, so the narrow layout is the real one and wider screens just
-   get a centered column. */
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html {
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
-  font-family: var(--sans);
-  color: var(--text);
-  background: var(--surface);
-}
-
-img {
-  display: block;
-  max-width: 100%;
-}
-
-button {
-  font: inherit;
-  color: inherit;
 }
