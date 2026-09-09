@@ -7,9 +7,6 @@
 #   cd ~/VeggieBook2
 #   docker compose up -d
 #
-# The api service is commented out until the project exists. Uncommenting it is
-# the only change needed once api/ is scaffolded.
-#
 # PORT BINDINGS. Only web is published on 0.0.0.0, because the Cloudflare
 # Tunnel points at it. db is bound to 127.0.0.1 so the LAN cannot reach it:
 # ufw does NOT block Docker published ports, so the bind address is the only
@@ -45,10 +42,17 @@ services:
     depends_on:
       - api
     volumes:
+      # Serves deploy/placeholder, NOT web/. web/ is React source: its
+      # index.html loads /src/main.tsx and needs the Vite dev server or a
+      # build to mean anything, so nginx cannot serve it directly. Local
+      # development runs `npm run dev` in web/ and proxies /api/ to this
+      # stack. When the real UI is ready to show faculty, this service gains
+      # a build: stage that compiles web/ and serves the output instead.
+      #
       # Mounted as siblings, not nested. Mounting images inside the read-only
       # web mount fails: Docker has to create the mountpoint directory, and it
       # cannot create anything inside a read-only mount.
-      - ./web:/usr/share/nginx/html:ro
+      - ./deploy/placeholder:/usr/share/nginx/html:ro
       - ./images:/srv/images:ro
       - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
 
