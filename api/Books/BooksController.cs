@@ -1,9 +1,9 @@
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Controllers;
+using VeggieBook.Api.Covers;
 using VeggieBook.Api.Data;
 
 namespace VeggieBook.Api.Books;
@@ -50,14 +50,6 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
     private const int MaxCoverBytes = 400 * 1024;   // matches the database check
 
     private const string JpegDataUrl = "data:image/jpeg;base64,";
-
-    // Covers offered to every book, matching SHARED_COVERS in
-    // web/src/pages/CoverChooser.tsx. cornucopia.jpg goes in both lists once
-    // the owner provides the file.
-    private static readonly string[] SharedCovers = [];
-
-    private static readonly Regex VegetableCover =
-        new(@"^cover/([A-Z]{2})\.jpg$", RegexOptions.CultureInvariant);
 
     private Guid CurrentUserId =>
         AuthSetup.UserId(User)
@@ -175,7 +167,7 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
         if (validRecipes != recipeIds.Length)
             return BadRequest(new { error = "Unknown recipe." });
 
-        // Exactly one cover: a preset or an upload.
+        // Exactly one cover: one from the catalog, or an upload.
         var hasPreset = !string.IsNullOrEmpty(req.CoverPath);
         var hasUpload = !string.IsNullOrEmpty(req.CoverUpload);
         if (hasPreset == hasUpload)
@@ -184,7 +176,9 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
         byte[]? upload = null;
         if (hasPreset)
         {
-            if (!await IsPresetCover(req.CoverPath!))
+            // Vegetable covers, shared covers, and recipe photos. See
+            // Covers/CoverCatalog.cs.
+            if (!await CoverCatalog.IsAllowed(content, req.CoverPath!))
                 return BadRequest(new { error = "Unknown cover." });
         }
         else
@@ -266,23 +260,9 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
     }
 
     // Uploaded covers are served through the API so only the owner can see
-    // them. Presets are public files under /images.
+    // them. Catalog covers are public files under /images.
     private static string CoverUrl(Guid id, string? coverPath, bool hasUpload) =>
         hasUpload ? $"/api/books/{id}/cover" : coverPath ?? "";
-
-    // A preset is one of the ten vegetable covers or a shared cover. The
-    // pattern check means a path like ../../etc/passwd can never be stored.
-    private async Task<bool> IsPresetCover(string path)
-    {
-        if (SharedCovers.Contains(path)) return true;
-
-        var match = VegetableCover.Match(path);
-        if (!match.Success) return false;
-
-        var shortCode = match.Groups[1].Value;
-        return await content.Vegetables
-            .AnyAsync(v => v.ShortCode == shortCode && v.Active);
-    }
 
     // Accepts only a JPEG data URL, as produced by the site's resizer. The
     // bytes must start with the JPEG signature, so a renamed file of another
