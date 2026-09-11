@@ -1,0 +1,186 @@
+/* Account screens: welcome, sign in, create account, account settings, and
+   the account bar on the home screen.
+
+   Primary buttons reuse .create-btn from pages.css, so the green action
+   looks the same everywhere. */
+
+.account-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--pad-x);
+}
+
+.account-title {
+  margin: 0;
+  font-size: var(--font-title);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.account-section-title {
+  margin: var(--sp-4) 0 0;
+  font-size: var(--font-section);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.account-text {
+  margin: 0;
+  font-size: var(--font-label);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.account-center {
+  text-align: center;
+}
+
+/* Form fields */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.field-label {
+  font-size: var(--font-label);
+  font-weight: 600;
+  color: var(--text-label);
+}
+
+/* 17px text: iOS zooms the page in on any input smaller than 16px. */
+.field-input {
+  width: 100%;
+  padding: var(--sp-3);
+  font: inherit;
+  font-size: var(--font-row);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+}
+
+.field-input:focus {
+  border-color: var(--green-dark);
+  outline: 2px solid var(--green-dark);
+  outline-offset: 1px;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: var(--font-small);
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--font-label);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.check-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green-dark);
+}
+
+.form-error {
+  margin: 0;
+  padding: var(--sp-3);
+  font-size: var(--font-label);
+  line-height: 1.4;
+  color: var(--danger);
+  background: var(--danger-tint);
+  border: 1px solid var(--danger-line);
+  border-radius: var(--r-md);
+}
+
+.form-success {
+  margin: 0;
+  padding: var(--sp-3);
+  font-size: var(--font-label);
+  color: var(--text);
+  background: var(--green-tint);
+  border: 1px solid var(--green-dark);
+  border-radius: var(--r-md);
+}
+
+/* Buttons */
+
+.account-btn {
+  width: 100%;
+  padding: var(--sp-4);
+  font-size: var(--font-row);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.account-btn:hover {
+  background: var(--surface-alt);
+}
+
+.account-btn:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.account-btn.is-danger {
+  color: var(--danger);
+  border-color: var(--danger-line);
+}
+
+.account-btn.is-danger:hover {
+  background: var(--danger-tint);
+}
+
+/* Text-style button. Dark text with an underline rather than green text:
+   the brand green is too light to read as small text on white. */
+.link-btn {
+  align-self: center;
+  padding: var(--sp-2) var(--sp-1);
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: 600;
+  color: var(--text);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* The bar at the top of the home screen: who is signed in, or a reminder
+   that a guest's books are not saved. */
+.account-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--pad-x);
+  font-size: var(--font-small);
+  color: var(--text-muted);
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--line);
+}
+
+.account-bar-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-bar .link-btn {
+  flex-shrink: 0;
+  font-size: var(--font-small);
+}

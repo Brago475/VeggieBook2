@@ -1,99 +1,56 @@
-import { useState, type ChangeEvent } from 'react'
+import { useState } from 'react'
+import { BookCard } from '../components/BookCard'
+import { CoverOptions } from '../components/CoverOptions'
 import { NavBar } from '../components/NavBar'
 import type { Vegetable } from '../types'
-import { coverSrc } from '../utils/coverSrc'
-import { resizeImage } from '../utils/resizeImage'
 
-// Last screen of a VeggieBook. Three ways to set the cover:
+// Last screen of a VeggieBook: pick the cover, then finish the book.
 //
-//   default -> the book's own vegetable cover (selected on arrival)
-//   choose  -> a grid of every preset cover
-//   upload  -> the user's own photo, shrunk in the browser
+// The preview is the same card the home screen shows, so users see their
+// book exactly as it will look: the vegetable's photo, with the chosen cover
+// as the inset.
 //
-// The preview reuses the home screen's book card, so users see their book
-// exactly as it will appear in their library. SAVE BOOK hands the chosen
-// image to App, which builds and stores the book.
-//
-// The original also offered a camera option and a set of religious images.
-// Neither is carried over: this is a web app, and the images were a
-// content decision.
-
-// Covers offered alongside the ten vegetable covers. The original's produce
-// basket (cornucopia.jpg) goes here once the owner provides the file.
-const SHARED_COVERS: { image: string; label: string }[] = []
-
-type Mode = 'default' | 'choose' | 'upload'
+// Signed in, SAVE BOOK saves to the account. A guest gets two choices:
+// create an account and save the book into it, or finish without saving and
+// keep the book on this page until it closes.
 
 type Props = {
   vegetable: Vegetable
   vegetables: Vegetable[]
-  // Returns false if the book could not be saved.
-  onSave: (image: string) => boolean
+  signedIn: boolean
+  // Throws with a message for the user if the book cannot be saved.
+  onSave: (cover: string) => Promise<void>
+  onCreateAccount: (cover: string) => void
+  onFinishWithoutSaving: (cover: string) => void
 }
 
-export function CoverChooser({ vegetable, vegetables, onSave }: Props) {
+export function CoverChooser({
+  vegetable,
+  vegetables,
+  signedIn,
+  onSave,
+  onCreateAccount,
+  onFinishWithoutSaving,
+}: Props) {
   const defaultCover = `cover/${vegetable.shortCode}.jpg`
 
-  // The book's own vegetable first, then the other nine, then any shared
-  // presets.
-  const presets = [
-    { image: defaultCover, label: `${vegetable.name} cover` },
-    ...vegetables
-      .filter((v) => v.code !== vegetable.code)
-      .map((v) => ({
-        image: `cover/${v.shortCode}.jpg`,
-        label: `${v.name} cover`,
-      })),
-    ...SHARED_COVERS,
-  ]
-
-  const [mode, setMode] = useState<Mode>('default')
   const [selected, setSelected] = useState(defaultCover)
-  const [uploaded, setUploaded] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function pickDefault() {
-    setMode('default')
-    setSelected(defaultCover)
-    setError(null)
-  }
-
-  function openGrid() {
-    setMode('choose')
-    setError(null)
-  }
-
-  async function handleFile(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    // Clear the input so picking the same photo again still triggers.
-    event.target.value = ''
-    if (!file) return
-
-    setBusy(true)
+  async function save() {
+    if (uploading || saving) return
+    setSaving(true)
     setError(null)
     try {
-      const dataUrl = await resizeImage(file)
-      setUploaded(dataUrl)
-      setSelected(dataUrl)
-      setMode('upload')
+      await onSave(selected)
+      // On success the parent moves on to the home screen.
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'This photo could not be used.',
+        err instanceof Error ? err.message : 'Your book could not be saved. Please try again.',
       )
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  function save() {
-    if (busy) return
-    if (!onSave(selected)) {
-      setError(
-        'Your book could not be saved because this browser is out of ' +
-          'storage space. Try the default cover or choose one instead of ' +
-          'your own photo.',
-      )
+      setSaving(false)
     }
   }
 
@@ -104,67 +61,46 @@ export function CoverChooser({ vegetable, vegetables, onSave }: Props) {
       </div>
 
       <div className="cover-preview">
-        <div className="book-card">
-          <img className="book-card-img" src={coverSrc(selected)} alt="" />
-          <span className="book-card-name">{vegetable.name}</span>
-        </div>
+        <BookCard title={vegetable.name} background={defaultCover} cover={selected} />
       </div>
 
-      <div className="cover-modes">
-        <button
-          type="button"
-          className="cover-mode"
-          aria-pressed={mode === 'default'}
-          onClick={pickDefault}
-        >
-          Use default cover
-        </button>
+      <CoverOptions
+        vegetable={vegetable}
+        vegetables={vegetables}
+        defaultCover={defaultCover}
+        selected={selected}
+        onSelect={setSelected}
+        onBusy={setUploading}
+      />
 
-        <button
-          type="button"
-          className="cover-mode"
-          aria-pressed={mode === 'choose'}
-          onClick={openGrid}
-        >
-          Choose a cover
-        </button>
-
-        <label
-          className={mode === 'upload' ? 'cover-mode is-active' : 'cover-mode'}
-        >
-          <input
-            className="cover-upload-input"
-            type="file"
-            accept="image/*"
-            onChange={handleFile}
-            disabled={busy}
-          />
-          {uploaded ? 'Upload a different cover' : 'Upload your own cover'}
-        </label>
-      </div>
-
-      {mode === 'choose' && (
-        <ul className="cover-grid">
-          {presets.map((preset) => (
-            <li key={preset.image}>
-              <button
-                type="button"
-                className="cover-tile"
-                aria-pressed={selected === preset.image}
-                aria-label={preset.label}
-                onClick={() => setSelected(preset.image)}
-              >
-                <img src={coverSrc(preset.image)} alt="" loading="lazy" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {busy && <p className="message">Preparing your photo...</p>}
       {error && <p className="message">{error}</p>}
 
-      <NavBar primaryLabel="SAVE BOOK" onPrimary={save} />
+      {signedIn ? (
+        <NavBar primaryLabel={saving ? 'SAVING...' : 'SAVE BOOK'} onPrimary={save} />
+      ) : (
+        <>
+          <NavBar
+            primaryLabel="CREATE ACCOUNT AND SAVE"
+            onPrimary={() => {
+              if (!uploading) onCreateAccount(selected)
+            }}
+          />
+          <div className="account-page">
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() => {
+                if (!uploading) onFinishWithoutSaving(selected)
+              }}
+            >
+              Finish without saving
+            </button>
+            <p className="field-hint account-center">
+              Without an account, your book stays on this page until you close it.
+            </p>
+          </div>
+        </>
+      )}
     </>
   )
 }

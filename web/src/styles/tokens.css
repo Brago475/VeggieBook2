@@ -26,6 +26,12 @@
   --line: #e6e6df;
   --line-strong: #d5d5cc;
 
+  /* Warnings and destructive actions: error messages, delete account.
+     The text red passes contrast on white and on its own tint. */
+  --danger: #a3261f;
+  --danger-tint: #fdf0ef;
+  --danger-line: #eab8b4;
+
   /* Spacing scale. Everything is a multiple of 4, which keeps vertical
      rhythm consistent without hand-tuning each screen. */
   --sp-1: 4px;

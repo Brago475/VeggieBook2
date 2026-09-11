@@ -1,0 +1,30 @@
+/* Home screen book list: spacing between books, and each book's delete
+   link. The account bar above the list lives in account.css. */
+
+.book-item {
+  margin-bottom: var(--sp-4);
+}
+
+.book-item .book-card {
+  margin-bottom: var(--sp-1);
+}
+
+/* Quiet by default so it is never mistaken for the main action, and red on
+   hover so its meaning is clear before the click. */
+.book-delete {
+  display: block;
+  margin-left: auto;
+  padding: var(--sp-1) var(--pad-x);
+  font: inherit;
+  font-size: var(--font-small);
+  color: var(--text-muted);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.book-delete:hover {
+  color: var(--danger);
+}

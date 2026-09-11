@@ -26,14 +26,15 @@ export type Question = {
   choices: Choice[]
 }
 
-// A saved book as GET /api/books lists it.
+// A saved book as GET /api/books lists it. A guest's unsaved book uses the
+// same shape, so the home screen shows both the same way.
 //
-// cover is either a preset path (cover/BR.jpg, served from /images) or, for
-// an uploaded photo, a private API link (/api/books/{id}/cover) that only the
-// book's owner can open. coverSrc() turns either one into an <img> src.
+// cover is a preset path (cover/BR.jpg), a saved upload's private API link
+// (/api/books/{id}/cover), or, for a guest, the photo's data URL.
+// coverSrc() turns any of them into an <img> src.
 //
-// There is no title: a VeggieBook is named after its vegetable, so the page
-// looks the name up from vegetableCode in the language being shown.
+// There is no title: a VeggieBook is named after its vegetable, looked up
+// from vegetableCode in the language being shown.
 
 export type BookSummary = {
   id: string
@@ -54,22 +55,6 @@ export type NewBook = {
   coverPath?: string
   coverUpload?: string
   lang?: 'en' | 'es'
-}
-
-// The localStorage version of a book. Still used by App.tsx and
-// HomeLibrary.tsx until they move to the API next session; delete it then,
-// along with hooks/useSavedBooks.ts.
-
-export type SavedBook = {
-  id: string
-  kind: 'veggie' | 'secrets'
-  title: string
-  image: string
-  vegetableCode: string | null
-  attributes: string[]
-  recipeIds: number[]
-  extraCopyIds: number[]
-  createdAt: string
 }
 
 // Recipe summary as returned by POST /api/match. Ingredients and

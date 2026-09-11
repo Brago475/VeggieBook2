@@ -1,136 +1,128 @@
 import { useState } from 'react'
 import { Masthead } from './components/Masthead'
-import { useMatch } from './hooks/useMatch'
-import { useSavedBooks } from './hooks/useSavedBooks'
+import { useAuth } from './hooks/useAuth'
+import { useBookFlow } from './hooks/useBookFlow'
+import { useBooks } from './hooks/useBooks'
 import { useVeggieBookData } from './hooks/useVeggieBookData'
-import { CoverChooser } from './pages/CoverChooser'
-import { ExtraCopies } from './pages/ExtraCopies'
+import { AccountSettings } from './pages/AccountSettings'
+import { AuthForm, type AuthMode } from './pages/AuthForm'
+import { BookFlow } from './pages/BookFlow'
 import { HomeLibrary } from './pages/HomeLibrary'
-import { QuestionScreen } from './pages/QuestionScreen'
-import { RecipeReview } from './pages/RecipeReview'
-import { Transition } from './pages/Transition'
-import { VegetablePicker } from './pages/VegetablePicker'
-import type { RecipeSummary, SavedBook, Vegetable } from './types'
+import { Welcome } from './pages/Welcome'
+import type { BookSummary, NewBook } from './types'
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
 import './styles/pages.css'
+import './styles/account.css'
+import './styles/library.css'
 import './styles/responsive.css'
 
-// Flow state lives here; each screen is a page component.
-//
-//   home       -> saved books plus the two create buttons
-//   pick       -> choose a vegetable
-//   quiz       -> five questions, one per screen
-//   transition -> explains KEEP and DROP
-//   review     -> the matched recipes, one card at a time
-//   copies     -> mark kept recipes for an extra printed copy
-//   cover      -> choose the cover, then the book is saved and the user
-//                 returns home with it in their library
-
-type Screen =
-  | 'home'
-  | 'pick'
-  | 'quiz'
-  | 'transition'
-  | 'review'
-  | 'copies'
-  | 'cover'
-
-// Book ids only need to be unique within this browser. randomUUID is
-// missing on plain http pages (for example, testing over a LAN address),
-// so there is a fallback.
-function newId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
-}
+// Top-level screens. Making a book is one view ('flow'); its steps live in
+// hooks/useBookFlow.ts and pages/BookFlow.tsx.
+type View = 'home' | 'signin' | 'register' | 'account' | 'flow'
 
 export default function App() {
   const { vegetables, questions, error, loading } = useVeggieBookData()
-  const { books, saveBook } = useSavedBooks()
-  const match = useMatch()
+  const account = useAuth()
+  const email = account.auth.status === 'signedIn' ? account.auth.email : null
+  const library = useBooks(email, account.sessionEnded)
+  const flow = useBookFlow(questions.length)
 
-  const [screen, setScreen] = useState<Screen>('home')
-  const [vegetable, setVegetable] = useState<Vegetable | null>(null)
-  const [step, setStep] = useState(0)
-  const [picked, setPicked] = useState<Set<string>>(new Set())
-  const [kept, setKept] = useState<RecipeSummary[]>([])
-  const [extraCopies, setExtraCopies] = useState<number[]>([])
-
-  function toggle(attribute: string) {
-    setPicked((prev) => {
-      const next = new Set(prev)
-      if (next.has(attribute)) next.delete(attribute)
-      else next.add(attribute)
-      return next
-    })
-  }
+  const [view, setView] = useState<View>('home')
+  // Chose Continue as guest. Not remembered across visits: guests leave
+  // nothing behind, not even this.
+  const [guest, setGuest] = useState(false)
+  // A guest's finished books. This page only.
+  const [guestBooks, setGuestBooks] = useState<BookSummary[]>([])
+  // A guest's finished book, waiting to be saved once they have an account.
+  const [pending, setPending] = useState<NewBook | null>(null)
 
   function goHome() {
-    setScreen('home')
-    setVegetable(null)
-    setStep(0)
-    setPicked(new Set())
-    setKept([])
-    setExtraCopies([])
-    match.reset()
+    setPending(null)
+    setView('home')
   }
 
-  function chooseVegetable(veg: Vegetable) {
-    setVegetable(veg)
-    setStep(0)
-    setScreen('quiz')
+  function startBook() {
+    flow.start()
+    setView('flow')
   }
 
-  // The match runs when leaving the last question, so the results are
-  // already in flight while the user reads the transition screen.
-  function advanceQuestion() {
-    if (step < questions.length - 1) {
-      setStep(step + 1)
-      return
-    }
-    if (vegetable) match.run(vegetable.code, [...picked])
-    setScreen('transition')
-  }
-
-  // Builds the finished book from everything collected along the way and
-  // stores it. Returns false if storage refused it, so the cover screen
-  // can tell the user instead of losing the book silently.
-  function finishBook(image: string): boolean {
-    if (!vegetable) return false
-
-    const book: SavedBook = {
-      id: newId(),
-      kind: 'veggie',
-      title: vegetable.name,
-      image,
-      vegetableCode: vegetable.code,
-      attributes: [...picked],
-      recipeIds: kept.map((recipe) => recipe.id),
-      extraCopyIds: extraCopies,
-      createdAt: new Date().toISOString(),
-    }
-
-    if (!saveBook(book)) return false
+  // Signed in. A failure throws, and the cover screen shows the reason.
+  async function saveBook(cover: string) {
+    const book = flow.buildBook(cover)
+    if (!book) return
+    await library.saveBook(book)
     goHome()
-    return true
   }
 
-  const question = questions[step]
+  function finishWithoutSaving(cover: string) {
+    const summary = flow.guestSummary(cover)
+    if (summary) setGuestBooks((prev) => [summary, ...prev])
+    goHome()
+  }
 
-  function backAction() {
-    if (screen === 'pick') return goHome
-    if (screen === 'quiz') {
-      return step === 0 ? () => setScreen('pick') : () => setStep(step - 1)
-    }
-    if (screen === 'transition') {
-      return () => {
-        match.reset()
-        setScreen('quiz')
+  function createAccountToSave(cover: string) {
+    setPending(flow.buildBook(cover))
+    setView('register')
+  }
+
+  // A failed sign-in or sign-up throws and stays on the form. After that the
+  // user is signed in, and a guest's waiting book is saved into the account.
+  // Books a guest finished without saving are not moved over.
+  async function submitAuth(mode: AuthMode, address: string, password: string) {
+    if (mode === 'register') await account.register(address, password)
+    else await account.signIn(address, password)
+
+    setGuestBooks([])
+    const book = pending
+    setPending(null)
+    if (book) {
+      try {
+        await library.saveBook(book)
+      } catch {
+        // The cover screen is still set up. Signed in now, it offers SAVE
+        // BOOK and shows the reason if saving fails again.
+        setView('flow')
+        return
       }
     }
+    setView('home')
+  }
+
+  async function signOut() {
+    await account.signOut()
+    setGuest(false)
+    goHome()
+  }
+
+  async function deleteAccount(password: string) {
+    await account.deleteAccount(password)
+    setGuest(false)
+    goHome()
+  }
+
+  async function deleteBook(id: string) {
+    if (email) await library.deleteBook(id)
+    else setGuestBooks((prev) => prev.filter((b) => b.id !== id))
+  }
+
+  const status = account.auth.status
+  // A session that ends while on the account screen falls back to home.
+  const current: View = view === 'account' && !email ? 'home' : view
+  const showWelcome = current === 'home' && status === 'guest' && !guest
+  const authMode: AuthMode | null =
+    current === 'signin' || current === 'register' ? current : null
+
+  function backAction(): (() => void) | undefined {
+    if (current === 'flow') return flow.backAction(goHome)
+    if (authMode && pending) {
+      return () => {
+        setPending(null)
+        setView('flow')
+      }
+    }
+    if (authMode || current === 'account') return goHome
     return undefined
   }
 
@@ -139,64 +131,63 @@ export default function App() {
       <Masthead onBack={backAction()} />
 
       {error && <p className="message">Could not load: {error}</p>}
+      {status === 'loading' && <p className="message">Loading...</p>}
 
-      {screen === 'home' && (
-        <HomeLibrary books={books} onCreateVeggie={() => setScreen('pick')} />
+      {showWelcome && (
+        <Welcome
+          onCreateAccount={() => setView('register')}
+          onSignIn={() => setView('signin')}
+          onGuest={() => setGuest(true)}
+        />
       )}
 
-      {screen === 'pick' && (
-        <VegetablePicker
+      {status !== 'loading' && current === 'home' && !showWelcome && (
+        <HomeLibrary
+          email={email}
+          books={email ? library.books : guestBooks}
           vegetables={vegetables}
+          loading={library.loading}
+          error={library.error}
+          onCreateVeggie={startBook}
+          onAccount={() => setView('account')}
+          onSignIn={() => setView('signin')}
+          onDeleteBook={deleteBook}
+        />
+      )}
+
+      {authMode && (
+        <AuthForm
+          key={authMode}
+          mode={authMode}
+          note={
+            pending && flow.vegetable
+              ? `Create an account or sign in to save your ${flow.vegetable.name} VeggieBook.`
+              : undefined
+          }
+          onSubmit={(address, password) => submitAuth(authMode, address, password)}
+          onSwitchMode={() => setView(authMode === 'signin' ? 'register' : 'signin')}
+        />
+      )}
+
+      {current === 'account' && email && (
+        <AccountSettings
+          email={email}
+          onSignOut={signOut}
+          onChangePassword={account.changePassword}
+          onDeleteAccount={deleteAccount}
+        />
+      )}
+
+      {current === 'flow' && (
+        <BookFlow
+          flow={flow}
+          vegetables={vegetables}
+          questions={questions}
           loading={loading}
-          onSelect={chooseVegetable}
-        />
-      )}
-
-      {screen === 'quiz' && vegetable && question && (
-        <QuestionScreen
-          vegetable={vegetable}
-          question={question}
-          picked={picked}
-          onToggle={toggle}
-          onNext={advanceQuestion}
-        />
-      )}
-
-      {screen === 'transition' && (
-        <Transition onNext={() => setScreen('review')} />
-      )}
-
-      {screen === 'review' && (
-        <>
-          {match.running && <p className="message">Loading recipes...</p>}
-          {match.error && <p className="message">Match failed: {match.error}</p>}
-          {match.result && (
-            <RecipeReview
-              recipes={match.result.recipes}
-              onFinish={(recipes) => {
-                setKept(recipes)
-                setScreen('copies')
-              }}
-            />
-          )}
-        </>
-      )}
-
-      {screen === 'copies' && (
-        <ExtraCopies
-          recipes={kept}
-          onNext={(ids) => {
-            setExtraCopies(ids)
-            setScreen('cover')
-          }}
-        />
-      )}
-
-      {screen === 'cover' && vegetable && (
-        <CoverChooser
-          vegetable={vegetable}
-          vegetables={vegetables}
-          onSave={finishBook}
+          signedIn={email !== null}
+          onSave={saveBook}
+          onCreateAccount={createAccountToSave}
+          onFinishWithoutSaving={finishWithoutSaving}
         />
       )}
     </div>

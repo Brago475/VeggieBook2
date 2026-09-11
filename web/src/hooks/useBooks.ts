@@ -24,21 +24,32 @@ export function useBooks(email: string | null, onSessionEnded: () => void) {
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [loadError, setLoadError] = useState<LoadError | null>(null)
 
-  // Always call the latest onSessionEnded without restarting the load
-  // whenever the parent re-renders.
-  const sessionEnded = useRef(onSessionEnded)
+  // The latest arguments, for code that runs after an await. A save can
+  // finish after the page has moved on (for example, a guest who has just
+  // created an account), and it must refresh the list for whoever is signed
+  // in by then.
+  const latest = useRef({ email, onSessionEnded })
   useEffect(() => {
-    sessionEnded.current = onSessionEnded
+    latest.current = { email, onSessionEnded }
   })
 
+  // Each load is numbered, and only the newest may update the list. Without
+  // this, a slow older request could overwrite a newer one: for example, the
+  // first load after sign-in finishing after the refresh that follows a save,
+  // and hiding the book that was just saved.
+  const seq = useRef(0)
+
   const load = useCallback(async (owner: string) => {
+    const mine = ++seq.current
     try {
       const books = await apiFetch<BookSummary[]>('/books')
+      if (mine !== seq.current) return
       setLoaded({ owner, books })
       setLoadError(null)
     } catch (err) {
+      if (mine !== seq.current) return
       if (err instanceof ApiError && err.status === 401) {
-        sessionEnded.current()
+        latest.current.onSessionEnded()
       } else {
         setLoadError({
           owner,
@@ -53,41 +64,53 @@ export function useBooks(email: string | null, onSessionEnded: () => void) {
     if (email) void load(email)
   }, [email, load])
 
+  const refresh = useCallback(async () => {
+    const owner = latest.current.email
+    if (owner) await load(owner)
+  }, [load])
+
   const books = email && loaded?.owner === email ? loaded.books : []
   const error = email && loadError?.owner === email ? loadError.message : null
   const loading = email !== null && loaded?.owner !== email && error === null
 
   // Saves a finished book and refreshes the list. Throws an ApiError with a
-  // message for the user if the save is refused, so the cover screen can
-  // show it and let them try again.
+  // message for the user if the save is refused, so the screen can show it
+  // and let them try again.
   async function saveBook(book: NewBook): Promise<string> {
+    let created: { id: string }
     try {
-      const created = await apiFetch<{ id: string }>('/books', {
+      created = await apiFetch<{ id: string }>('/books', {
         method: 'POST',
         body: book,
       })
-      if (email) await load(email)
-      return created.id
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) sessionEnded.current()
+      if (err instanceof ApiError && err.status === 401) {
+        latest.current.onSessionEnded()
+      }
       throw err
     }
+    await refresh()
+    return created.id
   }
 
   async function deleteBook(id: string) {
     try {
       await apiFetch<void>(`/books/${id}`, { method: 'DELETE' })
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) sessionEnded.current()
+      if (err instanceof ApiError && err.status === 401) {
+        latest.current.onSessionEnded()
+      }
       throw err
     }
     setLoaded((prev) =>
-      prev ? { owner: prev.owner, books: prev.books.filter((b) => b.id !== id) } : prev,
+      prev
+        ? { owner: prev.owner, books: prev.books.filter((b) => b.id !== id) }
+        : prev,
     )
   }
 
   function reload() {
-    if (email) void load(email)
+    void refresh()
   }
 
   return { books, loading, error, saveBook, deleteBook, reload }
