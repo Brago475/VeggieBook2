@@ -7,11 +7,18 @@
 #   cd ~/VeggieBook2
 #   docker compose up -d
 #
-# PORT BINDINGS. Only web is published on 0.0.0.0, because the Cloudflare
-# Tunnel points at it. db is bound to 127.0.0.1 so the LAN cannot reach it:
-# ufw does NOT block Docker published ports, so the bind address is the only
-# thing protecting it. Services reach each other by name over the internal
-# network regardless of what is published.
+# PORT BINDINGS. Everything is bound to 127.0.0.1, including web. ufw does NOT
+# block Docker published ports, so the bind address is the only thing keeping
+# the LAN out. cloudflared runs on the host and connects to localhost:8080
+# (see /etc/cloudflared/config.yml), so the tunnel does not need web on
+# 0.0.0.0.
+#
+# This also matters for the API: it trusts Cloudflare's CF-Connecting-IP
+# header to rate limit sign-ins per visitor. That header can only be trusted
+# if the tunnel is the only way to reach nginx.
+#
+# Services reach each other by name over the internal network regardless of
+# what is published.
 
 name: veggiebook2
 
@@ -39,7 +46,8 @@ services:
     container_name: veggiebook-web
     restart: unless-stopped
     ports:
-      - "8080:80"
+      # Localhost only. cloudflared connects here from the host.
+      - "127.0.0.1:8080:80"
     depends_on:
       - api
     volumes:
