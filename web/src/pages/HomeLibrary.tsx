@@ -1,4 +1,5 @@
 import type { SavedBook } from '../types'
+import { coverSrc } from '../utils/coverSrc'
 
 // Home screen. Two create buttons, then the books already made, shown as
 // large photo cards with the name overlaid.
@@ -38,7 +39,7 @@ export function HomeLibrary({ books, onCreateVeggie }: Props) {
               <button type="button" className="book-card">
                 <img
                   className="book-card-img"
-                  src={`/images/${book.image}`}
+                  src={coverSrc(book.image)}
                   alt=""
                   loading="lazy"
                 />

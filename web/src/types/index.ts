@@ -26,8 +26,39 @@ export type Question = {
   choices: Choice[]
 }
 
-// A saved book. Shape mirrors the book_session tables so moving this to the
-// API later is a change in one storage module, not a change to the app.
+// A saved book as GET /api/books lists it.
+//
+// cover is either a preset path (cover/BR.jpg, served from /images) or, for
+// an uploaded photo, a private API link (/api/books/{id}/cover) that only the
+// book's owner can open. coverSrc() turns either one into an <img> src.
+//
+// There is no title: a VeggieBook is named after its vegetable, so the page
+// looks the name up from vegetableCode in the language being shown.
+
+export type BookSummary = {
+  id: string
+  kind: 'veggie' | 'secrets'
+  vegetableCode: string | null
+  cover: string
+  recipeCount: number
+  createdAt: string
+}
+
+// What POST /api/books expects. Exactly one of coverPath or coverUpload is
+// set: a preset path, or a JPEG data URL from resizeImage().
+
+export type NewBook = {
+  vegetableCode: string
+  attributes: string[]
+  recipes: { id: number; extraCopies: number }[]
+  coverPath?: string
+  coverUpload?: string
+  lang?: 'en' | 'es'
+}
+
+// The localStorage version of a book. Still used by App.tsx and
+// HomeLibrary.tsx until they move to the API next session; delete it then,
+// along with hooks/useSavedBooks.ts.
 
 export type SavedBook = {
   id: string
@@ -36,6 +67,8 @@ export type SavedBook = {
   image: string
   vegetableCode: string | null
   attributes: string[]
+  recipeIds: number[]
+  extraCopyIds: number[]
   createdAt: string
 }
 

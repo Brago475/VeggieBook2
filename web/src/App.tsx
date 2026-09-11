@@ -3,13 +3,14 @@ import { Masthead } from './components/Masthead'
 import { useMatch } from './hooks/useMatch'
 import { useSavedBooks } from './hooks/useSavedBooks'
 import { useVeggieBookData } from './hooks/useVeggieBookData'
+import { CoverChooser } from './pages/CoverChooser'
 import { ExtraCopies } from './pages/ExtraCopies'
 import { HomeLibrary } from './pages/HomeLibrary'
 import { QuestionScreen } from './pages/QuestionScreen'
 import { RecipeReview } from './pages/RecipeReview'
 import { Transition } from './pages/Transition'
 import { VegetablePicker } from './pages/VegetablePicker'
-import type { RecipeSummary, Vegetable } from './types'
+import type { RecipeSummary, SavedBook, Vegetable } from './types'
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
@@ -24,7 +25,8 @@ import './styles/responsive.css'
 //   transition -> explains KEEP and DROP
 //   review     -> the matched recipes, one card at a time
 //   copies     -> mark kept recipes for an extra printed copy
-//   done       -> temporary summary; becomes the cover chooser
+//   cover      -> choose the cover, then the book is saved and the user
+//                 returns home with it in their library
 
 type Screen =
   | 'home'
@@ -33,11 +35,21 @@ type Screen =
   | 'transition'
   | 'review'
   | 'copies'
-  | 'done'
+  | 'cover'
+
+// Book ids only need to be unique within this browser. randomUUID is
+// missing on plain http pages (for example, testing over a LAN address),
+// so there is a fallback.
+function newId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
 
 export default function App() {
   const { vegetables, questions, error, loading } = useVeggieBookData()
-  const { books } = useSavedBooks()
+  const { books, saveBook } = useSavedBooks()
   const match = useMatch()
 
   const [screen, setScreen] = useState<Screen>('home')
@@ -81,6 +93,29 @@ export default function App() {
     }
     if (vegetable) match.run(vegetable.code, [...picked])
     setScreen('transition')
+  }
+
+  // Builds the finished book from everything collected along the way and
+  // stores it. Returns false if storage refused it, so the cover screen
+  // can tell the user instead of losing the book silently.
+  function finishBook(image: string): boolean {
+    if (!vegetable) return false
+
+    const book: SavedBook = {
+      id: newId(),
+      kind: 'veggie',
+      title: vegetable.name,
+      image,
+      vegetableCode: vegetable.code,
+      attributes: [...picked],
+      recipeIds: kept.map((recipe) => recipe.id),
+      extraCopyIds: extraCopies,
+      createdAt: new Date().toISOString(),
+    }
+
+    if (!saveBook(book)) return false
+    goHome()
+    return true
   }
 
   const question = questions[step]
@@ -152,34 +187,17 @@ export default function App() {
           recipes={kept}
           onNext={(ids) => {
             setExtraCopies(ids)
-            setScreen('done')
+            setScreen('cover')
           }}
         />
       )}
 
-      {/* Temporary end of flow. Becomes the cover chooser. */}
-      {screen === 'done' && (
-        <>
-          <p className="message">
-            You kept {kept.length} of {match.result?.recipes.length ?? 0}{' '}
-            recipes.
-          </p>
-          <p className="message">
-            Extra copies requested: {extraCopies.length}
-          </p>
-          <ul>
-            {kept.map((recipe) => (
-              <li key={recipe.id} className="message">
-                {recipe.title}
-              </li>
-            ))}
-          </ul>
-          <div className="nav">
-            <button type="button" className="nav-btn" onClick={goHome}>
-              Start over
-            </button>
-          </div>
-        </>
+      {screen === 'cover' && vegetable && (
+        <CoverChooser
+          vegetable={vegetable}
+          vegetables={vegetables}
+          onSave={finishBook}
+        />
       )}
     </div>
   )
