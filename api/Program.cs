@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,9 +15,17 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
 
 builder.Services.AddDbContext<VeggieBookContext>(options =>
     options.UseNpgsql(connectionString)
-           // Content is read-only, so tracking is pure overhead. Any write
-           // path added later must opt back in per query.
+           // Content is read-only, so tracking is pure overhead. User data
+           // lives in AccountsContext below, so this context never writes.
            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+
+// User data: accounts now, saved books next. Same database, separate
+// context. Tracking stays on because this context writes.
+builder.Services.AddDbContext<AccountsContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// Session cookies, password hashing, and rate limits. See Auth/AuthSetup.cs.
+builder.Services.AddVeggieBookAuth(builder.Configuration, builder.Environment);
 
 // Only needed while the front end runs on the Vite dev server on a different
 // origin. In production both are served from veggiebook2.com through nginx,
@@ -33,6 +42,13 @@ if (app.Environment.IsDevelopment())
 {
     app.UseCors("dev");
 }
+
+// Order matters. Authentication reads the session cookie, authorization
+// enforces [Authorize] using it, and the rate limiter applies the per-endpoint
+// limits. All three must run before the endpoints they protect.
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 

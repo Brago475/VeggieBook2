@@ -27,6 +27,15 @@ RUN dotnet publish -c Release -o /app --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+# Where the keys that encrypt session cookies live. docker-compose mounts a
+# volume here so the keys survive redeploys; without them every deploy would
+# sign everyone out.
+#
+# The directory is created now, while the build still runs as root, and handed
+# to the app user. A new Docker volume copies the ownership of the directory it
+# is mounted over, so this is what lets the non-root app write its keys.
+RUN mkdir -p /keys && chown $APP_UID /keys
+
 # Run as a non-root user. The aspnet image provides one, and using it means a
 # container escape does not land on root. Note this is separate from the docker
 # group question on the host.

@@ -73,10 +73,15 @@ services:
       # localhost means the api container itself.
       ConnectionStrings__Default: "Host=db;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
       ASPNETCORE_ENVIRONMENT: Production
+      # Session cookie encryption keys, kept in the api-keys volume below.
+      # The API refuses to start in production without this.
+      DataProtection__KeysPath: /keys
     ports:
       # Localhost only. nginx reaches it by service name over the internal
       # network; this binding exists for debugging from the server shell.
       - "127.0.0.1:5000:8080"
+    volumes:
+      - api-keys:/keys
     depends_on:
       db:
         condition: service_healthy
@@ -87,3 +92,8 @@ volumes:
     # picked up rather than a new empty volume being created.
     name: veggiebook-pgdata
     external: true
+
+  api-keys:
+    # Created by compose on first start. Deleting it signs everyone out, but
+    # loses no data: accounts and books live in the database.
+    name: veggiebook-api-keys
