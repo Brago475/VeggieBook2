@@ -1,21 +1,20 @@
 import { useState, type ChangeEvent } from 'react'
+import { useCovers } from '../hooks/useCovers'
 import type { Vegetable } from '../types'
 import { coverSrc } from '../utils/coverSrc'
 import { resizeImage } from '../utils/resizeImage'
+import '../styles/covers.css'
 
 // The three ways to set a book's cover:
 //
 //   default -> the book's own vegetable cover (selected on arrival)
-//   choose  -> a grid of every preset cover
+//   choose  -> browse covers one vegetable at a time: its own cover, then
+//              every photo of its recipes
 //   upload  -> the user's own photo, shrunk in the browser first
 //
-// The original app also offered a camera option and a set of religious
-// images. Neither is carried over.
-
-// Covers offered alongside the ten vegetable covers. Must match SharedCovers
-// in api/Books/BooksController.cs, which refuses any cover not on its list.
-// The produce basket (cornucopia.jpg) goes in both once the owner sends it.
-const SHARED_COVERS: { image: string; label: string }[] = []
+// The covers come from the API (GET /api/covers), which also checks the
+// cover when the book is saved, so the two always agree. The original app's
+// camera option and religious images are not carried over.
 
 type Mode = 'default' | 'choose' | 'upload'
 
@@ -36,19 +35,20 @@ export function CoverOptions({
   onSelect,
   onBusy,
 }: Props) {
-  // The book's own vegetable first, then the other nine, then shared covers.
-  const presets = [
-    { image: defaultCover, label: `${vegetable.name} cover` },
-    ...vegetables
-      .filter((v) => v.code !== vegetable.code)
-      .map((v) => ({ image: `cover/${v.shortCode}.jpg`, label: `${v.name} cover` })),
-    ...SHARED_COVERS,
-  ]
-
   const [mode, setMode] = useState<Mode>('default')
+  const [browsing, setBrowsing] = useState(vegetable.code)
   const [uploaded, setUploaded] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Photos whose file fails to load are dropped from the grid rather than
+  // shown as broken tiles.
+  const [broken, setBroken] = useState<Set<string>>(new Set())
+
+  const { covers, error: coversError } = useCovers(browsing)
+
+  // The book's own vegetable first, then the rest in their usual order.
+  const browseOrder = [vegetable, ...vegetables.filter((v) => v.code !== vegetable.code)]
+  const browsingName = vegetables.find((v) => v.code === browsing)?.name ?? vegetable.name
 
   function working(value: boolean) {
     setBusy(value)
@@ -59,6 +59,10 @@ export function CoverOptions({
     setMode('default')
     onSelect(defaultCover)
     setError(null)
+  }
+
+  function hide(image: string) {
+    setBroken((prev) => new Set(prev).add(image))
   }
 
   async function handleFile(event: ChangeEvent<HTMLInputElement>) {
@@ -115,21 +119,53 @@ export function CoverOptions({
       </div>
 
       {mode === 'choose' && (
-        <ul className="cover-grid">
-          {presets.map((preset) => (
-            <li key={preset.image}>
+        <>
+          <div className="cover-veg-row" role="group" aria-label="Browse covers by vegetable">
+            {browseOrder.map((v) => (
               <button
+                key={v.code}
                 type="button"
-                className="cover-tile"
-                aria-pressed={selected === preset.image}
-                aria-label={preset.label}
-                onClick={() => onSelect(preset.image)}
+                className="cover-veg"
+                aria-pressed={browsing === v.code}
+                onClick={() => setBrowsing(v.code)}
               >
-                <img src={coverSrc(preset.image)} alt="" loading="lazy" />
+                {v.name}
               </button>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+
+          {!covers && !coversError && <p className="message">Loading covers...</p>}
+          {coversError && <p className="message">{coversError}</p>}
+
+          {covers && (
+            <ul className="cover-grid">
+              {covers
+                .filter((image) => !broken.has(image))
+                .map((image) => (
+                  <li key={image}>
+                    <button
+                      type="button"
+                      className="cover-tile"
+                      aria-pressed={selected === image}
+                      aria-label={
+                        image.startsWith('cover/')
+                          ? `${browsingName} cover`
+                          : `${browsingName} recipe photo`
+                      }
+                      onClick={() => onSelect(image)}
+                    >
+                      <img
+                        src={coverSrc(image)}
+                        alt=""
+                        loading="lazy"
+                        onError={() => hide(image)}
+                      />
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </>
       )}
 
       {busy && <p className="message">Preparing your photo...</p>}
