@@ -11,3 +11,4 @@ obj/
 .idea/
 appsettings.Development.json
 _source/
+_out/
