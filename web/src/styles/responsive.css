@@ -2,7 +2,12 @@
    The phone layout is the base and stays untouched below 720px. Above that
    the column widens and the copy grid gains a third across. The recipe stays
    a single column on purpose: it is a document, and documents read better as
-   one comfortable column than split into panels. */
+   one comfortable column than split into panels.
+
+   Nothing new appears on a wide screen. Pantry clients use this on phones,
+   so a desktop-only panel would be decoration that most users never see.
+   What the extra room buys instead is a column that reads as a held surface
+   and slightly more generous type. */
 
 @media (min-width: 720px) {
   .app {
@@ -36,14 +41,42 @@
   }
 }
 
-/* A soft page background on very wide screens so the app column reads as a
-   surface rather than blending into the browser. */
-@media (min-width: 1024px) {
+/* As soon as the column stops growing, the space around it becomes visible,
+   so it has to be deliberate. The page takes the tinted surface and the
+   column sits on it as a sheet: the white becomes a choice rather than an
+   unfilled page. */
+@media (min-width: 760px) {
   body {
     background: var(--surface-alt);
   }
 
   .app {
+    min-height: 100vh;
     box-shadow: var(--shadow-md);
+  }
+
+  /* The masthead is the only full-bleed green band, so it holds the top of
+     the sheet. Rounding the sheet below it keeps the column from looking
+     like a slice cut out of the page. */
+  .app {
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+
+  /* Reading a recipe is the one place the extra room helps: a little more
+     size on the body text, since nobody is holding a laptop at arm's
+     length in a kitchen. */
+  .book-ingredients li,
+  .book-steps li {
+    font-size: var(--font-row);
+  }
+
+  .recipe-row-title {
+    font-size: 19px;
+  }
+
+  .recipe-thumb {
+    width: 104px;
+    height: 104px;
   }
 }

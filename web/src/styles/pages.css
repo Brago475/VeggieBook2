@@ -46,6 +46,10 @@
    small square inset on the right, and the name sits bottom left over a
    soft gradient.
 
+   Photographs get a small radius and buttons keep the larger one, so the
+   corner tells you what a thing is: a nearly square edge means an image,
+   a soft one means something to press.
+
    Layering: the photo is at the bottom, the gradient (::after) above it,
    and the inset and name above both. */
 
@@ -60,7 +64,7 @@
   overflow: hidden;
   background: var(--surface);
   border: 0;
-  border-radius: var(--r-lg);
+  border-radius: var(--r-sm);
   box-shadow: var(--shadow-md);
 }
 
@@ -86,6 +90,8 @@ button.book-card {
   pointer-events: none;
 }
 
+/* Square, with a white edge and a real shadow, so it reads as a print
+   resting on the photo below rather than a rounded chip stuck to it. */
 .book-card-cover {
   position: absolute;
   z-index: 1;
@@ -96,9 +102,9 @@ button.book-card {
   aspect-ratio: 1;
   object-fit: cover;
   background: var(--surface-alt);
-  border: 2px solid var(--surface);
-  border-radius: var(--r-sm);
-  box-shadow: var(--shadow-md);
+  border: 3px solid var(--surface);
+  border-radius: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
 }
 
 /* The name stops short of the inset so long names wrap instead of running
@@ -272,7 +278,7 @@ button.book-card {
   overflow: hidden;
   background: var(--surface-alt);
   border: 2px solid transparent;
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition: border-color 0.15s ease;
 }
@@ -398,10 +404,13 @@ button.book-card {
   outline-offset: 2px;
 }
 
+/* A tighter gap than the spacing scale would give: these are photographs
+   in a contact sheet, and the grid reads better as a block of images than
+   as separated tiles. */
 .cover-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   padding: 0 var(--pad-x) var(--sp-4);
 }
 
@@ -413,7 +422,7 @@ button.book-card {
   overflow: hidden;
   background: var(--surface-alt);
   border: 3px solid transparent;
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition: border-color 0.15s ease;
 }

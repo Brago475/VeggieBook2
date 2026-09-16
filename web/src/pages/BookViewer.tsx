@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { BookCard } from '../components/BookCard'
 import { NavBar } from '../components/NavBar'
 import { useBookDetail } from '../hooks/useBookDetail'
 import { useRecipeDetail } from '../hooks/useRecipeDetail'
@@ -141,11 +142,15 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
         <p>Your {vegetableName} VeggieBook</p>
       </div>
 
-      {book.cover && (
-        <div className="cover-preview">
-          <img src={coverSrc(book.cover)} alt="" />
-        </div>
-      )}
+      {/* The same card the home screen and the cover chooser show, so a
+          book looks the same wherever it appears. */}
+      <div className="cover-preview">
+        <BookCard
+          title={vegetableName}
+          background={vegetableShortCode ? `cover/${vegetableShortCode}.jpg` : null}
+          cover={book.cover}
+        />
+      </div>
 
       <p className="field-hint">
         {book.recipes.length} {book.recipes.length === 1 ? 'recipe' : 'recipes'}

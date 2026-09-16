@@ -45,23 +45,14 @@
   border-radius: 8px;
 }
 
-/* Icon-only delete. The label is on aria-label, so the button needs a
-   real size of its own rather than taking it from text. */
+/* The trash icon takes the same quiet treatment as the text link it
+   replaced: no box, aligned right under the card, red on hover. */
 .book-delete {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 36px;
   padding: 0;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: #fff;
-  color: #c00;
-  cursor: pointer;
-}
-
-.book-delete:hover {
-  background: #fff3f3;
-  border-color: #c00;
+  text-decoration: none;
 }
