@@ -11,6 +11,7 @@ namespace VeggieBook.Api.Covers;
 // A cover is one of:
 //   a vegetable cover   cover/BR.jpg, one per active vegetable
 //   a shared cover      SharedCovers below, offered with every vegetable
+//   a stock photo       StockCovers below, offered with every vegetable
 //   a recipe photo      any photo of an active recipe, exactly as stored
 //
 // Paths are only ever matched exactly against this list or the database, so
@@ -24,11 +25,39 @@ public static class CoverCatalog
     // The produce basket (cornucopia.jpg) goes here once the owner sends it.
     public static readonly string[] SharedCovers = [];
 
+    // The ten produce photos from the original app's stock folder, offered
+    // with every vegetable so a book is not limited to its own recipes'
+    // photos.
+    //
+    // Deliberately excluded from this list:
+    //   the nine dreamstimelarge_*.jpg files, pending the original owner's
+    //     confirmation that they may be used under the folder's CC BY-SA
+    //     license. Do not add them before that answer arrives.
+    //   interface graphics (masthead, kid-friendly, asian, soul_food,
+    //     hispanic, cocina-latina, secretsToHealthyEating), which are app
+    //     chrome rather than photographs.
+    //   loose files with no clear provenance (Untitled.png, Screen_Shot_*,
+    //     Photo_on_*, 20121231_194617.jpg).
+    public static readonly string[] StockCovers =
+    [
+        "stock/broccoli.jpg",
+        "stock/cabbage.jpg",
+        "stock/carrot.jpg",
+        "stock/cauliflower.jpg",
+        "stock/greenbean.jpg",
+        "stock/onion.jpg",
+        "stock/potato.jpg",
+        "stock/rootvegetable.jpg",
+        "stock/sweetpotato.jpg",
+        "stock/zucchini.jpg",
+    ];
+
     private static readonly Regex VegetableCover =
         new(@"^cover/([A-Z]{2})\.jpg$", RegexOptions.CultureInvariant);
 
     // Every cover offered while browsing one vegetable: its own cover, the
-    // shared covers, then its recipes' photos in recipe order.
+    // shared covers, the stock photos, then its recipes' photos in recipe
+    // order.
     public static async Task<List<string>> ForVegetable(VeggieBookContext db, Vegetable veg)
     {
         var photos = await db.RecipePhotos
@@ -41,7 +70,8 @@ public static class CoverCatalog
             .Select(x => x.p.ImagePath)
             .ToListAsync();
 
-        List<string> all = [$"cover/{veg.ShortCode}.jpg", .. SharedCovers, .. photos];
+        List<string> all =
+            [$"cover/{veg.ShortCode}.jpg", .. SharedCovers, .. StockCovers, .. photos];
         return all.Distinct().ToList();
     }
 
@@ -49,6 +79,7 @@ public static class CoverCatalog
     {
         if (path.Length > 300) return false;
         if (SharedCovers.Contains(path)) return true;
+        if (StockCovers.Contains(path)) return true;
 
         var match = VegetableCover.Match(path);
         if (match.Success)

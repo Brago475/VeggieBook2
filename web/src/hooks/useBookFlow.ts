@@ -28,20 +28,30 @@ export function useBookFlow(questionCount: number) {
   const [kept, setKept] = useState<RecipeSummary[]>([])
   const [extraCopies, setExtraCopies] = useState<number[]>([])
 
-  // Clears everything for a new book.
-  function start() {
+  // Everything belonging to one book's answers. Used when starting a new
+  // book and again whenever a vegetable is chosen, since choosing one
+  // begins that book's questions from scratch.
+  function clearAnswers() {
     match.reset()
-    setStep('pick')
-    setVegetable(null)
     setQuestionIndex(0)
     setPicked(new Set())
     setKept([])
     setExtraCopies([])
   }
 
+  // Clears everything for a new book.
+  function start() {
+    clearAnswers()
+    setStep('pick')
+    setVegetable(null)
+  }
+
+  // Choosing a vegetable starts that book's questions over. Without the
+  // clear, backing out to the pick screen and choosing a different
+  // vegetable carried the previous answers into the new book.
   function chooseVegetable(veg: Vegetable) {
+    clearAnswers()
     setVegetable(veg)
-    setQuestionIndex(0)
     setStep('quiz')
   }
 
