@@ -186,7 +186,7 @@ export function CoverOptions({
 
               {showMore && more.length > 0 && (
                 <>
-                  <p className="field-hint">Photos of other vegetables</p>
+                 <p className="field-hint">More covers</p>
                   <ul className="cover-grid">{tiles(more)}</ul>
                 </>
               )}
