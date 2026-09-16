@@ -1,175 +1,177 @@
-using System.Text.RegularExpressions;
-using Microsoft.EntityFrameworkCore;
-using VeggieBook.Api.Data;
+import { useState, type ChangeEvent } from 'react'
+import { useCovers } from '../hooks/useCovers'
+import type { Vegetable } from '../types'
+import { coverSrc } from '../utils/coverSrc'
+import { resizeImage } from '../utils/resizeImage'
+import '../styles/covers.css'
 
-namespace VeggieBook.Api.Covers;
-
-// Which images can be a book's cover. One catalog, used both to list the
-// choices (CoversController) and to check a saved book's cover
-// (BooksController), so the two can never disagree.
+// The three ways to set a book's cover:
 //
-// A cover is one of:
-//   a vegetable cover   cover/BR.jpg, one per active vegetable
-//   a shared cover      SharedCovers below, offered with every vegetable
-//   a produce photo     stock/<code>.jpg, accepted but not offered: each
-//                       one duplicates its cover/<shortCode>.jpg twin
-//   an extra photo      ExtraCovers below, tied to one vegetable
-//   a graphic           MoreCoverImages below, the app's own artwork
-//   a recipe photo      any photo of an active recipe, exactly as stored
+//   default -> the book's own vegetable cover (selected on arrival)
+//   choose  -> browse covers one vegetable at a time: its own cover, any
+//              extra photos of it, then every photo of its recipes
+//   upload  -> the user's own photo, shrunk in the browser first
 //
-// The choices come back in two lists. ForVegetable is the grid shown by
-// default: this vegetable's own images, so a broccoli book opens on
-// broccoli. MoreCovers is everything else usable, revealed only when the
-// user asks for more, so the same images do not sit at the top of every
-// vegetable's grid.
+// The covers come from the API (GET /api/covers), which also checks the
+// cover when the book is saved, so the two always agree. The original app's
+// camera option and religious images are not carried over.
 //
-// Paths are only ever matched exactly against this list or the database, so
-// a path like ../../etc/passwd can never be stored.
-//
-// Deliberately not offered:
-//   the nine dreamstimelarge_*.jpg files, pending the original owner's
-//     confirmation that they may be used under the folder's CC BY-SA
-//     license. Do not add them before that answer arrives.
-//   broccoli400.jpg, a smaller duplicate of stock/broccoli.jpg, and
-//     root-vegetables.png, byte-identical to root_vegetables.png.
-//   Untitled.png, Photo_on_1-11-13_at_10.19_PM.jpg, 20121231_194617.jpg and
-//     annotation/1353005872361.jpg, which are personal photographs of
-//     identifiable people that ended up in the assets folder.
-//   Screen_Shot_2013-01-12_at_3.45.34_PM.png, a screenshot of a developer's
-//     file picker showing personal folder and network names.
-//   the religious images from the original app, which were never loaded
-//     into this database, so no query can return them.
-//   the secrets/, secretCat/ and tip/ folders, whose images belong to other
-//     features: Secrets artwork, category buttons and tip illustrations.
+// The API also returns a "more" list of the app's own artwork. It is not
+// shown yet: the graphics carry baked-in text and crop badly as covers.
+// The endpoint keeps returning it, so bringing the section back is a
+// change here only.
 
-public static class CoverCatalog
-{
-    // The produce basket (cornucopia.jpg) goes here once the owner sends it.
-    public static readonly string[] SharedCovers = [];
+type Mode = 'default' | 'choose' | 'upload'
 
-    // Photos in the stock folder that belong to one vegetable but are not
-    // its main produce shot. Keyed by vegetable code.
-    private static readonly Dictionary<string, string[]> ExtraCovers = new()
-    {
-        ["CABBAGE"] = ["stock/CabbageWedges.jpg", "stock/CabbageWedges-prep.jpg"],
-    };
+type Props = {
+  vegetable: Vegetable
+  vegetables: Vegetable[]
+  defaultCover: string
+  selected: string
+  onSelect: (image: string) => void
+  onBusy: (busy: boolean) => void
+}
 
-    // The app's own artwork: category banners, the masthead, the Secrets
-    // title card. These carry baked-in text and were built as interface
-    // graphics rather than photographs, so they are offered only under
-    // "more covers", never in a vegetable's default grid.
-    private static readonly string[] MoreCoverImages =
-    [
-        "stock/asian-cooking-en.png",
-        "stock/asian-cooking-es.png",
-        "stock/asian_en200.gif",
-        "stock/asian_en640.jpg",
-        "stock/asian_es640.jpg",
-        "stock/cocina-latina-en.png",
-        "stock/cocina-latina-es.png",
-        "stock/hispanic_en640.jpg",
-        "stock/hispanic_es640.jpg",
-        "stock/kid-friendly-en.png",
-        "stock/kid-friendly-es.png",
-        "stock/kidfriendly_en200.gif",
-        "stock/kidfriendly_en640.jpg",
-        "stock/kidfriendly_es640.jpg",
-        "stock/masthead_en300.png",
-        "stock/root_vegetables.png",
-        "stock/secretsToHealthyEating.png",
-        "stock/soul_food-en.png",
-        "stock/soul_food-es.png",
-        "stock/soulfood_en640.jpg",
-        "stock/soulfood_es640.jpg",
-    ];
+export function CoverOptions({
+  vegetable,
+  vegetables,
+  defaultCover,
+  selected,
+  onSelect,
+  onBusy,
+}: Props) {
+  const [mode, setMode] = useState<Mode>('default')
+  const [browsing, setBrowsing] = useState(vegetable.code)
+  const [uploaded, setUploaded] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  // Photos whose file fails to load are dropped from the grid rather than
+  // shown as broken tiles.
+  const [broken, setBroken] = useState<Set<string>>(new Set())
 
-    private static readonly Regex VegetableCover =
-        new(@"^cover/([A-Z]{2})\.jpg$", RegexOptions.CultureInvariant);
+  const { covers, error: coversError } = useCovers(browsing)
 
-    private static readonly Regex StockCover =
-        new(@"^stock/([a-z]+)\.jpg$", RegexOptions.CultureInvariant);
+  // The book's own vegetable first, then the rest in their usual order.
+  const browseOrder = [vegetable, ...vegetables.filter((v) => v.code !== vegetable.code)]
+  const browsingName = vegetables.find((v) => v.code === browsing)?.name ?? vegetable.name
 
-    // The produce shot filenames are the vegetable codes lowercased:
-    // BROCCOLI -> stock/broccoli.jpg. Not offered as a choice, since each
-    // one is byte-identical to its cover/<shortCode>.jpg twin, but kept
-    // here because books saved earlier may still hold a stock/ path.
-    private static string StockFor(string vegetableCode) =>
-        $"stock/{vegetableCode.ToLowerInvariant()}.jpg";
+  function working(value: boolean) {
+    setBusy(value)
+    onBusy(value)
+  }
 
-    private static string[] ExtrasFor(string vegetableCode) =>
-        ExtraCovers.TryGetValue(vegetableCode, out var extras) ? extras : [];
+  function pickDefault() {
+    setMode('default')
+    onSelect(defaultCover)
+    setError(null)
+  }
 
-    // The default grid: this vegetable's cover, the shared covers, any
-    // extra photos of it, then its recipes' photos in recipe order.
-    public static async Task<List<string>> ForVegetable(VeggieBookContext db, Vegetable veg)
-    {
-        var photos = await db.RecipePhotos
-            .Join(db.Recipes, p => p.RecipeId, r => r.Id, (p, r) => new { p, r })
-            .Where(x => x.r.VegetableCode == veg.Code && x.r.Active)
-            .OrderBy(x => x.r.DisplayCode == null)
-            .ThenBy(x => x.r.DisplayCode)
-            .ThenBy(x => x.r.Id)
-            .ThenBy(x => x.p.Position)
-            .Select(x => x.p.ImagePath)
-            .ToListAsync();
+  function hide(image: string) {
+    setBroken((prev) => new Set(prev).add(image))
+  }
 
-        List<string> all =
-        [
-            $"cover/{veg.ShortCode}.jpg",
-            .. SharedCovers,
-            .. ExtrasFor(veg.Code),
-            .. photos,
-        ];
-        return all.Distinct().ToList();
+  function label(image: string): string {
+    if (image.startsWith('cover/')) return `${browsingName} cover`
+    if (image.startsWith('stock/')) return `${browsingName} photo`
+    return `${browsingName} recipe photo`
+  }
+
+  function tiles(images: string[]) {
+    return images
+      .filter((image) => !broken.has(image))
+      .map((image) => (
+        <li key={image}>
+          <button
+            type="button"
+            className="cover-tile"
+            aria-pressed={selected === image}
+            aria-label={label(image)}
+            onClick={() => onSelect(image)}
+          >
+            <img src={coverSrc(image)} alt="" loading="lazy" onError={() => hide(image)} />
+          </button>
+        </li>
+      ))
+  }
+
+  async function handleFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    // Clear the input so picking the same photo again still triggers.
+    event.target.value = ''
+    if (!file) return
+
+    working(true)
+    setError(null)
+    try {
+      const dataUrl = await resizeImage(file)
+      setUploaded(dataUrl)
+      onSelect(dataUrl)
+      setMode('upload')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'This photo could not be used.')
+    } finally {
+      working(false)
     }
+  }
 
-    // Everything usable that the default grid does not already show: the
-    // other vegetables' covers and extras, then the app's artwork.
-    //
-    // Uses cover/<shortCode>.jpg rather than the byte-identical
-    // stock/<code>.jpg, so one image is never offered under two paths.
-    public static async Task<List<string>> MoreCovers(VeggieBookContext db, Vegetable veg)
-    {
-        var others = await db.Vegetables
-            .Where(v => v.Active && v.Code != veg.Code)
-            .OrderBy(v => v.Code)
-            .Select(v => new { v.Code, v.ShortCode })
-            .ToListAsync();
+  return (
+    <>
+      <div className="cover-modes">
+        <button
+          type="button"
+          className="cover-mode"
+          aria-pressed={mode === 'default'}
+          onClick={pickDefault}
+        >
+          Use default cover
+        </button>
 
-        List<string> more = [];
-        foreach (var other in others)
-        {
-            more.Add($"cover/{other.ShortCode}.jpg");
-            more.AddRange(ExtrasFor(other.Code));
-        }
-        more.AddRange(MoreCoverImages);
-        return more.Distinct().ToList();
-    }
+        <button
+          type="button"
+          className="cover-mode"
+          aria-pressed={mode === 'choose'}
+          onClick={() => setMode('choose')}
+        >
+          Choose a cover
+        </button>
 
-    public static async Task<bool> IsAllowed(VeggieBookContext db, string path)
-    {
-        if (path.Length > 300) return false;
-        if (SharedCovers.Contains(path)) return true;
-        if (MoreCoverImages.Contains(path)) return true;
-        if (ExtraCovers.Values.Any(list => list.Contains(path))) return true;
+        <label className={mode === 'upload' ? 'cover-mode is-active' : 'cover-mode'}>
+          <input
+            className="cover-upload-input"
+            type="file"
+            accept="image/*"
+            onChange={handleFile}
+            disabled={busy}
+          />
+          {uploaded ? 'Upload a different cover' : 'Upload your own cover'}
+        </label>
+      </div>
 
-        var vegMatch = VegetableCover.Match(path);
-        if (vegMatch.Success)
-        {
-            var shortCode = vegMatch.Groups[1].Value;
-            return await db.Vegetables.AnyAsync(v => v.ShortCode == shortCode && v.Active);
-        }
+      {mode === 'choose' && (
+        <>
+          <div className="cover-veg-row" role="group" aria-label="Browse covers by vegetable">
+            {browseOrder.map((v) => (
+              <button
+                key={v.code}
+                type="button"
+                className="cover-veg"
+                aria-pressed={browsing === v.code}
+                onClick={() => setBrowsing(v.code)}
+              >
+                {v.name}
+              </button>
+            ))}
+          </div>
 
-        // A produce shot is allowed if it belongs to an active vegetable,
-        // whichever vegetable's book it is used on.
-        var stockMatch = StockCover.Match(path);
-        if (stockMatch.Success)
-        {
-            var code = stockMatch.Groups[1].Value.ToUpperInvariant();
-            return await db.Vegetables.AnyAsync(v => v.Code == code && v.Active);
-        }
+          {!covers && !coversError && <p className="message">Loading covers...</p>}
+          {coversError && <p className="message">{coversError}</p>}
 
-        return await db.RecipePhotos.AnyAsync(p =>
-            p.ImagePath == path && db.Recipes.Any(r => r.Id == p.RecipeId && r.Active));
-    }
+          {covers && <ul className="cover-grid">{tiles(covers)}</ul>}
+        </>
+      )}
+
+      {busy && <p className="message">Preparing your photo...</p>}
+      {error && <p className="message">{error}</p>}
+    </>
+  )
 }
