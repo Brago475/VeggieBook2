@@ -36,8 +36,9 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
 
   const { detail, error: detailError } = useRecipeDetail(openRecipe)
 
-  const vegetableName =
-    vegetables.find((v) => v.code === book?.vegetableCode)?.name ?? ''
+  const vegetable = vegetables.find((v) => v.code === book?.vegetableCode)
+  const vegetableName = vegetable?.name ?? ''
+  const vegetableShortCode = vegetable?.shortCode ?? ''
 
   function openRecipeAt(id: number) {
     listScroll.current = window.scrollY
@@ -112,7 +113,7 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
               &middot; Serves {detail.servings}
             </p>
 
-                       <h3>Ingredients</h3>
+            <h3>Ingredients</h3>
             <ul className="book-ingredients">
               {detail.ingredients.map((line, i) => (
                 <li key={i}>{line}</li>
@@ -121,13 +122,6 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
 
             <h3>Steps</h3>
             <ol className="book-steps">
-              {detail.steps.map((line, i) => (
-                <li key={i}>{line}</li>
-              ))}
-            </ol>
-
-            <h3>Steps</h3>
-            <ol className="recipe-steps">
               {detail.steps.map((line, i) => (
                 <li key={i}>{line}</li>
               ))}
@@ -173,9 +167,15 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
                   loading="lazy"
                 />
               ) : (
-                // A recipe whose photo was lost with the original img/
-                // folder. The space is kept so the titles stay aligned.
-                <span className="recipe-thumb is-missing" aria-hidden="true" />
+                // This recipe's photo was lost with the original img/
+                // folder. The vegetable's own photo stands in, dimmed, so
+                // the row still reads as a recipe rather than as broken.
+                <img
+                  className="recipe-thumb is-standin"
+                  src={coverSrc(`cover/${vegetableShortCode}.jpg`)}
+                  alt=""
+                  loading="lazy"
+                />
               )}
               <span className="recipe-row-title">{r.title}</span>
             </button>

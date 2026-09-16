@@ -46,10 +46,12 @@
   background: var(--surface-alt);
 }
 
-/* Holds the space when a recipe lost its photo with the original img/
-   folder, so the titles stay in one column. */
-.recipe-thumb.is-missing {
-  border: 1px dashed var(--line-strong);
+/* This recipe's photo was lost with the original img/ folder, so the
+   vegetable's own photo stands in. Dimmed and desaturated, so it never
+   passes for a photograph of the finished dish. */
+.recipe-thumb.is-standin {
+  opacity: 0.45;
+  filter: grayscale(0.35);
 }
 
 .recipe-row-title {
