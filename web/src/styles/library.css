@@ -28,3 +28,40 @@
 .book-delete:hover {
   color: var(--danger);
 }
+/* The card as a button: no chrome of its own, the card is the surface. */
+.book-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: inherit;
+}
+
+.book-open:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+/* Icon-only delete. The label is on aria-label, so the button needs a
+   real size of its own rather than taking it from text. */
+.book-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  color: #c00;
+  cursor: pointer;
+}
+
+.book-delete:hover {
+  background: #fff3f3;
+  border-color: #c00;
+}

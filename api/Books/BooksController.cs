@@ -14,7 +14,7 @@ namespace VeggieBook.Api.Books;
 // API never confirms that it exists.
 //
 //   GET    /api/books             this account's books, newest first
-//   GET    /api/books/{id}        one book in full
+//   GET    /api/books/{id}        one book in full, with recipe titles
 //   POST   /api/books             save a finished book
 //   DELETE /api/books/{id}        delete a book
 //   GET    /api/books/{id}/cover  the book's uploaded cover photo
@@ -87,8 +87,12 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
         }));
     }
 
+    // One book with its recipes, for the screen that opens a saved book.
+    // The recipes carry their titles so the list can be shown without a
+    // request per recipe; full content still comes from /api/recipes/{id}
+    // when one is opened.
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id)
+    public async Task<IActionResult> Get(Guid id, [FromQuery] string? lang)
     {
         var uid = CurrentUserId;
 
@@ -113,6 +117,42 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
 
         if (book is null) return NotFound();
 
+        // Titles come from the content database, a separate context, so this
+        // is a second query rather than a join. One query for the whole book,
+        // not one per recipe.
+        var ids = book.Recipes.Select(r => r.id).ToArray();
+        var spanish = Lang.IsSpanish(lang);
+
+        var titles = await content.Recipes
+            .AsNoTracking()
+            .Where(r => ids.Contains(r.Id))
+            .Select(r => new
+            {
+                r.Id,
+                r.DisplayCode,
+                Title = spanish ? r.TitleEs : r.TitleEn
+            })
+            .ToListAsync();
+
+        var byId = titles.ToDictionary(t => t.Id);
+
+        // Recipe order, matching the rest of the app: coded recipes first in
+        // code order, then the uncoded ones by id. A recipe since removed
+        // from the content database is skipped rather than listed blank.
+        var recipes = book.Recipes
+            .Where(r => byId.ContainsKey(r.id))
+            .Select(r => new
+            {
+                id = r.id,
+                extraCopies = r.extraCopies,
+                displayCode = byId[r.id].DisplayCode,
+                title = byId[r.id].Title
+            })
+            .OrderBy(r => r.displayCode == null)
+            .ThenBy(r => r.displayCode)
+            .ThenBy(r => r.id)
+            .ToList();
+
         return Ok(new
         {
             id = book.Id,
@@ -121,7 +161,7 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
             cover = CoverUrl(book.Id, book.CoverPath, book.HasUpload),
             createdAt = book.CreatedAt,
             attributes = book.Attributes,
-            recipes = book.Recipes
+            recipes
         });
     }
 

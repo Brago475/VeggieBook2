@@ -7,6 +7,7 @@ import { useVeggieBookData } from './hooks/useVeggieBookData'
 import { AccountSettings } from './pages/AccountSettings'
 import { AuthForm, type AuthMode } from './pages/AuthForm'
 import { BookFlow } from './pages/BookFlow'
+import { BookViewer } from './pages/BookViewer'
 import { HomeLibrary } from './pages/HomeLibrary'
 import { Welcome } from './pages/Welcome'
 import type { BookSummary, NewBook } from './types'
@@ -19,8 +20,9 @@ import './styles/library.css'
 import './styles/responsive.css'
 
 // Top-level screens. Making a book is one view ('flow'); its steps live in
-// hooks/useBookFlow.ts and pages/BookFlow.tsx.
-type View = 'home' | 'signin' | 'register' | 'account' | 'flow'
+// hooks/useBookFlow.ts and pages/BookFlow.tsx. Opening a saved book is
+// another ('book'), in pages/BookViewer.tsx.
+type View = 'home' | 'signin' | 'register' | 'account' | 'flow' | 'book'
 
 export default function App() {
   const { vegetables, questions, error, loading } = useVeggieBookData()
@@ -37,15 +39,24 @@ export default function App() {
   const [guestBooks, setGuestBooks] = useState<BookSummary[]>([])
   // A guest's finished book, waiting to be saved once they have an account.
   const [pending, setPending] = useState<NewBook | null>(null)
+  // The saved book being viewed, or null. Signed-in accounts only: a
+  // guest's book exists on this page alone and has no id to open.
+  const [openBook, setOpenBook] = useState<string | null>(null)
 
   function goHome() {
     setPending(null)
+    setOpenBook(null)
     setView('home')
   }
 
   function startBook() {
     flow.start()
     setView('flow')
+  }
+
+  function viewBook(id: string) {
+    setOpenBook(id)
+    setView('book')
   }
 
   // Signed in. A failure throws, and the cover screen shows the reason.
@@ -108,14 +119,17 @@ export default function App() {
   }
 
   const status = account.auth.status
-  // A session that ends while on the account screen falls back to home.
-  const current: View = view === 'account' && !email ? 'home' : view
+  // A session that ends while on the account screen falls back to home, and
+  // so does one that ends while a saved book is open.
+  const current: View =
+    (view === 'account' || view === 'book') && !email ? 'home' : view
   const showWelcome = current === 'home' && status === 'guest' && !guest
   const authMode: AuthMode | null =
     current === 'signin' || current === 'register' ? current : null
 
   function backAction(): (() => void) | undefined {
     if (current === 'flow') return flow.backAction(goHome)
+    if (current === 'book') return goHome
     if (authMode && pending) {
       return () => {
         setPending(null)
@@ -152,6 +166,7 @@ export default function App() {
           onAccount={() => setView('account')}
           onSignIn={() => setView('signin')}
           onDeleteBook={deleteBook}
+          onViewBook={email ? viewBook : undefined}
         />
       )}
 
@@ -188,6 +203,18 @@ export default function App() {
           onSave={saveBook}
           onCreateAccount={createAccountToSave}
           onFinishWithoutSaving={finishWithoutSaving}
+        />
+      )}
+
+      {current === 'book' && openBook && (
+        <BookViewer
+          bookId={openBook}
+          vegetables={vegetables}
+          onClose={goHome}
+          onDelete={async (id) => {
+            await deleteBook(id)
+            goHome()
+          }}
         />
       )}
     </div>
