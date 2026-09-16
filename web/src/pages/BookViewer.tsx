@@ -112,12 +112,19 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
               &middot; Serves {detail.servings}
             </p>
 
-            <h3>Ingredients</h3>
-            <ul className="recipe-ingredients">
+                       <h3>Ingredients</h3>
+            <ul className="book-ingredients">
               {detail.ingredients.map((line, i) => (
                 <li key={i}>{line}</li>
               ))}
             </ul>
+
+            <h3>Steps</h3>
+            <ol className="book-steps">
+              {detail.steps.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ol>
 
             <h3>Steps</h3>
             <ol className="recipe-steps">
