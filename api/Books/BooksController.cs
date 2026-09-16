@@ -88,9 +88,9 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
     }
 
     // One book with its recipes, for the screen that opens a saved book.
-    // The recipes carry their titles so the list can be shown without a
-    // request per recipe; full content still comes from /api/recipes/{id}
-    // when one is opened.
+    // The recipes carry their titles and first photo so the list can be
+    // shown without a request per recipe; full content still comes from
+    // /api/recipes/{id} when one is opened.
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, [FromQuery] string? lang)
     {
@@ -117,24 +117,33 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
 
         if (book is null) return NotFound();
 
-        // Titles come from the content database, a separate context, so this
-        // is a second query rather than a join. One query for the whole book,
-        // not one per recipe.
+        // Titles and cover photos come from the content database, a separate
+        // context, so this is a second query rather than a join. One query
+        // for the whole book, not one per recipe.
         var ids = book.Recipes.Select(r => r.id).ToArray();
         var spanish = Lang.IsSpanish(lang);
 
-        var titles = await content.Recipes
+        var details = await content.Recipes
             .AsNoTracking()
             .Where(r => ids.Contains(r.Id))
             .Select(r => new
             {
                 r.Id,
                 r.DisplayCode,
-                Title = spanish ? r.TitleEs : r.TitleEn
+                Title = spanish ? r.TitleEs : r.TitleEn,
+                // The first photo, for the thumbnail beside the title. Null
+                // for the recipes whose photos were lost with the original
+                // img/ folder, so those show a title alone rather than a
+                // broken image.
+                Photo = content.RecipePhotos
+                    .Where(p => p.RecipeId == r.Id && p.ImagePath.StartsWith("recipe/"))
+                    .OrderBy(p => p.Position)
+                    .Select(p => p.ImagePath)
+                    .FirstOrDefault()
             })
             .ToListAsync();
 
-        var byId = titles.ToDictionary(t => t.Id);
+        var byId = details.ToDictionary(t => t.Id);
 
         // Recipe order, matching the rest of the app: coded recipes first in
         // code order, then the uncoded ones by id. A recipe since removed
@@ -146,7 +155,8 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
                 id = r.id,
                 extraCopies = r.extraCopies,
                 displayCode = byId[r.id].DisplayCode,
-                title = byId[r.id].Title
+                title = byId[r.id].Title,
+                photo = byId[r.id].Photo
             })
             .OrderBy(r => r.displayCode == null)
             .ThenBy(r => r.displayCode)

@@ -4,9 +4,9 @@ import { ApiError, apiFetch } from '../utils/api'
 // One saved book with its recipes, for the screen that opens a book from
 // the home library.
 //
-// The recipes arrive with their titles, so the list needs no further
-// requests. Opening one recipe still loads its full content through
-// useRecipeDetail, the same way the review step does.
+// The recipes arrive with their titles and first photo, so the list needs
+// no further requests. Opening one recipe still loads its full content
+// through useRecipeDetail, the same way the review step does.
 //
 // Takes the book id, or null when no book is open. A book belonging to
 // another account answers 404, the same as one that does not exist, so
@@ -17,6 +17,9 @@ export type BookRecipeSummary = {
   extraCopies: number
   displayCode: string | null
   title: string
+  // Null for the recipes whose photos were lost with the original img/
+  // folder, so the list shows a title alone rather than a broken image.
+  photo: string | null
 }
 
 export type BookDetail = {

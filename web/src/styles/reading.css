@@ -1,0 +1,211 @@
+/* Reading a saved book: the recipe list and one recipe.
+ *
+ * The photographs are the design here. They were shot in real kitchens on
+ * real counters, which is the honest, domestic thing this app owns, so they
+ * get size and the surrounding chrome stays quiet. Everything else is a
+ * left-aligned reading column with a clear type scale.
+ *
+ * Loaded after the other stylesheets so these rules win. */
+
+:root {
+  /* Anchored on the original app's green so pantry clients still recognize
+   * it; the deep green is for text weight, the light one stays the action
+   * color it already is. */
+  --leaf: #4a7c2f;
+  --leaf-deep: #2d4f1c;
+  --bark: #23301c;
+  --paper: #fbfaf7;
+  --rule: #e2e0d8;
+}
+
+/* --- the recipe list ------------------------------------------------- */
+
+.book-recipes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* One row per recipe: photo, then title. No card, no border. The rule
+ * between rows is enough separation, and it keeps the photos reading as a
+ * column rather than as nine identical boxes. */
+.recipe-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 8px;
+  border: none;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.book-recipes li:last-child .recipe-row {
+  border-bottom: none;
+}
+
+.recipe-row:hover {
+  background: var(--paper);
+}
+
+.recipe-row:focus-visible {
+  outline: 2px solid var(--leaf);
+  outline-offset: -2px;
+}
+
+.recipe-thumb {
+  flex: 0 0 84px;
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--paper);
+  display: block;
+}
+
+/* Keeps the titles aligned when a recipe lost its photo with the original
+ * img/ folder. */
+.recipe-thumb.is-missing {
+  border: 1px dashed var(--rule);
+}
+
+.recipe-row-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--bark);
+}
+
+/* --- one recipe ------------------------------------------------------ */
+
+.recipe-detail {
+  max-width: 60ch;
+  margin: 0 auto;
+  color: var(--bark);
+}
+
+.recipe-detail h2 {
+  font-size: 2rem;
+  line-height: 1.15;
+  margin: 0 0 16px;
+  color: var(--leaf-deep);
+}
+
+/* Full width of the reading column, and tall enough to be looked at rather
+ * than glanced past. */
+.recipe-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 0 0 20px;
+  background: var(--paper);
+}
+
+/* Prep, cook and servings as three labelled facts. They answer "can I make
+ * this tonight", which is the question a pantry client is actually asking,
+ * so they get their own band rather than a run-on line of small grey text. */
+.recipe-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 0 0 28px;
+  padding: 14px 16px;
+  background: var(--paper);
+  border-left: 3px solid var(--leaf);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.95rem;
+}
+
+.recipe-detail h3 {
+  font-size: 1.25rem;
+  margin: 28px 0 12px;
+  color: var(--leaf-deep);
+}
+
+/* Kitchen reading: bigger than usual body text, loose enough to find your
+ * place again after looking away at the stove. */
+.recipe-ingredients,
+.recipe-steps {
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.recipe-ingredients {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recipe-ingredients li {
+  padding: 8px 0 8px 22px;
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+}
+
+.recipe-ingredients li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 17px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--leaf);
+}
+
+.recipe-ingredients li:last-child {
+  border-bottom: none;
+}
+
+.recipe-steps {
+  padding-left: 0;
+  list-style: none;
+  counter-reset: step;
+  margin: 0;
+}
+
+.recipe-steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 20px 44px;
+}
+
+/* The steps are a real sequence, so the numbers carry information rather
+ * than decorate. */
+.recipe-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--leaf);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .recipe-thumb {
+    flex-basis: 68px;
+    width: 68px;
+    height: 68px;
+  }
+
+  .recipe-row-title {
+    font-size: 1.05rem;
+  }
+
+  .recipe-detail h2 {
+    font-size: 1.6rem;
+  }
+}

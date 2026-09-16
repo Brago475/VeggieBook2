@@ -8,14 +8,18 @@ import '../styles/covers.css'
 // The three ways to set a book's cover:
 //
 //   default -> the book's own vegetable cover (selected on arrival)
-//   choose  -> browse covers one vegetable at a time: its own cover, its
-//              produce photo, then every photo of its recipes. A "more
-//              covers" control adds the other vegetables' produce photos.
+//   choose  -> browse covers one vegetable at a time: its own cover, any
+//              extra photos of it, then every photo of its recipes
 //   upload  -> the user's own photo, shrunk in the browser first
 //
 // The covers come from the API (GET /api/covers), which also checks the
 // cover when the book is saved, so the two always agree. The original app's
 // camera option and religious images are not carried over.
+//
+// The API also returns a "more" list of the app's own artwork. It is not
+// shown yet: the graphics carry baked-in text and crop badly as covers.
+// The endpoint keeps returning it, so bringing the section back is a
+// change here only.
 
 type Mode = 'default' | 'choose' | 'upload'
 
@@ -38,7 +42,6 @@ export function CoverOptions({
 }: Props) {
   const [mode, setMode] = useState<Mode>('default')
   const [browsing, setBrowsing] = useState(vegetable.code)
-  const [showMore, setShowMore] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -46,7 +49,7 @@ export function CoverOptions({
   // shown as broken tiles.
   const [broken, setBroken] = useState<Set<string>>(new Set())
 
-  const { covers, more, error: coversError } = useCovers(browsing)
+  const { covers, error: coversError } = useCovers(browsing)
 
   // The book's own vegetable first, then the rest in their usual order.
   const browseOrder = [vegetable, ...vegetables.filter((v) => v.code !== vegetable.code)]
@@ -63,20 +66,13 @@ export function CoverOptions({
     setError(null)
   }
 
-  // Switching vegetable closes the extra covers, so the grid always opens
-  // on the chosen vegetable's own photos.
-  function browse(code: string) {
-    setBrowsing(code)
-    setShowMore(false)
-  }
-
   function hide(image: string) {
     setBroken((prev) => new Set(prev).add(image))
   }
 
   function label(image: string): string {
     if (image.startsWith('cover/')) return `${browsingName} cover`
-    if (image.startsWith('stock/')) return 'Vegetable photo'
+    if (image.startsWith('stock/')) return `${browsingName} photo`
     return `${browsingName} recipe photo`
   }
 
@@ -160,7 +156,7 @@ export function CoverOptions({
                 type="button"
                 className="cover-veg"
                 aria-pressed={browsing === v.code}
-                onClick={() => browse(v.code)}
+                onClick={() => setBrowsing(v.code)}
               >
                 {v.name}
               </button>
@@ -170,28 +166,7 @@ export function CoverOptions({
           {!covers && !coversError && <p className="message">Loading covers...</p>}
           {coversError && <p className="message">{coversError}</p>}
 
-          {covers && (
-            <>
-              <ul className="cover-grid">{tiles(covers)}</ul>
-
-              {more.length > 0 && !showMore && (
-                <button
-                  type="button"
-                  className="link-btn"
-                  onClick={() => setShowMore(true)}
-                >
-                  More covers
-                </button>
-              )}
-
-              {showMore && more.length > 0 && (
-                <>
-                 <p className="field-hint">More covers</p>
-                  <ul className="cover-grid">{tiles(more)}</ul>
-                </>
-              )}
-            </>
-          )}
+          {covers && <ul className="cover-grid">{tiles(covers)}</ul>}
         </>
       )}
 

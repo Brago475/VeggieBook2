@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { NavBar } from '../components/NavBar'
 import { useBookDetail } from '../hooks/useBookDetail'
 import { useRecipeDetail } from '../hooks/useRecipeDetail'
@@ -7,9 +7,10 @@ import { coverSrc } from '../utils/coverSrc'
 
 // A saved book, opened from the home library.
 //
-// The book's recipes are listed by title. Tapping one opens its full
-// content, the same detail the review step shows. Back from a recipe
-// returns to the list; back from the list leaves the book.
+// The book's recipes are listed as a photo and a title. Tapping one opens
+// its full content, the same detail the review step shows. Coming back
+// returns to the same place in the list, so working through a long book
+// does not mean scrolling from the top each time.
 //
 // Read only. A book's recipes and cover are fixed once it is saved; the
 // only change available here is deleting the whole book.
@@ -29,10 +30,26 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  // Where the list was scrolled when a recipe was opened, so closing the
+  // recipe puts the user back where they were.
+  const listScroll = useRef(0)
+
   const { detail, error: detailError } = useRecipeDetail(openRecipe)
 
   const vegetableName =
     vegetables.find((v) => v.code === book?.vegetableCode)?.name ?? ''
+
+  function openRecipeAt(id: number) {
+    listScroll.current = window.scrollY
+    setOpenRecipe(id)
+    window.scrollTo(0, 0)
+  }
+
+  function closeRecipe() {
+    setOpenRecipe(null)
+    // After the list renders again, not before.
+    requestAnimationFrame(() => window.scrollTo(0, listScroll.current))
+  }
 
   async function remove() {
     if (deleting) return
@@ -80,7 +97,8 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
         {detail && (
           <article className="recipe-detail">
             <h2>{detail.title}</h2>
-                        {detail.photos.length > 0 && (
+
+            {detail.photos.length > 0 && (
               <img
                 className="recipe-photo"
                 src={coverSrc(detail.photos[0])}
@@ -88,20 +106,21 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
                 loading="lazy"
               />
             )}
-                        <p className="field-hint">
+
+            <p className="recipe-facts">
               Prep {detail.timeToPrepare} &middot; Cook {detail.timeToCook}{' '}
               &middot; Serves {detail.servings}
             </p>
 
             <h3>Ingredients</h3>
-            <ul>
+            <ul className="recipe-ingredients">
               {detail.ingredients.map((line, i) => (
                 <li key={i}>{line}</li>
               ))}
             </ul>
 
             <h3>Steps</h3>
-            <ol>
+            <ol className="recipe-steps">
               {detail.steps.map((line, i) => (
                 <li key={i}>{line}</li>
               ))}
@@ -109,7 +128,7 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
           </article>
         )}
 
-        <NavBar primaryLabel="BACK TO BOOK" onPrimary={() => setOpenRecipe(null)} />
+        <NavBar primaryLabel="BACK TO BOOK" onPrimary={closeRecipe} />
       </>
     )
   }
@@ -136,10 +155,22 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
           <li key={r.id}>
             <button
               type="button"
-              className="cover-mode"
-              onClick={() => setOpenRecipe(r.id)}
+              className="recipe-row"
+              onClick={() => openRecipeAt(r.id)}
             >
-              {r.title}
+              {r.photo ? (
+                <img
+                  className="recipe-thumb"
+                  src={coverSrc(r.photo)}
+                  alt=""
+                  loading="lazy"
+                />
+              ) : (
+                // A recipe whose photo was lost with the original img/
+                // folder. The space is kept so the titles stay aligned.
+                <span className="recipe-thumb is-missing" aria-hidden="true" />
+              )}
+              <span className="recipe-row-title">{r.title}</span>
             </button>
           </li>
         ))}
