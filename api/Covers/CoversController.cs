@@ -7,6 +7,9 @@ namespace VeggieBook.Api.Covers;
 // GET /api/covers?vegetable=BROCCOLI
 //
 // The covers offered while browsing one vegetable on the cover screen.
+// Two lists: covers is the default grid of this vegetable's own images,
+// more is everything else usable, shown only when the user asks for it.
+//
 // Public, like the rest of the content: these are the same photos the
 // recipe cards already show.
 
@@ -25,6 +28,7 @@ public class CoversController(VeggieBookContext db) : ControllerBase
         if (veg is null) return NotFound(new { error = "Unknown vegetable" });
 
         var covers = await CoverCatalog.ForVegetable(db, veg);
-        return Ok(new { vegetable = veg.Code, covers });
+        var more = await CoverCatalog.MoreCovers(db, veg);
+        return Ok(new { vegetable = veg.Code, covers, more });
     }
 }

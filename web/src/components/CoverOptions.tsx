@@ -8,8 +8,9 @@ import '../styles/covers.css'
 // The three ways to set a book's cover:
 //
 //   default -> the book's own vegetable cover (selected on arrival)
-//   choose  -> browse covers one vegetable at a time: its own cover, then
-//              every photo of its recipes
+//   choose  -> browse covers one vegetable at a time: its own cover, its
+//              produce photo, then every photo of its recipes. A "more
+//              covers" control adds the other vegetables' produce photos.
 //   upload  -> the user's own photo, shrunk in the browser first
 //
 // The covers come from the API (GET /api/covers), which also checks the
@@ -37,6 +38,7 @@ export function CoverOptions({
 }: Props) {
   const [mode, setMode] = useState<Mode>('default')
   const [browsing, setBrowsing] = useState(vegetable.code)
+  const [showMore, setShowMore] = useState(false)
   const [uploaded, setUploaded] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,7 +46,7 @@ export function CoverOptions({
   // shown as broken tiles.
   const [broken, setBroken] = useState<Set<string>>(new Set())
 
-  const { covers, error: coversError } = useCovers(browsing)
+  const { covers, more, error: coversError } = useCovers(browsing)
 
   // The book's own vegetable first, then the rest in their usual order.
   const browseOrder = [vegetable, ...vegetables.filter((v) => v.code !== vegetable.code)]
@@ -61,8 +63,39 @@ export function CoverOptions({
     setError(null)
   }
 
+  // Switching vegetable closes the extra covers, so the grid always opens
+  // on the chosen vegetable's own photos.
+  function browse(code: string) {
+    setBrowsing(code)
+    setShowMore(false)
+  }
+
   function hide(image: string) {
     setBroken((prev) => new Set(prev).add(image))
+  }
+
+  function label(image: string): string {
+    if (image.startsWith('cover/')) return `${browsingName} cover`
+    if (image.startsWith('stock/')) return 'Vegetable photo'
+    return `${browsingName} recipe photo`
+  }
+
+  function tiles(images: string[]) {
+    return images
+      .filter((image) => !broken.has(image))
+      .map((image) => (
+        <li key={image}>
+          <button
+            type="button"
+            className="cover-tile"
+            aria-pressed={selected === image}
+            aria-label={label(image)}
+            onClick={() => onSelect(image)}
+          >
+            <img src={coverSrc(image)} alt="" loading="lazy" onError={() => hide(image)} />
+          </button>
+        </li>
+      ))
   }
 
   async function handleFile(event: ChangeEvent<HTMLInputElement>) {
@@ -127,7 +160,7 @@ export function CoverOptions({
                 type="button"
                 className="cover-veg"
                 aria-pressed={browsing === v.code}
-                onClick={() => setBrowsing(v.code)}
+                onClick={() => browse(v.code)}
               >
                 {v.name}
               </button>
@@ -138,32 +171,26 @@ export function CoverOptions({
           {coversError && <p className="message">{coversError}</p>}
 
           {covers && (
-            <ul className="cover-grid">
-              {covers
-                .filter((image) => !broken.has(image))
-                .map((image) => (
-                  <li key={image}>
-                    <button
-                      type="button"
-                      className="cover-tile"
-                      aria-pressed={selected === image}
-                      aria-label={
-                        image.startsWith('cover/')
-                          ? `${browsingName} cover`
-                          : `${browsingName} recipe photo`
-                      }
-                      onClick={() => onSelect(image)}
-                    >
-                      <img
-                        src={coverSrc(image)}
-                        alt=""
-                        loading="lazy"
-                        onError={() => hide(image)}
-                      />
-                    </button>
-                  </li>
-                ))}
-            </ul>
+            <>
+              <ul className="cover-grid">{tiles(covers)}</ul>
+
+              {more.length > 0 && !showMore && (
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={() => setShowMore(true)}
+                >
+                  More covers
+                </button>
+              )}
+
+              {showMore && more.length > 0 && (
+                <>
+                  <p className="field-hint">Photos of other vegetables</p>
+                  <ul className="cover-grid">{tiles(more)}</ul>
+                </>
+              )}
+            </>
           )}
         </>
       )}
