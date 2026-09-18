@@ -1,0 +1,8 @@
+# Images deliberately kept out of the rebuild.
+#
+# Format: one path per line, then # and the reason.
+# The cover sheet skips these entirely rather than showing them as unused.
+# Recording the reason here means the decision survives the person who
+# made it.
+
+recipe/BR-201/photo1.jpg  # Joomla CMS logo, 635x150. Third-party trademark left in the media folder by the original site. Not VeggieBook content and must never be served as a recipe photo.

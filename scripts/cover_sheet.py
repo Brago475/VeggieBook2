@@ -7,10 +7,23 @@ the photo, or, for UNUSED photos, the photo-less recipes for that vegetable
 so you can match them by eye. Arrow keys move between photos. The Copy
 button copies the photo path plus the recipe text.
 
-    RECOVERED  (green) - repointed by db/fixes/003_img_to_recipe_paths.sql
-    MISSING    (red)   - database points here but the server has no image
-    UNUSED     (blue)  - file on disk, no recipe in the database uses it
-    OK         (gray)  - was working already
+    RESTORED   (purple) - original file recovered from the owner's archive
+    RECOVERED  (green)  - repointed by db/fixes/003_img_to_recipe_paths.sql
+    MISSING    (red)    - database points here but the server has no image
+    UNUSED     (blue)   - file on disk, no recipe in the database uses it
+    OK         (gray)   - was working already
+
+RESTORED and RECOVERED are deliberately separate. A RESTORED photo is the
+original file, matched by exact path. A RECOVERED photo was assigned by
+looking at the image and reasoning about the recipe, which is a judgment
+call that can be wrong. Collapsing them into one color would hide the
+difference between evidence and inference.
+
+When _out/s3_manifest.csv is present, RECOVERED cards whose original file
+now exists in the archive are flagged for re-check, since the original is
+better evidence than the guess that replaced it.
+
+Paths listed in docs/excluded_images.txt are skipped entirely.
 
 Needs _out/recipes.json (exported from the database).
 
@@ -19,6 +32,7 @@ Usage:
     python3 scripts/cover_sheet.py BROCCOLI        # one vegetable
 """
 
+import csv
 import html
 import json
 import os
@@ -35,6 +49,11 @@ LOCAL_RECIPES = os.path.join(REPO, "images", "recipe")
 OUT_DIR = os.path.join(REPO, "_out")
 OUT_FILE = os.path.join(OUT_DIR, "cover_sheet.html")
 RECIPES_JSON = os.path.join(OUT_DIR, "recipes.json")
+MANIFEST_CSV = os.path.join(OUT_DIR, "s3_manifest.csv")
+
+DOCS_DIR = os.path.join(REPO, "docs")
+RESTORED_LIST = os.path.join(DOCS_DIR, "restored_from_archive.txt")
+EXCLUDED_LIST = os.path.join(DOCS_DIR, "excluded_images.txt")
 
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
       "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
@@ -67,6 +86,39 @@ RECOVERED = {
     "recipe/ZU-204/photo1.jpg": "img/ZucchiniTomatoCassarole.jpg",
     "recipe/ZU-224/photo1.jpg": "img/Zucchini-3-2012-Photo1.jpg",
 }
+
+
+def load_path_list(path):
+    """Read a list file of paths, each with an optional '# reason' comment.
+
+    Returns {path: reason}. A missing file gives an empty mapping, so the
+    sheet still builds on a checkout that predates these records.
+    """
+    entries = {}
+    if not os.path.isfile(path):
+        return entries
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "#" in line:
+                p, reason = line.split("#", 1)
+                entries[p.strip()] = reason.strip()
+            else:
+                entries[line] = ""
+    return entries
+
+
+def load_archive_keys():
+    """Every key in the owner's bucket, if the manifest has been built."""
+    if not os.path.isfile(MANIFEST_CSV):
+        return set()
+    keys = set()
+    with open(MANIFEST_CSV, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            keys.add(row["key"])
+    return keys
 
 
 def request(url):
@@ -135,6 +187,10 @@ def main():
     args = [a.upper() for a in sys.argv[1:]]
     vegetables = args if args else list(PREFIX.keys())
 
+    restored_paths = load_path_list(RESTORED_LIST)
+    excluded = load_path_list(EXCLUDED_LIST)
+    archive_keys = load_archive_keys()
+
     recipes = load_recipes()
     by_photo = {}
     for r in recipes:
@@ -151,10 +207,17 @@ def main():
                 recipe_dict(r))
 
     print("Vegetables: %s" % ", ".join(vegetables))
+    if restored_paths:
+        print("Archive restorations tracked: %d" % len(restored_paths))
+    if excluded:
+        print("Excluded from the sheet: %d" % len(excluded))
+    if not archive_keys:
+        print("No _out/s3_manifest.csv, recovered photos will not be "
+              "flagged for re-check.")
 
     sections = []
     items = []          # one entry per card, in page order
-    total = bad_total = rec_total = unused_total = 0
+    total = bad_total = rec_total = unused_total = res_total = 0
 
     for veg in vegetables:
         try:
@@ -164,28 +227,39 @@ def main():
             continue
 
         in_api = set(covers)
-        unused = [p for p in local_photos_for(veg) if p not in in_api]
-        all_paths = list(covers) + unused
+        unused = [p for p in local_photos_for(veg)
+                  if p not in in_api and p not in excluded]
+        all_paths = [p for p in list(covers) + unused if p not in excluded]
 
         with ThreadPoolExecutor(max_workers=8) as pool:
             results = list(pool.map(check_image, all_paths))
 
         bad = [r for r in results if not r[2].startswith("image/")]
+        res = [r for r in results if r[0] in restored_paths]
         rec = [r for r in results if r[0] in RECOVERED]
         total += len(results)
         bad_total += len(bad)
+        res_total += len(res)
         rec_total += len(rec)
         unused_total += len(unused)
-        print("  %-14s %3d photos, %3d missing, %2d recovered, %2d unused"
-              % (veg, len(results), len(bad), len(rec), len(unused)))
+        print("  %-14s %3d photos, %3d missing, %2d restored, %2d recovered, "
+              "%2d unused"
+              % (veg, len(results), len(bad), len(res), len(rec), len(unused)))
 
         cards = []
         for rel, status, ctype in results:
             ok = ctype.startswith("image/")
             if not ok:
                 cls, label, sub = "bad", "MISSING", str(status)
+            elif rel in restored_paths:
+                cls, label = "restored", "RESTORED"
+                sub = "original file from the owner's archive"
             elif rel in RECOVERED:
-                cls, label, sub = "rec", "RECOVERED", "was " + RECOVERED[rel]
+                cls, label = "rec", "RECOVERED"
+                original = RECOVERED[rel]
+                sub = "was " + original
+                if original in archive_keys:
+                    sub += "  (original now in archive, re-check)"
             elif rel in unused:
                 cls, label, sub = "unused", "UNUSED", "no recipe in database"
             else:
@@ -214,12 +288,13 @@ def main():
 
         sections.append(
             '<section><h2>%s <small>%d photos &middot; '
+            '<span class="cs">%d restored</span> &middot; '
             '<span class="cr">%d recovered</span> &middot; '
             '<span class="cb">%d missing</span> &middot; '
             '<span class="cu">%d unused</span> &middot; '
             '%d recipes with no photo</small></h2>'
             '<div class="grid">%s</div></section>'
-            % (veg, len(results), len(rec), len(bad), len(unused),
+            % (veg, len(results), len(res), len(rec), len(bad), len(unused),
                len(orphans_by_veg.get(veg, [])), "".join(cards)))
 
     data_json = json.dumps(items)
@@ -234,6 +309,7 @@ h2 small { font-weight: normal; color: #666; font-size: 14px; margin-left: 8px; 
 .cr { color: #167a3c; font-weight: 700; }
 .cb { color: #c00; font-weight: 700; }
 .cu { color: #1451b4; font-weight: 700; }
+.cs { color: #6b21a8; font-weight: 700; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-top: 12px; }
 .card { margin: 0; background: #fff; border: 3px solid #ddd; border-radius: 6px; overflow: hidden; cursor: pointer; }
 .card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.18); }
@@ -247,6 +323,8 @@ figcaption { font-size: 11px; word-break: break-all; padding: 6px 8px 8px; color
 .card.bad figcaption, .card.bad .sub { color: #c00; }
 .card.unused { border-color: #1451b4; background: #f3f7fe; } .card.unused .banner { background: #1451b4; }
 .card.unused figcaption, .card.unused .sub { color: #1451b4; }
+.card.restored { border-color: #6b21a8; background: #faf5ff; } .card.restored .banner { background: #6b21a8; }
+.card.restored figcaption, .card.restored .sub { color: #6b21a8; }
 .summary { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 12px; display: inline-block; }
 
 #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 50; }
@@ -258,7 +336,8 @@ figcaption { font-size: 11px; word-break: break-all; padding: 6px 8px 8px; color
          border-bottom: 1px solid #e3e3e3; background: #fafafa; }
 #pkind { font-size: 11px; font-weight: 800; letter-spacing: .08em; color: #fff;
          background: #aaa; padding: 4px 10px; border-radius: 4px; }
-#pkind.rec { background: #167a3c; } #pkind.bad { background: #c00; } #pkind.unused { background: #1451b4; }
+#pkind.rec { background: #167a3c; } #pkind.bad { background: #c00; }
+#pkind.unused { background: #1451b4; } #pkind.restored { background: #6b21a8; }
 #ppath { font-size: 12px; color: #555; word-break: break-all; flex: 1; }
 #phead button { border: 1px solid #ccc; background: #fff; border-radius: 6px; cursor: pointer;
                 font-size: 14px; padding: 6px 12px; }
@@ -286,9 +365,11 @@ figcaption { font-size: 11px; word-break: break-all; padding: 6px 8px 8px; color
 </style></head><body>
 <h1>VeggieBook2 cover sheet</h1>
 <p class="summary"><strong>%d</strong> photos checked &middot;
+<span class="cs">%d restored</span> &middot;
 <span class="cr">%d recovered</span> &middot;
 <span class="cb">%d missing</span> &middot;
 <span class="cu">%d unused</span><br>
+<span style="font-size:13px;color:#555">RESTORED is the original file from the owner's archive. RECOVERED was assigned by inference and can be wrong.</span><br>
 <span style="font-size:13px;color:#555">Click a photo to open it. Arrow keys move between photos, Esc closes, C copies.</span></p>
 %s
 
@@ -427,15 +508,15 @@ document.addEventListener('keydown', function (e) {
   else if (e.key === 'c' || e.key === 'C') copyCur();
 });
 </script>
-</body></html>""" % (total, rec_total, bad_total, unused_total,
+</body></html>""" % (total, res_total, rec_total, bad_total, unused_total,
                      "".join(sections), data_json)
 
     os.makedirs(OUT_DIR, exist_ok=True)
     with open(OUT_FILE, "w", encoding="utf-8") as f:
         f.write(page)
 
-    print("\n%d photos checked, %d missing, %d recovered, %d unused"
-          % (total, bad_total, rec_total, unused_total))
+    print("\n%d photos checked, %d missing, %d restored, %d recovered, %d unused"
+          % (total, bad_total, res_total, rec_total, unused_total))
     print("Wrote %s" % os.path.normpath(OUT_FILE))
     return 0
 

@@ -1,0 +1,80 @@
+# Recipe photos restored from the original owner's S3 archive.
+#
+# The original img/ folder was never uploaded to the web host and was
+# confirmed absent from every public source (GitHub repos including full
+# history, mobile app bundles, the 2020 MySQL dump, veggiebook.mobi).
+# On 2026-09-18 the owner made their S3 bucket readable and the folder
+# was recovered from it in full.
+#
+# All 65 paths matched the database exactly. No database rows were changed
+# and no photo was assigned by inference. These are the original files.
+#
+# Source:    s3://quickhelp/img/
+# Fetched:   2026-09-18, checksums verified against S3 ETags
+# Processed: longest side 1600px, EXIF stripped, 264.2 MB -> 16.5 MB
+
+img/Broccoli-11-2012.jpg
+img/Broccoli-12-2012.jpg
+img/Broccoli-13-2012.jpg
+img/Broccoli-4-2012.jpg
+img/Broccoli-6-2012-Photo.jpg
+img/Cabbage-10-2012.jpg
+img/Cabbage-5-2012-prep1.jpg
+img/Cabbage-5-2012-prep2.jpg
+img/Cabbage-5-2012.jpg
+img/Cabbage-7-2012.jpg
+img/Cabbage-8-2012.jpg
+img/Cabbage-9-2012.jpg
+img/Carrot-4-2012.jpg
+img/Carrot-5-2012.jpg
+img/Carrot-6-2012.jpg
+img/Carrot-7-2012-prep.jpg
+img/Carrot-7-2012.jpg
+img/Carrot-8-2012.jpg
+img/Caulif_and_Apple_Soup.jpg
+img/Cauliflower-1-2012.jpg
+img/Cauliflower-4-2012.jpg
+img/Cauliflower-5-2012.jpg
+img/Cauliflower-6-2012.jpg
+img/Cauliflower-7-2012.jpg
+img/Cauliflower-8-2012.jpg
+img/Cauliflower-9-2012.jpg
+img/CrockPotPorkSweetPotatoes.jpg
+img/CrockPot_Carrots.jpg
+img/Greenbeans-1-2012.jpg
+img/Greenbeans-2-2012.jpg
+img/Greenbeans-3-2012.jpg
+img/Greenbeans-4-2012.jpg
+img/Greenbeans-5-2012.jpg
+img/Greenbeans-6-2012.jpg
+img/Onion_Beef_CrockPot.jpg
+img/Onion_Tort_Pizza.jpg
+img/Onions-1-2012.jpg
+img/Onions-6-2012.jpg
+img/Onions-7-2012.jpg
+img/Potato-1-2012.jpg
+img/Potato-5-2012.jpg
+img/Potato-6-2012.jpg
+img/Root-10-2012.jpg
+img/Root-3-2012.jpg
+img/Root-4-2012.jpg
+img/Root-5-2012.jpg
+img/Root-6-2012.jpg
+img/Root-7-2012.jpg
+img/Root-8-2012.jpg
+img/SwPotato-2-2012.jpg
+img/SwPotato-4-2012.jpg
+img/SwPotato-5-2012.jpg
+img/SwPotato-7-2012.jpg
+img/Tort_Pizza_with_Brocc.jpg
+img/Tort_Pizza_with_Cauliflower.jpg
+img/Tort_Pizza_with_Zucchini.jpg
+img/VegetableSoup.jpg
+img/Zucchini-10-2012.jpg
+img/Zucchini-3-2012-Photo2.jpg
+img/Zucchini-4-2012-PCversion.jpg
+img/Zucchini-5-2012-prep.jpg
+img/Zucchini-5-2012.jpg
+img/Zucchini-7-2012.jpg
+img/Zucchini-8-2012.jpg
+img/Zucchini-9-2012.jpg
