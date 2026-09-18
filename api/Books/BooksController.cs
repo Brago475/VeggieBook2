@@ -131,12 +131,13 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
                 r.Id,
                 r.DisplayCode,
                 Title = spanish ? r.TitleEs : r.TitleEn,
-                // The first photo, for the thumbnail beside the title. Null
-                // for the recipes whose photos were lost with the original
-                // img/ folder, so those show a title alone rather than a
-                // broken image.
+                // The first photo, for the thumbnail beside the title. Every
+                // referenced photo is on disk since the original img/ folder
+                // was restored from the owner's archive on 2026-09-18, so no
+                // path prefix is filtered here. Null only if a recipe has no
+                // photo row at all, which the viewer handles.
                 Photo = content.RecipePhotos
-                    .Where(p => p.RecipeId == r.Id && p.ImagePath.StartsWith("recipe/"))
+                    .Where(p => p.RecipeId == r.Id)
                     .OrderBy(p => p.Position)
                     .Select(p => p.ImagePath)
                     .FirstOrDefault()
