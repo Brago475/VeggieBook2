@@ -10,15 +10,21 @@ import { BookFlow } from './pages/BookFlow'
 import { BookViewer } from './pages/BookViewer'
 import { HomeLibrary } from './pages/HomeLibrary'
 import { Welcome } from './pages/Welcome'
-import './styles/responsive.css'
-import './styles/reading.css'
 import type { BookSummary, NewBook } from './types'
+
+// Stylesheet order is load order, and load order decides who wins a tie.
+// Tokens first so the variables exist, then base, then the shared pieces,
+// then the screens built on them, then responsive last so its overrides
+// are not beaten by a rule of equal specificity further down.
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
 import './styles/pages.css'
 import './styles/account.css'
+import './styles/auth.css'
 import './styles/library.css'
+import './styles/reading.css'
+import './styles/dialog.css'
 import './styles/responsive.css'
 
 // Top-level screens. Making a book is one view ('flow'); its steps live in

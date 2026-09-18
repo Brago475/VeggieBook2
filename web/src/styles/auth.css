@@ -1,0 +1,169 @@
+/* Welcome, sign in, and create account.
+ *
+ * White page. The masthead already carries the brand color; repeating it as
+ * a panel behind the form made the screen loud and pushed the work down.
+ *
+ * Buttons are the app's existing .create-btn and .account-btn rather than
+ * anything new, so these screens are the same size as every other screen.
+ * Only the fields are restyled: filled and quiet, with the icon and the
+ * show control living inside them.
+ */
+
+.auth-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--pad-x) var(--sp-6);
+}
+
+.auth-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.auth-greeting {
+  margin: 0;
+  font-size: var(--font-title);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.auth-sub {
+  margin: 0;
+  font-size: var(--font-label);
+  color: var(--text-muted);
+}
+
+/* The fields belong to each other, closer than to anything around them. */
+.auth-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.pill-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+/* Small and muted. The field itself is the loud part, not its name. */
+.pill-label {
+  font-size: var(--font-small);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.pill-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pill-icon {
+  position: absolute;
+  left: var(--sp-3);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* Filled, no border until focus. A gray box around white on white is the
+   shape every form had a decade ago.
+
+   17px text: iOS zooms the page in on any input smaller than 16px. */
+.pill-input {
+  width: 100%;
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) 42px;
+  font: inherit;
+  font-size: var(--font-row);
+  color: var(--text);
+  background: var(--surface-alt);
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pill-input:hover {
+  background: var(--surface-press);
+}
+
+.pill-input:focus {
+  background: var(--surface);
+  border-color: var(--green-dark);
+  outline: 2px solid var(--green-dark);
+  outline-offset: 1px;
+}
+
+.pill-input.has-action {
+  padding-right: 68px;
+}
+
+/* Browsers paint their own pale blue on autofilled fields and ignore the
+   background property, so a large inset shadow is the only cover. */
+.pill-input:-webkit-autofill,
+.pill-input:-webkit-autofill:hover,
+.pill-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-alt) inset;
+  box-shadow: 0 0 0 1000px var(--surface-alt) inset;
+  caret-color: var(--text);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Lives inside the field it controls. 44px because that is the smallest
+   comfortable tap target on a phone, and the field is tall enough to hold
+   it without growing. A checkbox under the field was never this reachable. */
+.pill-action {
+  position: absolute;
+  right: var(--sp-2);
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--sp-2);
+  font: inherit;
+  font-size: var(--font-small);
+  font-weight: 700;
+  color: var(--green-dark);
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pill-action:hover {
+  background: var(--green-tint);
+}
+
+.pill-action:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 1px;
+}
+
+.auth-note {
+  margin: 0;
+  font-size: var(--font-small);
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* The other way in, set below a rule so it reads as an alternative rather
+   than a second button competing with the first. */
+.auth-alt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill-input,
+  .pill-action {
+    transition: none;
+  }
+}

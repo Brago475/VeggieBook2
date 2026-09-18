@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BookCard } from '../components/BookCard'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import type { BookSummary, Vegetable } from '../types'
 
 // Home screen: who is using the site, the two create buttons, then the books.
@@ -39,15 +40,28 @@ export function HomeLibrary({
   onViewBook,
 }: Props) {
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  // The book awaiting confirmation. The name is held alongside the id so the
+  // question can say which book, rather than "this book".
+  const [pending, setPending] = useState<{ id: string; name: string } | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
   const byCode = new Map<string, Vegetable>(vegetables.map((v) => [v.code, v]))
 
-  async function remove(id: string, name: string) {
-    if (!window.confirm(`Delete your ${name} book? This cannot be undone.`)) return
+  async function confirmDelete() {
+    if (!pending || deleting) return
+    setDeleting(true)
     setDeleteError(null)
     try {
-      await onDeleteBook(id)
+      await onDeleteBook(pending.id)
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Could not delete this book.')
+      setDeleteError(
+        err instanceof Error ? err.message : 'Could not delete this book.',
+      )
+    } finally {
+      // Closed either way. On failure the reason is shown on the page
+      // behind, where it stays readable instead of vanishing with the box.
+      setDeleting(false)
+      setPending(null)
     }
   }
 
@@ -107,7 +121,7 @@ export function HomeLibrary({
                 className="book-delete"
                 aria-label={`Delete your ${name} book`}
                 title="Delete"
-                onClick={() => remove(book.id, name)}
+                onClick={() => setPending({ id: book.id, name })}
               >
                 {/* Inline so the app takes no icon dependency for one button. */}
                 <svg
@@ -133,6 +147,20 @@ export function HomeLibrary({
           )
         })}
       </ul>
+
+      <ConfirmDialog
+        open={pending !== null}
+        title={`Delete your ${pending?.name ?? ''} book?`}
+        body="This cannot be undone."
+        confirmLabel="Yes, delete it"
+        cancelLabel="Keep it"
+        danger
+        busy={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          if (!deleting) setPending(null)
+        }}
+      />
     </>
   )
 }

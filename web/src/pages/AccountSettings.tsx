@@ -6,6 +6,15 @@ import { DeleteAccountForm } from '../components/DeleteAccountForm'
 //
 // Each section is its own component with its own error message, so a
 // problem in one never hides another.
+//
+// Those components each render their own .account-page. Rather than edit
+// all three, this wrapper turns each block into a card, which is what was
+// missing: three sections stacked with matching padding read as six loose
+// items, not three things.
+//
+// Deleting the account is wrapped separately so it can be marked as the one
+// irreversible thing on the screen instead of sitting in the same rhythm as
+// signing out.
 
 type Props = {
   email: string
@@ -39,11 +48,19 @@ export function AccountSettings({
   }
 
   return (
-    <>
-      <div className="account-page">
+    <div className="account-screen">
+      <div className="account-head">
         <h1 className="account-title">Your account</h1>
-        <p className="account-text">Signed in as {email}</p>
-        <button type="button" className="account-btn" onClick={signOut} disabled={busy}>
+        <p className="account-sub">{email}</p>
+      </div>
+
+      <div className="account-card">
+        <button
+          type="button"
+          className="account-btn"
+          onClick={signOut}
+          disabled={busy}
+        >
           {busy ? 'Signing out...' : 'Sign out'}
         </button>
         {error && (
@@ -54,7 +71,10 @@ export function AccountSettings({
       </div>
 
       <ChangePasswordForm email={email} onChangePassword={onChangePassword} />
-      <DeleteAccountForm onDeleteAccount={onDeleteAccount} />
-    </>
+
+      <div className="account-danger">
+        <DeleteAccountForm onDeleteAccount={onDeleteAccount} />
+      </div>
+    </div>
   )
 }

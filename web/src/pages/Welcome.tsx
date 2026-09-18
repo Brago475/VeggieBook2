@@ -13,30 +13,32 @@ type Props = {
 
 export function Welcome({ onCreateAccount, onSignIn, onGuest }: Props) {
   return (
-    <div className="account-page">
-      <h1 className="account-title">Welcome to VeggieBook</h1>
-      <p className="account-text">
-        Answer a few questions, keep the recipes you like, and make your own
-        book for the vegetable you have.
-      </p>
-      <p className="account-text">
-        Create an account to save your books, so they are here every time you
-        come back.
-      </p>
+    <div className="auth-screen">
+      <div className="auth-head">
+        <h1 className="auth-greeting">Welcome</h1>
+        <p className="auth-sub">
+          Make your own book for the vegetable you have.
+        </p>
+      </div>
 
-      <button type="button" className="create-btn" onClick={onCreateAccount}>
-        Create account
-      </button>
-      <button type="button" className="account-btn" onClick={onSignIn}>
-        Sign in
-      </button>
+      <div className="auth-fields">
+        <button type="button" className="create-btn" onClick={onCreateAccount}>
+          Create account
+        </button>
+        <button type="button" className="account-btn" onClick={onSignIn}>
+          Sign in
+        </button>
+        <p className="auth-note">
+          An account saves your books, so they are here when you come back.
+        </p>
+      </div>
 
-      <button type="button" className="link-btn" onClick={onGuest}>
-        Continue as guest
-      </button>
-      <p className="field-hint account-center">
-        As a guest, your books are not saved.
-      </p>
+      <div className="auth-alt">
+        <button type="button" className="link-btn" onClick={onGuest}>
+          Continue as guest
+        </button>
+        <p className="auth-note">As a guest, your books are not saved.</p>
+      </div>
     </div>
   )
 }
