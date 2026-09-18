@@ -2,35 +2,34 @@ import { useEffect, useState } from 'react'
 
 // An image that degrades instead of breaking.
 //
-// Four sources, tried in order:
+// Three sources, tried in order:
 //
-//   src           the photo we want
-//   fallbackSrc   optional, usually the vegetable's own cover
-//   the logo      from /brand, the same path convention Masthead uses
-//   the drawing   inline SVG, below
+//   src         the photo we want
+//   the logo    from /brand, the same path convention Masthead uses
+//   the drawing inline SVG, below
 //
-// The first three are fetched files and can in principle fail. The drawing
-// cannot, because it is never requested. That is why it stays: without a
-// guaranteed end, a typo in the brand path gives a broken-image icon, which
-// is the exact thing this component exists to prevent.
+// The first two are fetched files and can fail. The drawing cannot, because
+// it is never requested. Without a guaranteed end, a typo in the brand path
+// gives a broken-image icon, which is the thing this component exists to
+// prevent.
 //
-// The positive logo rather than the negative one: negative is a light mark
-// for dark surfaces, which is right for the masthead and wrong for a
-// thumbnail on a white card. Positive sits on a light neutral and recedes.
+// The mark rather than a stand-in photograph: a dimmed vegetable photo reads
+// as a bad photo, while the logo reads as "no photo here."
+//
+// fallbackSrc is still available for callers that have a better second guess
+// than the logo, but nothing passes it today.
 //
 // Empty or null sources are dropped from the chain rather than attempted,
 // since an empty src makes the browser request the page itself.
 //
-// onError advances one step. Once the last source is showing, onError is
-// ignored, otherwise a browser that fires it repeatedly would spin.
+// onError advances one step and warns once, naming the path, so a broken
+// image shows up in DevTools without the user being shown anything.
 
 const DRAWING_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-  <rect width="120" height="120" fill="#f6f6f2"/>
-  <circle cx="60" cy="64" r="29" fill="none" stroke="#d5d5cc" stroke-width="4"/>
-  <circle cx="60" cy="64" r="17" fill="none" stroke="#e6e6df" stroke-width="3"/>
-  <path d="M60 47c0-9 6-15 14-17-1 9-6 15-14 17z" fill="#d5d5cc"/>
-  <path d="M60 47c-1-6-4-10-9-12" fill="none" stroke="#d5d5cc"
-        stroke-width="3" stroke-linecap="round"/>
+  <rect width="120" height="120" fill="#8cc63e"/>
+  <circle cx="60" cy="64" r="29" fill="none" stroke="#fff" stroke-width="4" opacity="0.85"/>
+  <circle cx="60" cy="64" r="17" fill="none" stroke="#fff" stroke-width="3" opacity="0.55"/>
+  <path d="M60 47c0-9 6-15 14-17-1 9-6 15-14 17z" fill="#fff" opacity="0.85"/>
 </svg>`
 
 const DRAWING =
@@ -38,10 +37,8 @@ const DRAWING =
 
 type Props = {
   src?: string | null
-  /** Tried when src fails. Usually the vegetable's own cover. */
+  /** An optional second guess, tried before the logo. Unused today. */
   fallbackSrc?: string | null
-  /** Added to className once anything past the first source is showing. */
-  fallbackClassName?: string
   /** Which logo to fall back to. Matches Masthead's default. */
   lang?: 'en' | 'es'
   alt?: string
@@ -52,13 +49,12 @@ type Props = {
 export function SafeImage({
   src,
   fallbackSrc,
-  fallbackClassName,
   lang = 'en',
   alt = '',
   className,
   loading = 'lazy',
 }: Props) {
-  const logo = `/brand/logo-positive-${lang}.png`
+  const logo = `/brand/logo-negative-${lang}.png`
 
   const chain = [src, fallbackSrc]
     .filter((s): s is string => Boolean(s))
@@ -76,15 +72,11 @@ export function SafeImage({
   const atEnd = index >= chain.length - 1
   const current = chain[index]
 
-  // The last two are marks, not photographs, so they are contained on a
-  // neutral rather than cropped to fill, and never dimmed.
+  // The last two are marks, not photographs, so they are contained on the
+  // brand green rather than cropped to fill.
   const onPlaceholder = current === logo || current === DRAWING
 
-  const classes = [
-    className,
-    step > 0 && !onPlaceholder ? fallbackClassName : null,
-    onPlaceholder ? 'is-placeholder' : null,
-  ]
+  const classes = [className, onPlaceholder ? 'is-placeholder' : null]
     .filter(Boolean)
     .join(' ')
 
@@ -95,7 +87,9 @@ export function SafeImage({
       alt={alt}
       loading={loading}
       onError={() => {
-        if (!atEnd) setStep((s) => s + 1)
+        if (atEnd) return
+        console.warn('SafeImage: could not load', chain[index])
+        setStep((s) => s + 1)
       }}
     />
   )

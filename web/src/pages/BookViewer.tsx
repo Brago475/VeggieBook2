@@ -42,13 +42,6 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
   const vegetableName = vegetable?.name ?? ''
   const vegetableShortCode = vegetable?.shortCode ?? ''
 
-  // Stands in for a recipe photo that is absent or fails to load. Null when
-  // the vegetable is unknown, in which case SafeImage goes straight to its
-  // own placeholder.
-  const vegetableCover = vegetableShortCode
-    ? coverSrc(`cover/${vegetableShortCode}.jpg`)
-    : null
-
   function openRecipeAt(id: number) {
     listScroll.current = window.scrollY
     setOpenRecipe(id)
@@ -111,9 +104,7 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
             {detail.photos.length > 0 && (
               <SafeImage
                 className="recipe-photo"
-                fallbackClassName="is-standin"
                 src={coverSrc(detail.photos[0])}
-                fallbackSrc={vegetableCover}
               />
             )}
 
@@ -172,25 +163,12 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
               className="recipe-row"
               onClick={() => openRecipeAt(r.id)}
             >
-              {r.photo ? (
-                // The photo the database assigns. If it ever stops loading,
-                // the vegetable's cover steps in, then the placeholder.
-                <SafeImage
-                  className="recipe-thumb"
-                  fallbackClassName="is-standin"
-                  src={coverSrc(r.photo)}
-                  fallbackSrc={vegetableCover}
-                />
-              ) : (
-                // This recipe has no photo row at all. The vegetable's own
-                // photo stands in, dimmed, so the row still reads as a
-                // recipe rather than as broken. No active recipe is in this
-                // state today, but the branch stays as a safety net.
-                <SafeImage
-                  className="recipe-thumb is-standin"
-                  src={vegetableCover}
-                />
-              )}
+              {/* No photo row, or a photo that will not load, both land on
+                  the VeggieBook mark rather than a stand-in photograph. */}
+              <SafeImage
+                className="recipe-thumb"
+                src={r.photo ? coverSrc(r.photo) : null}
+              />
               <span className="recipe-row-title">{r.title}</span>
             </button>
           </li>

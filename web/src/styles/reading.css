@@ -54,23 +54,20 @@
   opacity: 0.45;
   filter: grayscale(0.35);
 }
-
-/* Last resort: the VeggieBook mark, or the inline drawing behind it. A mark
-   is not a photograph, so it is contained on a neutral rather than cropped
-   to fill, and it is never dimmed. Equal specificity to .is-standin and
-   listed after it, so it wins if both ever apply. box-sizing because the
-   thumb has a fixed width and the padding has to come out of it. */
+/* No photo, or one that would not load. The VeggieBook mark on the brand
+   green, contained rather than cropped, so it reads as a placeholder
+   instead of as a bad photograph. */
 .recipe-thumb.is-placeholder,
 .recipe-photo.is-placeholder {
   box-sizing: border-box;
   object-fit: contain;
-  background: var(--surface-alt);
+  background: var(--green);
   opacity: 1;
   filter: none;
 }
 
 .recipe-thumb.is-placeholder {
-  padding: 18%;
+  padding: 16%;
 }
 
 .recipe-photo.is-placeholder {
@@ -118,6 +115,14 @@
   border-radius: var(--r-lg);
   background: var(--surface-alt);
   box-shadow: var(--shadow-md);
+}
+/* Same override as the thumbnail, but it has to out-specify
+   .recipe-detail .recipe-photo above, which sets cover and a gray
+   background and would otherwise win on source order. */
+.recipe-detail .recipe-photo.is-placeholder {
+  object-fit: contain;
+  background: var(--green);
+  padding: var(--sp-5);
 }
 
 /* Prep, cook and servings. The same tinted panel .recipe-summary uses on
