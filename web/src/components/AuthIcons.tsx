@@ -1,5 +1,9 @@
 // Icons for the account screens. Inline rather than an icon package: five
 // shapes do not justify a dependency, and these ship with the bundle.
+//
+// `as const` on the two string literals: without it TypeScript widens them
+// to `string`, and React types focusable as Booleanish, so the spread stops
+// being assignable to SVGProps.
 
 const base = {
   width: 18,
@@ -11,7 +15,7 @@ const base = {
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
   'aria-hidden': true,
-  focusable: 'false',
+  focusable: 'false' as const,
 }
 
 export function MailIcon() {
