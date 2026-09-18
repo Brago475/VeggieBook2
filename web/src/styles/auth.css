@@ -1,25 +1,84 @@
 /* Welcome, sign in, and create account.
  *
- * White page. The masthead already carries the brand color; repeating it as
- * a panel behind the form made the screen loud and pushed the work down.
+ * These three screens hide the masthead and own the whole viewport. A
+ * photograph fills a tinted band at the top, the logo sits under it, and
+ * the form follows. Every other screen keeps the green bar.
  *
- * Buttons are the app's existing .create-btn and .account-btn rather than
- * anything new, so these screens are the same size as every other screen.
- * Only the fields are restyled: filled and quiet, with the icon and the
- * show control living inside them.
+ * Warm off-white page, white outlined fields, deep green actions. The brand
+ * green is bright enough that white text on it fails contrast, so it stays
+ * the identity color and the deep green carries the buttons.
  */
 
 .auth-screen {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-5);
-  padding: var(--sp-5) var(--pad-x) var(--sp-6);
+  min-height: 100dvh;
+  background: var(--cream);
+}
+
+/* The photograph ends in a shape rather than a hard line across the screen.
+   The two radii are horizontal then vertical: a wide, shallow arc. Raise
+   the 16% for a deeper curve, lower it for a flatter one. */
+.auth-hero {
+  position: relative;
+  flex: 0 0 auto;
+  height: 32vh;
+  max-height: 280px;
+  overflow: hidden;
+  background: var(--green-tint);
+  border-bottom-left-radius: 50% 16%;
+  border-bottom-right-radius: 50% 16%;
+}
+
+.auth-hero img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 45%;
+}
+
+/* The masthead is gone here, so back lives in the page. It sits over the
+   photograph, so it carries its own backing to stay readable whatever the
+   picture is doing behind it. */
+.auth-back {
+  position: absolute;
+  top: var(--sp-3);
+  left: var(--sp-3);
+  z-index: 2;
+  padding: var(--sp-2) var(--sp-3);
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: 600;
+  color: var(--green-deep);
+  background: rgba(255, 255, 255, 0.88);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.auth-back:hover {
+  background: #fff;
+}
+
+.auth-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--pad-x) var(--sp-6);
+}
+
+.auth-logo {
+  display: block;
+  width: 210px;
+  max-width: 58%;
+  margin: 0 auto;
 }
 
 .auth-head {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
+  text-align: center;
 }
 
 .auth-greeting {
@@ -28,21 +87,23 @@
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.01em;
-  color: var(--text);
+  color: var(--green-deep);
 }
 
 .auth-sub {
-  margin: 0;
+  margin: var(--sp-1) 0 0;
   font-size: var(--font-label);
+  line-height: 1.5;
   color: var(--text-muted);
 }
 
-/* The fields belong to each other, closer than to anything around them. */
 .auth-fields {
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
 }
+
+/* --- fields ----------------------------------------------------------- */
 
 .pill-field {
   display: flex;
@@ -50,7 +111,6 @@
   gap: var(--sp-1);
 }
 
-/* Small and muted. The field itself is the loud part, not its name. */
 .pill-label {
   font-size: var(--font-small);
   font-weight: 600;
@@ -70,35 +130,30 @@
   pointer-events: none;
 }
 
-/* Filled, no border until focus. A gray box around white on white is the
-   shape every form had a decade ago.
+/* White on the cream page, so the field reads as a surface to write on
+   rather than a hole cut in the background.
 
    17px text: iOS zooms the page in on any input smaller than 16px. */
 .pill-input {
   width: 100%;
-  padding: var(--sp-3) var(--sp-3) var(--sp-3) 42px;
+  padding: var(--sp-3) var(--sp-3) var(--sp-3) 44px;
   font: inherit;
   font-size: var(--font-row);
   color: var(--text);
-  background: var(--surface-alt);
-  border: 1px solid transparent;
-  border-radius: var(--r-md);
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.pill-input:hover {
-  background: var(--surface-press);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  transition: border-color 0.15s ease;
 }
 
 .pill-input:focus {
-  background: var(--surface);
-  border-color: var(--green-dark);
-  outline: 2px solid var(--green-dark);
+  border-color: var(--green-deep);
+  outline: 2px solid var(--green-deep);
   outline-offset: 1px;
 }
 
 .pill-input.has-action {
-  padding-right: 68px;
+  padding-right: 48px;
 }
 
 /* Browsers paint their own pale blue on autofilled fields and ignore the
@@ -107,40 +162,116 @@
 .pill-input:-webkit-autofill:hover,
 .pill-input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--surface-alt) inset;
-  box-shadow: 0 0 0 1000px var(--surface-alt) inset;
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset;
+  box-shadow: 0 0 0 1000px var(--surface) inset;
   caret-color: var(--text);
   transition: background-color 9999s ease-in-out 0s;
 }
 
-/* Lives inside the field it controls. 44px because that is the smallest
-   comfortable tap target on a phone, and the field is tall enough to hold
-   it without growing. A checkbox under the field was never this reachable. */
+/* 44px square: the smallest comfortable tap target on a phone. */
 .pill-action {
   position: absolute;
-  right: var(--sp-2);
+  right: var(--sp-1);
   display: flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 var(--sp-2);
-  font: inherit;
-  font-size: var(--font-small);
-  font-weight: 700;
-  color: var(--green-dark);
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--text-muted);
   background: none;
   border: 0;
-  border-radius: var(--r-sm);
+  border-radius: 50%;
   cursor: pointer;
-  transition: background 0.15s ease;
 }
 
 .pill-action:hover {
-  background: var(--green-tint);
+  color: var(--green-deep);
 }
 
 .pill-action:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 1px;
+  outline: 2px solid var(--green-deep);
+  outline-offset: -2px;
+}
+
+/* --- actions ---------------------------------------------------------- */
+
+.auth-primary,
+.auth-secondary,
+.auth-guest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--sp-3) var(--sp-4);
+  font: inherit;
+  font-size: var(--font-row);
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.auth-primary:active,
+.auth-secondary:active,
+.auth-guest:active {
+  transform: translateY(1px);
+}
+
+.auth-primary {
+  color: #fff;
+  background: var(--green-deep);
+  border: 1px solid var(--green-deep);
+  box-shadow: 0 2px 8px rgba(47, 93, 47, 0.22);
+}
+
+.auth-primary:hover {
+  background: var(--green-deep-press);
+}
+
+.auth-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.auth-secondary {
+  color: var(--green-deep);
+  background: var(--surface);
+  border: 1px solid var(--green-deep);
+}
+
+.auth-secondary:hover {
+  background: var(--green-tint);
+}
+
+.auth-guest {
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border: 1px solid transparent;
+}
+
+.auth-guest:hover {
+  background: #e9f2da;
+}
+
+/* --- divider and copy ------------------------------------------------- */
+
+.auth-or {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-size: var(--font-small);
+  color: var(--text-muted);
+}
+
+.auth-or::before,
+.auth-or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line-strong);
 }
 
 .auth-note {
@@ -151,19 +282,22 @@
   text-align: center;
 }
 
-/* The other way in, set below a rule so it reads as an alternative rather
-   than a second button competing with the first. */
-.auth-alt {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--line);
+.auth-switch {
+  margin: 0;
+  font-size: var(--font-label);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.auth-switch .link-btn {
+  color: var(--green-deep);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pill-input,
-  .pill-action {
+  .auth-primary,
+  .auth-secondary,
+  .auth-guest,
+  .pill-input {
     transition: none;
   }
 }

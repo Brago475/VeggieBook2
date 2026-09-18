@@ -189,3 +189,23 @@
   color: var(--green-dark);
   font-weight: 700;
 }
+
+/* The recipe count. A chip rather than a line of gray text: it is a fact
+   about the book, so it sits on its own tint under the cover instead of
+   trailing off the corner of the card. */
+.book-count {
+  margin: 0;
+  padding: var(--sp-1) var(--pad-x) 0;
+  text-align: center;
+}
+
+.book-count-pill {
+  display: inline-block;
+  padding: var(--sp-1) var(--sp-3);
+  font-size: var(--font-small);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border-radius: 999px;
+}

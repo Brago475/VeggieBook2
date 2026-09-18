@@ -1,4 +1,8 @@
 import { useState, type FormEvent } from 'react'
+import { ArrowIcon, EyeIcon, LockIcon, MailIcon } from '../components/AuthIcons'
+import { SafeImage } from '../components/SafeImage'
+import { coverSrc } from '../utils/coverSrc'
+import { AUTH_PHOTO } from '../utils/authPhoto'
 
 // Sign in and create account share this form. Only the wording, the password
 // hint, and the browser autofill hints differ.
@@ -8,6 +12,10 @@ import { useState, type FormEvent } from 'react'
 //
 // Errors from the API are already written for the user (see utils/api.ts),
 // so they are shown as they come.
+//
+// The masthead is hidden on this screen (see App.tsx), so the photograph
+// takes the top of the screen, the logo sits under it, and back rides over
+// the photograph.
 
 export type AuthMode = 'signin' | 'register'
 
@@ -17,53 +25,13 @@ type Props = {
   note?: string
   onSubmit: (email: string, password: string) => Promise<void>
   onSwitchMode: () => void
+  // The masthead is hidden here, so back is rendered in the page instead.
+  onBack?: () => void
 }
 
 const MIN_PASSWORD = 12
 
-function MailIcon() {
-  return (
-    <svg
-      className="pill-icon"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3.5 7.5 8.5 6 8.5-6" />
-    </svg>
-  )
-}
-
-function LockIcon() {
-  return (
-    <svg
-      className="pill-icon"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect x="4" y="10" width="16" height="10" rx="2" />
-      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-    </svg>
-  )
-}
-
-export function AuthForm({ mode, note, onSubmit, onSwitchMode }: Props) {
+export function AuthForm({ mode, note, onSubmit, onSwitchMode, onBack }: Props) {
   const register = mode === 'register'
 
   const [email, setEmail] = useState('')
@@ -98,92 +66,112 @@ export function AuthForm({ mode, note, onSubmit, onSwitchMode }: Props) {
 
   return (
     <form className="auth-screen" onSubmit={submit} noValidate>
-      <div className="auth-head">
-        <h1 className="auth-greeting">
-          {register ? 'Create account' : 'Sign in'}
-        </h1>
-        <p className="auth-sub">
-          {register
-            ? 'Your books are kept in your account.'
-            : 'Welcome back. Your books are waiting.'}
-        </p>
-        {note && <p className="auth-sub">{note}</p>}
+      <div className="auth-hero">
+        {onBack && (
+          <button type="button" className="auth-back" onClick={onBack}>
+            <span aria-hidden="true">&#8249;</span> Back
+          </button>
+        )}
+        <SafeImage src={coverSrc(AUTH_PHOTO)} loading="eager" />
       </div>
 
-      <div className="auth-fields">
-        <div className="pill-field">
-          <label className="pill-label" htmlFor="auth-email">
-            Email
-          </label>
-          <div className="pill-wrap">
-            <MailIcon />
-            <input
-              id="auth-email"
-              className="pill-input"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              spellCheck={false}
-              maxLength={254}
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
+      <div className="auth-main">
+        <img
+          className="auth-logo"
+          src="/brand/logo-positive-en.png"
+          alt="VeggieBook, Quick Help for Meals"
+        />
+
+        <div className="auth-head">
+          <h1 className="auth-greeting">
+            {register ? 'Create an account' : 'Welcome back'}
+          </h1>
+          <p className="auth-sub">
+            {register
+              ? 'Your books are kept in your account, on any device.'
+              : 'Sign in to get back to the books you saved.'}
+          </p>
+          {note && <p className="auth-sub">{note}</p>}
         </div>
 
-        <div className="pill-field">
-          <label className="pill-label" htmlFor="auth-password">
-            Password
-          </label>
-          <div className="pill-wrap">
-            <LockIcon />
-            <input
-              id="auth-password"
-              className="pill-input has-action"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete={register ? 'new-password' : 'current-password'}
-              maxLength={128}
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <button
-              type="button"
-              className="pill-action"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-pressed={showPassword}
-              aria-controls="auth-password"
-            >
-              {showPassword ? 'Hide' : 'Show'}
-            </button>
+        <div className="auth-fields">
+          <div className="pill-field">
+            <label className="pill-label" htmlFor="auth-email">
+              Email address
+            </label>
+            <div className="pill-wrap">
+              <MailIcon />
+              <input
+                id="auth-email"
+                className="pill-input"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                maxLength={254}
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
           </div>
-          {register && (
-            <p className="field-hint">
-              At least 12 characters. A few words together are easy to remember,
-              like "green garden table lamp".
+
+          <div className="pill-field">
+            <label className="pill-label" htmlFor="auth-password">
+              Password
+            </label>
+            <div className="pill-wrap">
+              <LockIcon />
+              <input
+                id="auth-password"
+                className="pill-input has-action"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete={register ? 'new-password' : 'current-password'}
+                maxLength={128}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="pill-action"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-pressed={showPassword}
+                aria-controls="auth-password"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <EyeIcon off={showPassword} />
+              </button>
+            </div>
+            {register && (
+              <p className="field-hint">
+                At least 12 characters. A few words together are easy to
+                remember, like "green garden table lamp".
+              </p>
+            )}
+          </div>
+
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
             </p>
           )}
-        </div>
 
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
+          <button type="submit" className="auth-primary" disabled={busy}>
+            {busy ? 'Please wait...' : register ? 'Create account' : 'Sign in'}
+            {!busy && <ArrowIcon />}
+          </button>
+
+          <div className="auth-or">or</div>
+
+          <p className="auth-switch">
+            {register ? 'Already have an account? ' : 'New here? '}
+            <button type="button" className="link-btn" onClick={onSwitchMode}>
+              {register ? 'Sign in' : 'Create an account'}
+            </button>
           </p>
-        )}
-
-        <button type="submit" className="create-btn" disabled={busy}>
-          {busy ? 'Please wait...' : register ? 'Create account' : 'Sign in'}
-        </button>
-      </div>
-
-      <div className="auth-alt">
-        <button type="button" className="link-btn" onClick={onSwitchMode}>
-          {register
-            ? 'Already have an account? Sign in'
-            : 'New here? Create an account'}
-        </button>
+        </div>
       </div>
     </form>
   )

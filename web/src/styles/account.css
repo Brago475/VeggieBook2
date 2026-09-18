@@ -334,3 +334,39 @@
   background: var(--danger-tint);
   border-color: var(--danger-line);
 }
+
+/* The action inside a card is the card's whole point, so it is filled
+   rather than outlined. Outlined-in-a-box left every action on the page
+   looking the same weight, which told the eye nothing. */
+.account-screen > .account-page .account-btn {
+  color: #fff;
+  background: var(--green-deep);
+  border-color: var(--green-deep);
+}
+
+.account-screen > .account-page .account-btn:hover {
+  background: var(--green-deep-press);
+}
+
+.account-screen > .account-page .account-btn:disabled {
+  color: #fff;
+  opacity: 0.55;
+}
+
+/* The one irreversible action, filled so it is unmistakable rather than a
+   pale outline that reads like a link. */
+.account-danger > .account-page .account-btn.is-danger {
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.account-danger > .account-page .account-btn.is-danger:hover {
+  background: #8b1f18;
+}
+
+/* Sign out is not a card, so it keeps the plain outlined treatment and
+   sits quieter than the filled actions inside the cards. */
+.account-screen > .account-btn {
+  margin-bottom: var(--sp-1);
+}

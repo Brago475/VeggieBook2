@@ -8,13 +8,13 @@ import { DeleteAccountForm } from '../components/DeleteAccountForm'
 // problem in one never hides another.
 //
 // Those components each render their own .account-page. Rather than edit
-// all three, this wrapper turns each block into a card, which is what was
-// missing: three sections stacked with matching padding read as six loose
-// items, not three things.
+// all three, this wrapper turns each block into a card.
+//
+// Sign out is deliberately not a card: it is one button with no settings
+// behind it, and wrapping it put a bordered button inside a bordered box.
 //
 // Deleting the account is wrapped separately so it can be marked as the one
-// irreversible thing on the screen instead of sitting in the same rhythm as
-// signing out.
+// irreversible thing on the screen.
 
 type Props = {
   email: string
@@ -54,21 +54,19 @@ export function AccountSettings({
         <p className="account-sub">{email}</p>
       </div>
 
-      <div className="account-card">
-        <button
-          type="button"
-          className="account-btn"
-          onClick={signOut}
-          disabled={busy}
-        >
-          {busy ? 'Signing out...' : 'Sign out'}
-        </button>
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
-      </div>
+      <button
+        type="button"
+        className="account-btn"
+        onClick={signOut}
+        disabled={busy}
+      >
+        {busy ? 'Signing out...' : 'Sign out'}
+      </button>
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <ChangePasswordForm email={email} onChangePassword={onChangePassword} />
 

@@ -75,4 +75,13 @@
 
   --sans:
     system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  /* Deep green for actions on the account screens. The brand green is
+     bright enough that white text on it fails contrast, so it stays the
+     identity color and this carries the buttons. */
+  --green-deep: #2f5d2f;
+  --green-deep-press: #264b26;
+
+  /* Warm off-white. Pure white made the auth screens read as unfinished. */
+  --cream: #f8f7f2;
 }

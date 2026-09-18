@@ -135,6 +135,11 @@ export default function App() {
   const authMode: AuthMode | null =
     current === 'signin' || current === 'register' ? current : null
 
+  // Welcome, sign in and create account hide the green bar. They show the
+  // logo in the page and run a photograph to the bottom edge, which the
+  // masthead would cut off at the top.
+  const onAuthScreen = showWelcome || authMode !== null
+
   function backAction(): (() => void) | undefined {
     if (current === 'flow') return flow.backAction(goHome)
     if (current === 'book') return goHome
@@ -150,7 +155,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Masthead onBack={backAction()} />
+      {!onAuthScreen && <Masthead onBack={backAction()} />}
 
       {error && <p className="message">Could not load: {error}</p>}
       {status === 'loading' && <p className="message">Loading...</p>}
@@ -189,6 +194,7 @@ export default function App() {
           }
           onSubmit={(address, password) => submitAuth(authMode, address, password)}
           onSwitchMode={() => setView(authMode === 'signin' ? 'register' : 'signin')}
+          onBack={backAction()}
         />
       )}
 

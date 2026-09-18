@@ -151,8 +151,13 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
         />
       </div>
 
-      <p className="field-hint">
-        {book.recipes.length} {book.recipes.length === 1 ? 'recipe' : 'recipes'}
+      {/* A chip rather than a line of gray text: it is a fact about the
+          book, so it sits on its own tint under the cover instead of
+          trailing off the corner of the card. */}
+      <p className="book-count">
+        <span className="book-count-pill">
+          {book.recipes.length} {book.recipes.length === 1 ? 'recipe' : 'recipes'}
+        </span>
       </p>
 
       <ul className="book-recipes">
