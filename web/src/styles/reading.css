@@ -46,12 +46,35 @@
   background: var(--surface-alt);
 }
 
-/* This recipe's photo was lost with the original img/ folder, so the
-   vegetable's own photo stands in. Dimmed and desaturated, so it never
-   passes for a photograph of the finished dish. */
-.recipe-thumb.is-standin {
+/* This recipe has no photo of its own, so the vegetable's photo stands in.
+   Dimmed and desaturated, so it never passes for a photograph of the
+   finished dish. */
+.recipe-thumb.is-standin,
+.recipe-photo.is-standin {
   opacity: 0.45;
   filter: grayscale(0.35);
+}
+
+/* Last resort: the VeggieBook mark, or the inline drawing behind it. A mark
+   is not a photograph, so it is contained on a neutral rather than cropped
+   to fill, and it is never dimmed. Equal specificity to .is-standin and
+   listed after it, so it wins if both ever apply. box-sizing because the
+   thumb has a fixed width and the padding has to come out of it. */
+.recipe-thumb.is-placeholder,
+.recipe-photo.is-placeholder {
+  box-sizing: border-box;
+  object-fit: contain;
+  background: var(--surface-alt);
+  opacity: 1;
+  filter: none;
+}
+
+.recipe-thumb.is-placeholder {
+  padding: 18%;
+}
+
+.recipe-photo.is-placeholder {
+  padding: var(--sp-5);
 }
 
 .recipe-row-title {

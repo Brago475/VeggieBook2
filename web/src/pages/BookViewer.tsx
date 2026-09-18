@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { BookCard } from '../components/BookCard'
 import { NavBar } from '../components/NavBar'
+import { SafeImage } from '../components/SafeImage'
 import { useBookDetail } from '../hooks/useBookDetail'
 import { useRecipeDetail } from '../hooks/useRecipeDetail'
 import type { Vegetable } from '../types'
@@ -40,6 +41,13 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
   const vegetable = vegetables.find((v) => v.code === book?.vegetableCode)
   const vegetableName = vegetable?.name ?? ''
   const vegetableShortCode = vegetable?.shortCode ?? ''
+
+  // Stands in for a recipe photo that is absent or fails to load. Null when
+  // the vegetable is unknown, in which case SafeImage goes straight to its
+  // own placeholder.
+  const vegetableCover = vegetableShortCode
+    ? coverSrc(`cover/${vegetableShortCode}.jpg`)
+    : null
 
   function openRecipeAt(id: number) {
     listScroll.current = window.scrollY
@@ -101,11 +109,11 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
             <h2>{detail.title}</h2>
 
             {detail.photos.length > 0 && (
-              <img
+              <SafeImage
                 className="recipe-photo"
+                fallbackClassName="is-standin"
                 src={coverSrc(detail.photos[0])}
-                alt=""
-                loading="lazy"
+                fallbackSrc={vegetableCover}
               />
             )}
 
@@ -165,21 +173,22 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
               onClick={() => openRecipeAt(r.id)}
             >
               {r.photo ? (
-                <img
+                // The photo the database assigns. If it ever stops loading,
+                // the vegetable's cover steps in, then the placeholder.
+                <SafeImage
                   className="recipe-thumb"
+                  fallbackClassName="is-standin"
                   src={coverSrc(r.photo)}
-                  alt=""
-                  loading="lazy"
+                  fallbackSrc={vegetableCover}
                 />
               ) : (
-                // This recipe's photo was lost with the original img/
-                // folder. The vegetable's own photo stands in, dimmed, so
-                // the row still reads as a recipe rather than as broken.
-                <img
+                // This recipe has no photo row at all. The vegetable's own
+                // photo stands in, dimmed, so the row still reads as a
+                // recipe rather than as broken. No active recipe is in this
+                // state today, but the branch stays as a safety net.
+                <SafeImage
                   className="recipe-thumb is-standin"
-                  src={coverSrc(`cover/${vegetableShortCode}.jpg`)}
-                  alt=""
-                  loading="lazy"
+                  src={vegetableCover}
                 />
               )}
               <span className="recipe-row-title">{r.title}</span>
