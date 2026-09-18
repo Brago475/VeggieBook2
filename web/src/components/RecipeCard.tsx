@@ -1,5 +1,7 @@
+import { SafeImage } from './SafeImage'
 import { useRecipeDetail } from '../hooks/useRecipeDetail'
 import type { RecipeSummary } from '../types'
+import { coverSrc } from '../utils/coverSrc'
 
 // One recipe in the review flow.
 //
@@ -21,8 +23,7 @@ export function RecipeCard({ recipe, position, total }: Props) {
 
   return (
     <div className="recipe">
-
-              <p className="recipe-counter">
+      <p className="recipe-counter">
         Recipe {position} of {total}
       </p>
 
@@ -42,11 +43,17 @@ export function RecipeCard({ recipe, position, total }: Props) {
 
       <h2 className="recipe-title">{recipe.title}</h2>
 
+      {/* Through SafeImage and coverSrc rather than a hand-built /images/
+          path: a missing photo used to collapse this frame to nothing,
+          silently, because the img had no alt text and no fixed height. */}
       <div className="recipe-photo-frame">
-        <img className="recipe-photo" src={`/images/${recipe.photo}`} alt="" />
+        <SafeImage
+          className="recipe-photo"
+          src={recipe.photo ? coverSrc(recipe.photo) : null}
+        />
       </div>
 
-        {error && <p className="message">Could not load details: {error}</p>}
+      {error && <p className="message">Could not load details: {error}</p>}
 
       {/* Skeleton placeholders while the detail fetch is in flight, sized to
           roughly match the real sections so the card does not jump when the
@@ -118,8 +125,6 @@ export function RecipeCard({ recipe, position, total }: Props) {
           )}
         </>
       )}
-
-
     </div>
   )
 }
