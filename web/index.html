@@ -7,9 +7,99 @@
     <link rel="apple-touch-icon" href="/LogoVB2.png" />
     <title>VeggieBook</title>
     <meta name="description" content="Quick Help for Meals" />
+
+    <!-- Fetched early so the logo is on the loading screen from the start
+         rather than popping in after the green. -->
+    <link rel="preload" as="image" href="/brand/logo-negative-en.png" />
+
+    <!--
+      The loading screen's styles live here, not in src/styles, on purpose.
+      Stylesheets under src/ arrive with the JavaScript bundle, and the gap
+      before that bundle loads is exactly when the page used to show plain
+      white. Styles in the page itself apply as soon as it arrives.
+
+      components/LoadingScreen.tsx uses the same class names while the
+      sign-in check runs, so the static screen below and React's version
+      are the same screen, and the handover between them cannot be seen.
+
+      The color is the brand green, written out because the design tokens
+      in tokens.css have not loaded yet at this point.
+    -->
+    <style>
+      .loading-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        background: #8cc63e;
+      }
+
+      .loading-logo {
+        width: 220px;
+        max-width: 70vw;
+        height: auto;
+      }
+
+      .loading-dots {
+        display: flex;
+        gap: 8px;
+      }
+
+      .loading-dots span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ffffff;
+        opacity: 0.35;
+        animation: loading-dot 1.2s ease-in-out infinite;
+      }
+
+      .loading-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .loading-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes loading-dot {
+        0%,
+        80%,
+        100% {
+          opacity: 0.35;
+          transform: scale(0.8);
+        }
+        40% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .loading-dots span {
+          animation: none;
+          opacity: 0.8;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until React starts, which replaces everything inside root.
+         Keep this markup matching components/LoadingScreen.tsx. -->
+    <div id="root">
+      <div class="loading-screen" role="status" aria-label="Loading VeggieBook">
+        <img class="loading-logo" src="/brand/logo-negative-en.png" alt="" />
+        <div class="loading-dots" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

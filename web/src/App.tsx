@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { LoadingScreen } from './components/LoadingScreen'
 import { Masthead } from './components/Masthead'
 import { useAuth } from './hooks/useAuth'
 import { useBookFlow } from './hooks/useBookFlow'
@@ -16,6 +17,9 @@ import type { BookSummary, NewBook } from './types'
 // Tokens first so the variables exist, then base, then the shared pieces,
 // then the screens built on them, then responsive last so its overrides
 // are not beaten by a rule of equal specificity further down.
+//
+// The loading screen's styles are not here: they live in index.html so
+// they apply before this bundle has loaded.
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
@@ -154,12 +158,18 @@ export default function App() {
     return undefined
   }
 
+  // Until the sign-in check answers, it is not known which screen to show:
+  // Welcome for a visitor, the library for a signed-in account. The whole
+  // page is the loading screen until then, continuing the one index.html
+  // showed before the app started, so a refresh never flashes white or
+  // shows the wrong screen for a moment.
+  if (status === 'loading') return <LoadingScreen />
+
   return (
     <div className="app">
       {!onAuthScreen && <Masthead onBack={backAction()} />}
 
       {error && <p className="message">Could not load: {error}</p>}
-      {status === 'loading' && <p className="message">Loading...</p>}
 
       {showWelcome && (
         <Welcome
@@ -169,7 +179,7 @@ export default function App() {
         />
       )}
 
-      {status !== 'loading' && current === 'home' && !showWelcome && (
+      {current === 'home' && !showWelcome && (
         <HomeLibrary
           email={email}
           books={email ? library.books : guestBooks}
