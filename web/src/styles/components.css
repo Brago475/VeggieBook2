@@ -268,88 +268,30 @@
   color: var(--text);
 }
 
+/* A fixed 3:2 shape, the same as the top photo in a saved book. The space
+   is held before the photo arrives, so the sections below never jump down
+   when it finishes loading. */
 .recipe-photo-frame {
+  aspect-ratio: 3 / 2;
   overflow: hidden;
   border-radius: var(--r-lg);
   background: var(--surface-alt);
   box-shadow: var(--shadow-md);
 }
 
+/* Fills the frame and crops to fit, since source photos come in every
+   shape. The placeholder override in reading.css (.recipe-photo
+   .is-placeholder) still wins, so a missing photo shows the logo
+   contained rather than cropped. */
 .recipe-photo {
-  width: 100%;
-  height: auto;
-}
-
-/* Sections are plain cards now rather than tabbed outlines: the tab was an
-   Android convention that reads as dated on the web. */
-.recipe-section {
-  margin-top: var(--sp-5);
-}
-
-.recipe-section-tab {
   display: block;
-  margin-bottom: var(--sp-2);
-  font-size: var(--font-section);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--green-dark);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.recipe-summary {
-  display: grid;
-  grid-template-columns: auto auto auto auto;
-  align-items: center;
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--surface-alt);
-  border-radius: var(--r-md);
-}
-
-.recipe-summary-key {
-  padding: var(--sp-2) var(--sp-2) var(--sp-2) 0;
-  font-size: var(--font-small);
-  color: var(--text-muted);
-}
-
-.recipe-summary-val {
-  padding: var(--sp-2) var(--sp-4) var(--sp-2) 0;
-  font-size: var(--font-small);
-  font-weight: 600;
-  color: var(--text);
-}
-
-.recipe-list {
-  margin: 0;
-  padding: var(--sp-1) var(--sp-3);
-  background: var(--surface-alt);
-  border-radius: var(--r-md);
-}
-
-.recipe-list li {
-  padding: var(--sp-3) 0;
-  font-size: var(--font-label);
-  line-height: 1.5;
-  color: var(--text);
-  border-bottom: 1px solid var(--line);
-}
-
-.recipe-list li:last-child {
-  border-bottom: 0;
-}
-
-/* Steps are numbered, so they need back the marker and indent that the
-   base reset strips from every list. */
-.recipe-steps {
-  padding-left: var(--sp-6);
-  list-style: decimal;
-}
-
-.recipe-steps li {
-  padding-left: var(--sp-1);
-}
-
-.recipe-steps::marker {
-  color: var(--green-dark);
-}
+/* The recipe's sections (Ingredients, Summary, Instructions, Notes,
+   Photos) are styled in recipe-sections.css. */
 
 /* Sits above the card as a progress marker rather than a footnote, so the
    reader knows where they are before reading. */

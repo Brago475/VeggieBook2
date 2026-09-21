@@ -65,9 +65,10 @@
 
   /* Reading a recipe is the one place the extra room helps: a little more
      size on the body text, since nobody is holding a laptop at arm's
-     length in a kitchen. */
-  .book-ingredients li,
-  .book-steps li {
+     length in a kitchen. Covers ingredients, instructions, and notes on
+     both the review step and a saved book, since both draw them through
+     RecipeSections. */
+  .recipe-list li {
     font-size: var(--font-row);
   }
 

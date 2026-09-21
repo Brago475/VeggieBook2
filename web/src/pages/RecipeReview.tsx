@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useState } from 'react'
 import { RecipeCard } from '../components/RecipeCard'
 import type { RecipeSummary } from '../types'
 
@@ -18,6 +18,14 @@ export function RecipeReview({ recipes, onFinish }: Props) {
 
   const recipe = recipes[index]
 
+  // KEEP and DROP sit at the bottom of a long recipe, so without this the
+  // next recipe opened wherever the last one was scrolled to, often at its
+  // end. A layout effect runs before the browser paints, so the new recipe
+  // is never seen at the old position, not even for a frame.
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0)
+  }, [index])
+
   function decide(keep: boolean) {
     const nextKept = keep ? [...kept, recipe] : kept
     setKept(nextKept)
@@ -35,7 +43,10 @@ export function RecipeReview({ recipes, onFinish }: Props) {
 
   return (
     <>
+      {/* Keyed by recipe so each one mounts fresh: nothing from the
+          previous card, its photo or its loaded content, carries over. */}
       <RecipeCard
+        key={recipe.id}
         recipe={recipe}
         position={index + 1}
         total={recipes.length}

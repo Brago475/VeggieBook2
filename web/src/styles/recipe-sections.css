@@ -1,0 +1,156 @@
+/* The body of one recipe: Ingredients, Summary, Instructions, Notes, and
+ * Photos. Rendered by components/RecipeSections.tsx on both the review
+ * step and a saved book, so these are the only styles for those sections.
+ *
+ * Each section is a green outlined box with a tab label on its top edge,
+ * matching the original app. The class names are the ones the review
+ * screen already used (.recipe-list, .recipe-summary, .recipe-steps), so
+ * the small screen rules in responsive.css keep working unchanged. */
+
+/* --- the box and its tab --------------------------------------------- */
+
+.recipe-section {
+  margin-top: var(--sp-5);
+}
+
+/* The tab sits on the box's top edge: square bottom corners, and no gap
+   between it and the border below, so the two read as one shape. Dark
+   text on the brand green, the same pairing the create buttons use. */
+.recipe-section-tab {
+  display: inline-block;
+  margin: 0 0 0 var(--sp-3);
+  padding: 4px 14px;
+  font-size: var(--font-small);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  background: var(--green);
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+}
+
+.recipe-section-body {
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--surface);
+  border: 2px solid var(--green);
+  border-radius: var(--r-md);
+}
+
+/* --- ingredients, instructions, notes -------------------------------- */
+
+.recipe-list {
+  margin: 0;
+  padding: 0;
+}
+
+.recipe-list li {
+  padding: var(--sp-3) 0;
+  font-size: var(--font-label);
+  line-height: 1.5;
+  color: var(--text);
+  border-bottom: 1px solid var(--line);
+}
+
+.recipe-list li:last-child {
+  border-bottom: 0;
+}
+
+/* Steps are a real sequence, so they get back the numbers and indent the
+   base reset strips from every list. */
+.recipe-steps {
+  padding-left: var(--sp-5);
+  list-style: decimal;
+}
+
+.recipe-steps li {
+  padding-left: var(--sp-1);
+}
+
+.recipe-steps li::marker {
+  font-weight: 700;
+  color: var(--green-deep);
+}
+
+/* --- summary --------------------------------------------------------- */
+
+/* Two facts per row, as in the original: label, value, label, value. The
+   labels sit on a light green tint like the original's shaded cells. */
+.recipe-summary {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  gap: var(--sp-1) var(--sp-2);
+  align-items: center;
+  padding: var(--sp-2) 0;
+}
+
+.recipe-summary-key {
+  padding: var(--sp-1) var(--sp-2);
+  font-size: var(--font-small);
+  color: var(--text-muted);
+  background: var(--green-tint);
+  border-radius: var(--r-sm);
+}
+
+.recipe-summary-val {
+  padding: var(--sp-1) 0;
+  font-size: var(--font-small);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* --- photos ---------------------------------------------------------- */
+
+/* The extra photos, after the one shown at the top of the page. Stacked
+   full width in the order the original stored them, so a prep sequence
+   reads top to bottom. */
+.recipe-photos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-2) 0;
+}
+
+/* figure carries a browser default margin; the gap above does the
+   spacing instead. */
+.recipe-photos-item {
+  margin: 0;
+}
+
+/* Natural height rather than a fixed crop: prep shots show hands and pans
+   that a crop would cut off. */
+.recipe-photos-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-sm);
+  background: var(--surface-alt);
+}
+
+/* Only photos whose file name marks them as a preparation step get one.
+   Small and green so it reads as a label for the photo, not body text. */
+.recipe-photos-caption {
+  margin-top: var(--sp-2);
+  font-size: var(--font-small);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--green-deep);
+}
+
+/* SafeImage fell back to the vegetable photo: dimmed so it never passes
+   for a photo of this dish. */
+.recipe-photos-img.is-standin {
+  opacity: 0.45;
+  filter: grayscale(0.35);
+}
+
+/* SafeImage fell back to the VeggieBook mark: contained on the brand
+   green, with a fixed ratio since a logo has no natural photo height. */
+.recipe-photos-img.is-placeholder {
+  box-sizing: border-box;
+  aspect-ratio: 3 / 2;
+  padding: var(--sp-5);
+  object-fit: contain;
+  background: var(--green);
+  opacity: 1;
+  filter: none;
+}

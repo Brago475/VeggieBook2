@@ -4,9 +4,10 @@
  * real counters, which is the honest thing this app owns, so they get size
  * and the chrome around them stays quiet.
  *
- * Everything resolves to tokens.css. The class names are book-specific
- * (.book-ingredients, .book-steps) because components.css already styles
- * .recipe-steps for the review screen, and the two should not fight. */
+ * Everything resolves to tokens.css. An opened recipe's sections
+ * (Ingredients through Photos) are styled in recipe-sections.css, shared
+ * with the review screen; this file covers only what is specific to a
+ * saved book. */
 
 /* --- the recipe list ------------------------------------------------- */
 
@@ -96,14 +97,6 @@
   color: var(--text);
 }
 
-.recipe-detail h3 {
-  margin: var(--sp-5) 0 var(--sp-2);
-  font-size: var(--font-section);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--green-dark);
-}
-
 /* Matches .recipe-photo-frame on the review screen: same radius, same
    shadow, so one recipe looks the same whether it is being chosen or read.
    The fixed ratio keeps the page from jumping as photos load. */
@@ -111,7 +104,6 @@
   width: 100%;
   aspect-ratio: 3 / 2;
   object-fit: cover;
-  margin-bottom: var(--sp-4);
   border-radius: var(--r-lg);
   background: var(--surface-alt);
   box-shadow: var(--shadow-md);
@@ -125,74 +117,11 @@
   padding: var(--sp-5);
 }
 
-/* Prep, cook and servings. The same tinted panel .recipe-summary uses on
-   the review screen, laid out as a row because there are only three. */
-.recipe-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-4);
-  margin: 0;
-  padding: var(--sp-3);
-  font-size: var(--font-small);
-  font-weight: 600;
-  color: var(--text);
-  background: var(--surface-alt);
-  border-radius: var(--r-md);
-}
+/* --- the book's recipe count ----------------------------------------- */
 
-/* Ingredients and steps reuse the .recipe-list treatment from the review
-   screen: a tinted panel with hairline rules between items. */
-.book-ingredients {
-  margin: 0;
-  padding: var(--sp-1) var(--sp-3);
-  background: var(--surface-alt);
-  border-radius: var(--r-md);
-}
-
-.book-ingredients li {
-  padding: var(--sp-3) 0;
-  font-size: var(--font-label);
-  line-height: 1.5;
-  color: var(--text);
-  border-bottom: 1px solid var(--line);
-}
-
-.book-ingredients li:last-child {
-  border-bottom: 0;
-}
-
-/* Steps are a real sequence, so the numbers carry information. Plain
-   decimal markers, same as the review screen, rather than a second
-   numbering style in the same app. */
-.book-steps {
-  margin: 0;
-  padding: var(--sp-1) var(--sp-3) var(--sp-1) var(--sp-6);
-  list-style: decimal;
-  background: var(--surface-alt);
-  border-radius: var(--r-md);
-}
-
-.book-steps li {
-  padding: var(--sp-3) 0 var(--sp-3) var(--sp-1);
-  font-size: var(--font-label);
-  line-height: 1.5;
-  color: var(--text);
-  border-bottom: 1px solid var(--line);
-}
-
-.book-steps li:last-child {
-  border-bottom: 0;
-}
-
-.book-steps::marker,
-.book-steps li::marker {
-  color: var(--green-dark);
-  font-weight: 700;
-}
-
-/* The recipe count. A chip rather than a line of gray text: it is a fact
-   about the book, so it sits on its own tint under the cover instead of
-   trailing off the corner of the card. */
+/* A chip rather than a line of gray text: it is a fact about the book, so
+   it sits on its own tint under the cover instead of trailing off the
+   corner of the card. */
 .book-count {
   margin: 0;
   padding: var(--sp-1) var(--pad-x) 0;

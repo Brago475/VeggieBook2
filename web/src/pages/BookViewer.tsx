@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { BookCard } from '../components/BookCard'
 import { NavBar } from '../components/NavBar'
+import { RecipeSections } from '../components/RecipeSections'
 import { SafeImage } from '../components/SafeImage'
 import { useBookDetail } from '../hooks/useBookDetail'
 import { useRecipeDetail } from '../hooks/useRecipeDetail'
@@ -10,7 +11,8 @@ import { coverSrc } from '../utils/coverSrc'
 // A saved book, opened from the home library.
 //
 // The book's recipes are listed as a photo and a title. Tapping one opens
-// its full content, the same detail the review step shows. Coming back
+// its full content through RecipeSections, the same component the review
+// step uses, so a recipe reads the same in both places. Coming back
 // returns to the same place in the list, so working through a long book
 // does not mean scrolling from the top each time.
 //
@@ -92,6 +94,10 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
 
   // One recipe, opened from the list.
   if (openRecipe !== null) {
+    // The first photo shows large at the top; RecipeSections puts any
+    // others in Photos at the bottom and leaves this one out.
+    const topPhoto = detail?.photos[0] ?? null
+
     return (
       <>
         {!detail && !detailError && <p className="message">Loading recipe...</p>}
@@ -101,31 +107,11 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
           <article className="recipe-detail">
             <h2>{detail.title}</h2>
 
-            {detail.photos.length > 0 && (
-              <SafeImage
-                className="recipe-photo"
-                src={coverSrc(detail.photos[0])}
-              />
+            {topPhoto && (
+              <SafeImage className="recipe-photo" src={coverSrc(topPhoto)} />
             )}
 
-            <p className="recipe-facts">
-              Prep {detail.timeToPrepare} &middot; Cook {detail.timeToCook}{' '}
-              &middot; Serves {detail.servings}
-            </p>
-
-            <h3>Ingredients</h3>
-            <ul className="book-ingredients">
-              {detail.ingredients.map((line, i) => (
-                <li key={i}>{line}</li>
-              ))}
-            </ul>
-
-            <h3>Steps</h3>
-            <ol className="book-steps">
-              {detail.steps.map((line, i) => (
-                <li key={i}>{line}</li>
-              ))}
-            </ol>
+            <RecipeSections detail={detail} topPhoto={topPhoto} />
           </article>
         )}
 

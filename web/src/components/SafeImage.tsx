@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 // An image that degrades instead of breaking.
 //
@@ -46,6 +46,13 @@ type Props = {
   loading?: 'lazy' | 'eager'
 }
 
+// How far down the chain this image has fallen, and for which chain. A
+// failure only counts for the chain it happened on.
+type Fallback = {
+  chainKey: string
+  step: number
+}
+
 export function SafeImage({
   src,
   fallbackSrc,
@@ -60,13 +67,14 @@ export function SafeImage({
     .filter((s): s is string => Boolean(s))
     .concat(logo, DRAWING)
 
-  const [step, setStep] = useState(0)
+  const chainKey = chain.join('|')
 
-  // A new source is a fresh chance, so start over rather than staying on
-  // the placeholder left from whatever was rendered here before.
-  useEffect(() => {
-    setStep(0)
-  }, [src, fallbackSrc, logo])
+  const [fallback, setFallback] = useState<Fallback>({ chainKey, step: 0 })
+
+  // A new source is a fresh chance. Read in the same render rather than
+  // reset by an effect, which ran one frame late: the new photo's first
+  // frame showed the placeholder left over from the previous one.
+  const step = fallback.chainKey === chainKey ? fallback.step : 0
 
   const index = Math.min(step, chain.length - 1)
   const atEnd = index >= chain.length - 1
@@ -89,7 +97,7 @@ export function SafeImage({
       onError={() => {
         if (atEnd) return
         console.warn('SafeImage: could not load', chain[index])
-        setStep((s) => s + 1)
+        setFallback({ chainKey, step: index + 1 })
       }}
     />
   )

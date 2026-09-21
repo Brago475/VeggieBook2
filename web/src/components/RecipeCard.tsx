@@ -1,3 +1,4 @@
+import { RecipeSections } from './RecipeSections'
 import { SafeImage } from './SafeImage'
 import { useRecipeDetail } from '../hooks/useRecipeDetail'
 import type { RecipeSummary } from '../types'
@@ -6,8 +7,11 @@ import { coverSrc } from '../utils/coverSrc'
 // One recipe in the review flow.
 //
 // The match response carries the title, photo, and badges, so those render
-// immediately. Ingredients, steps, and the full summary come from
-// /api/recipes/{id} and fill in when that resolves.
+// immediately. Ingredients, steps, the full summary, and any extra photos
+// come from /api/recipes/{id} and fill in when that resolves.
+//
+// The sections themselves (Ingredients through Photos) are drawn by
+// RecipeSections, the same component a saved book uses.
 //
 // Badge colors arrive as bare hex without the leading #, which is why it is
 // added here. They carry the original app's palette.
@@ -20,6 +24,10 @@ type Props = {
 
 export function RecipeCard({ recipe, position, total }: Props) {
   const { detail, error } = useRecipeDetail(recipe.id)
+
+  // The match response sends the first photo, or null if the recipe has
+  // none, even though the type says string.
+  const topPhoto = recipe.photo || null
 
   return (
     <div className="recipe">
@@ -49,7 +57,7 @@ export function RecipeCard({ recipe, position, total }: Props) {
       <div className="recipe-photo-frame">
         <SafeImage
           className="recipe-photo"
-          src={recipe.photo ? coverSrc(recipe.photo) : null}
+          src={topPhoto ? coverSrc(topPhoto) : null}
         />
       </div>
 
@@ -71,60 +79,7 @@ export function RecipeCard({ recipe, position, total }: Props) {
         </div>
       )}
 
-      {detail && (
-        <>
-          <div className="recipe-section">
-            <span className="recipe-section-tab">Ingredients</span>
-            <ul className="recipe-list">
-              {detail.ingredients.map((line, i) => (
-                <li key={i}>{line}</li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="recipe-section">
-            <span className="recipe-section-tab">Summary</span>
-            <div className="recipe-summary">
-              <span className="recipe-summary-key">Preparation Time:</span>
-              <span className="recipe-summary-val">{detail.timeToPrepare}</span>
-              <span className="recipe-summary-key">Can be made ahead:</span>
-              <span className="recipe-summary-val">{detail.canBeMadeAhead}</span>
-
-              <span className="recipe-summary-key">Cooking Time:</span>
-              <span className="recipe-summary-val">{detail.timeToCook}</span>
-              <span className="recipe-summary-key">Can be frozen:</span>
-              <span className="recipe-summary-val">{detail.canBeFrozen}</span>
-
-              <span className="recipe-summary-key">Servings:</span>
-              <span className="recipe-summary-val">{detail.servings}</span>
-              <span className="recipe-summary-key">Good for leftovers:</span>
-              <span className="recipe-summary-val">
-                {detail.goodForLeftovers}
-              </span>
-            </div>
-          </div>
-
-          <div className="recipe-section">
-            <span className="recipe-section-tab">Instructions</span>
-            <ol className="recipe-list recipe-steps">
-              {detail.steps.map((step, i) => (
-                <li key={i}>{step}</li>
-              ))}
-            </ol>
-          </div>
-
-          {detail.notes.length > 0 && (
-            <div className="recipe-section">
-              <span className="recipe-section-tab">Notes</span>
-              <ul className="recipe-list">
-                {detail.notes.map((note, i) => (
-                  <li key={i}>{note}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
-      )}
+      {detail && <RecipeSections detail={detail} topPhoto={topPhoto} />}
     </div>
   )
 }
