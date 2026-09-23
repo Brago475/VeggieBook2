@@ -116,13 +116,18 @@ export function BookViewer({
   if (loading) return <BookSkeleton />
 
   // Same off-white page as the book, so a missing book does not flash to a
-  // white screen. The header's Back returns home.
+  // white screen, with a plain way back to the library under the message.
   if (error || !book) {
     return (
       <div className="book-view">
         <p className="message book-view-message">
           {error ?? 'Could not open this book.'}
         </p>
+        <div className="book-view-back">
+          <button type="button" className="link-btn" onClick={onClose}>
+            Back to my books
+          </button>
+        </div>
       </div>
     )
   }
