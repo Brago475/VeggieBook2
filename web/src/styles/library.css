@@ -209,3 +209,17 @@
   right: var(--sp-3);
   z-index: 2;
 }
+
+/* --- loading skeleton ------------------------------------------------ */
+
+/* A gray shape the size of a book card, pulsing (the animation comes from
+   .skeleton in components.css). The gray is darker than the default so it
+   shows against this page's off-white. */
+.library-skel-card {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  max-height: 260px;
+  background: #e6e6de;
+  border-radius: 20px;
+}

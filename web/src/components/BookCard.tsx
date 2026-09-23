@@ -1,4 +1,5 @@
 import { coverSrc } from '../utils/coverSrc'
+import { SafeImage } from './SafeImage'
 
 // A book as it appears in the library, matching the original app: the
 // vegetable's photo fills the card, the chosen cover sits as a small
@@ -7,6 +8,10 @@ import { coverSrc } from '../utils/coverSrc'
 // Used on the home screen, at the top of a saved book, and as the live
 // preview on the cover screen, so users see their book exactly as it will
 // look before they save it.
+//
+// Both photos go through SafeImage. The cover can be an uploaded photo
+// served by the API, which can fail to load; either way the card shows the
+// VeggieBook mark rather than a broken-image icon.
 //
 // The lines under the name are optional, so each screen shows only what
 // it needs:
@@ -38,9 +43,9 @@ export function BookCard({
   const content = (
     <>
       {background && (
-        <img className="book-card-bg" src={coverSrc(background)} alt="" />
+        <SafeImage className="book-card-bg" src={coverSrc(background)} />
       )}
-      <img className="book-card-cover" src={coverSrc(cover)} alt="" />
+      <SafeImage className="book-card-cover" src={coverSrc(cover)} />
 
       <span className="book-card-text">
         <span className="book-card-name">{title}</span>

@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import { NavBar } from '../components/NavBar'
+import { SafeImage } from '../components/SafeImage'
 import type { RecipeSummary } from '../types'
 
 // After the review, users mark any kept recipes they want an extra printed
 // copy of. Selection is recorded and passed along; printing itself is not
 // part of the web app.
+//
+// Each tile's photo goes through SafeImage. A recipe with no photo passes
+// null, which SafeImage skips straight to the VeggieBook mark, rather than
+// requesting /images/null and showing a broken-image icon.
 
 type Props = {
   recipes: RecipeSummary[]
@@ -42,11 +47,9 @@ export function ExtraCopies({ recipes, onNext }: Props) {
               onClick={() => toggle(recipe.id)}
               aria-pressed={selected.has(recipe.id)}
             >
-              <img
+              <SafeImage
                 className="copy-tile-img"
-                src={`/images/${recipe.photo}`}
-                alt=""
-                loading="lazy"
+                src={recipe.photo ? `/images/${recipe.photo}` : null}
               />
               <span className="copy-tile-title">{recipe.title}</span>
               <span

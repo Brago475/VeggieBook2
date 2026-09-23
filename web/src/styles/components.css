@@ -32,6 +32,23 @@
   flex: 1 0 auto;
 }
 
+/* Image fallback */
+
+/* When SafeImage cannot load a photo it shows the VeggieBook mark and adds
+   .is-placeholder. The mark is contained on the brand green with room
+   around it, not cropped like a photo, so it reads as "no photo here"
+   rather than a bad photograph. Covers every image SafeImage draws; the
+   recipe thumbnails and photos in reading.css set their own padding on
+   top of this. */
+img.is-placeholder {
+  box-sizing: border-box;
+  padding: 10%;
+  object-fit: contain;
+  background: var(--green);
+  opacity: 1;
+  filter: none;
+}
+
 /* Screen label strip */
 
 .screen-label {

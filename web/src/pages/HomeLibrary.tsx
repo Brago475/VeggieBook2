@@ -24,6 +24,9 @@ import type { BookSummary, Vegetable } from '../types'
 // card to read the book's recipes. A guest's book has no id on the server,
 // so onViewBook is not passed and its cards stay unclickable. Actions on a
 // book live in the ⋮ on its card.
+//
+// While the books load, two gray card shapes hold their place, so the list
+// does not pop in under a line of text.
 
 type Props = {
   email: string | null
@@ -37,6 +40,8 @@ type Props = {
   onDeleteBook: (id: string) => Promise<void>
   onViewBook?: (id: string) => void
 }
+
+const SKELETON_CARDS = 2
 
 export function HomeLibrary({
   email,
@@ -118,7 +123,18 @@ export function HomeLibrary({
         </button>
       </div>
 
-      {loading && <p className="message">Loading your books...</p>}
+      {loading && (
+        <div role="status" aria-busy="true">
+          <span className="visually-hidden">Loading your books...</span>
+          <ul className="library-books" aria-hidden="true">
+            {Array.from({ length: SKELETON_CARDS }, (_, i) => (
+              <li key={i}>
+                <div className="skeleton library-skel-card" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {error && <p className="message">{error}</p>}
       {deleteError && <p className="message">{deleteError}</p>}
 
