@@ -58,10 +58,14 @@ export default function App() {
   // The saved book being viewed, or null. Signed-in accounts only: a
   // guest's book exists on this page alone and has no id to open.
   const [openBook, setOpenBook] = useState<string | null>(null)
+  // The recipe open inside that book, or null for the book's list. Held
+  // here so the header's Back can close a recipe before leaving the book.
+  const [openRecipe, setOpenRecipe] = useState<number | null>(null)
 
   function goHome() {
     setPending(null)
     setOpenBook(null)
+    setOpenRecipe(null)
     setView('home')
   }
 
@@ -72,6 +76,7 @@ export default function App() {
 
   function viewBook(id: string) {
     setOpenBook(id)
+    setOpenRecipe(null)
     setView('book')
   }
 
@@ -150,7 +155,11 @@ export default function App() {
 
   function backAction(): (() => void) | undefined {
     if (current === 'flow') return flow.backAction(goHome)
-    if (current === 'book') return goHome
+    // Inside a book: an open recipe closes back to the list first, and only
+    // the list goes home.
+    if (current === 'book') {
+      return openRecipe !== null ? () => setOpenRecipe(null) : goHome
+    }
     if (authMode && pending) {
       return () => {
         setPending(null)
@@ -242,11 +251,14 @@ export default function App() {
         <BookViewer
           bookId={openBook}
           vegetables={vegetables}
+          openRecipe={openRecipe}
+          onOpenRecipe={setOpenRecipe}
           onClose={goHome}
           onDelete={async (id) => {
             await deleteBook(id)
             goHome()
           }}
+          onChanged={library.reload}
         />
       )}
     </div>

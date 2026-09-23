@@ -7,14 +7,14 @@
  * Everything resolves to tokens.css. An opened recipe's sections
  * (Ingredients through Photos) are styled in recipe-sections.css, shared
  * with the review screen; this file covers only what is specific to a
- * saved book. */
+ * saved book. The ⋮ menus themselves are styled in menu.css. */
 
 /* --- the page -------------------------------------------------------- */
 
 /* Off-white behind the list so the white recipe cards stand out from it. */
 .book-view {
+  padding-bottom: var(--sp-6);
   background: var(--surface-alt);
-  padding-bottom: var(--sp-2);
 }
 
 /* --- the heading ----------------------------------------------------- */
@@ -63,6 +63,14 @@
   color: var(--text-muted);
 }
 
+/* --- the cover card -------------------------------------------------- */
+
+/* Holds the card and its ⋮, which sits over the top right corner using
+   the same .book-item-menu position as the home screen's cards. */
+.book-hero {
+  position: relative;
+}
+
 /* --- the recipe list ------------------------------------------------- */
 
 /* One row per recipe: photo, then title. Flat by default, matching
@@ -95,6 +103,11 @@
   margin: 0;
   padding: var(--sp-4) var(--pad-x);
   list-style: none;
+}
+
+/* Holds the row and its ⋮. */
+.book-recipes li {
+  position: relative;
 }
 
 /* The transparent border holds the space the green hover outline takes,
@@ -139,8 +152,39 @@
   transition: color 0.18s ease;
 }
 
+/* Leaves room for the ⋮ between the title and the chevron, so a long
+   title wraps before it reaches the button. */
+.book-recipes .recipe-row.has-menu .recipe-row-title {
+  margin-right: 44px;
+}
+
 .book-recipes .recipe-row:hover .recipe-row-title {
   color: var(--green-deep);
+}
+
+/* The recipe's ⋮: between the title and the chevron, vertically centered.
+   Plain gray rather than the white circle used over photos, since it sits
+   on a white card. */
+.recipe-row-menu {
+  position: absolute;
+  top: 50%;
+  right: 44px;
+  z-index: 2;
+  transform: translateY(-50%);
+}
+
+.recipe-row-menu .menu-btn {
+  width: 36px;
+  height: 36px;
+  color: var(--text-muted);
+  background: transparent;
+  box-shadow: none;
+}
+
+.recipe-row-menu .menu-btn:hover,
+.recipe-row-menu .menu-btn[aria-expanded='true'] {
+  color: var(--text);
+  background: var(--surface-alt);
 }
 
 .recipe-row-chevron {

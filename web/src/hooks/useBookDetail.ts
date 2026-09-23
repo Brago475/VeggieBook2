@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ApiError, apiFetch } from '../utils/api'
 
 // One saved book with its recipes, for the screen that opens a book from
@@ -66,11 +66,33 @@ export function useBookDetail(id: string | null) {
     }
   }, [id])
 
+  // Takes one recipe out of this book. Throws with a message for the user
+  // if the server refuses, so the screen can show it. On success the recipe
+  // leaves the list here straight away, without reloading the whole book.
+  const removeRecipe = useCallback(
+    async (recipeId: number) => {
+      if (id === null) return
+      await apiFetch<void>(`/books/${id}/recipes/${recipeId}`, { method: 'DELETE' })
+      setLoaded((prev) =>
+        prev && prev.id === id
+          ? {
+              id,
+              book: {
+                ...prev.book,
+                recipes: prev.book.recipes.filter((r) => r.id !== recipeId),
+              },
+            }
+          : prev,
+      )
+    },
+    [id],
+  )
+
   // Only answers for the book currently asked for, so the previous book's
   // recipes are never shown under a new book's title.
   const book = id !== null && loaded?.id === id ? loaded.book : null
   const error = id !== null && failed?.id === id ? failed.message : null
   const loading = id !== null && book === null && error === null
 
-  return { book, loading, error }
+  return { book, loading, error, removeRecipe }
 }
