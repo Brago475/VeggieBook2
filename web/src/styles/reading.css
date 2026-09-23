@@ -7,7 +7,24 @@
  * Everything resolves to tokens.css. An opened recipe's sections
  * (Ingredients through Photos) are styled in recipe-sections.css, shared
  * with the review screen; this file covers only what is specific to a
- * saved book. The ⋮ menus themselves are styled in menu.css. */
+ * saved book, plus the color of recipe titles everywhere (below). The ⋮
+ * menus themselves are styled in menu.css. */
+
+/* --- recipe titles --------------------------------------------------- */
+
+/* Recipe titles are printed in green, following the original VeggieBook's
+   formative research (Evans et al. 2009): pantry clients' preferred design
+   put recipe titles in green, "connoting nature." The deep green keeps
+   strong contrast on white.
+
+   Three places show a recipe title: the KEEP / DROP card (.recipe-title,
+   laid out in components.css), an opened recipe in a saved book
+   (.recipe-detail h2, below) and the rows of a book's list
+   (.recipe-row-title, below). All three are set here so the color lives
+   in one file. This file loads after components.css, so it wins. */
+.recipe-title {
+  color: var(--green-deep);
+}
 
 /* --- the page -------------------------------------------------------- */
 
@@ -130,8 +147,8 @@
     border-color 0.18s ease;
 }
 
-/* Hover: the card lifts, picks up a green edge, and the title and chevron
-   turn green, so it is clear which recipe is about to open. */
+/* Hover: the card lifts and picks up a green edge, and the chevron turns
+   green, so it is clear which recipe is about to open. */
 .book-recipes .recipe-row:hover {
   background: var(--surface);
   border-color: var(--green);
@@ -156,17 +173,12 @@
 .book-recipes .recipe-row-title {
   flex: 1;
   min-width: 0;
-  transition: color 0.18s ease;
 }
 
 /* Leaves room for the ⋮ between the title and the chevron, so a long
    title wraps before it reaches the button. */
 .book-recipes .recipe-row.has-menu .recipe-row-title {
   margin-right: 44px;
-}
-
-.book-recipes .recipe-row:hover .recipe-row-title {
-  color: var(--green-deep);
 }
 
 /* The recipe's ⋮: between the title and the chevron, vertically centered.
@@ -252,11 +264,13 @@
   padding: var(--sp-5);
 }
 
+/* A recipe's title in a list: green, like every recipe title (see the top
+   of this file). */
 .recipe-row-title {
   font-size: var(--font-row);
   font-weight: 600;
   line-height: 1.3;
-  color: var(--text);
+  color: var(--green-deep);
 }
 
 /* --- one recipe ------------------------------------------------------ */
@@ -265,13 +279,14 @@
   padding: var(--sp-4) var(--pad-x) 0;
 }
 
+/* An opened recipe's title: green, like every recipe title. */
 .recipe-detail h2 {
   margin: 0 0 var(--sp-3);
   font-size: var(--font-title);
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.01em;
-  color: var(--text);
+  color: var(--green-deep);
 }
 
 /* Matches .recipe-photo-frame on the review screen: same radius, same

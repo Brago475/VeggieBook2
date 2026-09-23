@@ -392,13 +392,14 @@
   border-radius: 20px;
 }
 
-/* Serif, to echo the logo's lettering. */
+/* Sans serif like the rest of the app: the original VeggieBook's
+   formative research found pantry clients preferred sans serif text
+   (Evans et al. 2009). */
 .auth-steps-title {
   margin: 0 0 var(--sp-4);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.005em;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   text-align: center;
   color: var(--text);
 }
