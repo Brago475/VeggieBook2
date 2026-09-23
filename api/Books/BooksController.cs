@@ -13,11 +13,12 @@ namespace VeggieBook.Api.Books;
 // books. A book that belongs to someone else answers 404, not 403, so the
 // API never confirms that it exists.
 //
-//   GET    /api/books             this account's books, newest first
-//   GET    /api/books/{id}        one book in full, with recipe titles
-//   POST   /api/books             save a finished book
-//   DELETE /api/books/{id}        delete a book
-//   GET    /api/books/{id}/cover  the book's uploaded cover photo
+//   GET    /api/books                        this account's books, newest first
+//   GET    /api/books/{id}                   one book in full, with recipe titles
+//   POST   /api/books                        save a finished book
+//   DELETE /api/books/{id}                   delete a book
+//   DELETE /api/books/{id}/recipes/{recipe}  take one recipe out of a book
+//   GET    /api/books/{id}/cover             the book's uploaded cover photo
 //
 // Guests never call these. A guest's book lives only in the open page and is
 // gone when it closes.
@@ -285,6 +286,43 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
             .ExecuteDeleteAsync();
 
         return removed == 0 ? NotFound() : NoContent();
+    }
+
+    // Takes one recipe out of a saved book. The row is kept with Kept set to
+    // false rather than deleted: the same flag DROP stands for in the review
+    // step, so the study data still shows the recipe was in the book and was
+    // taken out later. Every screen and count reads only kept recipes, so to
+    // the user it is gone.
+    //
+    // The last recipe cannot be taken out. A book with none has nothing to
+    // open, and deleting the book is the way to clear it.
+    [HttpDelete("{id:guid}/recipes/{recipeId:int}")]
+    public async Task<IActionResult> RemoveRecipe(Guid id, int recipeId)
+    {
+        var uid = CurrentUserId;
+
+        var book = await db.Books
+            .Include(b => b.Selections)
+            .FirstOrDefaultAsync(b => b.Id == id && b.UserId == uid);
+        if (book is null) return NotFound();
+
+        var kept = book.Selections
+            .Where(s => s.ContentType == "recipe" && s.Kept)
+            .ToList();
+
+        var target = kept.FirstOrDefault(s => s.ContentId == recipeId);
+        if (target is null) return NotFound();
+
+        if (kept.Count == 1)
+            return Conflict(new
+            {
+                error = "A book needs at least one recipe. Delete the book instead."
+            });
+
+        target.Kept = false;
+        await db.SaveChangesAsync();
+
+        return NoContent();
     }
 
     [HttpGet("{id:guid}/cover")]
