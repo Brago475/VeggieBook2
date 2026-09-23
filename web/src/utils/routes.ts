@@ -1,0 +1,71 @@
+// The app's addresses, and conversion between an address and the screen it
+// names. Kept separate from the hook so it can be read and tested on its
+// own.
+//
+//   /                             home (or Welcome for a visitor)
+//   /new                          making a new book
+//   /book/{id}                    a saved book
+//   /book/{id}/recipe/{recipeId}  one recipe inside it
+//   /account                      account settings
+//   /signin, /register            sign in, create account
+//
+// Anything else is treated as home, and the address is corrected to /.
+
+export type Route =
+  | { view: 'home' }
+  | { view: 'flow' }
+  | { view: 'account' }
+  | { view: 'signin' }
+  | { view: 'register' }
+  | { view: 'book'; bookId: string; recipeId: number | null }
+
+export function parseRoute(path: string): Route {
+  const parts = path.split('/').filter(Boolean)
+
+  if (parts.length === 0) return { view: 'home' }
+
+  if (parts.length === 1) {
+    switch (parts[0]) {
+      case 'new':
+        return { view: 'flow' }
+      case 'account':
+        return { view: 'account' }
+      case 'signin':
+        return { view: 'signin' }
+      case 'register':
+        return { view: 'register' }
+    }
+  }
+
+  if (parts[0] === 'book' && parts[1]) {
+    if (parts.length === 2) {
+      return { view: 'book', bookId: parts[1], recipeId: null }
+    }
+    if (parts.length === 4 && parts[2] === 'recipe' && /^\d+$/.test(parts[3])) {
+      return { view: 'book', bookId: parts[1], recipeId: Number(parts[3]) }
+    }
+  }
+
+  return { view: 'home' }
+}
+
+// The one correct address for a route, so a stray trailing slash or an
+// unknown path can be tidied up.
+export function routePath(route: Route): string {
+  switch (route.view) {
+    case 'home':
+      return '/'
+    case 'flow':
+      return '/new'
+    case 'account':
+      return '/account'
+    case 'signin':
+      return '/signin'
+    case 'register':
+      return '/register'
+    case 'book':
+      return route.recipeId === null
+        ? `/book/${route.bookId}`
+        : `/book/${route.bookId}/recipe/${route.recipeId}`
+  }
+}

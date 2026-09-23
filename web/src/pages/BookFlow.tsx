@@ -8,7 +8,8 @@ import { Transition } from './Transition'
 import { VegetablePicker } from './VegetablePicker'
 
 // Shows the current step of making a book. The steps and everything chosen
-// along the way live in hooks/useBookFlow.ts; this only picks the screen.
+// along the way, including the place in KEEP / DROP and the extra-copy
+// checkmarks, live in hooks/useBookFlow.ts; this only picks the screen.
 
 type Props = {
   flow: BookFlowState
@@ -67,14 +68,25 @@ export function BookFlow({
         {match.running && <p className="message">Loading recipes...</p>}
         {match.error && <p className="message">Match failed: {match.error}</p>}
         {match.result && (
-          <RecipeReview recipes={match.result.recipes} onFinish={flow.finishReview} />
+          <RecipeReview
+            recipes={match.result.recipes}
+            index={flow.reviewIndex}
+            onDecide={flow.decide}
+          />
         )}
       </>
     )
   }
 
   if (step === 'copies') {
-    return <ExtraCopies recipes={flow.kept} onNext={flow.finishCopies} />
+    return (
+      <ExtraCopies
+        recipes={flow.kept}
+        selected={flow.extraCopies}
+        onToggle={flow.toggleCopy}
+        onNext={flow.finishCopies}
+      />
+    )
   }
 
   return (

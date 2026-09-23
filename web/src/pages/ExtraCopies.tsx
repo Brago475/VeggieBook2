@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { NavBar } from '../components/NavBar'
 import { SafeImage } from '../components/SafeImage'
 import type { RecipeSummary } from '../types'
@@ -7,26 +6,22 @@ import type { RecipeSummary } from '../types'
 // copy of. Selection is recorded and passed along; printing itself is not
 // part of the web app.
 //
+// The checkmarks live in useBookFlow, so they are saved with the rest of
+// the book in progress and survive a refresh.
+//
 // Each tile's photo goes through SafeImage. A recipe with no photo passes
 // null, which SafeImage skips straight to the VeggieBook mark, rather than
 // requesting /images/null and showing a broken-image icon.
 
 type Props = {
   recipes: RecipeSummary[]
-  onNext: (extraCopyIds: number[]) => void
+  selected: number[]
+  onToggle: (id: number) => void
+  onNext: () => void
 }
 
-export function ExtraCopies({ recipes, onNext }: Props) {
-  const [selected, setSelected] = useState<Set<number>>(new Set())
-
-  function toggle(id: number) {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+export function ExtraCopies({ recipes, selected, onToggle, onNext }: Props) {
+  const chosen = new Set(selected)
 
   return (
     <>
@@ -44,8 +39,8 @@ export function ExtraCopies({ recipes, onNext }: Props) {
             <button
               type="button"
               className="copy-tile"
-              onClick={() => toggle(recipe.id)}
-              aria-pressed={selected.has(recipe.id)}
+              onClick={() => onToggle(recipe.id)}
+              aria-pressed={chosen.has(recipe.id)}
             >
               <SafeImage
                 className="copy-tile-img"
@@ -54,9 +49,7 @@ export function ExtraCopies({ recipes, onNext }: Props) {
               <span className="copy-tile-title">{recipe.title}</span>
               <span
                 className={
-                  selected.has(recipe.id)
-                    ? 'copy-tile-box is-checked'
-                    : 'copy-tile-box'
+                  chosen.has(recipe.id) ? 'copy-tile-box is-checked' : 'copy-tile-box'
                 }
                 aria-hidden="true"
               />
@@ -65,7 +58,7 @@ export function ExtraCopies({ recipes, onNext }: Props) {
         ))}
       </ul>
 
-      <NavBar primaryLabel="NEXT" onPrimary={() => onNext([...selected])} />
+      <NavBar primaryLabel="NEXT" onPrimary={onNext} />
     </>
   )
 }

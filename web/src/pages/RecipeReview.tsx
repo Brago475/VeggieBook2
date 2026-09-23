@@ -1,21 +1,20 @@
-import { useLayoutEffect, useState } from 'react'
+import { useLayoutEffect } from 'react'
 import { RecipeCard } from '../components/RecipeCard'
 import type { RecipeSummary } from '../types'
 
 // The KEEP / DROP flow. One recipe at a time; kept ones become the book.
 //
-// Both buttons advance, they differ only in whether the recipe is recorded.
-// When the last card is answered, onFinish receives the kept recipes.
+// Which recipe is showing, and what has been kept so far, live in
+// useBookFlow rather than here, so they are saved with the rest of the
+// book in progress and a refresh returns to the same recipe.
 
 type Props = {
   recipes: RecipeSummary[]
-  onFinish: (kept: RecipeSummary[]) => void
+  index: number
+  onDecide: (keep: boolean) => void
 }
 
-export function RecipeReview({ recipes, onFinish }: Props) {
-  const [index, setIndex] = useState(0)
-  const [kept, setKept] = useState<RecipeSummary[]>([])
-
+export function RecipeReview({ recipes, index, onDecide }: Props) {
   const recipe = recipes[index]
 
   // KEEP and DROP sit at the bottom of a long recipe, so without this the
@@ -25,17 +24,6 @@ export function RecipeReview({ recipes, onFinish }: Props) {
   useLayoutEffect(() => {
     window.scrollTo(0, 0)
   }, [index])
-
-  function decide(keep: boolean) {
-    const nextKept = keep ? [...kept, recipe] : kept
-    setKept(nextKept)
-
-    if (index === recipes.length - 1) {
-      onFinish(nextKept)
-      return
-    }
-    setIndex(index + 1)
-  }
 
   if (!recipe) {
     return <p className="message">No recipes matched your choices.</p>
@@ -53,18 +41,10 @@ export function RecipeReview({ recipes, onFinish }: Props) {
       />
 
       <div className="decide">
-        <button
-          type="button"
-          className="decide-btn"
-          onClick={() => decide(true)}
-        >
+        <button type="button" className="decide-btn" onClick={() => onDecide(true)}>
           KEEP
         </button>
-        <button
-          type="button"
-          className="decide-btn"
-          onClick={() => decide(false)}
-        >
+        <button type="button" className="decide-btn" onClick={() => onDecide(false)}>
           DROP
         </button>
       </div>
