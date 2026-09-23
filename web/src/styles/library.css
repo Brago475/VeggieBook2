@@ -1,58 +1,211 @@
-/* Home screen book list: spacing between books, and each book's delete
-   link. The account bar above the list lives in account.css. */
+/* Home screen: the heading, the two create buttons, and the book list.
+   The ⋮ on each card is styled in menu.css; the card itself in
+   book-card.css. */
 
+/* Off-white behind everything, matching a saved book, so the white
+   buttons and photo cards stand out from it. */
+.library {
+  padding-bottom: var(--sp-6);
+  background: var(--surface-alt);
+}
+
+/* --- heading --------------------------------------------------------- */
+
+.library-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-5) var(--pad-x) var(--sp-3);
+}
+
+.library-head-text {
+  min-width: 0;
+}
+
+.library-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.library-sub {
+  margin: 4px 0 0;
+  overflow: hidden;
+  font-size: var(--font-label);
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-account {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.library-account:hover {
+  background: var(--green-tint);
+  border-color: var(--green);
+}
+
+.library-account:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.library-account svg {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+}
+
+/* --- create buttons -------------------------------------------------- */
+
+.library-create {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--pad-x) var(--sp-5);
+}
+
+/* Icon circle on the left, label centered, chevron on the right. */
+.library-create-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 12px 18px 12px 12px;
+  font: inherit;
+  font-size: var(--font-row);
+  font-weight: 700;
+  border-radius: 18px;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.library-create-btn:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 3px;
+}
+
+.library-create-label {
+  flex: 1;
+  text-align: center;
+}
+
+.library-create-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.library-create-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.library-create-chevron {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  opacity: 0.85;
+}
+
+/* The main action. A deeper green than the brand green so the white text
+   on it stays readable. */
+.library-create-btn.is-primary {
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(180deg, #66a02a, #47831c);
+  border: 0;
+  box-shadow: 0 6px 16px rgba(71, 131, 28, 0.35);
+}
+
+.library-create-btn.is-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(71, 131, 28, 0.4);
+}
+
+.library-create-btn.is-primary:active {
+  transform: translateY(0);
+}
+
+.is-primary .library-create-icon {
+  color: #47831c;
+  background: #fff;
+}
+
+.library-create-btn.is-secondary {
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+}
+
+.library-create-btn.is-secondary:hover:not(:disabled) {
+  background: var(--green-tint);
+  border-color: var(--green);
+}
+
+.is-secondary .library-create-icon {
+  color: var(--text);
+  background: var(--surface-alt);
+}
+
+/* Secrets Book is not built yet. */
+.library-create-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* --- book list ------------------------------------------------------- */
+
+.library-books {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0 var(--pad-x);
+  list-style: none;
+}
+
+/* Holds the card and the ⋮ over its top right corner. The ⋮ is a sibling
+   of the card rather than inside it, so tapping it never opens the book. */
 .book-item {
-  margin-bottom: var(--sp-4);
+  position: relative;
 }
 
 .book-item .book-card {
-  margin-bottom: var(--sp-1);
+  margin-bottom: 0;
 }
 
-/* Quiet by default so it is never mistaken for the main action, and red on
-   hover so its meaning is clear before the click. */
-.book-delete {
-  display: block;
-  margin-left: auto;
-  padding: var(--sp-1) var(--pad-x);
-  font: inherit;
-  font-size: var(--font-small);
-  color: var(--text-muted);
-  background: none;
-  border: 0;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
-.book-delete:hover {
-  color: var(--danger);
-}
-/* The card as a button: no chrome of its own, the card is the surface. */
-.book-open {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  text-align: inherit;
-}
-
-.book-open:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 3px;
-  border-radius: 8px;
-}
-
-/* The trash icon takes the same quiet treatment as the text link it
-   replaced: no box, aligned right under the card, red on hover. */
-.book-delete {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 36px;
-  padding: 0;
-  text-decoration: none;
+.book-item-menu {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  z-index: 2;
 }

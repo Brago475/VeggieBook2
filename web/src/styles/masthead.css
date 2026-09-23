@@ -1,0 +1,92 @@
+/* Masthead: the green brand bar at the top of every screen. */
+
+.masthead {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  padding: var(--sp-2) var(--pad-x);
+  background: var(--green);
+}
+
+/* Absolute so the logo stays centered whether or not the button is there.
+   A filled pill with a label because a bare chevron on a web page reads as
+   decoration rather than navigation. */
+.masthead-back {
+  position: absolute;
+  left: var(--sp-3);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 8px 12px;
+  font-size: var(--font-label);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.85);
+  border: 0;
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.masthead-back:hover {
+  background: #fff;
+}
+
+.masthead-back:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.masthead-back-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* 220px keeps the vegetable photos the focus of each screen. */
+.masthead-logo {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+}
+
+/* Faint leaf tucked into the right corner, clipped by overflow: hidden. */
+.masthead-decor {
+  position: absolute;
+  right: -12px;
+  top: -18px;
+  width: 104px;
+  height: 104px;
+  color: rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+/* Narrow phones: the pill and the logo start to collide, so the pill drops
+   to the arrow alone. The word stays in the markup for screen readers. */
+@media (max-width: 380px) {
+  .masthead-back {
+    padding: 8px;
+  }
+
+  .masthead-back-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .masthead-logo {
+    max-width: 170px;
+  }
+}

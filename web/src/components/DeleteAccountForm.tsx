@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react'
+import { TrashIcon } from './AccountIcons'
+import { PasswordField } from './PasswordField'
 
 // Delete account, on the account settings screen.
 //
-// Two steps: a first click reveals a password field, so the account cannot
+// Two steps: the first click opens a password field, so the account cannot
 // be deleted by one stray tap, or by someone using a device its owner left
 // signed in. The API then removes the account, every book, and every
 // uploaded photo in one step.
@@ -46,39 +48,41 @@ export function DeleteAccountForm({ onDeleteAccount }: Props) {
   }
 
   return (
-    <form className="account-page" onSubmit={submit} noValidate>
-      <h2 className="account-section-title">Delete account</h2>
-      <p className="account-text">
-        This permanently deletes your account, all of your books, and any
-        photos you uploaded. It cannot be undone.
-      </p>
+    <form className="account-card" onSubmit={submit} noValidate>
+      <div className="account-card-head">
+        <span className="account-card-icon is-danger">
+          <TrashIcon />
+        </span>
+        <div className="account-card-head-text">
+          <h2 className="account-card-title">Delete account</h2>
+          <p className="account-card-text">
+            This permanently deletes your account, all of your books, and any
+            photos you uploaded. It cannot be undone.
+          </p>
+        </div>
 
-      {!confirming && (
-        <button
-          type="button"
-          className="account-btn is-danger"
-          onClick={() => setConfirming(true)}
-        >
-          Delete my account
-        </button>
-      )}
+        {!confirming && (
+          <button
+            type="button"
+            className="account-danger-btn"
+            onClick={() => setConfirming(true)}
+          >
+            Delete my account
+          </button>
+        )}
+      </div>
 
       {confirming && (
         <>
-          <div className="field">
-            <label className="field-label" htmlFor="delete-password">
-              Enter your password to confirm
-            </label>
-            <input
-              id="delete-password"
-              className="field-input"
-              type="password"
-              autoComplete="current-password"
-              maxLength={128}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+          {/* Focused as soon as it appears, so the next step is obvious. */}
+          <PasswordField
+            id="delete-password"
+            label="Enter your password to confirm"
+            autoComplete="current-password"
+            value={password}
+            onChange={setPassword}
+            autoFocus
+          />
 
           {error && (
             <p className="form-error" role="alert">
@@ -86,7 +90,11 @@ export function DeleteAccountForm({ onDeleteAccount }: Props) {
             </p>
           )}
 
-          <button type="submit" className="account-btn is-danger" disabled={busy}>
+          <button
+            type="submit"
+            className="account-danger-btn is-filled"
+            disabled={busy}
+          >
             {busy ? 'Deleting...' : 'Permanently delete my account'}
           </button>
           <button type="button" className="link-btn" onClick={cancel}>

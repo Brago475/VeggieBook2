@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { BookCard } from '../components/BookCard'
+import { BookHeading } from '../components/BookHeading'
 import { NavBar } from '../components/NavBar'
 import { RecipeSections } from '../components/RecipeSections'
 import { SafeImage } from '../components/SafeImage'
@@ -10,11 +11,11 @@ import { coverSrc } from '../utils/coverSrc'
 
 // A saved book, opened from the home library.
 //
-// The book's recipes are listed as a photo and a title. Tapping one opens
-// its full content through RecipeSections, the same component the review
-// step uses, so a recipe reads the same in both places. Coming back
-// returns to the same place in the list, so working through a long book
-// does not mean scrolling from the top each time.
+// The book's recipes are listed as cards: a photo, a title and a chevron.
+// Tapping one opens its full content through RecipeSections, the same
+// component the review step uses, so a recipe reads the same in both
+// places. Coming back returns to the same place in the list, so working
+// through a long book does not mean scrolling from the top each time.
 //
 // Read only. A book's recipes and cover are fixed once it is saved; the
 // only change available here is deleting the whole book.
@@ -122,18 +123,19 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
 
   // The book's recipe list.
   return (
-    <>
-      <div className="intro-text">
-        <p>Your {vegetableName} VeggieBook</p>
-      </div>
+    <div className="book-view">
+      {/* Logo, a small "YOUR", then the book's name. */}
+      <BookHeading title={`${vegetableName} VeggieBook`} />
 
       {/* The same card the home screen and the cover chooser show, so a
-          book looks the same wherever it appears. */}
+          book looks the same wherever it appears. Here it also carries the
+          small "VEGGIEBOOK" label under the name. */}
       <div className="cover-preview">
         <BookCard
           title={vegetableName}
           background={vegetableShortCode ? `cover/${vegetableShortCode}.jpg` : null}
           cover={book.cover}
+          label="VeggieBook"
         />
       </div>
 
@@ -161,6 +163,21 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
                 src={r.photo ? coverSrc(r.photo) : null}
               />
               <span className="recipe-row-title">{r.title}</span>
+              <svg
+                className="recipe-row-chevron"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M9 5l7 7-7 7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
           </li>
         ))}
@@ -203,6 +220,6 @@ export function BookViewer({ bookId, vegetables, onClose, onDelete }: Props) {
       </div>
 
       <NavBar primaryLabel="BACK" onPrimary={onClose} />
-    </>
+    </div>
   )
 }

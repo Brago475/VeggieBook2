@@ -1,8 +1,9 @@
-/* Account screens: welcome, sign in, create account, account settings, and
-   the account bar on the home screen.
+/* Account screens: welcome, sign in, create account, and account settings.
 
-   Primary buttons reuse .create-btn from pages.css, so the green action
-   looks the same everywhere. */
+   The shared pieces near the top (fields, messages, .account-btn,
+   .link-btn) are also used by the sign-in form, ConfirmDialog, and a few
+   other screens, so they stay general. The account settings screen has its
+   own section at the bottom. */
 
 .account-page {
   display: flex;
@@ -85,9 +86,8 @@
   color: var(--text-label);
 }
 
-/* Filled and borderless at rest, outlined only on focus. A 1px gray box
-   around white on white is the shape every form had in 2012; a soft fill
-   reads as a place to type without drawing a frame around it.
+/* Filled and borderless at rest, outlined only on focus. A soft fill reads
+   as a place to type without drawing a frame around it.
 
    17px text: iOS zooms the page in on any input smaller than 16px. */
 .field-input {
@@ -113,6 +113,11 @@
   outline-offset: 1px;
 }
 
+.field-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
 /* Browsers paint their own pale blue on autofilled fields and ignore the
    background property, so the only way to cover it is a large inset
    shadow. The long transition keeps it from flashing blue on focus. */
@@ -135,6 +140,11 @@
 
 .field-input.has-action {
   padding-right: 84px;
+}
+
+/* Room for the eye button in PasswordField. */
+.field-input.has-icon {
+  padding-right: 56px;
 }
 
 /* Sized to stay a comfortable tap target on a phone, which a checkbox
@@ -164,6 +174,40 @@
 .field-action:focus-visible {
   outline: 2px solid var(--green-dark);
   outline-offset: 1px;
+}
+
+/* The eye button inside PasswordField. */
+.field-icon-btn {
+  position: absolute;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  color: var(--text-muted);
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.field-icon-btn:hover {
+  color: var(--text);
+  background: var(--surface-alt);
+}
+
+.field-icon-btn:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 1px;
+}
+
+.field-icon-btn svg {
+  width: 22px;
+  height: 22px;
 }
 
 .field-hint {
@@ -213,6 +257,7 @@
 
 /* --- buttons ---------------------------------------------------------- */
 
+/* Used by ConfirmDialog for its red confirm button. */
 .account-btn {
   width: 100%;
   padding: var(--sp-4);
@@ -260,113 +305,301 @@
   cursor: pointer;
 }
 
-/* The bar at the top of the home screen: who is signed in, or a reminder
-   that a guest's books are not saved. */
-.account-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  padding: var(--sp-3) var(--pad-x);
-  font-size: var(--font-small);
-  color: var(--text-muted);
-  background: var(--surface-alt);
-  border-bottom: 1px solid var(--line);
-}
-
-.account-bar-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.account-bar .link-btn {
-  flex-shrink: 0;
-  font-size: var(--font-small);
-}
 /* --- account settings ------------------------------------------------- */
 
+/* Off-white behind the cards, matching the home screen and a saved book.
+   overflow: hidden clips the corner leaves at the screen's edge. */
 .account-screen {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
-  padding: var(--sp-5) var(--pad-x) var(--sp-6);
+  padding: var(--sp-5) var(--pad-x) var(--sp-7);
+  background: var(--surface-alt);
 }
 
-.account-head {
+/* Everything except the leaves sits above them. */
+.account-screen > :not(.account-leaf) {
+  position: relative;
+  z-index: 1;
+}
+
+.account-leaf {
+  position: absolute;
+  z-index: 0;
+  left: -36px;
+  bottom: -28px;
+  width: 190px;
+  height: 190px;
+  color: rgba(140, 198, 62, 0.16);
+  pointer-events: none;
+}
+
+.account-leaf.is-small {
+  left: 96px;
+  bottom: -40px;
+  width: 120px;
+  height: 120px;
+  transform: rotate(28deg);
+}
+
+/* Heading: avatar, then the title, email, and a short line. */
+.account-hero {
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  padding-bottom: var(--sp-1);
+  align-items: center;
+  gap: var(--sp-4);
+  padding-bottom: var(--sp-2);
 }
 
-.account-sub {
-  margin: 0;
+.account-avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border-radius: 50%;
+}
+
+.account-avatar svg {
+  width: 38px;
+  height: 38px;
+}
+
+.account-hero-text {
+  min-width: 0;
+}
+
+.account-hero .account-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.account-email {
+  margin: 2px 0 0;
+  font-size: var(--font-row);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.account-tagline {
+  margin: 4px 0 0;
   font-size: var(--font-label);
   color: var(--text-muted);
 }
 
-/* One card per section. The child components render their own
-   .account-page, so both selectors get the same treatment and neither
-   component has to change. */
-.account-screen > .account-card,
-.account-screen > .account-page,
-.account-danger > .account-page {
+/* One card per section. */
+.account-card {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3);
-  padding: var(--sp-4);
+  gap: var(--sp-4);
+  padding: var(--sp-5);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(20, 20, 15, 0.06);
 }
 
-/* Inside a card the heading starts the card, so it needs no space above
-   it. The card's own padding is the space. */
-.account-screen .account-section-title,
-.account-danger .account-section-title {
-  margin-top: 0;
+/* Icon circle, title and text, and (on the delete card) the button on the
+   right. Wraps on a narrow phone so the button drops below the text
+   instead of squeezing it. */
+.account-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3) var(--sp-4);
 }
 
-/* The one thing on this screen that cannot be undone, marked as such
-   rather than left in the same rhythm as signing out. */
-.account-danger > .account-page {
+.account-card-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border-radius: 50%;
+}
+
+.account-card-icon.is-danger {
+  color: var(--danger);
   background: var(--danger-tint);
-  border-color: var(--danger-line);
 }
 
-/* The action inside a card is the card's whole point, so it is filled
-   rather than outlined. Outlined-in-a-box left every action on the page
-   looking the same weight, which told the eye nothing. */
-.account-screen > .account-page .account-btn {
+.account-card-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.account-card-head-text {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.account-card-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.account-card-text {
+  margin: 2px 0 0;
+  font-size: var(--font-label);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+/* Inside a white card the fields are outlined rather than filled, so they
+   stand out from the card around them. */
+.account-card .field-input {
+  background: var(--surface);
+  border-color: var(--line-strong);
+}
+
+.account-card .field-input:hover {
+  border-color: var(--green);
+}
+
+.account-card .field-input:focus {
+  border-color: var(--green-dark);
+}
+
+.account-card .field-input:-webkit-autofill,
+.account-card .field-input:-webkit-autofill:hover,
+.account-card .field-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--surface) inset;
+  box-shadow: 0 0 0 1000px var(--surface) inset;
+}
+
+/* The card's main action: filled deep green. */
+.account-primary {
+  width: 100%;
+  padding: 15px;
+  font: inherit;
+  font-size: var(--font-row);
+  font-weight: 700;
   color: #fff;
   background: var(--green-deep);
-  border-color: var(--green-deep);
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.account-screen > .account-page .account-btn:hover {
+.account-primary:hover {
   background: var(--green-deep-press);
 }
 
-.account-screen > .account-page .account-btn:disabled {
-  color: #fff;
-  opacity: 0.55;
+.account-primary:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
 }
 
-/* The one irreversible action, filled so it is unmistakable rather than a
-   pale outline that reads like a link. */
-.account-danger > .account-page .account-btn.is-danger {
+.account-primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Outlined red for the first step, filled red for the final one, so the
+   step that actually deletes is the one that looks the most serious. */
+.account-danger-btn {
+  flex: 0 0 auto;
+  padding: 11px 18px;
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: 700;
+  color: var(--danger);
+  background: var(--surface);
+  border: 1.5px solid var(--danger);
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.account-danger-btn:hover {
+  background: var(--danger-tint);
+}
+
+.account-danger-btn:focus-visible {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
+}
+
+.account-danger-btn.is-filled {
+  width: 100%;
+  padding: 15px;
+  font-size: var(--font-row);
   color: #fff;
   background: var(--danger);
-  border-color: var(--danger);
 }
 
-.account-danger > .account-page .account-btn.is-danger:hover {
+.account-danger-btn.is-filled:hover {
   background: #8b1f18;
 }
 
-/* Sign out is not a card, so it keeps the plain outlined treatment and
-   sits quieter than the filled actions inside the cards. */
-.account-screen > .account-btn {
-  margin-bottom: var(--sp-1);
+.account-danger-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Sign out, below the cards. */
+.account-divider {
+  width: 100%;
+  height: 1px;
+  margin: var(--sp-3) 0 var(--sp-2);
+  background: var(--line);
+  border: 0;
+}
+
+.account-signout {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 30px;
+  font: inherit;
+  font-size: var(--font-row);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.account-signout:hover {
+  background: var(--green-tint);
+  border-color: var(--green);
+}
+
+.account-signout:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.account-signout:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.account-signout svg {
+  width: 20px;
+  height: 20px;
+}
+
+.account-signout-note {
+  align-self: center;
+  margin: calc(var(--sp-2) * -1) 0 0;
+  font-size: var(--font-small);
+  text-align: center;
+  color: var(--text-muted);
 }

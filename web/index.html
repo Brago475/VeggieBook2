@@ -9,8 +9,8 @@
     <meta name="description" content="Quick Help for Meals" />
 
     <!-- Fetched early so the logo is on the loading screen from the start
-         rather than popping in after the green. -->
-    <link rel="preload" as="image" href="/brand/logo-negative-en.png" />
+         rather than popping in a moment later. -->
+    <link rel="preload" as="image" href="/brand/logo-positive-en.png" />
 
     <!--
       The loading screen's styles live here, not in src/styles, on purpose.
@@ -22,8 +22,11 @@
       sign-in check runs, so the static screen below and React's version
       are the same screen, and the handover between them cannot be seen.
 
-      The color is the brand green, written out because the design tokens
-      in tokens.css have not loaded yet at this point.
+      Colors are written out because the design tokens in tokens.css have
+      not loaded yet at this point.
+
+      The vegetable icons are Microsoft Fluent Emoji, MIT license, kept with
+      the files in public/icons/veg/LICENSE.txt.
     -->
     <style>
       .loading-screen {
@@ -34,69 +37,150 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 28px;
-        background: #8cc63e;
+        padding: 24px;
+        background: #ffffff;
       }
 
       .loading-logo {
-        width: 220px;
+        width: 240px;
         max-width: 70vw;
         height: auto;
+        margin-bottom: 40px;
       }
 
-      .loading-dots {
-        display: flex;
+      .loading-label {
+        margin: 0 0 20px;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #8a8a80;
+      }
+
+      .loading-progress {
+        width: min(320px, 80vw);
+      }
+
+      /* Two identical rows of vegetables stacked on top of each other: a
+         gray one underneath, and a full-color one on top that is revealed
+         from left to right. The bar below uses the same timing, so the
+         color and the bar always line up. */
+      .loading-veg {
+        position: relative;
+        margin-bottom: 14px;
+      }
+
+      .loading-veg-row {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
         gap: 8px;
       }
 
-      .loading-dots span {
-        width: 10px;
+      .loading-veg-row img {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1;
+      }
+
+      .loading-veg-base img {
+        filter: grayscale(1);
+        opacity: 0.28;
+      }
+
+      .loading-veg-lit {
+        position: absolute;
+        inset: 0;
+        clip-path: inset(0 100% 0 0);
+        animation: loading-reveal 2.6s ease-in-out infinite;
+        animation-delay: var(--loading-offset, 0s);
+      }
+
+      .loading-track {
         height: 10px;
-        border-radius: 50%;
-        background: #ffffff;
-        opacity: 0.35;
-        animation: loading-dot 1.2s ease-in-out infinite;
+        overflow: hidden;
+        background: #eef3e6;
+        border-radius: 999px;
       }
 
-      .loading-dots span:nth-child(2) {
-        animation-delay: 0.2s;
+      .loading-track-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #8cc63e, #6fa32c);
+        border-radius: 999px;
+        transform: scaleX(0);
+        transform-origin: left center;
+        animation: loading-fill 2.6s ease-in-out infinite;
+        animation-delay: var(--loading-offset, 0s);
       }
 
-      .loading-dots span:nth-child(3) {
-        animation-delay: 0.4s;
-      }
-
-      @keyframes loading-dot {
-        0%,
+      /* Fills over the first 80%, then holds full for a beat before
+         starting again. */
+      @keyframes loading-reveal {
+        0% {
+          clip-path: inset(0 100% 0 0);
+        }
         80%,
         100% {
-          opacity: 0.35;
-          transform: scale(0.8);
+          clip-path: inset(0 0 0 0);
         }
-        40% {
-          opacity: 1;
-          transform: scale(1);
+      }
+
+      @keyframes loading-fill {
+        0% {
+          transform: scaleX(0);
+        }
+        80%,
+        100% {
+          transform: scaleX(1);
         }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .loading-dots span {
+        .loading-veg-lit {
           animation: none;
-          opacity: 0.8;
+          clip-path: none;
+        }
+
+        .loading-track-fill {
+          animation: none;
+          transform: scaleX(1);
         }
       }
     </style>
   </head>
   <body>
     <!-- Shown until React starts, which replaces everything inside root.
-         Keep this markup matching components/LoadingScreen.tsx. -->
+         Keep this markup, and the order of the vegetables, matching
+         components/LoadingScreen.tsx. -->
     <div id="root">
       <div class="loading-screen" role="status" aria-label="Loading VeggieBook">
-        <img class="loading-logo" src="/brand/logo-negative-en.png" alt="" />
-        <div class="loading-dots" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
+        <img class="loading-logo" src="/brand/logo-positive-en.png" alt="" />
+        <p class="loading-label" aria-hidden="true">Loading...</p>
+        <div class="loading-progress" aria-hidden="true">
+          <div class="loading-veg">
+            <div class="loading-veg-row loading-veg-base">
+              <img src="/icons/veg/carrot.svg" alt="" />
+              <img src="/icons/veg/broccoli.svg" alt="" />
+              <img src="/icons/veg/tomato.svg" alt="" />
+              <img src="/icons/veg/leafy-green.svg" alt="" />
+              <img src="/icons/veg/corn.svg" alt="" />
+              <img src="/icons/veg/cucumber.svg" alt="" />
+              <img src="/icons/veg/potato.svg" alt="" />
+              <img src="/icons/veg/onion.svg" alt="" />
+            </div>
+            <div class="loading-veg-row loading-veg-lit">
+              <img src="/icons/veg/carrot.svg" alt="" />
+              <img src="/icons/veg/broccoli.svg" alt="" />
+              <img src="/icons/veg/tomato.svg" alt="" />
+              <img src="/icons/veg/leafy-green.svg" alt="" />
+              <img src="/icons/veg/corn.svg" alt="" />
+              <img src="/icons/veg/cucumber.svg" alt="" />
+              <img src="/icons/veg/potato.svg" alt="" />
+              <img src="/icons/veg/onion.svg" alt="" />
+            </div>
+          </div>
+          <div class="loading-track"><div class="loading-track-fill"></div></div>
         </div>
       </div>
     </div>

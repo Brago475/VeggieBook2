@@ -23,6 +23,9 @@ import type { BookSummary, NewBook } from './types'
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
+import './styles/masthead.css'
+import './styles/book-card.css'
+import './styles/menu.css'
 import './styles/pages.css'
 import './styles/account.css'
 import './styles/auth.css'
@@ -167,7 +170,11 @@ export default function App() {
 
   return (
     <div className="app">
-      {!onAuthScreen && <Masthead onBack={backAction()} />}
+      {/* The leaf ornament shows on the account screen only; the library
+          and reading screens keep a plain bar so the photos lead. */}
+      {!onAuthScreen && (
+        <Masthead onBack={backAction()} decor={current === 'account'} />
+      )}
 
       {error && <p className="message">Could not load: {error}</p>}
 

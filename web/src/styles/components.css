@@ -1,61 +1,27 @@
 /* Shared component styles.
-   Page-specific styles live in pages.css. */
+   Page-specific styles live in pages.css. The masthead has its own file,
+   masthead.css. */
 
 /* App shell */
 
+/* A column the full height of the window, so a screen can stretch to the
+   bottom instead of stopping where its content ends. */
 .app {
+  display: flex;
+  flex-direction: column;
   max-width: var(--app-max);
   margin: 0 auto;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--surface);
 }
 
-/* Masthead */
-
-.masthead {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--sp-2) var(--pad-x);
-  background: var(--green);
-}
-
-/* Absolute so the logo stays centered whether or not the button is there.
-   Given a visible border and label because a bare chevron on a web page
-   reads as decoration rather than navigation. */
-.masthead-back {
-  position: absolute;
-  left: var(--sp-2);
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-  padding: 6px 12px;
-  font-size: var(--font-small);
-  font-weight: 600;
-  line-height: 1;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.6);
-  border: 0;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.masthead-back:hover {
-  background: rgba(255, 255, 255, 0.85);
-}
-
-.masthead-back span {
-  font-size: 17px;
-}
-
-.masthead-logo {
-  width: 100%;
-  max-width: 220px;
-  height: auto;
+/* The off-white screens fill the rest of the window below the masthead,
+   so no strip of white shows under a short page. */
+.app > .library,
+.app > .book-view,
+.app > .account-screen {
+  flex: 1 0 auto;
 }
 
 /* Screen label strip */

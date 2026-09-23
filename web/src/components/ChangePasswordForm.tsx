@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
+import { LockIcon } from './LibraryIcons'
+import { PasswordField } from './PasswordField'
 
 // Change password, on the account settings screen.
 //
 // On success the API gives this device a fresh session and signs out every
-// other one. The fields clear and a confirmation shows.
+// other one. The fields clear and a confirmation says so.
 
 type Props = {
   email: string
@@ -46,44 +48,37 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
   }
 
   return (
-    <form className="account-page" onSubmit={submit} noValidate>
-      <h2 className="account-section-title">Change password</h2>
+    <form className="account-card" onSubmit={submit} noValidate>
+      <div className="account-card-head">
+        <span className="account-card-icon">
+          <LockIcon />
+        </span>
+        <div className="account-card-head-text">
+          <h2 className="account-card-title">Change password</h2>
+          <p className="account-card-text">Keep your account secure.</p>
+        </div>
+      </div>
 
       {/* Lets password managers save the new password under this email. */}
       <input type="email" autoComplete="username" value={email} readOnly hidden />
 
-      <div className="field">
-        <label className="field-label" htmlFor="current-password">
-          Current password
-        </label>
-        <input
-          id="current-password"
-          className="field-input"
-          type="password"
-          autoComplete="current-password"
-          maxLength={128}
-          value={current}
-          onChange={(e) => setCurrent(e.target.value)}
-        />
-      </div>
+      <PasswordField
+        id="current-password"
+        label="Current password"
+        autoComplete="current-password"
+        value={current}
+        onChange={setCurrent}
+      />
 
-      <div className="field">
-        <label className="field-label" htmlFor="new-password">
-          New password
-        </label>
-        <input
-          id="new-password"
-          className="field-input"
-          type="password"
-          autoComplete="new-password"
-          maxLength={128}
-          value={next}
-          onChange={(e) => setNext(e.target.value)}
-        />
-        <p className="field-hint">
-          At least 12 characters. Changing it signs you out on your other devices.
-        </p>
-      </div>
+      <PasswordField
+        id="new-password"
+        label="New password"
+        autoComplete="new-password"
+        placeholder="Enter a new password"
+        hint={`Use at least ${MIN_PASSWORD} characters.`}
+        value={next}
+        onChange={setNext}
+      />
 
       {error && (
         <p className="form-error" role="alert">
@@ -96,7 +91,7 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
         </p>
       )}
 
-      <button type="submit" className="account-btn" disabled={busy}>
+      <button type="submit" className="account-primary" disabled={busy}>
         {busy ? 'Changing...' : 'Change password'}
       </button>
     </form>

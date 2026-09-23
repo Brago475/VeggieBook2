@@ -1,0 +1,161 @@
+/* The book card: a vegetable photo with the chosen cover inset on the
+   right and the book's name along the bottom. Shared by the home screen,
+   the top of a saved book, and the cover chooser's preview. */
+
+.book-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  max-height: 260px;
+  margin-bottom: var(--sp-3);
+  padding: 0;
+  overflow: hidden;
+  font: inherit;
+  text-align: left;
+  background: var(--surface-alt);
+  border: 0;
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(20, 20, 15, 0.12);
+}
+
+button.book-card {
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+button.book-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(20, 20, 15, 0.16);
+}
+
+button.book-card:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 3px;
+}
+
+.book-card-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Darkens the lower part of the photo so white text stays readable
+   whatever color the bottom of the photo happens to be. */
+.book-card::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 70%;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.65),
+    rgba(0, 0, 0, 0.25) 55%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Rounded, with a thick white frame and a real shadow, so it reads as a
+   photo resting on top of the vegetable picture. */
+.book-card-cover {
+  position: absolute;
+  z-index: 1;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  width: 26%;
+  max-width: 160px;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background: var(--surface-alt);
+  border: 4px solid var(--surface);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+/* The name and anything under it. Stops short of the inset so long names
+   wrap instead of running underneath it. */
+.book-card-text {
+  position: absolute;
+  z-index: 1;
+  left: var(--sp-5);
+  right: calc(26% + var(--sp-4) * 2);
+  bottom: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-invert);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+
+.book-card-name {
+  font-size: var(--font-hero);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+/* A short rule, then a small word spaced wide: "—— VEGGIEBOOK". */
+.book-card-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0.92;
+}
+
+.book-card-label::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+}
+
+.book-card-subtitle {
+  font-size: var(--font-label);
+  font-weight: 400;
+  opacity: 0.92;
+}
+
+.book-card-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: var(--font-small);
+  font-weight: 500;
+}
+
+.book-card-count-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Phones: a smaller name and tighter edges so the text still fits beside
+   the inset. */
+@media (max-width: 480px) {
+  .book-card-text {
+    left: var(--sp-4);
+    bottom: var(--sp-3);
+  }
+
+  .book-card-name {
+    font-size: var(--font-title);
+  }
+
+  .book-card-cover {
+    right: var(--sp-3);
+    bottom: var(--sp-3);
+    border-width: 3px;
+  }
+}
