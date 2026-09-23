@@ -1,14 +1,7 @@
 /* Page-specific styles. */
 
-/* Home library */
-
-.create-actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-  padding: var(--sp-5) var(--pad-x);
-}
-
+/* Green action button. The home screen no longer uses it (see
+   library.css), but ConfirmDialog does for its non-danger confirm. */
 .create-btn {
   width: 100%;
   padding: var(--sp-4);
@@ -64,10 +57,6 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--green-dark);
-}
-
-.choice-list {
-  margin-top: var(--sp-4);
 }
 
 /* Transition screen */

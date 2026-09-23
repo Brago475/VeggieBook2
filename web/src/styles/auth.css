@@ -132,7 +132,11 @@
   margin: 0 auto;
 }
 
+/* The title and the lines under it, centered and stacked. */
 .auth-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
   text-align: center;
 }
 
@@ -360,9 +364,8 @@
   text-align: center;
 }
 
-/* The other door, under a thin line. display: block on purpose: an older
-   .auth-switch rule in account.css makes it a column, which put "New
-   here?" and its link on two separate lines. */
+/* The other door on sign in and create account, under a thin line, with
+   "New here?" and its link on one line. */
 .auth-switch {
   display: block;
   margin: var(--sp-2) 0 0;

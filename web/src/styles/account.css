@@ -1,9 +1,10 @@
-/* Account screens: welcome, sign in, create account, and account settings.
+/* Account settings, and the form pieces shared with other screens.
 
    The shared pieces near the top (fields, messages, .account-btn,
-   .link-btn) are also used by the sign-in form, ConfirmDialog, and a few
-   other screens, so they stay general. The account settings screen has its
-   own section at the bottom. */
+   .link-btn) are also used by PasswordField, ConfirmDialog, and the saved
+   book screen, so they stay general. Welcome, sign in, and create account
+   are styled in auth.css. The account settings screen has its own section
+   at the bottom. */
 
 .account-page {
   display: flex;
@@ -19,57 +20,8 @@
   color: var(--text);
 }
 
-.account-section-title {
-  margin: var(--sp-4) 0 0;
-  font-size: var(--font-section);
-  font-weight: 700;
-  color: var(--text);
-}
-
-.account-text {
-  margin: 0;
-  font-size: var(--font-label);
-  line-height: 1.5;
-  color: var(--text-muted);
-}
-
 .account-center {
   text-align: center;
-}
-
-/* --- sign in and create account --------------------------------------- */
-
-/* Its own container rather than .account-page. That page puts the same gap
-   between every child, which is right for a settings list and wrong for a
-   form, where the heading, the fields, the action, and the other door are
-   four groups that should not be evenly spaced. */
-.auth-page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-5);
-  padding: var(--sp-6) var(--pad-x);
-}
-
-.auth-head {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-
-/* The two fields belong together, closer to each other than to anything
-   around them. */
-.auth-fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-}
-
-.auth-switch {
-  display: flex;
-  flex-direction: column;
-  margin-top: var(--sp-2);
-  padding-top: var(--sp-5);
-  border-top: 1px solid var(--line);
 }
 
 /* --- form fields ------------------------------------------------------ */
@@ -131,49 +83,17 @@
   transition: background-color 9999s ease-in-out 0s;
 }
 
-/* A field with a control living inside it, such as Show on a password. */
+/* A field with a control living inside it, such as the eye button on a
+   password. */
 .field-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.field-input.has-action {
-  padding-right: 84px;
-}
-
 /* Room for the eye button in PasswordField. */
 .field-input.has-icon {
   padding-right: 56px;
-}
-
-/* Sized to stay a comfortable tap target on a phone, which a checkbox
-   never was. */
-.field-action {
-  position: absolute;
-  right: var(--sp-2);
-  display: flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 var(--sp-3);
-  font: inherit;
-  font-size: var(--font-small);
-  font-weight: 700;
-  color: var(--green-dark);
-  background: none;
-  border: 0;
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.field-action:hover {
-  background: var(--green-tint);
-}
-
-.field-action:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 1px;
 }
 
 /* The eye button inside PasswordField. */
@@ -215,23 +135,6 @@
   font-size: var(--font-small);
   line-height: 1.4;
   color: var(--text-muted);
-}
-
-/* Still used by other screens. The auth form no longer reveals its password
-   with a checkbox. */
-.check-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  font-size: var(--font-label);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.check-row input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--green-dark);
 }
 
 .form-error {
