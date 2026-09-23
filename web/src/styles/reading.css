@@ -17,6 +17,13 @@
   background: var(--surface-alt);
 }
 
+/* A message on the book page (for example, a book that no longer exists),
+   with room around it rather than tucked against the header. */
+.book-view-message {
+  padding-top: var(--sp-6);
+  text-align: center;
+}
+
 /* --- the heading ----------------------------------------------------- */
 
 .book-heading {
@@ -308,6 +315,86 @@
   color: var(--green-deep);
   background: var(--green-tint);
   border-radius: 999px;
+}
+
+/* --- loading skeleton ------------------------------------------------ */
+
+/* Shapes sized to match the real heading, card, pill and rows, so nothing
+   moves when the book arrives. .skeleton (components.css) supplies the
+   pulse; the gray is darkened here because the default matches this
+   page's off-white and would be invisible on it. */
+.book-skeleton .skeleton {
+  display: block;
+  background: #e6e6de;
+}
+
+.skel-logo {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+
+.skel-heading-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skel-eyebrow {
+  width: 48px;
+  height: 12px;
+}
+
+.skel-title {
+  width: 70%;
+  max-width: 260px;
+  height: 24px;
+}
+
+.skel-card {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  max-height: 260px;
+  border-radius: 20px;
+}
+
+.skel-pill {
+  display: inline-block;
+  width: 110px;
+  height: 32px;
+  border-radius: 999px;
+}
+
+/* Same size and white card as a real recipe row. */
+.skel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-2);
+  background: var(--surface);
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  box-shadow: 0 1px 3px rgba(20, 20, 15, 0.08);
+}
+
+.skel-thumb {
+  flex: 0 0 auto;
+  width: var(--thumb-w);
+  height: var(--thumb-w);
+  border-radius: var(--r-md);
+}
+
+/* Inside the white row, a lighter gray than the shapes on the page. */
+.skel-row .skeleton {
+  background: #eeeee8;
+}
+
+.skel-row-title {
+  flex: 1;
+  max-width: 220px;
+  height: 18px;
 }
 
 /* --- reduced motion -------------------------------------------------- */

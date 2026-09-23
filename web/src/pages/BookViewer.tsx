@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ActionMenu } from '../components/ActionMenu'
 import { BookCard } from '../components/BookCard'
 import { BookHeading } from '../components/BookHeading'
+import { BookSkeleton } from '../components/BookSkeleton'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { NavBar } from '../components/NavBar'
 import { RecipeSections } from '../components/RecipeSections'
@@ -26,6 +27,9 @@ import { coverSrc } from '../utils/coverSrc'
 // Changes live in ⋮ menus: on the cover card, Delete book; on each recipe,
 // Delete recipe. The last recipe has no menu, since a book cannot be left
 // empty; deleting the book covers that case.
+//
+// While the book loads, BookSkeleton shows its shape, so the screen is
+// never a blank page.
 
 type Props = {
   bookId: string
@@ -109,21 +113,17 @@ export function BookViewer({
     setPending(null)
   }
 
-  if (loading) {
-    return (
-      <>
-        <p className="message">Opening your book...</p>
-        <NavBar primaryLabel="BACK" onPrimary={onClose} />
-      </>
-    )
-  }
+  if (loading) return <BookSkeleton />
 
+  // Same off-white page as the book, so a missing book does not flash to a
+  // white screen. The header's Back returns home.
   if (error || !book) {
     return (
-      <>
-        <p className="message">{error ?? 'Could not open this book.'}</p>
-        <NavBar primaryLabel="BACK" onPrimary={onClose} />
-      </>
+      <div className="book-view">
+        <p className="message book-view-message">
+          {error ?? 'Could not open this book.'}
+        </p>
+      </div>
     )
   }
 
