@@ -5,7 +5,13 @@
 /* App shell */
 
 /* A column the full height of the window, so a screen can stretch to the
-   bottom instead of stopping where its content ends. */
+   bottom instead of stopping where its content ends.
+
+   hyphens: none makes the browser ignore soft hyphens (U+00AD). The
+   original recipe text has about 140 of them, invisible marks left over
+   from a word processor, and a line that wrapped at one showed a stray
+   extra hyphen (CA-221 read "One--Pot"). Ignoring them here fixes the
+   display while the text itself stays exactly as the original has it. */
 .app {
   display: flex;
   flex-direction: column;
@@ -14,6 +20,8 @@
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--surface);
+  hyphens: none;
+  -webkit-hyphens: none;
 }
 
 /* The off-white screens fill the rest of the window below the masthead,
