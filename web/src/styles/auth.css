@@ -2,7 +2,9 @@
  *
  * These three screens hide the masthead and own the whole viewport. A
  * photograph fills a tinted band at the top, the logo sits under it, and
- * the form follows. Every other screen keeps the green bar.
+ * the form follows. On a tall window the spare space collects at the
+ * bottom, where a footer can go later. Every other screen keeps the green
+ * bar.
  *
  * Warm off-white page, white outlined fields, deep green actions. The brand
  * green is bright enough that white text on it fails contrast, so it stays
@@ -11,24 +13,28 @@
 
 .auth-screen {
   position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
   background: var(--cream);
 }
 
-/* The photograph ends in a shape rather than a hard line across the screen.
-   The two radii are horizontal then vertical: a wide, shallow arc. Raise
-   the 16% for a deeper curve, lower it for a flatter one. */
+/* A fixed band: about a third of the screen, never taller than 280px.
+
+   It ends in a shallow arc rather than a hard line across the screen. The
+   curve is a fixed depth (48px), so it looks the same at any window
+   height. */
 .auth-hero {
   position: relative;
   flex: 0 0 auto;
   height: 32vh;
+  min-height: 180px;
   max-height: 280px;
   overflow: hidden;
   background: var(--green-tint);
-  border-bottom-left-radius: 50% 16%;
-  border-bottom-right-radius: 50% 16%;
+  border-bottom-left-radius: 50% 48px;
+  border-bottom-right-radius: 50% 48px;
 }
 
 .auth-hero img {
@@ -39,41 +45,90 @@
   object-position: center 45%;
 }
 
-/* The masthead is gone here, so back lives in the page. It sits over the
-   photograph, so it carries its own backing to stay readable whatever the
-   picture is doing behind it. */
+/* The masthead is gone here, so Back lives over the photograph. Same white
+   pill and arrow as the header's Back, so it is recognized as the same
+   control. */
 .auth-back {
   position: absolute;
   top: var(--sp-3);
   left: var(--sp-3);
   z-index: 2;
-  padding: var(--sp-2) var(--sp-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 8px 12px;
   font: inherit;
   font-size: var(--font-label);
   font-weight: 600;
-  color: var(--green-deep);
-  background: rgba(255, 255, 255, 0.88);
+  line-height: 1;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.9);
   border: 0;
   border-radius: 999px;
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .auth-back:hover {
   background: #fff;
 }
 
+.auth-back:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.auth-back svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Fills the rest of the screen, but its content stays packed at the top,
+   so the spare space is below everything rather than between the buttons.
+   Relative so the decorative leaves can be placed inside it. */
 .auth-main {
+  position: relative;
   display: flex;
-  flex: 1;
+  flex: 1 0 auto;
   flex-direction: column;
+  justify-content: flex-start;
   gap: var(--sp-4);
   padding: var(--sp-4) var(--pad-x) var(--sp-6);
 }
 
+/* Everything except the leaves sits above them. */
+.auth-main > :not(.auth-leaf) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Two faint leaves at the screen's edges, level with the logo. Clipped by
+   the screen's overflow: hidden, so they peek in from the sides. */
+.auth-leaf {
+  position: absolute;
+  z-index: 0;
+  top: -8px;
+  width: 110px;
+  height: 110px;
+  color: rgba(140, 198, 62, 0.22);
+  pointer-events: none;
+}
+
+.auth-leaf.is-left {
+  left: -44px;
+  transform: rotate(-30deg);
+}
+
+.auth-leaf.is-right {
+  right: -40px;
+  transform: scaleX(-1) rotate(-20deg);
+}
+
 .auth-logo {
   display: block;
-  width: 210px;
-  max-width: 58%;
+  width: 230px;
+  max-width: 62%;
   margin: 0 auto;
 }
 
@@ -101,6 +156,22 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
+}
+
+/* Welcome's second group: the "or", the guest option, and the steps. */
+.auth-lower {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+/* On a tall window, the second group moves down by a share of the height,
+   so the page is balanced instead of everything sitting at the top. Capped
+   at 160px, and phones are left alone so nothing drops below the fold. */
+@media (min-height: 900px) {
+  .auth-lower {
+    margin-top: min(12vh, 160px);
+  }
 }
 
 /* --- fields ----------------------------------------------------------- */
@@ -219,6 +290,13 @@
   transform: translateY(1px);
 }
 
+.auth-primary:focus-visible,
+.auth-secondary:focus-visible,
+.auth-guest:focus-visible {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
+}
+
 .auth-primary {
   color: #fff;
   background: var(--green-deep);
@@ -282,21 +360,120 @@
   text-align: center;
 }
 
+/* The other door, under a thin line. display: block on purpose: an older
+   .auth-switch rule in account.css makes it a column, which put "New
+   here?" and its link on two separate lines. */
 .auth-switch {
-  margin: 0;
+  display: block;
+  margin: var(--sp-2) 0 0;
+  padding-top: var(--sp-4);
   font-size: var(--font-label);
   color: var(--text-muted);
   text-align: center;
+  border-top: 1px solid var(--line);
 }
 
 .auth-switch .link-btn {
+  padding: 0;
   color: var(--green-deep);
+}
+
+/* --- how it works (Welcome only) -------------------------------------- */
+
+/* A soft green card, so the steps read as information about the site
+   rather than another set of buttons. */
+.auth-steps {
+  margin-top: var(--sp-3);
+  padding: var(--sp-5) var(--sp-4) var(--sp-5);
+  background: #f1f6e9;
+  border-radius: 20px;
+}
+
+/* Serif, to echo the logo's lettering. */
+.auth-steps-title {
+  margin: 0 0 var(--sp-4);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  text-align: center;
+  color: var(--text);
+}
+
+/* Three equal columns, numbered by a counter so the numbers stay right if
+   a step is ever added or reordered. */
+.auth-steps-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.auth-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+  counter-increment: step;
+}
+
+/* A dotted line from each icon to the next, at the height of the icons'
+   centers. It starts just past this icon's edge (32px radius plus 10px)
+   and stops the same distance short of the next one, across the gap
+   between the columns. */
+.auth-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 32px;
+  left: calc(50% + 42px);
+  width: calc(100% + var(--sp-3) - 84px);
+  border-top: 2px dotted rgba(47, 93, 47, 0.3);
+  pointer-events: none;
+}
+
+.auth-step-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  color: var(--green-deep);
+  background: #e2eed3;
+  border-radius: 50%;
+}
+
+.auth-step-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.auth-step-label {
+  font-size: var(--font-label);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.auth-step-label::before {
+  content: counter(step) '. ';
+}
+
+/* Very narrow phones: no room for the dotted lines between the icons. */
+@media (max-width: 360px) {
+  .auth-step:not(:last-child)::after {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .auth-primary,
   .auth-secondary,
   .auth-guest,
+  .auth-back,
   .pill-input {
     transition: none;
   }

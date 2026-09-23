@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { ArrowIcon, EyeIcon, LockIcon, MailIcon } from '../components/AuthIcons'
 import { SafeImage } from '../components/SafeImage'
-import { coverSrc } from '../utils/coverSrc'
+import { BackArrowIcon } from '../components/StepIcons'
 import { AUTH_PHOTO } from '../utils/authPhoto'
+import { coverSrc } from '../utils/coverSrc'
 
 // Sign in and create account share this form. Only the wording, the password
 // hint, and the browser autofill hints differ.
@@ -14,8 +15,8 @@ import { AUTH_PHOTO } from '../utils/authPhoto'
 // so they are shown as they come.
 //
 // The masthead is hidden on this screen (see App.tsx), so the photograph
-// takes the top of the screen, the logo sits under it, and back rides over
-// the photograph.
+// takes the top of the screen, the logo sits under it, and Back rides over
+// the photograph in the same white pill the header uses.
 
 export type AuthMode = 'signin' | 'register'
 
@@ -69,7 +70,8 @@ export function AuthForm({ mode, note, onSubmit, onSwitchMode, onBack }: Props) 
       <div className="auth-hero">
         {onBack && (
           <button type="button" className="auth-back" onClick={onBack}>
-            <span aria-hidden="true">&#8249;</span> Back
+            <BackArrowIcon />
+            Back
           </button>
         )}
         <SafeImage src={coverSrc(AUTH_PHOTO)} loading="eager" />
@@ -163,8 +165,8 @@ export function AuthForm({ mode, note, onSubmit, onSwitchMode, onBack }: Props) 
             {!busy && <ArrowIcon />}
           </button>
 
-          <div className="auth-or">or</div>
-
+          {/* The other door, under a thin line rather than an "or", so it
+              reads as a way out of this form, not a third choice in it. */}
           <p className="auth-switch">
             {register ? 'Already have an account? ' : 'New here? '}
             <button type="button" className="link-btn" onClick={onSwitchMode}>
