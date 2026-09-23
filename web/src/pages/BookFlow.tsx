@@ -1,3 +1,4 @@
+import { RecipeSkeleton } from '../components/RecipeSkeleton'
 import type { BookFlowState } from '../hooks/useBookFlow'
 import type { Question, Vegetable } from '../types'
 import { CoverChooser } from './CoverChooser'
@@ -65,8 +66,14 @@ export function BookFlow({
   if (step === 'review') {
     return (
       <>
-        {match.running && <p className="message">Loading recipes...</p>}
-        {match.error && <p className="message">Match failed: {match.error}</p>}
+        {/* The recipes are usually ready by the time the transition screen
+            is passed; if not, the shape of the first one holds its place. */}
+        {match.running && <RecipeSkeleton />}
+        {match.error && (
+          <p className="message">
+            We could not find recipes right now. Please go back and try again.
+          </p>
+        )}
         {match.result && (
           <RecipeReview
             recipes={match.result.recipes}

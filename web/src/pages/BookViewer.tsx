@@ -6,6 +6,7 @@ import { BookSkeleton } from '../components/BookSkeleton'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { NavBar } from '../components/NavBar'
 import { RecipeSections } from '../components/RecipeSections'
+import { RecipeSkeleton } from '../components/RecipeSkeleton'
 import { SafeImage } from '../components/SafeImage'
 import { useBookDetail } from '../hooks/useBookDetail'
 import { useRecipeDetail } from '../hooks/useRecipeDetail'
@@ -28,8 +29,8 @@ import { coverSrc } from '../utils/coverSrc'
 // Delete recipe. The last recipe has no menu, since a book cannot be left
 // empty; deleting the book covers that case.
 //
-// While the book loads, BookSkeleton shows its shape, so the screen is
-// never a blank page.
+// While the book or a recipe loads, a skeleton of its shape shows, so the
+// screen is never a blank page or a lone line of text.
 
 type Props = {
   bookId: string
@@ -140,7 +141,7 @@ export function BookViewer({
 
     return (
       <>
-        {!detail && !detailError && <p className="message">Loading recipe...</p>}
+        {!detail && !detailError && <RecipeSkeleton />}
         {detailError && <p className="message">This recipe could not be loaded.</p>}
 
         {detail && (

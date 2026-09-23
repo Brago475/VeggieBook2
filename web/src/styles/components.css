@@ -327,6 +327,20 @@ img.is-placeholder {
   width: 60%;
 }
 
+/* RecipeSkeleton: the title and the top photo, sized like the real ones
+   (a title line, then a 3:2 photo with the same rounded corners). */
+.skel-recipe-title {
+  width: 75%;
+  height: 28px;
+  margin-bottom: var(--sp-3);
+}
+
+.skel-recipe-photo {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--r-lg);
+}
+
 @keyframes pulse {
   0%,
   100% {
