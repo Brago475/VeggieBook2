@@ -200,6 +200,10 @@ public class Secret
 
     public string HeadlineEn { get; set; } = "";
     public string HeadlineEs { get; set; } = "";
+    // The secret itself, shown under the picture. Added by
+    // db/fixes/008_add_secret_body.sql; the original import left it out.
+    public string? BodyEn { get; set; }
+    public string? BodyEs { get; set; }
     public string WhyItWorksEn { get; set; } = "";
     public string WhyItWorksEs { get; set; } = "";
 

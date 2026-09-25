@@ -260,6 +260,8 @@ public class VeggieBookContext(DbContextOptions<VeggieBookContext> options)
             e.Property(x => x.Active).HasColumnName("active");
             e.Property(x => x.HeadlineEn).HasColumnName("headline_en");
             e.Property(x => x.HeadlineEs).HasColumnName("headline_es");
+            e.Property(x => x.BodyEn).HasColumnName("body_en");
+            e.Property(x => x.BodyEs).HasColumnName("body_es");
             e.Property(x => x.WhyItWorksEn).HasColumnName("why_it_works_en");
             e.Property(x => x.WhyItWorksEs).HasColumnName("why_it_works_es");
             e.Property(x => x.ImagePathEn).HasColumnName("image_path_en");
