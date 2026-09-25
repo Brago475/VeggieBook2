@@ -278,6 +278,13 @@ export default function App() {
   // masthead would cut off at the top.
   const onAuthScreen = showWelcome || authMode !== null
 
+  // The SecretsBook logo while making or reading a Secrets Book, as in the
+  // original app; the VeggieBook logo everywhere else.
+  const mastheadBrand: 'veggie' | 'secrets' =
+    current === 'secrets' || (current === 'book' && openBookKind === 'secrets')
+      ? 'secrets'
+      : 'veggie'
+
   // The line on the sign-up form naming the book that will be saved.
   function pendingNote(): string | undefined {
     if (pending?.kind === 'veggie' && flow.vegetable) {
@@ -322,7 +329,11 @@ export default function App() {
       {/* The leaf ornament shows on the account screen only; the library
           and reading screens keep a plain bar so the photos lead. */}
       {!onAuthScreen && (
-        <Masthead onBack={backAction()} decor={current === 'account'} />
+        <Masthead
+          brand={mastheadBrand}
+          onBack={backAction()}
+          decor={current === 'account'}
+        />
       )}
 
       {error && <p className="message">Could not load: {error}</p>}
