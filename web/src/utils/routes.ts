@@ -3,7 +3,8 @@
 // own.
 //
 //   /                             home (or Welcome for a visitor)
-//   /new                          making a new book
+//   /new                          making a new VeggieBook
+//   /secrets                      making a new Secrets Book
 //   /book/{id}                    a saved book
 //   /book/{id}/recipe/{recipeId}  one recipe inside it
 //   /account                      account settings
@@ -14,6 +15,7 @@
 export type Route =
   | { view: 'home' }
   | { view: 'flow' }
+  | { view: 'secrets' }
   | { view: 'account' }
   | { view: 'signin' }
   | { view: 'register' }
@@ -28,6 +30,8 @@ export function parseRoute(path: string): Route {
     switch (parts[0]) {
       case 'new':
         return { view: 'flow' }
+      case 'secrets':
+        return { view: 'secrets' }
       case 'account':
         return { view: 'account' }
       case 'signin':
@@ -57,6 +61,8 @@ export function routePath(route: Route): string {
       return '/'
     case 'flow':
       return '/new'
+    case 'secrets':
+      return '/secrets'
     case 'account':
       return '/account'
     case 'signin':

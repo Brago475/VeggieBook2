@@ -25,6 +25,10 @@ namespace VeggieBook.Api.Books;
 //
 // Nothing the client sends is trusted: the vegetable, every answer, every
 // recipe, and the cover are checked against the database before saving.
+//
+// Both kinds of book are listed, opened and deleted here. A Secrets Book is
+// saved by SecretBooksController (POST /api/books/secrets), since it is
+// built differently; everything after saving is the same.
 
 public record BookRecipe(int Id, int ExtraCopies);
 
@@ -70,9 +74,14 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
                 b.Id,
                 b.Kind,
                 b.VegetableCode,
+                b.SecretCategoryId,
                 b.CoverPath,
                 HasUpload = b.CoverUpload != null,
-                RecipeCount = b.Selections.Count(s => s.ContentType == "recipe" && s.Kept),
+                // What the book holds: kept recipes in a VeggieBook, kept
+                // secrets in a Secrets Book. A book only ever holds one
+                // kind, so counting both gives the right number for each.
+                RecipeCount = b.Selections.Count(s =>
+                    s.Kept && (s.ContentType == "recipe" || s.ContentType == "secret")),
                 b.CreatedAt
             })
             .ToListAsync();
@@ -82,6 +91,7 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
             id = b.Id,
             kind = b.Kind,
             vegetableCode = b.VegetableCode,
+            secretCategoryId = b.SecretCategoryId,
             cover = CoverUrl(b.Id, b.CoverPath, b.HasUpload),
             recipeCount = b.RecipeCount,
             createdAt = b.CreatedAt
@@ -105,6 +115,7 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
                 b.Id,
                 b.Kind,
                 b.VegetableCode,
+                b.SecretCategoryId,
                 b.CoverPath,
                 HasUpload = b.CoverUpload != null,
                 b.CreatedAt,
@@ -170,6 +181,7 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
             id = book.Id,
             kind = book.Kind,
             vegetableCode = book.VegetableCode,
+            secretCategoryId = book.SecretCategoryId,
             cover = CoverUrl(book.Id, book.CoverPath, book.HasUpload),
             createdAt = book.CreatedAt,
             attributes = book.Attributes,

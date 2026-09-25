@@ -34,12 +34,18 @@ export type Question = {
 // coverSrc() turns any of them into an <img> src.
 //
 // There is no title: a VeggieBook is named after its vegetable, looked up
-// from vegetableCode in the language being shown.
+// from vegetableCode in the language being shown. A Secrets Book is named
+// after its category, looked up from secretCategoryId the same way.
+//
+// recipeCount counts what the book holds: recipes in a VeggieBook, secrets
+// in a Secrets Book.
 
 export type BookSummary = {
   id: string
   kind: 'veggie' | 'secrets'
   vegetableCode: string | null
+  // Secrets Books only. Optional so older lists without it still work.
+  secretCategoryId?: number | null
   cover: string
   recipeCount: number
   createdAt: string
@@ -52,6 +58,18 @@ export type NewBook = {
   vegetableCode: string
   attributes: string[]
   recipes: { id: number; extraCopies: number }[]
+  coverPath?: string
+  coverUpload?: string
+  lang?: 'en' | 'es'
+}
+
+// What POST /api/books/secrets expects. No answers. Exactly one of
+// coverPath or coverUpload is set, the same as NewBook: any secret's
+// picture, or a JPEG data URL from resizeImage().
+
+export type NewSecretsBook = {
+  categoryId: number
+  secrets: { id: number; extraCopies: number }[]
   coverPath?: string
   coverUpload?: string
   lang?: 'en' | 'es'
@@ -102,4 +120,48 @@ export type RecipeDetail = {
   steps: string[]
   notes: string[]
   photos: string[]
+}
+
+// --- Secrets Book ---------------------------------------------------------
+
+// One of the five categories from GET /api/secret-categories. color is hex
+// without the leading #, the same as recipe badges. image is a path under
+// /images (secretCat/Breakfast_button3.png).
+
+export type SecretCategory = {
+  id: number
+  name: string
+  image: string
+  color: string
+  secretCount: number
+}
+
+export type SecretLink = {
+  url: string
+  label: string | null
+}
+
+// One secret, in full. A Secrets Book has no questions and no separate
+// detail request: the review screen gets everything it shows from here.
+//
+// image is the Spanish illustration for a Spanish request when there is
+// one, otherwise the shared one. attachment is a path under /images
+// (secret_attachments/...pdf) or null.
+
+export type Secret = {
+  id: number
+  headline: string
+  body: string | null
+  whyItWorks: string
+  image: string | null
+  attachment: string | null
+  links: SecretLink[]
+}
+
+// GET /api/secret-categories/{id}/secrets
+
+export type CategorySecrets = {
+  category: Omit<SecretCategory, 'secretCount'>
+  secretCount: number
+  secrets: Secret[]
 }

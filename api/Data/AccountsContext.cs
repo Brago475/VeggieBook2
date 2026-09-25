@@ -43,6 +43,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.Kind).HasColumnName("kind");
             e.Property(x => x.Language).HasColumnName("language");
             e.Property(x => x.VegetableCode).HasColumnName("vegetable_code");
+            e.Property(x => x.SecretCategoryId).HasColumnName("secret_category_id");
             e.Property(x => x.CoverPath).HasColumnName("cover_path");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
 

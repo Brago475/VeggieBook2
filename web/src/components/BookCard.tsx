@@ -3,7 +3,8 @@ import { SafeImage } from './SafeImage'
 
 // A book as it appears in the library, matching the original app: the
 // vegetable's photo fills the card, the chosen cover sits as a small
-// inset on the right, and the book's name runs along the bottom.
+// inset on the right, and the book's name runs along the bottom. A Secrets
+// Book uses the same card, with its category's picture as the background.
 //
 // Used on the home screen, at the top of a saved book, and as the live
 // preview on the cover screen, so users see their book exactly as it will
@@ -15,19 +16,22 @@ import { SafeImage } from './SafeImage'
 //
 // The lines under the name are optional, so each screen shows only what
 // it needs:
-//   label     a small spaced-out word under a short rule ("VeggieBook")
-//   subtitle  a short line ("Recipes, tips and more")
-//   count     the number of recipes, with a book icon
+//   label      a small spaced-out word under a short rule ("VeggieBook")
+//   subtitle   a short line ("Recipes, tips and more")
+//   count      the number of recipes or secrets, with a book icon
+//   countNoun  what count counts: "recipe" (the default) or "secret"
 
 type Props = {
   title: string
-  // The vegetable's photo. Null while the vegetable list is still loading.
+  // The vegetable's photo, or a Secrets category's picture. Null while the
+  // list it comes from is still loading.
   background: string | null
   // The chosen cover: a preset path or an uploaded data URL.
   cover: string
   label?: string
   subtitle?: string
   count?: number
+  countNoun?: 'recipe' | 'secret'
   onClick?: () => void
 }
 
@@ -38,6 +42,7 @@ export function BookCard({
   label,
   subtitle,
   count,
+  countNoun = 'recipe',
   onClick,
 }: Props) {
   const content = (
@@ -70,7 +75,7 @@ export function BookCard({
                 strokeLinejoin="round"
               />
             </svg>
-            {count} {count === 1 ? 'recipe' : 'recipes'}
+            {count} {count === 1 ? countNoun : `${countNoun}s`}
           </span>
         )}
       </span>

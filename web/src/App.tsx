@@ -5,14 +5,17 @@ import { useAuth } from './hooks/useAuth'
 import { useBookFlow } from './hooks/useBookFlow'
 import { useBooks } from './hooks/useBooks'
 import { useRoute } from './hooks/useRoute'
+import { useSecretCategories } from './hooks/useSecrets'
+import { useSecretsFlow } from './hooks/useSecretsFlow'
 import { useVeggieBookData } from './hooks/useVeggieBookData'
 import { AccountSettings } from './pages/AccountSettings'
 import { AuthForm, type AuthMode } from './pages/AuthForm'
 import { BookFlow } from './pages/BookFlow'
 import { BookViewer } from './pages/BookViewer'
 import { HomeLibrary } from './pages/HomeLibrary'
+import { SecretsFlow } from './pages/SecretsFlow'
 import { Welcome } from './pages/Welcome'
-import type { BookSummary, NewBook } from './types'
+import type { BookSummary, NewBook, NewSecretsBook } from './types'
 import { routePath } from './utils/routes'
 
 // Stylesheet order is load order, and load order decides who wins a tie.
@@ -34,6 +37,7 @@ import './styles/auth.css'
 import './styles/library.css'
 import './styles/reading.css'
 import './styles/recipe-sections.css'
+import './styles/secrets.css'
 import './styles/dialog.css'
 import './styles/responsive.css'
 
@@ -44,14 +48,27 @@ import './styles/responsive.css'
 //
 // A guest is the exception on purpose: nothing about a guest is kept, so a
 // refresh brings them back to Welcome, as before.
+//
+// A Secrets Book in progress is not kept through a refresh yet (see
+// hooks/useSecretsFlow.ts); a refresh on /secrets starts it over.
+
+// A guest's finished book, waiting to be saved once they have an account.
+// The kind says which save to use, and which flow to return to.
+type Pending =
+  | { kind: 'veggie'; book: NewBook }
+  | { kind: 'secrets'; book: NewSecretsBook }
 
 export default function App() {
   const { vegetables, questions, error, loading } = useVeggieBookData()
+  // The five Secrets categories, loaded once: the Secrets flow shows them,
+  // and the home screen names and pictures saved Secrets Books with them.
+  const secretCategories = useSecretCategories()
   const account = useAuth()
   const email = account.auth.status === 'signedIn' ? account.auth.email : null
   const library = useBooks(email, account.sessionEnded)
   // The email turns on saving the book in progress; null for a guest.
   const flow = useBookFlow(questions.length, email)
+  const secrets = useSecretsFlow()
   const { route, path, navigate, goUp } = useRoute()
 
   // Chose Continue as guest. Not remembered across visits: guests leave
@@ -59,8 +76,7 @@ export default function App() {
   const [guest, setGuest] = useState(false)
   // A guest's finished books. This page only.
   const [guestBooks, setGuestBooks] = useState<BookSummary[]>([])
-  // A guest's finished book, waiting to be saved once they have an account.
-  const [pending, setPending] = useState<NewBook | null>(null)
+  const [pending, setPending] = useState<Pending | null>(null)
 
   const view = route.view
   // The saved book being viewed, and the recipe open inside it.
@@ -73,15 +89,16 @@ export default function App() {
   // sign-in check has answered:
   //   an account screen or a saved book, without an account
   //   sign in or create account, while already signed in
-  //   a book in progress, for a visitor who has not chosen guest (after a
-  //     guest refreshes, which by design keeps nothing)
+  //   a book in progress, of either kind, for a visitor who has not chosen
+  //     guest (after a guest refreshes, which by design keeps nothing)
   //   an unknown or untidy address
   useEffect(() => {
     if (status === 'loading') return
 
     const needsAccount = view === 'account' || view === 'book'
     const authWhileSignedIn = email !== null && (view === 'signin' || view === 'register')
-    const flowWithoutVisitor = email === null && !guest && view === 'flow'
+    const flowWithoutVisitor =
+      email === null && !guest && (view === 'flow' || view === 'secrets')
     const untidy = path !== routePath(route)
 
     if ((needsAccount && !email) || authWhileSignedIn || flowWithoutVisitor || untidy) {
@@ -109,6 +126,11 @@ export default function App() {
     navigate('/new')
   }
 
+  function startSecrets() {
+    secrets.start()
+    navigate('/secrets')
+  }
+
   function viewBook(id: string) {
     navigate(`/book/${id}`)
   }
@@ -118,6 +140,8 @@ export default function App() {
     if (id === null) goUp(`/book/${openBook}`)
     else navigate(`/book/${openBook}/recipe/${id}`)
   }
+
+  // --- finishing a VeggieBook ---
 
   // Signed in. A failure throws, and the cover screen shows the reason.
   // Once saved, the book in progress is cleared, so a refresh or the next
@@ -138,8 +162,39 @@ export default function App() {
   }
 
   function createAccountToSave(cover: string) {
-    setPending(flow.buildBook(cover))
+    const book = flow.buildBook(cover)
+    if (!book) return
+    setPending({ kind: 'veggie', book })
     navigate('/register')
+  }
+
+  // --- finishing a Secrets Book: the same three ways ---
+
+  async function saveSecrets(cover: string) {
+    const book = secrets.buildBook(cover)
+    if (!book) return
+    await library.saveSecretsBook(book)
+    secrets.start()
+    finishToHome()
+  }
+
+  function finishSecretsWithoutSaving(cover: string) {
+    const summary = secrets.guestSummary(cover)
+    if (summary) setGuestBooks((prev) => [summary, ...prev])
+    secrets.start()
+    finishToHome()
+  }
+
+  function createAccountToSaveSecrets(cover: string) {
+    const book = secrets.buildBook(cover)
+    if (!book) return
+    setPending({ kind: 'secrets', book })
+    navigate('/register')
+  }
+
+  // Where a waiting book's cover screen is, to return to it.
+  function pendingPath(p: Pending): string {
+    return p.kind === 'veggie' ? '/new' : '/secrets'
   }
 
   // A failed sign-in or sign-up throws and stays on the form. After that the
@@ -150,18 +205,20 @@ export default function App() {
     else await account.signIn(address, password)
 
     setGuestBooks([])
-    const book = pending
+    const waiting = pending
     setPending(null)
-    if (book) {
+    if (waiting) {
       try {
-        await library.saveBook(book)
+        if (waiting.kind === 'veggie') await library.saveBook(waiting.book)
+        else await library.saveSecretsBook(waiting.book)
       } catch {
         // The cover screen is still set up. Signed in now, it offers SAVE
         // BOOK and shows the reason if saving fails again.
-        navigate('/new', { replace: true })
+        navigate(pendingPath(waiting), { replace: true })
         return
       }
-      flow.start()
+      if (waiting.kind === 'veggie') flow.start()
+      else secrets.start()
     }
     navigate('/', { replace: true })
   }
@@ -170,6 +227,7 @@ export default function App() {
     await account.signOut()
     setGuest(false)
     flow.start()
+    secrets.start()
     finishToHome()
   }
 
@@ -177,6 +235,7 @@ export default function App() {
     await account.deleteAccount(password)
     setGuest(false)
     flow.start()
+    secrets.start()
     finishToHome()
   }
 
@@ -198,17 +257,30 @@ export default function App() {
   // masthead would cut off at the top.
   const onAuthScreen = showWelcome || authMode !== null
 
+  // The line on the sign-up form naming the book that will be saved.
+  function pendingNote(): string | undefined {
+    if (pending?.kind === 'veggie' && flow.vegetable) {
+      return `Create an account or sign in to save your ${flow.vegetable.name} VeggieBook.`
+    }
+    if (pending?.kind === 'secrets' && secrets.category) {
+      return `Create an account or sign in to save your ${secrets.category.name} book.`
+    }
+    return undefined
+  }
+
   function backAction(): (() => void) | undefined {
     if (current === 'flow') return flow.backAction(goHome)
+    if (current === 'secrets') return secrets.backAction(goHome)
     // Inside a book: an open recipe closes back to the list first, and only
     // the list goes home.
     if (current === 'book') {
       return openRecipe !== null ? () => openRecipeInBook(null) : goHome
     }
     if (authMode && pending) {
+      const back = pendingPath(pending)
       return () => {
         setPending(null)
-        goUp('/new')
+        goUp(back)
       }
     }
     if (authMode || current === 'account') return goHome
@@ -245,9 +317,11 @@ export default function App() {
           email={email}
           books={email ? library.books : guestBooks}
           vegetables={vegetables}
+          secretCategories={secretCategories.categories}
           loading={library.loading}
           error={library.error}
           onCreateVeggie={startBook}
+          onCreateSecrets={startSecrets}
           onAccount={() => navigate('/account')}
           onSignIn={() => navigate('/signin')}
           onDeleteBook={deleteBook}
@@ -259,11 +333,7 @@ export default function App() {
         <AuthForm
           key={authMode}
           mode={authMode}
-          note={
-            pending && flow.vegetable
-              ? `Create an account or sign in to save your ${flow.vegetable.name} VeggieBook.`
-              : undefined
-          }
+          note={pendingNote()}
           onSubmit={(address, password) => submitAuth(authMode, address, password)}
           onSwitchMode={() =>
             navigate(authMode === 'signin' ? '/register' : '/signin', { replace: true })
@@ -291,6 +361,19 @@ export default function App() {
           onSave={saveBook}
           onCreateAccount={createAccountToSave}
           onFinishWithoutSaving={finishWithoutSaving}
+        />
+      )}
+
+      {current === 'secrets' && (
+        <SecretsFlow
+          flow={secrets}
+          categories={secretCategories.categories}
+          categoriesLoading={secretCategories.loading}
+          categoriesError={secretCategories.error}
+          signedIn={email !== null}
+          onSave={saveSecrets}
+          onCreateAccount={createAccountToSaveSecrets}
+          onFinishWithoutSaving={finishSecretsWithoutSaving}
         />
       )}
 

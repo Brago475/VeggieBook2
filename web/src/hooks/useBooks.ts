@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { BookSummary, NewBook } from '../types'
+import type { BookSummary, NewBook, NewSecretsBook } from '../types'
 import { ApiError, apiFetch } from '../utils/api'
 
 // The signed-in account's saved books, kept in sync with the API.
@@ -16,6 +16,9 @@ import { ApiError, apiFetch } from '../utils/api'
 // If the API answers 401 mid-visit (password changed on another device,
 // account deleted elsewhere), onSessionEnded is called so the page can drop
 // back to guest.
+//
+// Both kinds of book are listed and deleted the same way. Only saving
+// differs: a VeggieBook posts to /books, a Secrets Book to /books/secrets.
 
 type Loaded = { owner: string; books: BookSummary[] }
 type LoadError = { owner: string; message: string }
@@ -73,16 +76,14 @@ export function useBooks(email: string | null, onSessionEnded: () => void) {
   const error = email && loadError?.owner === email ? loadError.message : null
   const loading = email !== null && loaded?.owner !== email && error === null
 
-  // Saves a finished book and refreshes the list. Throws an ApiError with a
+  // Posts a finished book and refreshes the list. Throws an ApiError with a
   // message for the user if the save is refused, so the screen can show it
-  // and let them try again.
-  async function saveBook(book: NewBook): Promise<string> {
+  // and let them try again. Shared by both kinds of book, so they handle a
+  // failed save and an ended session the same way.
+  async function post(path: string, body: unknown): Promise<string> {
     let created: { id: string }
     try {
-      created = await apiFetch<{ id: string }>('/books', {
-        method: 'POST',
-        body: book,
-      })
+      created = await apiFetch<{ id: string }>(path, { method: 'POST', body })
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         latest.current.onSessionEnded()
@@ -91,6 +92,14 @@ export function useBooks(email: string | null, onSessionEnded: () => void) {
     }
     await refresh()
     return created.id
+  }
+
+  function saveBook(book: NewBook): Promise<string> {
+    return post('/books', book)
+  }
+
+  function saveSecretsBook(book: NewSecretsBook): Promise<string> {
+    return post('/books/secrets', book)
   }
 
   async function deleteBook(id: string) {
@@ -113,5 +122,5 @@ export function useBooks(email: string | null, onSessionEnded: () => void) {
     void refresh()
   }
 
-  return { books, loading, error, saveBook, deleteBook, reload }
+  return { books, loading, error, saveBook, saveSecretsBook, deleteBook, reload }
 }
