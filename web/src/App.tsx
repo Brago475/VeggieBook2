@@ -44,13 +44,11 @@ import './styles/responsive.css'
 // Which screen is showing comes from the address (see utils/routes.ts), so
 // a refresh keeps a signed-in user where they were, and the browser's Back
 // and Forward buttons move between screens. A signed-in user's book in
-// progress is also kept through a refresh (see hooks/useBookFlow.ts).
+// progress, of either kind, is also kept through a refresh (see
+// hooks/useBookFlow.ts and hooks/useSecretsFlow.ts).
 //
 // A guest is the exception on purpose: nothing about a guest is kept, so a
 // refresh brings them back to Welcome, as before.
-//
-// A Secrets Book in progress is not kept through a refresh yet (see
-// hooks/useSecretsFlow.ts); a refresh on /secrets starts it over.
 
 // A guest's finished book, waiting to be saved once they have an account.
 // The kind says which save to use, and which flow to return to.
@@ -68,7 +66,7 @@ export default function App() {
   const library = useBooks(email, account.sessionEnded)
   // The email turns on saving the book in progress; null for a guest.
   const flow = useBookFlow(questions.length, email)
-  const secrets = useSecretsFlow()
+  const secrets = useSecretsFlow(email)
   const { route, path, navigate, goUp } = useRoute()
 
   // Chose Continue as guest. Not remembered across visits: guests leave

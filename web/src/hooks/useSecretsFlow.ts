@@ -1,5 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { BookSummary, NewSecretsBook, Secret, SecretCategory } from '../types'
+import {
+  clearSavedSecretsFlow,
+  loadSavedSecretsFlow,
+  saveSecretsFlow,
+} from '../utils/secretsFlowStorage'
 import { useCategorySecrets } from './useSecrets'
 
 // The steps of making one Secrets Book, from choosing a category to
@@ -20,8 +25,10 @@ import { useCategorySecrets } from './useSecrets'
 // are usually ready by the time NEXT is pressed on the transition, the
 // same as the VeggieBook flow's recipe match.
 //
-// Not yet kept through a refresh, as the VeggieBook flow is. That comes
-// once the whole flow works; until then a refresh starts over.
+// For a signed-in user (owner is their email) the book in progress is kept
+// in the tab's storage after every change and restored on load, so a
+// refresh picks up where they were, the same as useBookFlow. For a guest
+// (owner is null) nothing is kept.
 
 export type SecretsStep =
   | 'pick'
@@ -43,10 +50,11 @@ function newId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
-export function useSecretsFlow() {
+export function useSecretsFlow(owner: string | null) {
   const [step, setStep] = useState<SecretsStep>('pick')
   const [category, setCategory] = useState<SecretCategory | null>(null)
   // Loads the chosen category's secrets; nothing while none is chosen.
+  // After a refresh this loads them again for the restored category.
   const secrets = useCategorySecrets(category?.id ?? null)
 
   // Where the user is in KEEP / DROP, and what they have kept so far.
@@ -56,6 +64,51 @@ export function useSecretsFlow() {
   const [kept, setKept] = useState<Secret[]>([])
   // Secrets checked for an extra printed copy.
   const [extraCopies, setExtraCopies] = useState<number[]>([])
+
+  // Restore a saved book once, when the signed-in user is known. A layout
+  // effect, so the restored step is drawn in the first frame and the
+  // category picker never flashes up before it.
+  //
+  // Only into an empty flow: a guest who has just created an account to
+  // save their finished book already has a book here, and it must not be
+  // replaced by an older one from storage.
+  const restoredFor = useRef<string | null>(null)
+  useLayoutEffect(() => {
+    if (!owner || restoredFor.current === owner) return
+    restoredFor.current = owner
+    if (step !== 'pick' || category !== null) return
+
+    const saved = loadSavedSecretsFlow(owner)
+    if (!saved) return
+
+    setStep(saved.step)
+    setCategory(saved.category)
+    setReviewIndex(saved.reviewIndex)
+    setReviewKept(saved.reviewKept)
+    setKept(saved.kept)
+    setExtraCopies(saved.extraCopies)
+    // Runs only when the signed-in user changes; the rest is read once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [owner])
+
+  // Save after every change, for a signed-in user only. An empty flow
+  // (no category chosen yet) clears what was saved.
+  useEffect(() => {
+    if (!owner) return
+    if (!category) {
+      clearSavedSecretsFlow()
+      return
+    }
+    saveSecretsFlow({
+      owner,
+      step,
+      category,
+      reviewIndex,
+      reviewKept,
+      kept,
+      extraCopies,
+    })
+  }, [owner, step, category, reviewIndex, reviewKept, kept, extraCopies])
 
   // "Use default cover": the first kept secret that has a picture.
   const defaultCover = kept.map((s) => s.image).find((image) => Boolean(image)) ?? null
@@ -67,12 +120,13 @@ export function useSecretsFlow() {
     setExtraCopies([])
   }
 
-  // Clears everything for a new Secrets Book. Also called once a book is
-  // saved, and on sign out.
+  // Clears everything for a new Secrets Book, and whatever was saved for
+  // the last one. Also called once a book is saved, and on sign out.
   function start() {
     clearReview()
     setCategory(null)
     setStep('pick')
+    clearSavedSecretsFlow()
   }
 
   // Choosing a category starts its review over, and shows the transition
