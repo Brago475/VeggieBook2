@@ -23,12 +23,9 @@ import type { BookSummary, SecretCategory, Vegetable } from '../types'
 // chosen cover sits as a small inset. For a VeggieBook the picture is the
 // vegetable's; for a Secrets Book it is the category's (the toaster, the
 // cart), as on the original app's home screen. A signed-in account can open
-// a VeggieBook card to read its recipes. A guest's book has no id on the
+// either kind of card to read the book. A guest's book has no id on the
 // server, so onViewBook is not passed and its cards stay unclickable.
 // Actions on a book live in the ⋮ on its card.
-//
-// Secrets Book cards do not open yet: the book viewer shows recipes only,
-// so they wait for the Secrets viewer.
 //
 // While the books load, two gray card shapes hold their place, so the list
 // does not pop in under a line of text.
@@ -59,7 +56,6 @@ type CardInfo = {
   background: string | null
   subtitle: string
   countNoun: 'recipe' | 'secret'
-  opens: boolean
 }
 
 export function HomeLibrary({
@@ -91,14 +87,12 @@ export function HomeLibrary({
     if (book.kind === 'secrets') {
       const category =
         book.secretCategoryId != null ? byCategory.get(book.secretCategoryId) : undefined
-      const title = category?.name ?? 'Secrets Book'
       return {
-        title,
+        title: category?.name ?? 'Secrets Book',
         bookName: category ? `${category.name} book` : 'Secrets Book',
         background: category?.image ?? null,
         subtitle: 'Secrets to better eating',
         countNoun: 'secret',
-        opens: false,
       }
     }
 
@@ -109,7 +103,6 @@ export function HomeLibrary({
       background: veg ? `cover/${veg.shortCode}.jpg` : null,
       subtitle: 'Recipes, tips and more',
       countNoun: 'recipe',
-      opens: true,
     }
   }
 
@@ -214,9 +207,7 @@ export function HomeLibrary({
                 subtitle={info.subtitle}
                 count={book.recipeCount}
                 countNoun={info.countNoun}
-                onClick={
-                  onViewBook && info.opens ? () => onViewBook(book.id) : undefined
-                }
+                onClick={onViewBook ? () => onViewBook(book.id) : undefined}
               />
 
               <ActionMenu

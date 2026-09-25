@@ -5,8 +5,9 @@
 //   /                             home (or Welcome for a visitor)
 //   /new                          making a new VeggieBook
 //   /secrets                      making a new Secrets Book
-//   /book/{id}                    a saved book
-//   /book/{id}/recipe/{recipeId}  one recipe inside it
+//   /book/{id}                    a saved book, of either kind
+//   /book/{id}/recipe/{recipeId}  one recipe inside a VeggieBook
+//   /book/{id}/secret/{secretId}  one secret inside a Secrets Book
 //   /account                      account settings
 //   /signin, /register            sign in, create account
 //
@@ -19,7 +20,12 @@ export type Route =
   | { view: 'account' }
   | { view: 'signin' }
   | { view: 'register' }
-  | { view: 'book'; bookId: string; recipeId: number | null }
+  | {
+      view: 'book'
+      bookId: string
+      recipeId: number | null
+      secretId: number | null
+    }
 
 export function parseRoute(path: string): Route {
   const parts = path.split('/').filter(Boolean)
@@ -43,10 +49,15 @@ export function parseRoute(path: string): Route {
 
   if (parts[0] === 'book' && parts[1]) {
     if (parts.length === 2) {
-      return { view: 'book', bookId: parts[1], recipeId: null }
+      return { view: 'book', bookId: parts[1], recipeId: null, secretId: null }
     }
-    if (parts.length === 4 && parts[2] === 'recipe' && /^\d+$/.test(parts[3])) {
-      return { view: 'book', bookId: parts[1], recipeId: Number(parts[3]) }
+    if (parts.length === 4 && /^\d+$/.test(parts[3])) {
+      if (parts[2] === 'recipe') {
+        return { view: 'book', bookId: parts[1], recipeId: Number(parts[3]), secretId: null }
+      }
+      if (parts[2] === 'secret') {
+        return { view: 'book', bookId: parts[1], recipeId: null, secretId: Number(parts[3]) }
+      }
     }
   }
 
@@ -70,8 +81,8 @@ export function routePath(route: Route): string {
     case 'register':
       return '/register'
     case 'book':
-      return route.recipeId === null
-        ? `/book/${route.bookId}`
-        : `/book/${route.bookId}/recipe/${route.recipeId}`
+      if (route.recipeId !== null) return `/book/${route.bookId}/recipe/${route.recipeId}`
+      if (route.secretId !== null) return `/book/${route.bookId}/secret/${route.secretId}`
+      return `/book/${route.bookId}`
   }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { BookSkeleton } from './components/BookSkeleton'
 import { LoadingScreen } from './components/LoadingScreen'
 import { Masthead } from './components/Masthead'
 import { useAuth } from './hooks/useAuth'
@@ -13,6 +14,7 @@ import { AuthForm, type AuthMode } from './pages/AuthForm'
 import { BookFlow } from './pages/BookFlow'
 import { BookViewer } from './pages/BookViewer'
 import { HomeLibrary } from './pages/HomeLibrary'
+import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
 import { Welcome } from './pages/Welcome'
 import type { BookSummary, NewBook, NewSecretsBook } from './types'
@@ -77,9 +79,24 @@ export default function App() {
   const [pending, setPending] = useState<Pending | null>(null)
 
   const view = route.view
-  // The saved book being viewed, and the recipe open inside it.
+  // The saved book being viewed, and the recipe or secret open inside it.
   const openBook = route.view === 'book' ? route.bookId : null
   const openRecipe = route.view === 'book' ? route.recipeId : null
+  const openSecret = route.view === 'book' ? route.secretId : null
+
+  // Which viewer a saved book needs. An open recipe or secret in the
+  // address already says; otherwise the account's book list, which the
+  // home screen has loaded, knows each book's kind. Null while that list
+  // is still loading, for example after a refresh on a book's address.
+  const openBookKind: 'veggie' | 'secrets' | null =
+    openSecret !== null
+      ? 'secrets'
+      : openRecipe !== null
+        ? 'veggie'
+        : openBook
+          ? (library.books.find((b) => b.id === openBook)?.kind ??
+            (library.loading ? null : 'veggie'))
+          : null
 
   const status = account.auth.status
 
@@ -137,6 +154,12 @@ export default function App() {
     if (!openBook) return
     if (id === null) goUp(`/book/${openBook}`)
     else navigate(`/book/${openBook}/recipe/${id}`)
+  }
+
+  function openSecretInBook(id: number | null) {
+    if (!openBook) return
+    if (id === null) goUp(`/book/${openBook}`)
+    else navigate(`/book/${openBook}/secret/${id}`)
   }
 
   // --- finishing a VeggieBook ---
@@ -269,10 +292,12 @@ export default function App() {
   function backAction(): (() => void) | undefined {
     if (current === 'flow') return flow.backAction(goHome)
     if (current === 'secrets') return secrets.backAction(goHome)
-    // Inside a book: an open recipe closes back to the list first, and only
-    // the list goes home.
+    // Inside a book: an open recipe or secret closes back to the list
+    // first, and only the list goes home.
     if (current === 'book') {
-      return openRecipe !== null ? () => openRecipeInBook(null) : goHome
+      if (openRecipe !== null) return () => openRecipeInBook(null)
+      if (openSecret !== null) return () => openSecretInBook(null)
+      return goHome
     }
     if (authMode && pending) {
       const back = pendingPath(pending)
@@ -375,12 +400,30 @@ export default function App() {
         />
       )}
 
-      {current === 'book' && openBook && (
+      {/* A saved book: the skeleton until its kind is known, then the
+          viewer for that kind. */}
+      {current === 'book' && openBook && openBookKind === null && <BookSkeleton />}
+
+      {current === 'book' && openBook && openBookKind === 'veggie' && (
         <BookViewer
           bookId={openBook}
           vegetables={vegetables}
           openRecipe={openRecipe}
           onOpenRecipe={openRecipeInBook}
+          onClose={goHome}
+          onDelete={async (id) => {
+            await deleteBook(id)
+            finishToHome()
+          }}
+          onChanged={library.reload}
+        />
+      )}
+
+      {current === 'book' && openBook && openBookKind === 'secrets' && (
+        <SecretBookViewer
+          bookId={openBook}
+          openSecret={openSecret}
+          onOpenSecret={openSecretInBook}
           onClose={goHome}
           onDelete={async (id) => {
             await deleteBook(id)
