@@ -22,9 +22,9 @@ import { coverSrc } from '../utils/coverSrc'
 // Which secret is open is held by App rather than here, so the Back button
 // in the green header can close a secret before it leaves the book.
 //
-// Changes live in ⋮ menus: on the cover card, Delete book; on each secret,
-// Delete secret. The last secret has no menu, since a book cannot be left
-// empty; deleting the book covers that case.
+// Changes live in ⋮ menus: on the cover card, Change cover and Delete
+// book; on each secret, Delete secret. The last secret has no menu, since
+// a book cannot be left empty; deleting the book covers that case.
 //
 // While the book loads, the book skeleton shows, so the screen is never a
 // blank page or a lone line of text.
@@ -35,6 +35,8 @@ type Props = {
   openSecret: number | null
   onOpenSecret: (id: number | null) => void
   onClose: () => void
+  // Opens the change-cover screen for this book.
+  onChangeCover: () => void
   // Throws with a message for the user if the book cannot be deleted.
   onDelete: (id: string) => Promise<void>
   // Called after a secret is taken out, so the count on the home screen is
@@ -49,6 +51,7 @@ export function SecretBookViewer({
   openSecret,
   onOpenSecret,
   onClose,
+  onChangeCover,
   onDelete,
   onChanged,
 }: Props) {
@@ -171,6 +174,11 @@ export function SecretBookViewer({
             className="book-item-menu"
             label={`Options for your ${bookName}`}
             items={[
+              {
+                label: 'Change cover',
+                icon: 'image',
+                onSelect: onChangeCover,
+              },
               {
                 label: 'Delete book',
                 danger: true,

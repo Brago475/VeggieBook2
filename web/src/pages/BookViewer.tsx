@@ -25,9 +25,9 @@ import { coverSrc } from '../utils/coverSrc'
 // Which recipe is open is held by App rather than here, so the Back button
 // in the green header can close a recipe before it leaves the book.
 //
-// Changes live in ⋮ menus: on the cover card, Delete book; on each recipe,
-// Delete recipe. The last recipe has no menu, since a book cannot be left
-// empty; deleting the book covers that case.
+// Changes live in ⋮ menus: on the cover card, Change cover and Delete
+// book; on each recipe, Delete recipe. The last recipe has no menu, since
+// a book cannot be left empty; deleting the book covers that case.
 //
 // While the book or a recipe loads, a skeleton of its shape shows, so the
 // screen is never a blank page or a lone line of text.
@@ -39,6 +39,8 @@ type Props = {
   openRecipe: number | null
   onOpenRecipe: (id: number | null) => void
   onClose: () => void
+  // Opens the change-cover screen for this book.
+  onChangeCover: () => void
   // Throws with a message for the user if the book cannot be deleted.
   onDelete: (id: string) => Promise<void>
   // Called after a recipe is taken out, so the recipe count on the home
@@ -54,6 +56,7 @@ export function BookViewer({
   openRecipe,
   onOpenRecipe,
   onClose,
+  onChangeCover,
   onDelete,
   onChanged,
 }: Props) {
@@ -186,6 +189,11 @@ export function BookViewer({
             className="book-item-menu"
             label={`Options for your ${bookName}`}
             items={[
+              {
+                label: 'Change cover',
+                icon: 'image',
+                onSelect: onChangeCover,
+              },
               {
                 label: 'Delete book',
                 danger: true,

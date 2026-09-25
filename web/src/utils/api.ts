@@ -26,8 +26,9 @@ const FALLBACK: Record<number, string> = {
   429: 'Too many attempts. Wait a minute and try again.',
 }
 
+// PUT replaces something that already exists, such as a saved book's cover.
 type Options = {
-  method?: 'GET' | 'POST' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   body?: unknown
 }
 

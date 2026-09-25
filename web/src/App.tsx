@@ -13,6 +13,8 @@ import { AccountSettings } from './pages/AccountSettings'
 import { AuthForm, type AuthMode } from './pages/AuthForm'
 import { BookFlow } from './pages/BookFlow'
 import { BookViewer } from './pages/BookViewer'
+import { ChangeSecretCover } from './pages/ChangeSecretCover'
+import { ChangeVeggieCover } from './pages/ChangeVeggieCover'
 import { HomeLibrary } from './pages/HomeLibrary'
 import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
@@ -79,10 +81,12 @@ export default function App() {
   const [pending, setPending] = useState<Pending | null>(null)
 
   const view = route.view
-  // The saved book being viewed, and the recipe or secret open inside it.
+  // The saved book being viewed, the recipe or secret open inside it, and
+  // whether its cover is being changed.
   const openBook = route.view === 'book' ? route.bookId : null
   const openRecipe = route.view === 'book' ? route.recipeId : null
   const openSecret = route.view === 'book' ? route.secretId : null
+  const editingCover = route.view === 'book' ? route.cover : false
 
   // Which viewer a saved book needs. An open recipe or secret in the
   // address already says; otherwise the account's book list, which the
@@ -160,6 +164,25 @@ export default function App() {
     if (!openBook) return
     if (id === null) goUp(`/book/${openBook}`)
     else navigate(`/book/${openBook}/secret/${id}`)
+  }
+
+  // --- changing a saved book's cover ---
+
+  function changeCover() {
+    if (openBook) navigate(`/book/${openBook}/cover`)
+  }
+
+  function leaveCover() {
+    if (openBook) goUp(`/book/${openBook}`)
+  }
+
+  // A failure throws, and the change-cover screen shows the reason. On
+  // success the home list is refreshed, and the book opens with its new
+  // cover.
+  async function saveCover(cover: string) {
+    if (!openBook) return
+    await library.changeCover(openBook, cover)
+    leaveCover()
   }
 
   // --- finishing a VeggieBook ---
@@ -299,9 +322,10 @@ export default function App() {
   function backAction(): (() => void) | undefined {
     if (current === 'flow') return flow.backAction(goHome)
     if (current === 'secrets') return secrets.backAction(goHome)
-    // Inside a book: an open recipe or secret closes back to the list
-    // first, and only the list goes home.
+    // Inside a book: the change-cover screen, an open recipe, or an open
+    // secret closes back to the book first, and only the book goes home.
     if (current === 'book') {
+      if (editingCover) return leaveCover
       if (openRecipe !== null) return () => openRecipeInBook(null)
       if (openSecret !== null) return () => openSecretInBook(null)
       return goHome
@@ -323,6 +347,8 @@ export default function App() {
   // showed before the app started, so a refresh never flashes white or
   // shows the wrong screen for a moment.
   if (status === 'loading') return <LoadingScreen />
+
+  const showBook = current === 'book' && openBook !== null
 
   return (
     <div className="app">
@@ -412,16 +438,36 @@ export default function App() {
       )}
 
       {/* A saved book: the skeleton until its kind is known, then the
-          viewer for that kind. */}
-      {current === 'book' && openBook && openBookKind === null && <BookSkeleton />}
+          screen for that kind, either its viewer or its change-cover
+          screen. */}
+      {showBook && openBookKind === null && <BookSkeleton />}
 
-      {current === 'book' && openBook && openBookKind === 'veggie' && (
+      {showBook && openBookKind === 'veggie' && editingCover && (
+        <ChangeVeggieCover
+          bookId={openBook}
+          vegetables={vegetables}
+          onSave={saveCover}
+          onCancel={leaveCover}
+        />
+      )}
+
+      {showBook && openBookKind === 'secrets' && editingCover && (
+        <ChangeSecretCover
+          bookId={openBook}
+          categories={secretCategories.categories}
+          onSave={saveCover}
+          onCancel={leaveCover}
+        />
+      )}
+
+      {showBook && openBookKind === 'veggie' && !editingCover && (
         <BookViewer
           bookId={openBook}
           vegetables={vegetables}
           openRecipe={openRecipe}
           onOpenRecipe={openRecipeInBook}
           onClose={goHome}
+          onChangeCover={changeCover}
           onDelete={async (id) => {
             await deleteBook(id)
             finishToHome()
@@ -430,12 +476,13 @@ export default function App() {
         />
       )}
 
-      {current === 'book' && openBook && openBookKind === 'secrets' && (
+      {showBook && openBookKind === 'secrets' && !editingCover && (
         <SecretBookViewer
           bookId={openBook}
           openSecret={openSecret}
           onOpenSecret={openSecretInBook}
           onClose={goHome}
+          onChangeCover={changeCover}
           onDelete={async (id) => {
             await deleteBook(id)
             finishToHome()

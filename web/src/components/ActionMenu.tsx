@@ -1,17 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 
 // A ⋮ button that opens a small list of actions. Used on each book card on
-// the home screen, and later on each recipe row inside a book.
+// the home screen, on the book card inside a saved book, and on each recipe
+// or secret row inside a book.
 //
 // Closes when an action is picked, on a click anywhere outside, and on
 // Escape, which also puts focus back on the ⋮ so keyboard users keep
 // their place.
+//
+// Icons, drawn in the same line style:
+//   trash  deleting something
+//   image  changing a picture, such as a book's cover
 
 export type ActionMenuItem = {
   label: string
   onSelect: () => void
   danger?: boolean
-  icon?: 'trash'
+  icon?: 'trash' | 'image'
 }
 
 type Props = {
@@ -101,6 +106,22 @@ export function ActionMenu({ label, items, className = '' }: Props) {
                     <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
                     <path d="M10 11v6" />
                     <path d="M14 11v6" />
+                  </svg>
+                )}
+                {item.icon === 'image' && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <circle cx="8.5" cy="9.5" r="1.5" />
+                    <path d="M21 16l-5-5-9 9" />
                   </svg>
                 )}
                 {item.label}

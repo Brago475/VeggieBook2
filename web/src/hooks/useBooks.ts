@@ -17,8 +17,9 @@ import { ApiError, apiFetch } from '../utils/api'
 // account deleted elsewhere), onSessionEnded is called so the page can drop
 // back to guest.
 //
-// Both kinds of book are listed and deleted the same way. Only saving
-// differs: a VeggieBook posts to /books, a Secrets Book to /books/secrets.
+// Both kinds of book are listed, deleted, and given a new cover the same
+// way. Only saving differs: a VeggieBook posts to /books, a Secrets Book to
+// /books/secrets.
 
 type Loaded = { owner: string; books: BookSummary[] }
 type LoadError = { owner: string; message: string }
@@ -76,20 +77,28 @@ export function useBooks(email: string | null, onSessionEnded: () => void) {
   const error = email && loadError?.owner === email ? loadError.message : null
   const loading = email !== null && loaded?.owner !== email && error === null
 
-  // Posts a finished book and refreshes the list. Throws an ApiError with a
-  // message for the user if the save is refused, so the screen can show it
-  // and let them try again. Shared by both kinds of book, so they handle a
-  // failed save and an ended session the same way.
-  async function post(path: string, body: unknown): Promise<string> {
-    let created: { id: string }
+  // Any request that changes a book. A 401 means the session ended, which
+  // the page is told about; every failure is thrown on with its message for
+  // the user, so the screen can show it and let them try again.
+  async function send<T>(
+    path: string,
+    method: 'POST' | 'PUT' | 'DELETE',
+    body?: unknown,
+  ): Promise<T> {
     try {
-      created = await apiFetch<{ id: string }>(path, { method: 'POST', body })
+      return await apiFetch<T>(path, { method, body })
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         latest.current.onSessionEnded()
       }
       throw err
     }
+  }
+
+  // Saves a finished book and refreshes the list. Shared by both kinds of
+  // book, so they handle a failed save and an ended session the same way.
+  async function post(path: string, body: unknown): Promise<string> {
+    const created = await send<{ id: string }>(path, 'POST', body)
     await refresh()
     return created.id
   }
@@ -102,15 +111,18 @@ export function useBooks(email: string | null, onSessionEnded: () => void) {
     return post('/books/secrets', book)
   }
 
+  // Gives a saved book a new cover, of either kind, and refreshes the list
+  // so the home card shows it. An upload is a data URL; anything else is a
+  // picture's path, the same test used when a book is saved.
+  async function changeCover(id: string, cover: string): Promise<string> {
+    const body = cover.startsWith('data:') ? { coverUpload: cover } : { coverPath: cover }
+    const result = await send<{ cover: string }>(`/books/${id}/cover`, 'PUT', body)
+    await refresh()
+    return result.cover
+  }
+
   async function deleteBook(id: string) {
-    try {
-      await apiFetch<void>(`/books/${id}`, { method: 'DELETE' })
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        latest.current.onSessionEnded()
-      }
-      throw err
-    }
+    await send<void>(`/books/${id}`, 'DELETE')
     setLoaded((prev) =>
       prev
         ? { owner: prev.owner, books: prev.books.filter((b) => b.id !== id) }
@@ -122,5 +134,14 @@ export function useBooks(email: string | null, onSessionEnded: () => void) {
     void refresh()
   }
 
-  return { books, loading, error, saveBook, saveSecretsBook, deleteBook, reload }
+  return {
+    books,
+    loading,
+    error,
+    saveBook,
+    saveSecretsBook,
+    changeCover,
+    deleteBook,
+    reload,
+  }
 }
