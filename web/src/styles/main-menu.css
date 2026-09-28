@@ -1,0 +1,52 @@
+/* The ☰ Menu button on the home screen (MainMenu.tsx).
+
+   The button is the same white pill the Account button was, so the
+   heading looks the same as before. The list it opens is the ⋮ menu's
+   list (menu.css); this file only widens it a little for longer labels. */
+
+.main-menu {
+  flex: 0 0 auto;
+}
+
+.main-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.main-menu-btn:hover,
+.main-menu-btn[aria-expanded='true'] {
+  background: var(--green-tint);
+  border-color: var(--green);
+}
+
+.main-menu-btn:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.main-menu-btn svg {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+}
+
+.main-menu .menu-list {
+  min-width: 210px;
+}
+
+.main-menu .menu-item svg {
+  color: var(--text-muted);
+}

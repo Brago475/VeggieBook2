@@ -1,0 +1,132 @@
+/* Site footer (SiteFooter.tsx).
+
+   One soft green card on the off-white page, so it reads as information
+   about the app rather than another set of controls. A faint leaf sits in
+   the top right corner, clipped by the card's rounded edge. */
+
+.site-footer {
+  padding: var(--sp-5) var(--pad-x) var(--sp-6);
+  background: var(--surface-alt);
+}
+
+.site-footer-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  background: linear-gradient(135deg, #f4f9ec 0%, #edf5e2 100%);
+  border: 1px solid #dde8cc;
+  border-radius: 20px;
+}
+
+/* Everything except the leaf sits above it. */
+.site-footer-card > :not(.site-footer-leaf) {
+  position: relative;
+  z-index: 1;
+}
+
+.site-footer-leaf {
+  position: absolute;
+  z-index: 0;
+  top: -26px;
+  right: -22px;
+  width: 130px;
+  height: 130px;
+  color: rgba(140, 198, 62, 0.16);
+  transform: rotate(-20deg);
+  pointer-events: none;
+}
+
+/* --- heading: icon, title, and the short line ------------------------- */
+
+.site-footer-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.site-footer-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  color: var(--green-deep);
+  background: #e1eed0;
+  border-radius: 50%;
+}
+
+.site-footer-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.site-footer-head-text {
+  min-width: 0;
+}
+
+.site-footer-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--green-deep);
+}
+
+.site-footer-sub {
+  margin: 2px 0 0;
+  font-size: var(--font-label);
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.site-footer-sub strong {
+  font-weight: 700;
+}
+
+/* --- credit ----------------------------------------------------------- */
+
+.site-footer-credit {
+  margin: 0;
+  font-size: var(--font-small);
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* --- button to About -------------------------------------------------- */
+
+.site-footer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: var(--sp-1);
+  padding: 14px var(--sp-4) 14px var(--sp-5);
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: 700;
+  color: var(--green-deep);
+  text-align: left;
+  background: #e1eed0;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.site-footer-btn:hover {
+  background: #d6e8bf;
+}
+
+.site-footer-btn:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.site-footer-chevron {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+}

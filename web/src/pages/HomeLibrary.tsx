@@ -5,10 +5,12 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import {
   ChevronRightIcon,
   GearIcon,
+  InfoIcon,
   LockIcon,
   PersonIcon,
   PlusIcon,
 } from '../components/LibraryIcons'
+import { MainMenu, type MainMenuItem } from '../components/MainMenu'
 import type { BookSummary, SecretCategory, Vegetable } from '../types'
 
 // Home screen: a heading that says who is using the site, the two create
@@ -18,6 +20,10 @@ import type { BookSummary, SecretCategory, Vegetable } from '../types'
 // For a guest, they are the books finished on this page, gone when it
 // closes. The line under the heading says which, so a guest is never
 // surprised.
+//
+// Beside the heading, the ☰ Menu (MainMenu.tsx): Account settings for an
+// account, Sign in for a guest, and About VeggieBook for both. Future
+// features are added to its list, so the heading never gets more crowded.
 //
 // Each card follows the original app: a picture fills the card and the
 // chosen cover sits as a small inset. For a VeggieBook the picture is the
@@ -41,6 +47,7 @@ type Props = {
   onCreateSecrets: () => void
   onAccount: () => void
   onSignIn: () => void
+  onAbout: () => void
   onDeleteBook: (id: string) => Promise<void>
   onViewBook?: (id: string) => void
 }
@@ -69,6 +76,7 @@ export function HomeLibrary({
   onCreateSecrets,
   onAccount,
   onSignIn,
+  onAbout,
   onDeleteBook,
   onViewBook,
 }: Props) {
@@ -82,6 +90,15 @@ export function HomeLibrary({
   const byCategory = new Map<number, SecretCategory>(
     secretCategories.map((c) => [c.id, c]),
   )
+
+  // What the ☰ Menu offers. The first item depends on who is here; About is
+  // for everyone. New features go at the end of this list.
+  const menuItems: MainMenuItem[] = [
+    email
+      ? { label: 'Account settings', icon: <GearIcon />, onSelect: onAccount }
+      : { label: 'Sign in', icon: <PersonIcon />, onSelect: onSignIn },
+    { label: 'About VeggieBook', icon: <InfoIcon />, onSelect: onAbout },
+  ]
 
   function cardInfo(book: BookSummary): CardInfo {
     if (book.kind === 'secrets') {
@@ -133,14 +150,7 @@ export function HomeLibrary({
             {email ? `Signed in as ${email}` : 'Guest: your books are not saved'}
           </p>
         </div>
-        <button
-          type="button"
-          className="library-account"
-          onClick={email ? onAccount : onSignIn}
-        >
-          {email ? <GearIcon /> : <PersonIcon />}
-          {email ? 'Account' : 'Sign in'}
-        </button>
+        <MainMenu items={menuItems} />
       </div>
 
       {/* Both create buttons are the same green: the two kinds of book are

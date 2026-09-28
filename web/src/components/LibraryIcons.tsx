@@ -65,3 +65,25 @@ export function ChevronRightIcon({ className }: IconProps) {
     </Svg>
   )
 }
+
+// Three lines, for the Menu button.
+export function MenuIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M4 7h16" />
+      <path d="M4 12h16" />
+      <path d="M4 17h16" />
+    </Svg>
+  )
+}
+
+// An "i" in a circle, for About VeggieBook in the menu.
+export function InfoIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5" />
+      <path d="M12 7.5h.01" />
+    </Svg>
+  )
+}

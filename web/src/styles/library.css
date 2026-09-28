@@ -1,6 +1,7 @@
 /* Home screen: the heading, the two create buttons, and the book list.
    The ⋮ on each card is styled in menu.css; the card itself in
-   book-card.css. */
+   book-card.css. The ☰ Menu button in the heading has its own file,
+   main-menu.css. */
 
 /* Off-white behind everything, matching a saved book, so the white
    buttons and photo cards stand out from it. */
@@ -39,42 +40,6 @@
   color: var(--text-muted);
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.library-account {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  font: inherit;
-  font-size: var(--font-label);
-  font-weight: 600;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.library-account:hover {
-  background: var(--green-tint);
-  border-color: var(--green);
-}
-
-.library-account:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-}
-
-.library-account svg {
-  width: 20px;
-  height: 20px;
-  color: var(--text-muted);
 }
 
 /* --- create buttons -------------------------------------------------- */

@@ -10,6 +10,7 @@
 //   /book/{id}/secret/{secretId}  one secret inside a Secrets Book
 //   /book/{id}/cover              changing a saved book's cover
 //   /account                      account settings
+//   /about                        about VeggieBook, open to everyone
 //   /signin, /register            sign in, create account
 //
 // Anything else is treated as home, and the address is corrected to /.
@@ -19,6 +20,7 @@ export type Route =
   | { view: 'flow' }
   | { view: 'secrets' }
   | { view: 'account' }
+  | { view: 'about' }
   | { view: 'signin' }
   | { view: 'register' }
   | {
@@ -52,6 +54,8 @@ export function parseRoute(path: string): Route {
         return { view: 'secrets' }
       case 'account':
         return { view: 'account' }
+      case 'about':
+        return { view: 'about' }
       case 'signin':
         return { view: 'signin' }
       case 'register':
@@ -84,6 +88,8 @@ export function routePath(route: Route): string {
       return '/secrets'
     case 'account':
       return '/account'
+    case 'about':
+      return '/about'
     case 'signin':
       return '/signin'
     case 'register':

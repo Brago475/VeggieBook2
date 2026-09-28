@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BookSkeleton } from './components/BookSkeleton'
 import { LoadingScreen } from './components/LoadingScreen'
 import { Masthead } from './components/Masthead'
+import { SiteFooter } from './components/SiteFooter'
 import { useAuth } from './hooks/useAuth'
 import { useBookFlow } from './hooks/useBookFlow'
 import { useBooks } from './hooks/useBooks'
@@ -9,6 +10,7 @@ import { useRoute } from './hooks/useRoute'
 import { useSecretCategories } from './hooks/useSecrets'
 import { useSecretsFlow } from './hooks/useSecretsFlow'
 import { useVeggieBookData } from './hooks/useVeggieBookData'
+import { About } from './pages/About'
 import { AccountSettings } from './pages/AccountSettings'
 import { AuthForm, type AuthMode } from './pages/AuthForm'
 import { BookFlow } from './pages/BookFlow'
@@ -35,6 +37,7 @@ import './styles/components.css'
 import './styles/masthead.css'
 import './styles/book-card.css'
 import './styles/menu.css'
+import './styles/main-menu.css'
 import './styles/pages.css'
 import './styles/account.css'
 import './styles/auth.css'
@@ -42,6 +45,8 @@ import './styles/library.css'
 import './styles/reading.css'
 import './styles/recipe-sections.css'
 import './styles/secrets.css'
+import './styles/about.css'
+import './styles/footer.css'
 import './styles/dialog.css'
 import './styles/responsive.css'
 
@@ -111,6 +116,7 @@ export default function App() {
   //   a book in progress, of either kind, for a visitor who has not chosen
   //     guest (after a guest refreshes, which by design keeps nothing)
   //   an unknown or untidy address
+  // About is open to everyone, so it is never corrected.
   useEffect(() => {
     if (status === 'loading') return
 
@@ -337,7 +343,7 @@ export default function App() {
         goUp(back)
       }
     }
-    if (authMode || current === 'account') return goHome
+    if (authMode || current === 'account' || current === 'about') return goHome
     return undefined
   }
 
@@ -349,6 +355,17 @@ export default function App() {
   if (status === 'loading') return <LoadingScreen />
 
   const showBook = current === 'book' && openBook !== null
+
+  // The footer shows on the main screens: Welcome, home, account, About,
+  // and reading a saved book. It stays off while a book is being made or its
+  // cover changed, so it never sits under the NEXT, KEEP or SAVE buttons,
+  // and off on sign in and create account, so nothing pulls attention from
+  // the form.
+  const showFooter =
+    current === 'home' ||
+    current === 'account' ||
+    current === 'about' ||
+    (showBook && !editingCover)
 
   return (
     <div className="app">
@@ -384,6 +401,7 @@ export default function App() {
           onCreateSecrets={startSecrets}
           onAccount={() => navigate('/account')}
           onSignIn={() => navigate('/signin')}
+          onAbout={() => navigate('/about')}
           onDeleteBook={deleteBook}
           onViewBook={email ? viewBook : undefined}
         />
@@ -410,6 +428,9 @@ export default function App() {
           onDeleteAccount={deleteAccount}
         />
       )}
+
+      {/* Open to everyone: a visitor, a guest, or an account. */}
+      {current === 'about' && <About />}
 
       {current === 'flow' && (
         <BookFlow
@@ -489,6 +510,11 @@ export default function App() {
           }}
           onChanged={library.reload}
         />
+      )}
+
+      {/* No About link on the About screen itself. */}
+      {showFooter && (
+        <SiteFooter onAbout={current === 'about' ? undefined : () => navigate('/about')} />
       )}
     </div>
   )
