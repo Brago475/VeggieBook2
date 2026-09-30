@@ -1,0 +1,56 @@
+/* Terms of Use and Privacy Policy.
+
+   Built on about.css and account.css: the same screen, heading, card, and
+   reading text. This file only adds the version line, the numbered section
+   headings, and bullet lists. */
+
+.legal-meta {
+  margin: 0;
+  font-size: var(--font-small);
+  color: var(--text-muted);
+}
+
+/* One card holds every section, separated by a thin line. */
+.legal-card {
+  gap: 0;
+}
+
+.legal-section {
+  padding: var(--sp-4) 0;
+  border-top: 1px solid rgba(47, 93, 47, 0.12);
+  /* Keeps a linked section's heading visible under the sticky header. */
+  scroll-margin-top: 80px;
+}
+
+.legal-section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.legal-section:last-child {
+  padding-bottom: 0;
+}
+
+.legal-heading {
+  margin: 0 0 var(--sp-2);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.legal-number {
+  color: var(--green-deep);
+}
+
+.legal-list {
+  margin: 0 0 var(--sp-3);
+  padding-left: 1.25em;
+}
+
+.legal-list li {
+  margin-bottom: var(--sp-2);
+}
+
+.legal-list li:last-child {
+  margin-bottom: 0;
+}

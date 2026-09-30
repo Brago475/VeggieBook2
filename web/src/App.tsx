@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
 import { BookSkeleton } from './components/BookSkeleton'
+import { LegalPage } from './components/LegalPage'
 import { LoadingScreen } from './components/LoadingScreen'
 import { Masthead } from './components/Masthead'
 import { SiteFooter } from './components/SiteFooter'
+import { PRIVACY } from './content/privacy'
+import { TERMS } from './content/terms'
 import { useAuth } from './hooks/useAuth'
 import { useBookFlow } from './hooks/useBookFlow'
 import { useBooks } from './hooks/useBooks'
@@ -50,6 +53,7 @@ import './styles/reading.css'
 import './styles/recipe-sections.css'
 import './styles/secrets.css'
 import './styles/about.css'
+import './styles/legal.css'
 import './styles/footer.css'
 import './styles/dialog.css'
 import './styles/responsive.css'
@@ -59,7 +63,8 @@ import './styles/responsive.css'
 // Forward buttons move between screens.
 //
 // Who is here (see hooks/useAuth.ts):
-//   visitor   nobody signed in. Welcome, About, and the account screens.
+//   visitor   nobody signed in. Welcome, About, Terms, Privacy, and the
+//             account screens.
 //   guest     a temporary account. Makes, saves, and reads books like an
 //             account. Deleted on sign out, or after 24 hours.
 //   signedIn  a real account, with account settings.
@@ -128,7 +133,7 @@ export default function App() {
   //   sign in or create account, while already signed in to an account
   //     (a guest may use both, to move to a real account)
   //   an unknown or untidy address
-  // About and the email link pages are open to everyone.
+  // About, Terms, Privacy, and the email link pages are open to everyone.
   useEffect(() => {
     if (status === 'loading') return
 
@@ -273,6 +278,8 @@ export default function App() {
     current === 'signin' || current === 'register' ? current : null
   const linkPage =
     current === 'forgotPassword' || current === 'resetPassword' || current === 'confirmEmail'
+  const readingPage =
+    current === 'about' || current === 'terms' || current === 'privacy'
 
   // Welcome and every account screen hide the green bar. They show the logo
   // in the page and run a photograph to the bottom edge, which the masthead
@@ -298,7 +305,7 @@ export default function App() {
       return goHome
     }
     if (current === 'forgotPassword') return () => goUp('/signin')
-    if (authMode || current === 'account' || current === 'about') return goHome
+    if (authMode || current === 'account' || readingPage) return goHome
     return undefined
   }
 
@@ -311,14 +318,15 @@ export default function App() {
 
   const showBook = current === 'book' && openBook !== null
 
-  // The footer shows on the main screens: Welcome, home, account, About,
-  // and reading a saved book. It stays off while a book is being made or its
-  // cover changed, so it never sits under the NEXT, KEEP or SAVE buttons,
-  // and off on the account screens, so nothing pulls attention from the form.
+  // The footer shows on the main screens: Welcome, home, account, the
+  // reading pages, and reading a saved book. It stays off while a book is
+  // being made or its cover changed, so it never sits under the NEXT, KEEP
+  // or SAVE buttons, and off on the account screens, so nothing pulls
+  // attention from the form.
   const showFooter =
     current === 'home' ||
     current === 'account' ||
-    current === 'about' ||
+    readingPage ||
     (showBook && !editingCover)
 
   return (
@@ -412,6 +420,8 @@ export default function App() {
 
       {/* Open to everyone: a visitor, a guest, or an account. */}
       {current === 'about' && <About />}
+      {current === 'terms' && <LegalPage doc={TERMS} />}
+      {current === 'privacy' && <LegalPage doc={PRIVACY} />}
 
       {current === 'flow' && (
         <BookFlow

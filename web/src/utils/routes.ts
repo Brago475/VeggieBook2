@@ -11,6 +11,7 @@
 //   /book/{id}/cover              changing a saved book's cover
 //   /account                      account settings
 //   /about                        about VeggieBook, open to everyone
+//   /terms, /privacy              Terms of Use and Privacy Policy, open to everyone
 //   /signin, /register            sign in, create account
 //   /forgot-password              ask for a password reset link
 //   /reset-password?user&token    choose a new password, from the email link
@@ -26,6 +27,8 @@ export type Route =
   | { view: 'secrets' }
   | { view: 'account' }
   | { view: 'about' }
+  | { view: 'terms' }
+  | { view: 'privacy' }
   | { view: 'signin' }
   | { view: 'register' }
   | { view: 'forgotPassword' }
@@ -64,6 +67,10 @@ export function parseRoute(path: string): Route {
         return { view: 'account' }
       case 'about':
         return { view: 'about' }
+      case 'terms':
+        return { view: 'terms' }
+      case 'privacy':
+        return { view: 'privacy' }
       case 'signin':
         return { view: 'signin' }
       case 'register':
@@ -104,6 +111,10 @@ export function routePath(route: Route): string {
       return '/account'
     case 'about':
       return '/about'
+    case 'terms':
+      return '/terms'
+    case 'privacy':
+      return '/privacy'
     case 'signin':
       return '/signin'
     case 'register':
