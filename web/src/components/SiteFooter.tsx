@@ -2,23 +2,26 @@ import { BookSproutIcon } from './FooterIcons'
 import { LeafDecor } from './LeafDecor'
 import { ChevronRightIcon } from './LibraryIcons'
 
-// Footer for the main screens: Welcome, home, a saved book, account, and
-// About. One soft green card: an icon and title, a short line on where the
-// app comes from, the credit to the original creators and funder and to
-// Kean, and a button to the About page with the full story.
+// Footer for the main screens: Welcome, home, a saved book, account, About,
+// and the Terms and Privacy pages. One soft green card: an icon and title, a
+// short line on where the app comes from, the credit to the original
+// creators and funder and to Kean, a button to the About page with the full
+// story, and links to the Terms of Use and Privacy Policy.
 //
 // Hidden while a book is being made and on the sign in and create account
 // forms (see App.tsx), so it never sits under the NEXT and KEEP buttons or
 // pulls attention from a form.
 //
-// onAbout is left out on the About screen itself, so the card does not
-// link to the page it is already on.
+// Each link is left out on its own page, so the card never links to the
+// page it is already on.
 
 type Props = {
   onAbout?: () => void
+  onTerms?: () => void
+  onPrivacy?: () => void
 }
 
-export function SiteFooter({ onAbout }: Props) {
+export function SiteFooter({ onAbout, onTerms, onPrivacy }: Props) {
   return (
     <footer className="site-footer">
       <div className="site-footer-card">
@@ -48,6 +51,26 @@ export function SiteFooter({ onAbout }: Props) {
             Learn about the project
             <ChevronRightIcon className="site-footer-chevron" />
           </button>
+        )}
+
+        {(onTerms || onPrivacy) && (
+          <nav className="site-footer-links" aria-label="Legal">
+            {onTerms && (
+              <button type="button" className="site-footer-link" onClick={onTerms}>
+                Terms of Use
+              </button>
+            )}
+            {onTerms && onPrivacy && (
+              <span className="site-footer-dot" aria-hidden="true">
+                ·
+              </span>
+            )}
+            {onPrivacy && (
+              <button type="button" className="site-footer-link" onClick={onPrivacy}>
+                Privacy Policy
+              </button>
+            )}
+          </nav>
         )}
       </div>
     </footer>

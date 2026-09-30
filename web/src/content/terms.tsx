@@ -7,6 +7,15 @@ export const TERMS: LegalDocument = {
   title: 'Terms of Use',
   version: '1.0',
   updated: 'September 30, 2026',
+  intro: (
+    <p>
+      <strong>
+        By creating an account, or by using VeggieBook2 as a guest, you agree to
+        these Terms of Use and to our Privacy Policy.
+      </strong>{' '}
+      If you do not agree, please do not use VeggieBook2.
+    </p>
+  ),
   sections: [
     {
       id: 'about',

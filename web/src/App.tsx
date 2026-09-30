@@ -497,9 +497,13 @@ export default function App() {
         />
       )}
 
-      {/* No About link on the About screen itself. */}
+      {/* Each footer link is left out on its own page. */}
       {showFooter && (
-        <SiteFooter onAbout={current === 'about' ? undefined : () => navigate('/about')} />
+        <SiteFooter
+          onAbout={current === 'about' ? undefined : () => navigate('/about')}
+          onTerms={current === 'terms' ? undefined : () => navigate('/terms')}
+          onPrivacy={current === 'privacy' ? undefined : () => navigate('/privacy')}
+        />
       )}
     </div>
   )

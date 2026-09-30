@@ -7,6 +7,14 @@ export const PRIVACY: LegalDocument = {
   title: 'Privacy Policy',
   version: '1.0',
   updated: 'September 30, 2026',
+  intro: (
+    <p>
+      This policy explains what information VeggieBook2 collects and how it is
+      used.{' '}
+      <strong>By creating an account, you agree to this Privacy Policy</strong>{' '}
+      and to our Terms of Use.
+    </p>
+  ),
   sections: [
     {
       id: 'information-we-collect',

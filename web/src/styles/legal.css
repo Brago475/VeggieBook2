@@ -1,13 +1,30 @@
-/* Terms of Use and Privacy Policy.
+/* Terms of Use and Privacy Policy, and the legal links in the footer.
 
    Built on about.css and account.css: the same screen, heading, card, and
-   reading text. This file only adds the version line, the numbered section
-   headings, and bullet lists. */
+   reading text. This file only adds the version line, the highlighted
+   opening line, the numbered section headings, bullet lists, and the
+   footer's Terms and Privacy links. */
 
 .legal-meta {
   margin: 0;
   font-size: var(--font-small);
   color: var(--text-muted);
+}
+
+/* The opening line: what the reader agrees to, before anything else. */
+.legal-intro {
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--font-row);
+  line-height: 1.55;
+  color: var(--text);
+  background: rgba(47, 93, 47, 0.07);
+  border-left: 4px solid var(--green-deep);
+  border-radius: 12px;
+}
+
+.legal-intro p {
+  margin: 0;
 }
 
 /* One card holds every section, separated by a thin line. */
@@ -53,4 +70,44 @@
 
 .legal-list li:last-child {
   margin-bottom: 0;
+}
+
+/* --- footer links ----------------------------------------------------- */
+
+/* Terms of Use · Privacy Policy, small and quiet under the footer card's
+   main button. */
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  font-size: var(--font-small);
+}
+
+.site-footer-link {
+  padding: 4px 2px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--green-deep);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.site-footer-link:hover {
+  color: var(--green-deep-press);
+}
+
+.site-footer-link:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.site-footer-dot {
+  color: var(--text-muted);
 }

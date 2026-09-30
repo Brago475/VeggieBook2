@@ -9,6 +9,9 @@ import { LeafDecor } from './LeafDecor'
 // two faint corner leaves, the logo heading, and a white card. Each section
 // gets its own heading so the page is easy to scan and link to.
 //
+// The opening line (intro) sits in a highlighted box above the sections,
+// so what the reader agrees to is the first thing they see.
+//
 // Open to everyone, signed in or not. Read only. Back returns home.
 
 export type LegalSection = {
@@ -24,6 +27,7 @@ export type LegalDocument = {
   // agreed to which version. Change it whenever the text changes.
   version: string
   updated: string
+  intro?: ReactNode
   sections: LegalSection[]
 }
 
@@ -48,6 +52,8 @@ export function LegalPage({ doc }: Props) {
           Version {doc.version} · Last updated {doc.updated}
         </p>
       </header>
+
+      {doc.intro && <div className="legal-intro">{doc.intro}</div>}
 
       <article className="account-card about-card legal-card">
         {doc.sections.map((section, i) => (
