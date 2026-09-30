@@ -4,18 +4,15 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using VeggieBook.Api.Data;
-using VeggieBook.Api.Email;
 
 namespace VeggieBook.Api.Auth;
 
 // Account endpoints, part 1: getting in and out.
 //
-//   POST /api/auth/register              create an account, sends a confirmation email
-//   POST /api/auth/confirm-email         confirm the email from the link
-//   POST /api/auth/resend-confirmation   send the confirmation email again
-//   POST /api/auth/signin                sign in
-//   POST /api/auth/signout               sign out this device (deletes a guest)
-//   GET  /api/auth/me                    who is here, and their roles
+//   POST /api/auth/register   create an account and sign in
+//   POST /api/auth/signin     sign in
+//   POST /api/auth/signout    sign out this device (deletes a guest)
+//   GET  /api/auth/me         who is here, and their roles
 //
 // Passwords: PasswordController. Deleting an account: AccountController.
 // Guests: GuestController.
@@ -23,14 +20,12 @@ namespace VeggieBook.Api.Auth;
 // Every endpoint takes and returns JSON only. Combined with the SameSite=Lax
 // cookie, another site cannot submit a form that acts on a visitor's account.
 //
-// Register, resend, and forgot-password always give the same answer whether
-// or not the email has an account, so none of them can be used to find out
-// who is signed up. The real answer goes to the inbox instead.
+// The email is not confirmed at sign-up. It is used only to recover the
+// account, so a new account can sign in right away.
 //
 // A guest who signs up or signs in chooses what happens to their books
-// (KeepGuestBooks). Keep: the books move into the account, on sign in right
-// away, on sign up once the email is confirmed. Start fresh: the guest and
-// its books are deleted.
+// (KeepGuestBooks). Keep: the books move into the account right away.
+// Start fresh: the guest and its books are deleted.
 
 [ApiController]
 [Route("api/auth")]
@@ -38,12 +33,11 @@ public class AuthController(
     UserManager<AppUser> users,
     SignInManager<AppUser> signIn,
     IPasswordHasher<AppUser> hasher,
-    GuestAccounts guests,
-    AuthLinks links,
-    EmailQueue email) : ControllerBase
+    GuestAccounts guests) : ControllerBase
 {
     private const string WrongCredentials = "Email or password is incorrect.";
-    private const string InvalidLink = "This link is invalid or has expired.";
+    private const string EmailTaken =
+        "An account with this email already exists. Sign in, or reset your password if you forgot it.";
 
     // Used to spend the same time hashing when the email is unknown, so the
     // response time does not reveal whether an account exists.
@@ -58,7 +52,6 @@ public class AuthController(
             return BadRequest(new { error = "You are already signed in." });
 
         var guest = current;
-        var keepBooks = guest is not null && req.KeepGuestBooks == true;
 
         var address = req.Email?.Trim() ?? "";
         if (!AuthHelpers.IsValidEmail(address))
@@ -68,27 +61,12 @@ public class AuthController(
         if (passwordError is not null)
             return BadRequest(new { error = passwordError });
 
-        var existing = await users.FindByEmailAsync(address);
-        if (existing is not null)
-        {
-            // Hash anyway so this path takes as long as a real sign-up.
-            hasher.HashPassword(existing, req.Password!);
-            email.Enqueue(EmailTemplates.AlreadyRegistered(
-                existing.Email!, links.Home, links.ForgotPassword));
-
-            // Same guest handling as a real sign-up, so the answer looks
-            // identical either way.
-            if (guest is not null && !keepBooks) await DiscardGuest(guest);
-            return CheckYourEmail();
-        }
-
         var user = new AppUser
         {
             Id = Guid.NewGuid(),
             UserName = address,
             Email = address,
-            CreatedAt = DateTime.UtcNow,
-            PendingGuestId = keepBooks ? guest!.Id : null
+            CreatedAt = DateTime.UtcNow
         };
 
         IdentityResult created;
@@ -101,75 +79,30 @@ public class AuthController(
         {
             // Two sign-ups with the same email at the same moment. The
             // database's unique index caught the second one.
-            if (guest is not null && !keepBooks) await DiscardGuest(guest);
-            return CheckYourEmail();
+            return Conflict(new { error = EmailTaken });
         }
 
         if (!created.Succeeded)
+        {
+            if (created.Errors.Any(e => e.Code is "DuplicateEmail" or "DuplicateUserName"))
+                return Conflict(new { error = EmailTaken });
             return BadRequest(new { error = AuthHelpers.FirstError(created) });
+        }
 
         var role = await users.AddToRoleAsync(user, Roles.User);
         if (!role.Succeeded)
             throw new InvalidOperationException(
                 "Could not give the new account the User role. Has migration 003 run?");
 
-        await SendConfirmation(user);
-
         if (guest is not null)
         {
-            // Keep: the guest stays signed in, and lasts until the email is
-            // confirmed. Start fresh: the guest is gone now.
-            if (keepBooks) await guests.ExtendAsync(guest);
-            else await DiscardGuest(guest);
+            if (req.KeepGuestBooks == true) await guests.MoveBooksAsync(guest.Id, user.Id);
+            else await guests.DeleteAsync(guest.Id);
         }
 
-        return CheckYourEmail();
-    }
-
-    // Confirming does not sign the user in. They sign in normally afterward,
-    // so a leaked link can never be used as a way into the account.
-    [HttpPost("confirm-email")]
-    [EnableRateLimiting(AuthSetup.RateLimitPolicy)]
-    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest req)
-    {
-        var token = AuthHelpers.DecodeToken(req.Token);
-        var user = Guid.TryParse(req.UserId, out _)
-            ? await users.FindByIdAsync(req.UserId!)
-            : null;
-
-        if (user is null || token is null || GuestAccounts.IsGuest(user))
-            return BadRequest(new { error = InvalidLink });
-
-        if (user.EmailConfirmed)
-            return Ok(new { status = "confirmed" });
-
-        var result = await users.ConfirmEmailAsync(user, token);
-        if (!result.Succeeded)
-            return BadRequest(new { error = InvalidLink });
-
-        // The owner chose to keep their guest books when signing up.
-        if (user.PendingGuestId is Guid guestId)
-        {
-            await guests.MoveBooksAsync(guestId, user.Id);
-            user.PendingGuestId = null;
-            await users.UpdateAsync(user);
-        }
-
-        return Ok(new { status = "confirmed" });
-    }
-
-    [HttpPost("resend-confirmation")]
-    [EnableRateLimiting(AuthSetup.RateLimitPolicy)]
-    public async Task<IActionResult> ResendConfirmation([FromBody] EmailRequest req)
-    {
-        var address = req.Email?.Trim() ?? "";
-        if (AuthHelpers.IsValidEmail(address))
-        {
-            var user = await users.FindByEmailAsync(address);
-            if (user is not null && !user.EmailConfirmed)
-                await SendConfirmation(user);
-        }
-        return CheckYourEmail();
+        // Signing in replaces a guest's session with the new account's.
+        await signIn.SignInAsync(user, isPersistent: true);
+        return Ok(await AuthHelpers.MeFor(users, user));
     }
 
     [HttpPost("signin")]
@@ -200,22 +133,6 @@ public class AuthController(
         // lockout never confirms whether a guess was right.
         if (await users.IsLockedOutAsync(user))
             return TooManyAttempts();
-
-        if (!user.EmailConfirmed)
-        {
-            // Only say "confirm your email" to someone who knows the
-            // password. Wrong guesses still count toward the lockout.
-            if (!await users.CheckPasswordAsync(user, password))
-            {
-                await users.AccessFailedAsync(user);
-                return Unauthorized(new { error = WrongCredentials });
-            }
-            return StatusCode(StatusCodes.Status403Forbidden, new
-            {
-                error = "Please confirm your email first. Check your inbox for the link.",
-                code = "emailNotConfirmed"
-            });
-        }
 
         var result = await signIn.PasswordSignInAsync(
             user, password, isPersistent: true, lockoutOnFailure: true);
@@ -257,22 +174,6 @@ public class AuthController(
             ? new MeResponse(null, [])
             : await AuthHelpers.MeFor(users, user));
     }
-
-    private async Task DiscardGuest(AppUser guest)
-    {
-        await signIn.SignOutAsync();
-        await guests.DeleteAsync(guest.Id);
-    }
-
-    private async Task SendConfirmation(AppUser user)
-    {
-        var token = await users.GenerateEmailConfirmationTokenAsync(user);
-        email.Enqueue(EmailTemplates.ConfirmEmail(
-            user.Email!, links.ConfirmEmail(user.Id, token)));
-    }
-
-    private AcceptedResult CheckYourEmail() =>
-        Accepted(new { status = "checkEmail" });
 
     private ObjectResult TooManyAttempts() =>
         StatusCode(StatusCodes.Status429TooManyRequests,

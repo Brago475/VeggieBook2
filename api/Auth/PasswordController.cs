@@ -15,6 +15,9 @@ namespace VeggieBook.Api.Auth;
 //
 // Changing or resetting a password replaces the account's security stamp,
 // which signs out every other device on its next request.
+//
+// The email reset is the last resort. The recovery PIN, which comes with the
+// new sign-up form, will be tried first.
 
 [ApiController]
 [Route("api/auth")]
@@ -70,19 +73,9 @@ public class PasswordController(
             var user = await users.FindByEmailAsync(address);
             if (user is not null && !GuestAccounts.IsGuest(user))
             {
-                if (user.EmailConfirmed)
-                {
-                    var token = await users.GeneratePasswordResetTokenAsync(user);
-                    email.Enqueue(EmailTemplates.ResetPassword(
-                        user.Email!, links.ResetPassword(user.Id, token)));
-                }
-                else
-                {
-                    // Never confirmed: send the confirmation link instead.
-                    var token = await users.GenerateEmailConfirmationTokenAsync(user);
-                    email.Enqueue(EmailTemplates.ConfirmEmail(
-                        user.Email!, links.ConfirmEmail(user.Id, token)));
-                }
+                var token = await users.GeneratePasswordResetTokenAsync(user);
+                email.Enqueue(EmailTemplates.ResetPassword(
+                    user.Email!, links.ResetPassword(user.Id, token)));
             }
         }
         return Accepted(new { status = "checkEmail" });

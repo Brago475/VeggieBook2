@@ -8,8 +8,8 @@ namespace VeggieBook.Api.Auth;
 
 // Everything about how a visitor proves who they are, in one place.
 //
-// Accounts, passwords, lockout, email confirmation, password reset, and roles
-// are ASP.NET Core Identity. Nothing here implements security by hand.
+// Accounts, passwords, lockout, password reset, and roles are ASP.NET Core
+// Identity. Nothing here implements security by hand.
 //
 // Sessions are Identity's cookie: HttpOnly so page scripts can never read it,
 // Secure so it only travels over HTTPS, SameSite=Lax so other sites cannot
@@ -31,7 +31,7 @@ public static class AuthSetup
         IConfiguration config,
         IWebHostEnvironment env)
     {
-        // Data protection keys: encrypt the cookie and sign email tokens.
+        // Data protection keys: encrypt the cookie and sign reset tokens.
         var keysPath = config["DataProtection:KeysPath"];
         var dataProtection = services
             .AddDataProtection()
@@ -67,8 +67,9 @@ public static class AuthSetup
                 o.User.RequireUniqueEmail = true;
                 o.User.AllowedUserNameCharacters = "";
 
-                // No signing in until the email address is confirmed.
-                o.SignIn.RequireConfirmedEmail = true;
+                // Accounts can sign in right after sign-up. The email is used
+                // only to recover the account, so it is not confirmed first.
+                o.SignIn.RequireConfirmedEmail = false;
 
                 // Length is the rule that matters. No forced symbols or
                 // capitals, in line with current NIST guidance.
@@ -89,7 +90,7 @@ public static class AuthSetup
             .AddSignInManager()
             .AddDefaultTokenProviders();
 
-        // Email confirmation and password reset links expire after 3 hours.
+        // Password reset links expire after 3 hours.
         services.Configure<DataProtectionTokenProviderOptions>(o =>
             o.TokenLifespan = TimeSpan.FromHours(3));
 
