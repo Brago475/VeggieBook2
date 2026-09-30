@@ -37,18 +37,20 @@ public static class EmailTemplates
     {
         var text = $"{intro}\n\n{button}: {link}\n\n{footer}\n";
 
-        var e = WebUtility.HtmlEncode;
         var html = $"""
             <div style="font-family:Arial,Helvetica,sans-serif;max-width:480px;margin:0 auto;color:#1f2d1f">
               <h2 style="color:#2f5d2f">VeggieBook</h2>
-              <p>{e(intro)}</p>
+              <p>{Html(intro)}</p>
               <p style="margin:28px 0">
-                <a href="{e(link)}" style="background:#2f5d2f;color:#ffffff;padding:12px 22px;border-radius:999px;text-decoration:none;display:inline-block">{e(button)}</a>
+                <a href="{Html(link)}" style="background:#2f5d2f;color:#ffffff;padding:12px 22px;border-radius:999px;text-decoration:none;display:inline-block">{Html(button)}</a>
               </p>
-              <p style="font-size:13px;color:#5b6b5b">{e(footer)}</p>
+              <p style="font-size:13px;color:#5b6b5b">{Html(footer)}</p>
             </div>
             """;
 
         return new EmailMessage(to, subject, text, html);
     }
+
+    // Escapes text for safe use inside the HTML email.
+    private static string Html(string value) => WebUtility.HtmlEncode(value);
 }
