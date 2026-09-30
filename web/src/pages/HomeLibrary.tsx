@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { SignOutIcon } from '../components/AccountIcons'
 import { ActionMenu } from '../components/ActionMenu'
 import { BookCard } from '../components/BookCard'
 import { ConfirmDialog } from '../components/ConfirmDialog'
@@ -17,26 +18,29 @@ import type { BookSummary, SecretCategory, Vegetable } from '../types'
 // buttons, then the books.
 //
 // Signed in, the books come from the account and are there on any device.
-// For a guest, they are the books finished on this page, gone when it
-// closes. The line under the heading says which, so a guest is never
-// surprised.
+// For a guest, they are kept on the server in a temporary guest account,
+// until the guest signs out or for up to 24 hours. The line under the
+// heading says which, so a guest is never surprised.
 //
-// Beside the heading, the ☰ Menu (MainMenu.tsx): Account settings for an
-// account, Sign in for a guest, and About VeggieBook for both. Future
-// features are added to its list, so the heading never gets more crowded.
+// Beside the heading, the ☰ Menu (MainMenu.tsx). An account gets Account
+// settings. A guest gets Create account, Sign in, and End guest visit, which
+// asks first because it deletes their books. About VeggieBook is for
+// everyone. Future features are added to its list, so the heading never
+// gets more crowded.
 //
 // Each card follows the original app: a picture fills the card and the
 // chosen cover sits as a small inset. For a VeggieBook the picture is the
 // vegetable's; for a Secrets Book it is the category's (the toaster, the
-// cart), as on the original app's home screen. A signed-in account can open
-// either kind of card to read the book. A guest's book has no id on the
-// server, so onViewBook is not passed and its cards stay unclickable.
-// Actions on a book live in the ⋮ on its card.
+// cart), as on the original app's home screen. Every card opens its book,
+// for a guest as well as an account. Actions on a book live in the ⋮ on its
+// card.
 //
 // While the books load, two gray card shapes hold their place, so the list
 // does not pop in under a line of text.
 
 type Props = {
+  // The account's email, or null for a guest. Visitors who are neither see
+  // Welcome instead of this screen.
   email: string | null
   books: BookSummary[]
   vegetables: Vegetable[]
@@ -46,10 +50,13 @@ type Props = {
   onCreateVeggie: () => void
   onCreateSecrets: () => void
   onAccount: () => void
+  onRegister: () => void
   onSignIn: () => void
+  // Signs the guest out, which deletes the guest and their books.
+  onEndGuest: () => Promise<void>
   onAbout: () => void
   onDeleteBook: (id: string) => Promise<void>
-  onViewBook?: (id: string) => void
+  onViewBook: (id: string) => void
 }
 
 const SKELETON_CARDS = 2
@@ -75,30 +82,44 @@ export function HomeLibrary({
   onCreateVeggie,
   onCreateSecrets,
   onAccount,
+  onRegister,
   onSignIn,
+  onEndGuest,
   onAbout,
   onDeleteBook,
   onViewBook,
 }: Props) {
+  const isGuest = email === null
+
   const [deleteError, setDeleteError] = useState<string | null>(null)
   // The book awaiting confirmation. The name is held alongside the id so the
   // question can say which book, rather than "this book".
   const [pending, setPending] = useState<{ id: string; name: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  // End guest visit, waiting for confirmation.
+  const [confirmEnd, setConfirmEnd] = useState(false)
+  const [ending, setEnding] = useState(false)
+  const [endError, setEndError] = useState<string | null>(null)
+
   const byCode = new Map<string, Vegetable>(vegetables.map((v) => [v.code, v]))
   const byCategory = new Map<number, SecretCategory>(
     secretCategories.map((c) => [c.id, c]),
   )
 
-  // What the ☰ Menu offers. The first item depends on who is here; About is
+  // What the ☰ Menu offers. The first items depend on who is here; About is
   // for everyone. New features go at the end of this list.
-  const menuItems: MainMenuItem[] = [
-    email
-      ? { label: 'Account settings', icon: <GearIcon />, onSelect: onAccount }
-      : { label: 'Sign in', icon: <PersonIcon />, onSelect: onSignIn },
-    { label: 'About VeggieBook', icon: <InfoIcon />, onSelect: onAbout },
-  ]
+  const menuItems: MainMenuItem[] = isGuest
+    ? [
+        { label: 'Create account', icon: <PlusIcon />, onSelect: onRegister },
+        { label: 'Sign in', icon: <PersonIcon />, onSelect: onSignIn },
+        { label: 'End guest visit', icon: <SignOutIcon />, onSelect: () => setConfirmEnd(true) },
+        { label: 'About VeggieBook', icon: <InfoIcon />, onSelect: onAbout },
+      ]
+    : [
+        { label: 'Account settings', icon: <GearIcon />, onSelect: onAccount },
+        { label: 'About VeggieBook', icon: <InfoIcon />, onSelect: onAbout },
+      ]
 
   function cardInfo(book: BookSummary): CardInfo {
     if (book.kind === 'secrets') {
@@ -141,13 +162,39 @@ export function HomeLibrary({
     }
   }
 
+  async function endGuestVisit() {
+    if (ending) return
+    setEnding(true)
+    setEndError(null)
+    try {
+      await onEndGuest()
+      // On success the parent shows Welcome.
+    } catch (err) {
+      setEndError(
+        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+      )
+      setEnding(false)
+      setConfirmEnd(false)
+    }
+  }
+
+  // "Delete these 3 books", so the guest knows exactly what they lose.
+  const guestBooksLine =
+    books.length === 0
+      ? 'You have no books yet.'
+      : books.length === 1
+        ? 'This deletes your 1 book.'
+        : `This deletes your ${books.length} books.`
+
   return (
     <div className="library">
       <div className="library-head">
         <div className="library-head-text">
           <h1 className="library-title">My VeggieBooks</h1>
           <p className="library-sub">
-            {email ? `Signed in as ${email}` : 'Guest: your books are not saved'}
+            {isGuest
+              ? 'Guest: your books are kept until you sign out, for up to 24 hours'
+              : `Signed in as ${email}`}
           </p>
         </div>
         <MainMenu items={menuItems} />
@@ -196,6 +243,7 @@ export function HomeLibrary({
       )}
       {error && <p className="message">{error}</p>}
       {deleteError && <p className="message">{deleteError}</p>}
+      {endError && <p className="message">{endError}</p>}
 
       {!loading && !error && books.length === 0 && (
         <p className="message">
@@ -217,7 +265,7 @@ export function HomeLibrary({
                 subtitle={info.subtitle}
                 count={book.recipeCount}
                 countNoun={info.countNoun}
-                onClick={onViewBook ? () => onViewBook(book.id) : undefined}
+                onClick={() => onViewBook(book.id)}
               />
 
               <ActionMenu
@@ -248,6 +296,20 @@ export function HomeLibrary({
         onConfirm={confirmDelete}
         onCancel={() => {
           if (!deleting) setPending(null)
+        }}
+      />
+
+      <ConfirmDialog
+        open={confirmEnd}
+        title="End your guest visit?"
+        body={`${guestBooksLine} To keep them, choose Create account or Sign in instead.`}
+        confirmLabel="End visit"
+        cancelLabel="Cancel"
+        danger
+        busy={ending}
+        onConfirm={endGuestVisit}
+        onCancel={() => {
+          if (!ending) setConfirmEnd(false)
         }}
       />
     </div>

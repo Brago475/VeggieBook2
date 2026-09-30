@@ -20,18 +20,15 @@ import { WhoSaysSo } from './WhoSaysSo'
 // Every bottom button is NavBar, the same bar Phase 1 uses, so both kinds
 // of book have one button layout.
 //
-// What happens to a finished book (saved to the account, or kept on the
-// page for a guest) is decided by App, the same as for a VeggieBook.
+// A finished book is saved to the server for a guest and an account alike,
+// the same as a VeggieBook.
 
 type Props = {
   flow: SecretsFlowState
   categories: SecretCategory[]
   categoriesLoading: boolean
   categoriesError: string | null
-  signedIn: boolean
   onSave: (cover: string) => Promise<void>
-  onCreateAccount: (cover: string) => void
-  onFinishWithoutSaving: (cover: string) => void
 }
 
 export function SecretsFlow({
@@ -39,10 +36,7 @@ export function SecretsFlow({
   categories,
   categoriesLoading,
   categoriesError,
-  signedIn,
   onSave,
-  onCreateAccount,
-  onFinishWithoutSaving,
 }: Props) {
   const { step, category, secrets } = flow
 
@@ -142,10 +136,7 @@ export function SecretsFlow({
       categoryName={category.name}
       categoryImage={category.image}
       defaultCover={flow.defaultCover}
-      signedIn={signedIn}
       onSave={onSave}
-      onCreateAccount={onCreateAccount}
-      onFinishWithoutSaving={onFinishWithoutSaving}
     />
   )
 }

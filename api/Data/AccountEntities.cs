@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace VeggieBook.Api.Data;
 
 // Entities for user data, mapped onto tables created by db/migrations.
@@ -8,32 +10,35 @@ namespace VeggieBook.Api.Data;
 // Timestamps are DateTime in UTC. Npgsql maps timestamptz to DateTime and
 // requires Kind=Utc, so always assign DateTime.UtcNow, never DateTime.Now.
 
-public class AppUser
+// An account. ASP.NET Core Identity supplies the standard fields: email,
+// email confirmation, password hash, security stamp, lockout, and so on.
+// Identity manages all of them; nothing here touches them by hand.
+//
+// UserName is always set to the email address. Identity requires a user
+// name, and VeggieBook2 signs in by email only.
+public class AppUser : IdentityUser<Guid>
 {
-    public Guid Id { get; set; }
-
-    // As typed, for display.
-    public string Email { get; set; } = "";
-
-    // Trimmed and lowercased. This is what sign-in looks up, and the
-    // database enforces that it is unique.
-    public string EmailNormalized { get; set; } = "";
-
-    // PasswordHasher output. The password itself is never stored.
-    public string PasswordHash { get; set; } = "";
-
-    // Replaced on password change. Session cookies carry the stamp they were
-    // issued with, and a mismatch signs that session out.
-    public Guid SecurityStamp { get; set; }
-
-    public int FailedSignIns { get; set; }
-    public DateTime? LockedUntil { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    // Set only on guest accounts: when the cleanup job deletes it.
+    // See Auth/GuestAccounts.cs.
+    public DateTime? GuestExpiresAt { get; set; }
+
+    // Set on a new account whose owner chose to keep their guest books.
+    // The books move over when the email is confirmed.
+    public Guid? PendingGuestId { get; set; }
+}
+
+// A role: Guest, User, or Admin. See Auth/Roles.cs.
+public class AppRole : IdentityRole<Guid>
+{
+    public AppRole() { }
+    public AppRole(string name) : base(name) { }
 }
 
 // A saved book, stored in book_session. Belongs to exactly one account.
 // Deleting the account deletes its books through the database's
-// ON DELETE CASCADE (db/migrations/002_books.sql), so there is no
+// ON DELETE CASCADE (db/migrations/003_identity.sql), so there is no
 // relationship to AppUser in code: the database enforces it.
 //
 // A VeggieBook names its vegetable (VegetableCode); a Secrets Book names its

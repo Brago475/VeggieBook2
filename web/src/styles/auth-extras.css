@@ -1,0 +1,57 @@
+/* Additions to auth.css for the account screens: the form wrapper, the
+   forgot password link, and the guest books choice. */
+
+/* The form only groups the fields for submitting. display: contents keeps
+   its children laid out exactly as if they sat directly in .auth-main. */
+.auth-form {
+  display: contents;
+}
+
+.auth-forgot {
+  margin: -4px 0 0;
+  text-align: right;
+}
+
+/* Keep my books / Start fresh. */
+.guest-choice {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.guest-option {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid rgba(47, 93, 47, 0.25);
+  border-radius: 16px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.guest-option:has(input:checked) {
+  border-color: var(--green-deep, #2f5d2f);
+  box-shadow: 0 0 0 1px var(--green-deep, #2f5d2f);
+}
+
+.guest-option input {
+  margin-top: 3px;
+  accent-color: var(--green-deep, #2f5d2f);
+}
+
+.guest-option-text {
+  display: grid;
+  gap: 2px;
+}
+
+.guest-option-title {
+  font-weight: 600;
+}
+
+.guest-option-sub {
+  font-size: 0.9em;
+  opacity: 0.75;
+}

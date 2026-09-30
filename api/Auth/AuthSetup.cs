@@ -1,40 +1,37 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Data;
 
 namespace VeggieBook.Api.Auth;
 
 // Everything about how a visitor proves who they are, in one place.
 //
-// Sessions are a cookie issued by the API: HttpOnly so page scripts can
-// never read it, Secure so it only travels over HTTPS, SameSite=Lax so other
-// sites cannot make requests that carry it. There are no tokens in
-// localStorage.
+// Accounts, passwords, lockout, email confirmation, password reset, and roles
+// are ASP.NET Core Identity. Nothing here implements security by hand.
 //
-// The cookie's contents are encrypted with ASP.NET's data protection keys.
-// Those keys must survive a redeploy, or every deploy would sign everyone
-// out, so in production they live in a Docker volume (DataProtection__KeysPath).
+// Sessions are Identity's cookie: HttpOnly so page scripts can never read it,
+// Secure so it only travels over HTTPS, SameSite=Lax so other sites cannot
+// make requests that carry it. There are no tokens in localStorage.
 //
-// Passwords are hashed with ASP.NET Core's PasswordHasher (PBKDF2, random salt
-// per user). Nothing here implements cryptography by hand.
+// The cookie is encrypted with ASP.NET's data protection keys. Those keys must
+// survive a redeploy, or every deploy would sign everyone out, so in
+// production they live in a Docker volume (DataProtection__KeysPath).
 
 public static class AuthSetup
 {
     public const string RateLimitPolicy = "auth";
-
-    // Claim holding the security stamp the session was issued with.
-    public const string StampClaim = "vb2:stamp";
+    public const string GuestRateLimitPolicy = "guest";
+    public const int MinPasswordLength = 12;
+    public const int MaxPasswordLength = 128;
 
     public static IServiceCollection AddVeggieBookAuth(
         this IServiceCollection services,
         IConfiguration config,
         IWebHostEnvironment env)
     {
+        // Data protection keys: encrypt the cookie and sign email tokens.
         var keysPath = config["DataProtection:KeysPath"];
         var dataProtection = services
             .AddDataProtection()
@@ -46,53 +43,111 @@ public static class AuthSetup
         }
         else if (!env.IsDevelopment())
         {
-            // Same rule as the connection string: fail loudly at startup
-            // rather than run with keys that vanish on the next deploy.
-            throw new InvalidOperationException(
-                "DataProtection__KeysPath is not set.");
+            // Fail loudly at startup rather than run with keys that vanish
+            // on the next deploy.
+            throw new InvalidOperationException("DataProtection__KeysPath is not set.");
         }
 
-        services.AddSingleton<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
+        // The site's public address, for links in emails.
+        var publicUrl = config["App:PublicUrl"];
+        if (string.IsNullOrWhiteSpace(publicUrl))
+        {
+            if (!env.IsDevelopment())
+                throw new InvalidOperationException("App__PublicUrl is not set.");
+            publicUrl = "http://localhost:5173";
+        }
+        services.AddSingleton(new AuthLinks(publicUrl));
 
         services
-            .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(options =>
+            .AddIdentityCore<AppUser>(o =>
             {
-                options.Cookie.Name = "vb2_session";
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                options.Cookie.SameSite = SameSiteMode.Lax;
+                // One account per email. The user name is always the email
+                // (or guest-<id> for a guest), which the API sets itself, so
+                // any character is allowed.
+                o.User.RequireUniqueEmail = true;
+                o.User.AllowedUserNameCharacters = "";
 
-                // Stay signed in for 30 days, renewed while the site is used.
-                options.ExpireTimeSpan = TimeSpan.FromDays(30);
-                options.SlidingExpiration = true;
+                // No signing in until the email address is confirmed.
+                o.SignIn.RequireConfirmedEmail = true;
 
-                options.Events = new CookieAuthenticationEvents
-                {
-                    // This is an API, so answer with status codes instead of
-                    // redirecting to a login page that does not exist.
-                    OnRedirectToLogin = ctx =>
-                    {
-                        ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                        return Task.CompletedTask;
-                    },
-                    OnRedirectToAccessDenied = ctx =>
-                    {
-                        ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
-                        return Task.CompletedTask;
-                    },
-                    OnValidatePrincipal = ValidateStamp
-                };
-            });
+                // Length is the rule that matters. No forced symbols or
+                // capitals, in line with current NIST guidance.
+                o.Password.RequiredLength = MinPasswordLength;
+                o.Password.RequireDigit = false;
+                o.Password.RequireLowercase = false;
+                o.Password.RequireUppercase = false;
+                o.Password.RequireNonAlphanumeric = false;
+                o.Password.RequiredUniqueChars = 1;
 
-        services.AddAuthorization();
+                // Five wrong passwords lock the account for 15 minutes.
+                o.Lockout.AllowedForNewUsers = true;
+                o.Lockout.MaxFailedAccessAttempts = 5;
+                o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            })
+            .AddRoles<AppRole>()
+            .AddEntityFrameworkStores<AccountsContext>()
+            .AddSignInManager()
+            .AddDefaultTokenProviders();
 
-        // Limits sign-in and sign-up attempts per visitor. Per-account
-        // lockout stops guessing one password; this stops one visitor from
-        // trying passwords across many accounts.
+        // Email confirmation and password reset links expire after 3 hours.
+        services.Configure<DataProtectionTokenProviderOptions>(o =>
+            o.TokenLifespan = TimeSpan.FromHours(3));
+
+        // Check the session against the database on every request. A changed
+        // password, a deleted account, or a removed role takes effect
+        // immediately instead of up to 30 minutes later. One lookup per
+        // request is cheap at this scale.
+        services.Configure<SecurityStampValidatorOptions>(o =>
+            o.ValidationInterval = TimeSpan.Zero);
+
+        services
+            .AddAuthentication(IdentityConstants.ApplicationScheme)
+            .AddIdentityCookies();
+
+        services.ConfigureApplicationCookie(o =>
+        {
+            o.Cookie.Name = "vb2_session";
+            o.Cookie.HttpOnly = true;
+            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            o.Cookie.SameSite = SameSiteMode.Lax;
+
+            // Accounts stay signed in for 30 days, renewed while the site is
+            // used. Guests get a cookie that ends when the browser closes
+            // (see GuestController).
+            o.ExpireTimeSpan = TimeSpan.FromDays(30);
+            o.SlidingExpiration = true;
+
+            // This is an API, so answer with status codes instead of
+            // redirecting to a login page. Only these two events are replaced;
+            // Identity's session check stays in place.
+            o.Events.OnRedirectToLogin = ctx =>
+            {
+                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            };
+            o.Events.OnRedirectToAccessDenied = ctx =>
+            {
+                ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            };
+        });
+
+        services.AddAuthorization(o =>
+        {
+            o.AddPolicy(Roles.MemberPolicy, p => p.RequireRole(Roles.User));
+            o.AddPolicy(Roles.AdminPolicy, p => p.RequireRole(Roles.Admin));
+        });
+
+        // Guest accounts and the job that deletes expired ones.
+        services.AddScoped<GuestAccounts>();
+        services.AddHostedService<GuestCleanupWorker>();
+
+        // Per-visitor limits. Per-account lockout stops guessing one
+        // password; these stop one visitor from trying passwords across many
+        // accounts, flooding inboxes, or filling the database with guests.
         //
-        // 30 a minute leaves room for a class signing up together from campus,
-        // where many students share one public IP address.
+        // The numbers leave room for a class using the site together from
+        // campus, where many students share one public IP address.
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -102,6 +157,15 @@ public static class AuthSetup
                     _ => new FixedWindowRateLimiterOptions
                     {
                         PermitLimit = 30,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0
+                    }));
+            options.AddPolicy(GuestRateLimitPolicy, http =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    ClientIp(http),
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 20,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0
                     }));
@@ -121,55 +185,10 @@ public static class AuthSetup
         return http.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }
 
+    // The signed-in account's id. The book controllers use this, and it
+    // works the same for guests and accounts.
     public static Guid? UserId(ClaimsPrincipal principal) =>
         Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
             ? id
             : null;
-
-    // The session holds only the user's id and security stamp. Email and
-    // everything else is read from the database when needed.
-    public static ClaimsPrincipal CreatePrincipal(AppUser user)
-    {
-        var identity = new ClaimsIdentity(
-            new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(StampClaim, user.SecurityStamp.ToString())
-            },
-            CookieAuthenticationDefaults.AuthenticationScheme);
-
-        return new ClaimsPrincipal(identity);
-    }
-
-    // Runs on every request that carries a session cookie. The session is
-    // rejected if the account no longer exists (deleted) or its stamp has
-    // changed (password changed), which signs out every device at once.
-    // It is one primary-key lookup, cheap at this scale.
-    private static async Task ValidateStamp(CookieValidatePrincipalContext ctx)
-    {
-        var id = ctx.Principal is null ? null : UserId(ctx.Principal);
-        var claimed = ctx.Principal?.FindFirstValue(StampClaim);
-
-        if (id is null || !Guid.TryParse(claimed, out var stamp))
-        {
-            await Reject(ctx);
-            return;
-        }
-
-        var db = ctx.HttpContext.RequestServices.GetRequiredService<AccountsContext>();
-        var current = await db.Users
-            .AsNoTracking()
-            .Where(u => u.Id == id.Value)
-            .Select(u => (Guid?)u.SecurityStamp)
-            .FirstOrDefaultAsync();
-
-        if (current != stamp) await Reject(ctx);
-    }
-
-    private static async Task Reject(CookieValidatePrincipalContext ctx)
-    {
-        ctx.RejectPrincipal();
-        await ctx.HttpContext.SignOutAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme);
-    }
 }

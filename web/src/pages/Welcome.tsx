@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ArrowIcon, LeafIcon } from '../components/AuthIcons'
 import { LeafDecor } from '../components/LeafDecor'
 import { SafeImage } from '../components/SafeImage'
@@ -8,14 +9,15 @@ import { coverSrc } from '../utils/coverSrc'
 // First screen for a visitor who is not signed in.
 //
 // Three ways in. An account keeps books on the server, so they are there on
-// any device. A guest can use the whole site, but nothing is saved anywhere,
-// not on the server and not in the browser. A guest can still create an
-// account when their book is finished, and that book is saved into it.
+// any device. A guest gets a temporary account: books save and open like an
+// account's, and everything is deleted when the guest signs out, or 24 hours
+// after they started. A guest can create an account later and keep their
+// books.
 //
 // Below the three ways in, a card with three short steps says what the site
 // does, for a visitor who has never seen it before. On a tall window the
 // guest option and the card move down a little (see .auth-lower in
-// auth.css), with room left at the bottom for a footer later.
+// auth.css).
 //
 // The masthead is hidden on this screen (see App.tsx), so the photograph
 // takes the top of the screen and the logo sits under it, between two faint
@@ -24,7 +26,7 @@ import { coverSrc } from '../utils/coverSrc'
 type Props = {
   onCreateAccount: () => void
   onSignIn: () => void
-  onGuest: () => void
+  onGuest: () => Promise<void>
 }
 
 const STEPS = [
@@ -34,6 +36,22 @@ const STEPS = [
 ]
 
 export function Welcome({ onCreateAccount, onSignIn, onGuest }: Props) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function startGuest() {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      await onGuest()
+      // On success the parent shows the home screen.
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="auth-screen">
       {/* eager, not lazy: this is the first thing on the first screen, and
@@ -72,11 +90,25 @@ export function Welcome({ onCreateAccount, onSignIn, onGuest }: Props) {
           <div className="auth-or">or</div>
 
           <div className="auth-fields">
-            <button type="button" className="auth-guest" onClick={onGuest}>
+            <button
+              type="button"
+              className="auth-guest"
+              onClick={startGuest}
+              disabled={busy}
+            >
               <LeafIcon />
-              Continue as guest
+              {busy ? 'Please wait...' : 'Continue as guest'}
             </button>
-            <p className="auth-note">As a guest, your books are not saved.</p>
+            {error ? (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            ) : (
+              <p className="auth-note">
+                As a guest, your books are kept until you sign out, for up to 24
+                hours.
+              </p>
+            )}
           </div>
 
           <section className="auth-steps" aria-labelledby="how-it-works">

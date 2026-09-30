@@ -1,38 +1,56 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace VeggieBook.Api.Data;
 
-// Database context for user data: accounts and saved books.
+// Database context for user data: accounts, roles, and saved books.
 //
 // Separate from VeggieBookContext, which is read-only with tracking switched
 // off. Keeping writes in their own context means the content endpoints never
 // gain a write path, and user data never mixes with content queries.
 //
-// Same rules as the content context: no EF migrations, snake_case mapped
-// explicitly, and db/migrations is the source of truth for these tables.
+// Same rules as the content context: no EF migrations, snake_case names, and
+// db/migrations is the source of truth for these tables. Identity's own
+// tables are renamed below to match db/migrations/003_identity.sql.
 
 public class AccountsContext(DbContextOptions<AccountsContext> options)
-    : DbContext(options)
+    : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
-    public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<Book> Books => Set<Book>();
     public DbSet<BookCoverUpload> BookCoverUploads => Set<BookCoverUpload>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
-        b.Entity<AppUser>(e =>
+        // Identity's model first, then our names on top of it.
+        base.OnModelCreating(b);
+
+        b.Entity<AppUser>().ToTable("app_user");
+        b.Entity<AppRole>().ToTable("app_role");
+        b.Entity<IdentityUserRole<Guid>>().ToTable("app_user_role");
+        b.Entity<IdentityUserClaim<Guid>>().ToTable("app_user_claim");
+        b.Entity<IdentityUserLogin<Guid>>().ToTable("app_user_login");
+        b.Entity<IdentityUserToken<Guid>>().ToTable("app_user_token");
+        b.Entity<IdentityRoleClaim<Guid>>().ToTable("app_role_claim");
+
+        // Identity names its columns in PascalCase (NormalizedEmail). Ours
+        // are snake_case (normalized_email), so convert every Identity column.
+        Type[] identityTypes =
+        [
+            typeof(AppUser),
+            typeof(AppRole),
+            typeof(IdentityUserRole<Guid>),
+            typeof(IdentityUserClaim<Guid>),
+            typeof(IdentityUserLogin<Guid>),
+            typeof(IdentityUserToken<Guid>),
+            typeof(IdentityRoleClaim<Guid>)
+        ];
+        foreach (var type in identityTypes)
         {
-            e.ToTable("app_user");
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedNever();
-            e.Property(x => x.Email).HasColumnName("email");
-            e.Property(x => x.EmailNormalized).HasColumnName("email_normalized");
-            e.Property(x => x.PasswordHash).HasColumnName("password_hash");
-            e.Property(x => x.SecurityStamp).HasColumnName("security_stamp");
-            e.Property(x => x.FailedSignIns).HasColumnName("failed_sign_ins");
-            e.Property(x => x.LockedUntil).HasColumnName("locked_until");
-            e.Property(x => x.CreatedAt).HasColumnName("created_at");
-        });
+            var entity = b.Model.FindEntityType(type)!;
+            foreach (var property in entity.GetProperties())
+                property.SetColumnName(ToSnakeCase(property.Name));
+        }
 
         b.Entity<Book>(e =>
         {
@@ -81,5 +99,18 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.ContentType).HasColumnName("content_type");
             e.Property(x => x.Data).HasColumnName("data");
         });
+    }
+
+    // NormalizedUserName becomes normalized_user_name.
+    private static string ToSnakeCase(string name)
+    {
+        var sb = new System.Text.StringBuilder(name.Length + 8);
+        for (var i = 0; i < name.Length; i++)
+        {
+            var c = name[i];
+            if (char.IsUpper(c) && i > 0) sb.Append('_');
+            sb.Append(char.ToLowerInvariant(c));
+        }
+        return sb.ToString();
     }
 }

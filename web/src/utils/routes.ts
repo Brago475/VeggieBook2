@@ -12,8 +12,13 @@
 //   /account                      account settings
 //   /about                        about VeggieBook, open to everyone
 //   /signin, /register            sign in, create account
+//   /forgot-password              ask for a password reset link
+//   /reset-password?user&token    choose a new password, from the email link
+//   /confirm-email?user&token     confirm an email address, from the email link
 //
 // Anything else is treated as home, and the address is corrected to /.
+// The ?user&token part of the two email links is read by those pages
+// themselves (see utils/linkParams.ts), not here.
 
 export type Route =
   | { view: 'home' }
@@ -23,6 +28,9 @@ export type Route =
   | { view: 'about' }
   | { view: 'signin' }
   | { view: 'register' }
+  | { view: 'forgotPassword' }
+  | { view: 'resetPassword' }
+  | { view: 'confirmEmail' }
   | {
       view: 'book'
       bookId: string
@@ -60,6 +68,12 @@ export function parseRoute(path: string): Route {
         return { view: 'signin' }
       case 'register':
         return { view: 'register' }
+      case 'forgot-password':
+        return { view: 'forgotPassword' }
+      case 'reset-password':
+        return { view: 'resetPassword' }
+      case 'confirm-email':
+        return { view: 'confirmEmail' }
     }
   }
 
@@ -94,6 +108,12 @@ export function routePath(route: Route): string {
       return '/signin'
     case 'register':
       return '/register'
+    case 'forgotPassword':
+      return '/forgot-password'
+    case 'resetPassword':
+      return '/reset-password'
+    case 'confirmEmail':
+      return '/confirm-email'
     case 'book':
       if (route.cover) return `/book/${route.bookId}/cover`
       if (route.recipeId !== null) return `/book/${route.bookId}/recipe/${route.recipeId}`

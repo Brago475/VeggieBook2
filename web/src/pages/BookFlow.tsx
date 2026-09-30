@@ -17,22 +17,10 @@ type Props = {
   vegetables: Vegetable[]
   questions: Question[]
   loading: boolean
-  signedIn: boolean
   onSave: (cover: string) => Promise<void>
-  onCreateAccount: (cover: string) => void
-  onFinishWithoutSaving: (cover: string) => void
 }
 
-export function BookFlow({
-  flow,
-  vegetables,
-  questions,
-  loading,
-  signedIn,
-  onSave,
-  onCreateAccount,
-  onFinishWithoutSaving,
-}: Props) {
+export function BookFlow({ flow, vegetables, questions, loading, onSave }: Props) {
   const { step, vegetable, match } = flow
 
   if (step === 'pick') {
@@ -96,14 +84,5 @@ export function BookFlow({
     )
   }
 
-  return (
-    <CoverChooser
-      vegetable={vegetable}
-      vegetables={vegetables}
-      signedIn={signedIn}
-      onSave={onSave}
-      onCreateAccount={onCreateAccount}
-      onFinishWithoutSaving={onFinishWithoutSaving}
-    />
-  )
+  return <CoverChooser vegetable={vegetable} vegetables={vegetables} onSave={onSave} />
 }
