@@ -15,19 +15,17 @@ import { useSecretsFlow } from './hooks/useSecretsFlow'
 import { useVeggieBookData } from './hooks/useVeggieBookData'
 import { About } from './pages/About'
 import { AccountSettings } from './pages/AccountSettings'
-import { AuthForm, type AuthMode, type AuthOutcome } from './pages/AuthForm'
+import { AuthForm, type AuthMode } from './pages/AuthForm'
 import { BookFlow } from './pages/BookFlow'
 import { BookViewer } from './pages/BookViewer'
 import { ChangeSecretCover } from './pages/ChangeSecretCover'
 import { ChangeVeggieCover } from './pages/ChangeVeggieCover'
-import { ConfirmEmail } from './pages/ConfirmEmail'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { HomeLibrary } from './pages/HomeLibrary'
 import { ResetPassword } from './pages/ResetPassword'
 import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
 import { Welcome } from './pages/Welcome'
-import { resendConfirmation } from './utils/authApi'
 import { routePath } from './utils/routes'
 
 // Stylesheet order is load order, and load order decides who wins a tie.
@@ -133,7 +131,7 @@ export default function App() {
   //   sign in or create account, while already signed in to an account
   //     (a guest may use both, to move to a real account)
   //   an unknown or untidy address
-  // About, Terms, Privacy, and the email link pages are open to everyone.
+  // About, Terms, Privacy, and the password pages are open to everyone.
   useEffect(() => {
     if (status === 'loading') return
 
@@ -231,23 +229,18 @@ export default function App() {
 
   // --- signing in and out ---
 
-  // A failed sign-in or sign-up throws and stays on the form. Create account
-  // ends on Check your email; sign in goes home.
+  // Both forms sign in right away. A failure throws and stays on the form.
   async function submitAuth(
     mode: AuthMode,
     address: string,
     password: string,
     keepGuestBooks: boolean,
-  ): Promise<AuthOutcome> {
-    if (mode === 'register') {
-      await account.register(address, password, keepGuestBooks)
-      return 'checkEmail'
-    }
-    await account.signIn(address, password, keepGuestBooks)
+  ) {
+    if (mode === 'register') await account.register(address, password, keepGuestBooks)
+    else await account.signIn(address, password, keepGuestBooks)
     flow.start()
     secrets.start()
     navigate('/', { replace: true })
-    return 'signedIn'
   }
 
   // For a guest, this also deletes the guest and all their books.
@@ -276,15 +269,14 @@ export default function App() {
   const showWelcome = current === 'home' && status === 'visitor'
   const authMode: AuthMode | null =
     current === 'signin' || current === 'register' ? current : null
-  const linkPage =
-    current === 'forgotPassword' || current === 'resetPassword' || current === 'confirmEmail'
+  const passwordPage = current === 'forgotPassword' || current === 'resetPassword'
   const readingPage =
     current === 'about' || current === 'terms' || current === 'privacy'
 
   // Welcome and every account screen hide the green bar. They show the logo
   // in the page and run a photograph to the bottom edge, which the masthead
   // would cut off at the top.
-  const onAuthScreen = showWelcome || authMode !== null || linkPage
+  const onAuthScreen = showWelcome || authMode !== null || passwordPage
 
   // The SecretsBook logo while making or reading a Secrets Book, as in the
   // original app; the VeggieBook logo everywhere else.
@@ -377,12 +369,10 @@ export default function App() {
           mode={authMode}
           guestBookCount={isGuest ? library.books.length : 0}
           onSubmit={(address, password, keep) => submitAuth(authMode, address, password, keep)}
-          onResendConfirmation={resendConfirmation}
           onForgotPassword={() => navigate('/forgot-password')}
           onSwitchMode={() =>
             navigate(authMode === 'signin' ? '/register' : '/signin', { replace: true })
           }
-          onDone={finishToHome}
           onBack={backAction()}
         />
       )}
@@ -398,14 +388,6 @@ export default function App() {
         <ResetPassword
           onSignIn={() => navigate('/signin', { replace: true })}
           onForgotPassword={() => navigate('/forgot-password', { replace: true })}
-        />
-      )}
-
-      {current === 'confirmEmail' && (
-        <ConfirmEmail
-          onConfirmed={account.refresh}
-          onSignIn={() => navigate('/signin', { replace: true })}
-          onHome={finishToHome}
         />
       )}
 

@@ -2,17 +2,12 @@ import { useState, type FormEvent } from 'react'
 import { ArrowIcon } from '../components/AuthIcons'
 import { AuthPasswordField } from '../components/AuthPasswordField'
 import { AuthShell } from '../components/AuthShell'
-import { CheckEmailPanel } from '../components/CheckEmailPanel'
 import { EmailField } from '../components/EmailField'
 import { GuestBooksChoice } from '../components/GuestBooksChoice'
-import { ApiError } from '../utils/api'
 
 // Sign in and create account share this form. Only the wording, the password
-// hint, and the browser autofill hints differ.
-//
-// Create account ends on "Check your email": the account cannot be used
-// until its email is confirmed. Sign in with an unconfirmed email answers
-// 403, and the form offers to send the link again.
+// hint, and the browser autofill hints differ. Both sign in right away on
+// success, and the parent moves on to the home screen.
 //
 // A guest with saved books chooses what happens to them (GuestBooksChoice).
 //
@@ -20,18 +15,14 @@ import { ApiError } from '../utils/api'
 // so they are shown as they come.
 
 export type AuthMode = 'signin' | 'register'
-export type AuthOutcome = 'checkEmail' | 'signedIn'
 
 type Props = {
   mode: AuthMode
   // A guest's saved books. 0 for everyone else, which hides the choice.
   guestBookCount: number
-  onSubmit: (email: string, password: string, keepGuestBooks: boolean) => Promise<AuthOutcome>
-  onResendConfirmation: (email: string) => Promise<void>
+  onSubmit: (email: string, password: string, keepGuestBooks: boolean) => Promise<void>
   onForgotPassword: () => void
   onSwitchMode: () => void
-  // Leaving the Check your email screen.
-  onDone: () => void
   onBack?: () => void
 }
 
@@ -41,10 +32,8 @@ export function AuthForm({
   mode,
   guestBookCount,
   onSubmit,
-  onResendConfirmation,
   onForgotPassword,
   onSwitchMode,
-  onDone,
   onBack,
 }: Props) {
   const register = mode === 'register'
@@ -55,12 +44,6 @@ export function AuthForm({
   const [keepBooks, setKeepBooks] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [notConfirmed, setNotConfirmed] = useState(false)
-  const [resent, setResent] = useState(false)
-  // Set after Create account: the address the email went to.
-  const [sentTo, setSentTo] = useState<string | null>(null)
-
-  const keep = hasGuestBooks && keepBooks
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -73,48 +56,15 @@ export function AuthForm({
       return
     }
 
-    const address = email.trim()
     setBusy(true)
     setError(null)
-    setNotConfirmed(false)
-    setResent(false)
     try {
-      const outcome = await onSubmit(address, password, keep)
-      if (outcome === 'checkEmail') {
-        setSentTo(address)
-        setBusy(false)
-      }
-      // Signed in: the parent moves on to another screen.
+      await onSubmit(email.trim(), password, hasGuestBooks && keepBooks)
+      // On success the parent moves on to the home screen.
     } catch (err) {
-      if (!register && err instanceof ApiError && err.status === 403) {
-        setNotConfirmed(true)
-      }
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setBusy(false)
     }
-  }
-
-  async function resend() {
-    try {
-      await onResendConfirmation(email.trim())
-      setResent(true)
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
-    }
-  }
-
-  if (sentTo) {
-    return (
-      <AuthShell>
-        <CheckEmailPanel
-          email={sentTo}
-          keptBooks={keep}
-          onResend={() => onResendConfirmation(sentTo)}
-          onDone={onDone}
-        />
-      </AuthShell>
-    )
   }
 
   return (
@@ -158,7 +108,7 @@ export function AuthForm({
               count={guestBookCount}
               keep={keepBooks}
               onChange={setKeepBooks}
-              whenMoved={register ? 'once you confirm your email' : 'right away'}
+              whenMoved="right away"
             />
           )}
 
@@ -167,15 +117,6 @@ export function AuthForm({
               {error}
             </p>
           )}
-
-          {notConfirmed &&
-            (resent ? (
-              <p className="auth-note">A new link is on its way.</p>
-            ) : (
-              <button type="button" className="auth-secondary" onClick={resend}>
-                Send the confirmation email again
-              </button>
-            ))}
 
           <button type="submit" className="auth-primary" disabled={busy}>
             {busy ? 'Please wait...' : register ? 'Create account' : 'Sign in'}

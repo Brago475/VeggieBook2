@@ -43,13 +43,6 @@ function fromMe(me: MeResponse): AuthState {
   return { status: 'visitor' }
 }
 
-// A recheck that finds the same guest keeps the same key, so the book list
-// does not reload for nothing.
-function merge(prev: AuthState, next: AuthState): AuthState {
-  if (prev.status === 'guest' && next.status === 'guest') return prev
-  return next
-}
-
 export function useAuth() {
   const [auth, setAuth] = useState<AuthState>({ status: 'loading' })
 
@@ -71,34 +64,19 @@ export function useAuth() {
     }
   }, [])
 
-  // Asks the API again. Used after an email is confirmed, because that can
-  // end this browser's guest session (its books moved into the account).
-  const refresh = useCallback(async () => {
-    try {
-      const me = await apiFetch<MeResponse>('/auth/me')
-      setAuth((prev) => merge(prev, fromMe(me)))
-    } catch {
-      setAuth({ status: 'visitor' })
-    }
-  }, [])
-
   async function startGuest() {
     const me = await apiFetch<MeResponse>('/auth/guest', { method: 'POST' })
     setAuth(fromMe(me))
   }
 
-  // Creating an account does not sign in: the email must be confirmed first.
-  // A guest who chose to start fresh has been signed out by the API, and
-  // their guest books deleted. A guest who kept their books stays a guest
-  // until they confirm.
+  // Creating an account signs in right away. A guest's books either move
+  // into the new account or are deleted, as the guest chose.
   async function register(email: string, password: string, keepGuestBooks: boolean) {
-    await apiFetch<unknown>('/auth/register', {
+    const me = await apiFetch<MeResponse>('/auth/register', {
       method: 'POST',
       body: { email, password, keepGuestBooks },
     })
-    setAuth((prev) =>
-      prev.status === 'guest' && !keepGuestBooks ? { status: 'visitor' } : prev,
-    )
+    setAuth(fromMe(me))
   }
 
   async function signIn(email: string, password: string, keepGuestBooks: boolean) {
@@ -140,7 +118,6 @@ export function useAuth() {
 
   return {
     auth,
-    refresh,
     startGuest,
     register,
     signIn,
