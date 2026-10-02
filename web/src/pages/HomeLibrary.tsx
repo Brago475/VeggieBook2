@@ -5,7 +5,6 @@ import { BookCard } from '../components/BookCard'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import {
   ChevronRightIcon,
-  GearIcon,
   InfoIcon,
   LockIcon,
   PersonIcon,
@@ -25,8 +24,8 @@ import type { BookSummary, SecretCategory, Vegetable } from '../types'
 //
 // Beside the heading, the ☰ Menu (MainMenu.tsx), in two groups. On top,
 // features and information: About VeggieBook, and future features as they
-// are added. Below a line, the account: Account settings and Sign out, or
-// for a guest, Create account, Sign in, and End guest visit, which asks
+// are added. Below a line, the account: Profile and settings and Sign out,
+// or for a guest, Create account, Sign in, and End guest visit, which asks
 // first because it deletes their books.
 //
 // Each card follows the original app: a picture fills the card and the
@@ -130,7 +129,7 @@ export function HomeLibrary({
         },
       ]
     : [
-        { label: 'Account settings', icon: <GearIcon />, onSelect: onAccount },
+        { label: 'Profile and settings', icon: <PersonIcon />, onSelect: onAccount },
         { label: 'Sign out', icon: <SignOutIcon />, danger: true, onSelect: signOut },
       ]
 

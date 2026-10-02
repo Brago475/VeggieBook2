@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiFetch } from '../utils/api'
+import { PROFILE_CHANGED } from '../utils/profileApi'
 
 // Who is using the site, as the API sees it.
 //
@@ -17,6 +18,9 @@ import { apiFetch } from '../utils/api'
 // A guest has no email, so each guest session gets its own random key. The
 // book list uses it to know whose books it holds, so one guest's books are
 // never shown to the next guest on the same device, not even for a moment.
+//
+// When the profile is saved (components/ProfileCard.tsx), this asks the API
+// again, so the new username shows everywhere right away.
 //
 // Every action throws an ApiError on failure, with a message written for the
 // user, so screens can catch it and display it.
@@ -80,6 +84,24 @@ export function useAuth() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  // A saved profile: refresh the signed-in account's details. Only an
+  // account can have a profile, so a guest or visitor is left as is.
+  useEffect(() => {
+    function refresh() {
+      apiFetch<MeResponse>('/auth/me')
+        .then((me) => {
+          const next = fromMe(me)
+          if (next.status === 'signedIn') setAuth(next)
+        })
+        .catch(() => {
+          // The old username stays until the next visit. Nothing else breaks.
+        })
+    }
+
+    window.addEventListener(PROFILE_CHANGED, refresh)
+    return () => window.removeEventListener(PROFILE_CHANGED, refresh)
   }, [])
 
   async function startGuest() {

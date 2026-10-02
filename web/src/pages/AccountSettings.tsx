@@ -3,10 +3,12 @@ import { SignOutIcon, UserIcon } from '../components/AccountIcons'
 import { ChangePasswordForm } from '../components/ChangePasswordForm'
 import { DeleteAccountForm } from '../components/DeleteAccountForm'
 import { LeafDecor } from '../components/LeafDecor'
+import { ProfileCard } from '../components/ProfileCard'
 import { RecoveryCard } from '../components/RecoveryCard'
 
-// Account settings: who is signed in, change password, password recovery
-// (PIN and security question), delete account, and sign out.
+// Profile and settings: the profile (name and username), change password,
+// password recovery (PIN and security question), delete account, and sign
+// out.
 //
 // Each section is a card, with its own error message, so a problem in one
 // never hides another. Sign out sits below them on its own: it is one
@@ -17,7 +19,7 @@ import { RecoveryCard } from '../components/RecoveryCard'
 type Props = {
   email: string
   onSignOut: () => Promise<void>
-  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  onChangePassword: (ticket: string, newPassword: string) => Promise<void>
   onDeleteAccount: (password: string) => Promise<void>
 }
 
@@ -55,11 +57,13 @@ export function AccountSettings({
           <UserIcon />
         </span>
         <div className="account-hero-text">
-          <h1 className="account-title">Your account</h1>
+          <h1 className="account-title">Profile and settings</h1>
           <p className="account-email">{email}</p>
           <p className="account-tagline">Manage your account and preferences.</p>
         </div>
       </div>
+
+      <ProfileCard />
 
       <ChangePasswordForm email={email} onChangePassword={onChangePassword} />
 
