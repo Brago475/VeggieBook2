@@ -72,6 +72,10 @@ public static class AuthHelpers
     public static async Task<MeResponse> MeFor(UserManager<AppUser> users, AppUser user)
     {
         var roles = (await users.GetRolesAsync(user)).ToArray();
-        return new MeResponse(roles.Contains(Roles.Guest) ? null : user.Email, roles);
+        var isGuest = roles.Contains(Roles.Guest);
+        return new MeResponse(
+            isGuest ? null : user.Email,
+            roles,
+            isGuest ? null : user.DisplayName);
     }
 }

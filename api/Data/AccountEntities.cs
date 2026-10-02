@@ -15,7 +15,8 @@ namespace VeggieBook.Api.Data;
 // Identity manages all of them; nothing here touches them by hand.
 //
 // UserName is always set to the email address. Identity requires a user
-// name, and VeggieBook2 signs in by email only.
+// name, and VeggieBook2 signs in by email only. The name people see is
+// DisplayName (the username on the Create Account form).
 //
 // Column names come from AccountsContext, which turns every property name
 // into snake_case (RecoveryPinHash becomes recovery_pin_hash).
@@ -29,6 +30,15 @@ public class AppUser : IdentityUser<Guid>
 
     // Set on a new account whose owner chose to keep their guest books.
     public Guid? PendingGuestId { get; set; }
+
+    // The profile from the Create Account form.
+    // See db/migrations/005_profile.sql and Auth/SignUpRules.cs.
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? DisplayName { get; set; }
+    public string? AgeRange { get; set; }
+    public string? TermsVersion { get; set; }
+    public DateTime? TermsAcceptedAt { get; set; }
 
     // Account recovery. See Auth/AccountRecovery.cs and
     // db/migrations/004_recovery.sql.

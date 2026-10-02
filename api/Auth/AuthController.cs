@@ -12,16 +12,16 @@ namespace VeggieBook.Api.Auth;
 //   POST /api/auth/register   create an account and sign in
 //   POST /api/auth/signin     sign in
 //   POST /api/auth/signout    sign out this device (deletes a guest)
-//   GET  /api/auth/me         who is here, and their roles
+//   GET  /api/auth/me         who is here, their roles, and their username
 //
-// Passwords: PasswordController. Deleting an account: AccountController.
-// Guests: GuestController.
+// Passwords: PasswordController. Forgot password: RecoveryController.
+// Deleting an account: AccountController. Guests: GuestController.
 //
 // Every endpoint takes and returns JSON only. Combined with the SameSite=Lax
 // cookie, another site cannot submit a form that acts on a visitor's account.
 //
-// The email is not confirmed at sign-up. It is used only to recover the
-// account, so a new account can sign in right away.
+// The email is not confirmed at sign-up, so a new account can sign in right
+// away. Forgot password uses the PIN and security question set here.
 //
 // A guest who signs up or signs in chooses what happens to their books
 // (KeepGuestBooks). Keep: the books move into the account right away.
@@ -33,11 +33,17 @@ public class AuthController(
     UserManager<AppUser> users,
     SignInManager<AppUser> signIn,
     IPasswordHasher<AppUser> hasher,
-    GuestAccounts guests) : ControllerBase
+    GuestAccounts guests,
+    AccountRecovery recovery) : ControllerBase
 {
     private const string WrongCredentials = "Email or password is incorrect.";
     private const string EmailTaken =
-        "An account with this email already exists. Sign in, or reset your password if you forgot it.";
+        "An account with this email already exists. Sign in, or use Forgot password if you need to.";
+    private const string UsernameTaken =
+        "That username is taken. Please pick another one, or leave it blank and we'll make one for you.";
+
+    // The unique index from db/migrations/005_profile.sql.
+    private const string DisplayNameIndex = "app_user_display_name_idx";
 
     // Used to spend the same time hashing when the email is unknown, so the
     // response time does not reveal whether an account exists.
@@ -45,29 +51,60 @@ public class AuthController(
 
     [HttpPost("register")]
     [EnableRateLimiting(AuthSetup.RateLimitPolicy)]
-    public async Task<IActionResult> Register([FromBody] CredentialsRequest req)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest req)
     {
         var current = await users.GetUserAsync(User);
         if (current is not null && !GuestAccounts.IsGuest(current))
             return BadRequest(new { error = "You are already signed in." });
 
         var guest = current;
-
         var address = req.Email?.Trim() ?? "";
-        if (!AuthHelpers.IsValidEmail(address))
-            return BadRequest(new { error = "Enter a valid email address." });
 
-        var passwordError = AuthHelpers.CheckPasswordLength(req.Password);
-        if (passwordError is not null)
-            return BadRequest(new { error = passwordError });
+        // Every field is checked, in the order the form shows them, before
+        // anything is saved.
+        var error = SignUpRules.CheckName(req.FirstName, "first name")
+            ?? SignUpRules.CheckName(req.LastName, "last name")
+            ?? (AuthHelpers.IsValidEmail(address) ? null : "Enter a valid email address.")
+            ?? AuthHelpers.CheckPasswordLength(req.Password)
+            ?? SignUpRules.CheckAgeRange(req.AgeRange)
+            ?? AccountRecovery.CheckNewPin(req.Pin)
+            ?? AccountRecovery.CheckNewAnswer(req.QuestionId, req.Answer)
+            ?? (req.AgreeToTerms == true
+                ? null
+                : "Please agree to the Terms of Use and Privacy Policy.");
+        if (error is not null) return BadRequest(new { error });
 
+        // The username: theirs if they chose one, otherwise a made-up one.
+        var displayName = req.DisplayName?.Trim() ?? "";
+        if (displayName.Length > 0)
+        {
+            var nameError = SignUpRules.CheckDisplayName(displayName);
+            if (nameError is not null) return BadRequest(new { error = nameError });
+            if (await DisplayNameTaken(displayName))
+                return Conflict(new { error = UsernameTaken });
+        }
+        else
+        {
+            displayName = await NewDisplayName();
+        }
+
+        var now = DateTime.UtcNow;
         var user = new AppUser
         {
             Id = Guid.NewGuid(),
             UserName = address,
             Email = address,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            FirstName = req.FirstName!.Trim(),
+            LastName = req.LastName!.Trim(),
+            DisplayName = displayName,
+            AgeRange = req.AgeRange,
+            TermsVersion = SignUpRules.TermsVersion,
+            TermsAcceptedAt = now
         };
+
+        // The PIN and question go in with the account, in the same save.
+        recovery.SetRecovery(user, req.Pin!, req.QuestionId!.Value, req.Answer!);
 
         IdentityResult created;
         try
@@ -75,11 +112,14 @@ public class AuthController(
             created = await users.CreateAsync(user, req.Password!);
         }
         catch (DbUpdateException ex) when (
-            ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+            ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } pg)
         {
-            // Two sign-ups with the same email at the same moment. The
-            // database's unique index caught the second one.
-            return Conflict(new { error = EmailTaken });
+            // Two sign-ups with the same email or username at the same
+            // moment. The database's unique index caught the second one.
+            return Conflict(new
+            {
+                error = pg.ConstraintName == DisplayNameIndex ? UsernameTaken : EmailTaken
+            });
         }
 
         if (!created.Succeeded)
@@ -173,6 +213,25 @@ public class AuthController(
         return Ok(user is null
             ? new MeResponse(null, [])
             : await AuthHelpers.MeFor(users, user));
+    }
+
+    // Ignores capitals, the same way the unique index does.
+    private Task<bool> DisplayNameTaken(string name)
+    {
+        var lower = name.ToLowerInvariant();
+        return users.Users.AnyAsync(u => u.DisplayName != null && u.DisplayName.ToLower() == lower);
+    }
+
+    // A few tries at a free made-up name. A clash is very unlikely, and the
+    // unique index catches the rare one that slips through.
+    private async Task<string> NewDisplayName()
+    {
+        for (var i = 0; i < 10; i++)
+        {
+            var name = SignUpRules.GenerateDisplayName();
+            if (!await DisplayNameTaken(name)) return name;
+        }
+        return $"cook_{Guid.NewGuid():N}"[..SignUpRules.MaxDisplayNameLength];
     }
 
     private ObjectResult TooManyAttempts() =>
