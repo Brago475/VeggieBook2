@@ -11,8 +11,12 @@ public static class AuthHelpers
 {
     // Guest accounts get an address here. ".invalid" is reserved and can
     // never receive mail, and IsValidEmail refuses it, so nobody can sign up,
-    // sign in, or request a reset with one.
+    // sign in, or recover an account with one.
     public const string GuestEmailDomain = "guest.invalid";
+
+    public static readonly string PasswordRule =
+        $"Password must be at least {AuthSetup.MinPasswordLength} characters and include " +
+        "an uppercase letter, a lowercase letter, and a special character.";
 
     // MailAddress also accepts forms like "Name <a@b.com>". Requiring the
     // parsed address to equal the input rules those out.
@@ -22,19 +26,27 @@ public static class AuthHelpers
         && parsed.Address == email
         && !email.EndsWith("@" + GuestEmailDomain, StringComparison.OrdinalIgnoreCase);
 
-    // Identity enforces the minimum length. The maximum is checked here,
-    // before any hashing, so nobody can make the server hash megabytes.
+    // The full password rule, checked before any hashing. The maximum length
+    // stops anyone from making the server hash megabytes. Identity checks the
+    // same rule again (see AuthSetup), so nothing gets past both.
+    //
+    // The name is from when only the length was checked. It stays so the
+    // code that already calls it keeps working.
     public static string? CheckPasswordLength(string? password)
     {
         if (string.IsNullOrEmpty(password) || password.Length < AuthSetup.MinPasswordLength)
-            return $"Password must be at least {AuthSetup.MinPasswordLength} characters.";
+            return PasswordRule;
         if (password.Length > AuthSetup.MaxPasswordLength)
             return $"Password must be at most {AuthSetup.MaxPasswordLength} characters.";
+        if (!password.Any(char.IsUpper)
+            || !password.Any(char.IsLower)
+            || password.All(char.IsLetterOrDigit))
+            return PasswordRule;
         return null;
     }
 
-    // Identity's tokens contain characters that break in a URL, so links
-    // carry them Base64Url encoded.
+    // Identity's tokens contain characters that break in a URL or JSON, so
+    // they travel Base64Url encoded.
     public static string EncodeToken(string token) =>
         WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 

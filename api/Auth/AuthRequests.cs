@@ -12,8 +12,29 @@ public record CredentialsRequest(string? Email, string? Password, bool? KeepGues
 public record EmailRequest(string? Email);
 public record ConfirmEmailRequest(string? UserId, string? Token);
 public record ChangePasswordRequest(string? CurrentPassword, string? NewPassword);
-public record ResetPasswordRequest(string? UserId, string? Token, string? NewPassword);
 public record DeleteAccountRequest(string? Password);
+
+// Account recovery. See RecoveryController.
+public record RecoveryPinRequest(string? Email, string? Pin);
+public record RecoveryAnswerRequest(string? Email, string? Answer);
+
+// Finishing a reset sets everything new: password, PIN, and question.
+public record RecoveryResetRequest(
+    string? Email,
+    string? Ticket,
+    string? NewPassword,
+    string? NewPin,
+    int? QuestionId,
+    string? Answer);
+
+// Setting or changing the PIN and question while signed in.
+public record RecoverySettingsRequest(
+    string? CurrentPassword,
+    string? Pin,
+    int? QuestionId,
+    string? Answer);
+
+public record RecoverySettingsResponse(bool HasPin, int? QuestionId, string? Question);
 
 // What the site needs to know about the visitor.
 //   Nobody signed in: Email null, Roles empty.

@@ -16,6 +16,9 @@ namespace VeggieBook.Api.Data;
 //
 // UserName is always set to the email address. Identity requires a user
 // name, and VeggieBook2 signs in by email only.
+//
+// Column names come from AccountsContext, which turns every property name
+// into snake_case (RecoveryPinHash becomes recovery_pin_hash).
 public class AppUser : IdentityUser<Guid>
 {
     public DateTime CreatedAt { get; set; }
@@ -25,8 +28,21 @@ public class AppUser : IdentityUser<Guid>
     public DateTime? GuestExpiresAt { get; set; }
 
     // Set on a new account whose owner chose to keep their guest books.
-    // The books move over when the email is confirmed.
     public Guid? PendingGuestId { get; set; }
+
+    // Account recovery. See Auth/AccountRecovery.cs and
+    // db/migrations/004_recovery.sql.
+    public string? RecoveryPinHash { get; set; }
+    public int? SecurityQuestionId { get; set; }
+    public string? SecurityAnswerHash { get; set; }
+
+    public int PinFailedCount { get; set; }
+    public DateTime? PinFailWindowStart { get; set; }
+    public int AnswerFailedCount { get; set; }
+    public DateTime? AnswerFailWindowStart { get; set; }
+
+    // Set when password reset is locked for this account.
+    public DateTime? RecoveryLockedAt { get; set; }
 }
 
 // A role: Guest, User, or Admin. See Auth/Roles.cs.

@@ -23,7 +23,7 @@ public static class AuthSetup
 {
     public const string RateLimitPolicy = "auth";
     public const string GuestRateLimitPolicy = "guest";
-    public const int MinPasswordLength = 12;
+    public const int MinPasswordLength = 8;
     public const int MaxPasswordLength = 128;
 
     public static IServiceCollection AddVeggieBookAuth(
@@ -31,7 +31,7 @@ public static class AuthSetup
         IConfiguration config,
         IWebHostEnvironment env)
     {
-        // Data protection keys: encrypt the cookie and sign reset tokens.
+        // Data protection keys: encrypt the cookie and sign reset tickets.
         var keysPath = config["DataProtection:KeysPath"];
         var dataProtection = services
             .AddDataProtection()
@@ -67,20 +67,21 @@ public static class AuthSetup
                 o.User.RequireUniqueEmail = true;
                 o.User.AllowedUserNameCharacters = "";
 
-                // Accounts can sign in right after sign-up. The email is used
-                // only to recover the account, so it is not confirmed first.
+                // Accounts can sign in right after sign-up. The email is not
+                // confirmed for now; this can be turned back on later.
                 o.SignIn.RequireConfirmedEmail = false;
 
-                // Length is the rule that matters. No forced symbols or
-                // capitals, in line with current NIST guidance.
+                // At least 8 characters with an uppercase letter, a lowercase
+                // letter, and a special character. AuthHelpers.CheckPassword
+                // checks the same rule first, with one clear message.
                 o.Password.RequiredLength = MinPasswordLength;
                 o.Password.RequireDigit = false;
-                o.Password.RequireLowercase = false;
-                o.Password.RequireUppercase = false;
-                o.Password.RequireNonAlphanumeric = false;
+                o.Password.RequireLowercase = true;
+                o.Password.RequireUppercase = true;
+                o.Password.RequireNonAlphanumeric = true;
                 o.Password.RequiredUniqueChars = 1;
 
-                // Five wrong passwords lock the account for 15 minutes.
+                // Five wrong passwords lock sign-in for 15 minutes.
                 o.Lockout.AllowedForNewUsers = true;
                 o.Lockout.MaxFailedAccessAttempts = 5;
                 o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
@@ -90,9 +91,10 @@ public static class AuthSetup
             .AddSignInManager()
             .AddDefaultTokenProviders();
 
-        // Password reset links expire after 3 hours.
+        // A reset ticket is handed out only after a correct PIN or security
+        // answer, and is used right away, so it expires after 15 minutes.
         services.Configure<DataProtectionTokenProviderOptions>(o =>
-            o.TokenLifespan = TimeSpan.FromHours(3));
+            o.TokenLifespan = TimeSpan.FromMinutes(15));
 
         // Check the session against the database on every request. A changed
         // password, a deleted account, or a removed role takes effect
@@ -143,9 +145,12 @@ public static class AuthSetup
         services.AddScoped<GuestAccounts>();
         services.AddHostedService<GuestCleanupWorker>();
 
-        // Per-visitor limits. Per-account lockout stops guessing one
-        // password; these stop one visitor from trying passwords across many
-        // accounts, flooding inboxes, or filling the database with guests.
+        // The recovery PIN and security question. See AccountRecovery.cs.
+        services.AddScoped<AccountRecovery>();
+
+        // Per-visitor limits. Per-account limits stop guessing one account;
+        // these stop one visitor from trying many accounts or filling the
+        // database with guests.
         //
         // The numbers leave room for a class using the site together from
         // campus, where many students share one public IP address.
