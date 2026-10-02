@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
-using VeggieBook.Api.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,11 +24,9 @@ builder.Services.AddDbContext<VeggieBookContext>(options =>
 builder.Services.AddDbContext<AccountsContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Accounts, sessions, roles, and rate limits. See Auth/AuthSetup.cs.
+// Accounts, sessions, roles, recovery, and rate limits. See Auth/AuthSetup.cs.
+// The site sends no email for now; it is on the backlog.
 builder.Services.AddVeggieBookAuth(builder.Configuration, builder.Environment);
-
-// Confirmation and password reset emails. See Email/EmailSetup.cs.
-builder.Services.AddVeggieBookEmail(builder.Configuration);
 
 // Only needed while the front end runs on the Vite dev server on a different
 // origin. In production both are served from veggiebook2.com through nginx,

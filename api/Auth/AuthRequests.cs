@@ -25,7 +25,6 @@ public record RegisterRequest(
     bool? KeepGuestBooks);
 
 public record EmailRequest(string? Email);
-public record ConfirmEmailRequest(string? UserId, string? Token);
 public record ChangePasswordRequest(string? CurrentPassword, string? NewPassword);
 public record DeleteAccountRequest(string? Password);
 

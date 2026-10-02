@@ -48,16 +48,6 @@ public static class AuthSetup
             throw new InvalidOperationException("DataProtection__KeysPath is not set.");
         }
 
-        // The site's public address, for links in emails.
-        var publicUrl = config["App:PublicUrl"];
-        if (string.IsNullOrWhiteSpace(publicUrl))
-        {
-            if (!env.IsDevelopment())
-                throw new InvalidOperationException("App__PublicUrl is not set.");
-            publicUrl = "http://localhost:5173";
-        }
-        services.AddSingleton(new AuthLinks(publicUrl));
-
         services
             .AddIdentityCore<AppUser>(o =>
             {
@@ -67,13 +57,13 @@ public static class AuthSetup
                 o.User.RequireUniqueEmail = true;
                 o.User.AllowedUserNameCharacters = "";
 
-                // Accounts can sign in right after sign-up. The email is not
-                // confirmed for now; this can be turned back on later.
+                // Accounts can sign in right after sign-up. The site sends no
+                // email for now, so the address is never confirmed.
                 o.SignIn.RequireConfirmedEmail = false;
 
                 // At least 8 characters with an uppercase letter, a lowercase
-                // letter, and a special character. AuthHelpers.CheckPassword
-                // checks the same rule first, with one clear message.
+                // letter, and a special character. AuthHelpers checks the
+                // same rule first, with one clear message.
                 o.Password.RequiredLength = MinPasswordLength;
                 o.Password.RequireDigit = false;
                 o.Password.RequireLowercase = true;
