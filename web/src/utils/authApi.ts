@@ -8,6 +8,10 @@ import { apiFetch } from './api'
 //   1. The PIN, 3 tries a day.
 //   2. The security question, 3 tries a day. Then password reset locks.
 // A right PIN or answer gives a ticket, which finishes the reset once.
+//
+// Change password while signed in (see api/Auth/PasswordController.cs):
+//   1. The current password, or the PIN, gives a ticket.
+//   2. The ticket and the new password (hooks/useAuth.ts).
 
 export type RecoveryQuestion = { id: number; text: string }
 
@@ -68,6 +72,16 @@ export function finishPasswordReset(
       answer: recovery.answer,
     },
   })
+}
+
+// Signed in: prove it's you before changing the password. Send the current
+// password or the PIN, not both.
+export async function verifyForPasswordChange(proof: { currentPassword: string } | { pin: string }) {
+  const res = await apiFetch<Ticket>('/auth/password/verify', {
+    method: 'POST',
+    body: proof,
+  })
+  return res.ticket
 }
 
 export function getRecoverySettings() {

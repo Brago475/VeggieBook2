@@ -25,8 +25,13 @@ public record RegisterRequest(
     bool? KeepGuestBooks);
 
 public record EmailRequest(string? Email);
-public record ChangePasswordRequest(string? CurrentPassword, string? NewPassword);
 public record DeleteAccountRequest(string? Password);
+
+// Change password while signed in, in two steps. First prove it's you with
+// the current password or the recovery PIN (one of the two), which gives a
+// ticket. Then the ticket and the new password.
+public record PasswordVerifyRequest(string? CurrentPassword, string? Pin);
+public record ChangePasswordRequest(string? Ticket, string? NewPassword);
 
 // Account recovery. See RecoveryController.
 public record RecoveryPinRequest(string? Email, string? Pin);

@@ -111,11 +111,13 @@ export function useAuth() {
     setAuth({ status: 'visitor' })
   }
 
-  // Signs out every other device. This one stays signed in.
-  async function changePassword(currentPassword: string, newPassword: string) {
+  // The second step of changing a password. The ticket comes from proving
+  // it's you first (verifyForPasswordChange in utils/authApi.ts). Signs out
+  // every other device; this one stays signed in.
+  async function changePassword(ticket: string, newPassword: string) {
     await apiFetch<void>('/auth/password', {
       method: 'POST',
-      body: { currentPassword, newPassword },
+      body: { ticket, newPassword },
     })
   }
 

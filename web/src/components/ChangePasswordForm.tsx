@@ -1,36 +1,75 @@
 import { useState, type FormEvent } from 'react'
+import { verifyForPasswordChange } from '../utils/authApi'
 import { checkPassword, PASSWORD_HINT } from '../utils/passwordRule'
 import { LockIcon } from './LibraryIcons'
 import { PasswordField } from './PasswordField'
 
-// Change password, on the account settings screen.
+// Change password, on the account settings screen, in two steps:
 //
-// The rule is the same as Create Account (utils/passwordRule.ts), checked
-// here first and again by the API. On success the API gives this device a
-// fresh session and signs out every other one. The fields clear and a
-// confirmation says so.
+//   verify  prove it's you: the current password, or "Use your PIN instead"
+//           for someone who forgot it. A wrong PIN can be tried again, up
+//           to 3 times a day (shared with Forgot password).
+//   choose  the new password, twice.
+//
+// The current password box has no eye button and is not filled in by the
+// browser on its own, so nobody at an unlocked computer can reveal a saved
+// password here.
+//
+// On success the API gives this device a fresh session and signs out every
+// other one, and the card goes back to the first step.
 
 type Props = {
   email: string
-  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  onChangePassword: (ticket: string, newPassword: string) => Promise<void>
 }
 
+type Step = 'verify' | 'choose'
+type Proof = 'password' | 'pin'
+
 export function ChangePasswordForm({ email, onChangePassword }: Props) {
+  const [step, setStep] = useState<Step>('verify')
+  const [proof, setProof] = useState<Proof>('password')
   const [current, setCurrent] = useState('')
+  const [pin, setPin] = useState('')
+  const [ticket, setTicket] = useState<string | null>(null)
   const [next, setNext] = useState('')
+  const [nextAgain, setNextAgain] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  function reset() {
+    setStep('verify')
+    setProof('password')
+    setCurrent('')
+    setPin('')
+    setTicket(null)
+    setNext('')
+    setNextAgain('')
+    setError(null)
+  }
+
+  function switchProof(to: Proof) {
+    setProof(to)
+    setCurrent('')
+    setPin('')
+    setError(null)
+    setDone(false)
+  }
+
+  async function verify(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
     setDone(false)
 
     const problem =
-      (current ? null : 'Enter your current password.') ??
-      checkPassword(next) ??
-      (next === current ? "Your new password can't be the same as your old one." : null)
+      proof === 'password'
+        ? current
+          ? null
+          : 'Enter your current password.'
+        : pin.length === 6
+          ? null
+          : 'Enter your 6-digit PIN.'
     if (problem) {
       setError(problem)
       return
@@ -39,52 +78,64 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
     setBusy(true)
     setError(null)
     try {
-      await onChangePassword(current, next)
-      setCurrent('')
-      setNext('')
-      setDone(true)
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+      const t = await verifyForPasswordChange(
+        proof === 'password' ? { currentPassword: current } : { pin },
       )
+      setTicket(t)
+      setCurrent('')
+      setPin('')
+      setStep('choose')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      // A wrong PIN is cleared so it can be typed again.
+      setPin('')
     } finally {
       setBusy(false)
     }
   }
 
-  return (
-    <form className="account-card" onSubmit={submit} noValidate>
-      <div className="account-card-head">
-        <span className="account-card-icon">
-          <LockIcon />
-        </span>
-        <div className="account-card-head-text">
-          <h2 className="account-card-title">Change password</h2>
-          <p className="account-card-text">Keep your account secure.</p>
-        </div>
+  async function change(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (busy || !ticket) return
+
+    const problem =
+      checkPassword(next) ?? (next === nextAgain ? null : 'The two passwords do not match.')
+    if (problem) {
+      setError(problem)
+      return
+    }
+
+    setBusy(true)
+    setError(null)
+    try {
+      await onChangePassword(ticket, next)
+      reset()
+      setDone(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const head = (
+    <div className="account-card-head">
+      <span className="account-card-icon">
+        <LockIcon />
+      </span>
+      <div className="account-card-head-text">
+        <h2 className="account-card-title">Change password</h2>
+        <p className="account-card-text">
+          {step === 'verify'
+            ? 'First, confirm it is you.'
+            : 'Now choose your new password.'}
+        </p>
       </div>
+    </div>
+  )
 
-      {/* Lets password managers save the new password under this email. */}
-      <input type="email" autoComplete="username" value={email} readOnly hidden />
-
-      <PasswordField
-        id="current-password"
-        label="Current password"
-        autoComplete="current-password"
-        value={current}
-        onChange={setCurrent}
-      />
-
-      <PasswordField
-        id="new-password"
-        label="New password"
-        autoComplete="new-password"
-        placeholder="Enter a new password"
-        hint={PASSWORD_HINT}
-        value={next}
-        onChange={setNext}
-      />
-
+  const messages = (
+    <>
       {error && (
         <p className="form-error" role="alert">
           {error}
@@ -95,10 +146,94 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
           Password changed. You were signed out on your other devices.
         </p>
       )}
+    </>
+  )
+
+  if (step === 'choose') {
+    return (
+      <form className="account-card" onSubmit={change} noValidate>
+        {head}
+
+        {/* Lets password managers save the new password under this email. */}
+        <input type="email" autoComplete="username" value={email} readOnly hidden />
+
+        <PasswordField
+          id="new-password"
+          label="New password"
+          autoComplete="new-password"
+          placeholder="Enter a new password"
+          hint={PASSWORD_HINT}
+          value={next}
+          onChange={setNext}
+        />
+        <PasswordField
+          id="new-password-again"
+          label="Confirm new password"
+          autoComplete="new-password"
+          value={nextAgain}
+          onChange={setNextAgain}
+        />
+
+        {messages}
+
+        <button type="submit" className="account-primary" disabled={busy}>
+          {busy ? 'Changing...' : 'Change password'}
+        </button>
+        <button type="button" className="link-btn" onClick={reset} disabled={busy}>
+          Cancel
+        </button>
+      </form>
+    )
+  }
+
+  return (
+    <form className="account-card" onSubmit={verify} noValidate>
+      {head}
+
+      {proof === 'password' ? (
+        <PasswordField
+          id="current-password"
+          label="Current password"
+          autoComplete="off"
+          value={current}
+          onChange={setCurrent}
+          reveal={false}
+          noAutofill
+        />
+      ) : (
+        <div className="field">
+          <label className="field-label" htmlFor="change-pin">
+            Your 6-digit recovery PIN
+          </label>
+          <input
+            id="change-pin"
+            className="field-input recovery-pin"
+            type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="off"
+            maxLength={6}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          />
+        </div>
+      )}
+
+      {messages}
 
       <button type="submit" className="account-primary" disabled={busy}>
-        {busy ? 'Changing...' : 'Change password'}
+        {busy ? 'Checking...' : 'Continue'}
       </button>
+
+      {proof === 'password' ? (
+        <button type="button" className="link-btn" onClick={() => switchProof('pin')}>
+          Forgot your current password? Use your PIN instead
+        </button>
+      ) : (
+        <button type="button" className="link-btn" onClick={() => switchProof('password')}>
+          Use my current password instead
+        </button>
+      )}
     </form>
   )
 }

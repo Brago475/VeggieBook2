@@ -18,7 +18,8 @@ import '../styles/recovery-card.css'
 
 // Password recovery, on the account settings screen: shows whether a PIN
 // and security question are set, and which question, and lets the owner
-// change them. Asks for the current password first.
+// change them. Asks for the current password first, in a box with no eye
+// button that the browser does not fill in on its own.
 //
 // Saving also clears a locked password reset (see AccountRecovery.cs),
 // since knowing the password proves it is their account.
@@ -141,9 +142,11 @@ export function RecoveryCard() {
           <PasswordField
             id="recovery-current-password"
             label="Current password"
-            autoComplete="current-password"
+            autoComplete="off"
             value={current}
             onChange={setCurrent}
+            reveal={false}
+            noAutofill
           />
 
           <div className="field">
