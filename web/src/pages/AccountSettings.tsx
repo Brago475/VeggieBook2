@@ -3,13 +3,14 @@ import { SignOutIcon, UserIcon } from '../components/AccountIcons'
 import { ChangePasswordForm } from '../components/ChangePasswordForm'
 import { DeleteAccountForm } from '../components/DeleteAccountForm'
 import { LeafDecor } from '../components/LeafDecor'
+import { RecoveryCard } from '../components/RecoveryCard'
 
-// Account settings: who is signed in, change password, delete account, and
-// sign out.
+// Account settings: who is signed in, change password, password recovery
+// (PIN and security question), delete account, and sign out.
 //
-// Change password and delete account are each a card, with their own error
-// message, so a problem in one never hides another. Sign out sits below
-// them on its own: it is one button with no settings behind it.
+// Each section is a card, with its own error message, so a problem in one
+// never hides another. Sign out sits below them on its own: it is one
+// button with no settings behind it. It is also in the home screen's Menu.
 //
 // The two faint leaves in the bottom corner are decoration only.
 
@@ -61,6 +62,8 @@ export function AccountSettings({
       </div>
 
       <ChangePasswordForm email={email} onChangePassword={onChangePassword} />
+
+      <RecoveryCard />
 
       <DeleteAccountForm onDeleteAccount={onDeleteAccount} />
 

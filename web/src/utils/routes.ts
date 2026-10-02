@@ -13,12 +13,9 @@
 //   /about                        about VeggieBook, open to everyone
 //   /terms, /privacy              Terms of Use and Privacy Policy, open to everyone
 //   /signin, /register            sign in, create account
-//   /forgot-password              ask for a password reset link
-//   /reset-password?user&token    choose a new password, from the email link
+//   /forgot-password              forgot password (PIN, then security question)
 //
 // Anything else is treated as home, and the address is corrected to /.
-// The ?user&token part of the reset link is read by that page itself (see
-// utils/linkParams.ts), not here.
 
 export type Route =
   | { view: 'home' }
@@ -31,7 +28,6 @@ export type Route =
   | { view: 'signin' }
   | { view: 'register' }
   | { view: 'forgotPassword' }
-  | { view: 'resetPassword' }
   | {
       view: 'book'
       bookId: string
@@ -75,8 +71,6 @@ export function parseRoute(path: string): Route {
         return { view: 'register' }
       case 'forgot-password':
         return { view: 'forgotPassword' }
-      case 'reset-password':
-        return { view: 'resetPassword' }
     }
   }
 
@@ -117,8 +111,6 @@ export function routePath(route: Route): string {
       return '/register'
     case 'forgotPassword':
       return '/forgot-password'
-    case 'resetPassword':
-      return '/reset-password'
     case 'book':
       if (route.cover) return `/book/${route.bookId}/cover`
       if (route.recipeId !== null) return `/book/${route.bookId}/recipe/${route.recipeId}`

@@ -22,11 +22,11 @@ import type { BookSummary, SecretCategory, Vegetable } from '../types'
 // until the guest signs out or for up to 24 hours. The line under the
 // heading says which, so a guest is never surprised.
 //
-// Beside the heading, the ☰ Menu (MainMenu.tsx). An account gets Account
-// settings. A guest gets Create account, Sign in, and End guest visit, which
-// asks first because it deletes their books. About VeggieBook is for
-// everyone. Future features are added to its list, so the heading never
-// gets more crowded.
+// Beside the heading, the ☰ Menu (MainMenu.tsx), in two groups. On top,
+// features and information: About VeggieBook, and future features as they
+// are added. Below a line, the account: Account settings and Sign out, or
+// for a guest, Create account, Sign in, and End guest visit, which asks
+// first because it deletes their books.
 //
 // Each card follows the original app: a picture fills the card and the
 // chosen cover sits as a small inset. For a VeggieBook the picture is the
@@ -52,8 +52,8 @@ type Props = {
   onAccount: () => void
   onRegister: () => void
   onSignIn: () => void
-  // Signs the guest out, which deletes the guest and their books.
-  onEndGuest: () => Promise<void>
+  // Signs out. For a guest, this also deletes the guest and their books.
+  onSignOut: () => Promise<void>
   onAbout: () => void
   onDeleteBook: (id: string) => Promise<void>
   onViewBook: (id: string) => void
@@ -84,7 +84,7 @@ export function HomeLibrary({
   onAccount,
   onRegister,
   onSignIn,
-  onEndGuest,
+  onSignOut,
   onAbout,
   onDeleteBook,
   onViewBook,
@@ -100,25 +100,34 @@ export function HomeLibrary({
   // End guest visit, waiting for confirmation.
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [ending, setEnding] = useState(false)
-  const [endError, setEndError] = useState<string | null>(null)
+  // A failed sign out or end of visit.
+  const [signOutError, setSignOutError] = useState<string | null>(null)
 
   const byCode = new Map<string, Vegetable>(vegetables.map((v) => [v.code, v]))
   const byCategory = new Map<number, SecretCategory>(
     secretCategories.map((c) => [c.id, c]),
   )
 
-  // What the ☰ Menu offers. The first items depend on who is here; About is
-  // for everyone. New features go at the end of this list.
-  const menuItems: MainMenuItem[] = isGuest
+  // The ☰ Menu. Features on top (new ones go at the end of this list), the
+  // account below the line.
+  const menuItems: MainMenuItem[] = [
+    { label: 'About VeggieBook', icon: <InfoIcon />, onSelect: onAbout },
+  ]
+
+  const accountItems: MainMenuItem[] = isGuest
     ? [
         { label: 'Create account', icon: <PlusIcon />, onSelect: onRegister },
         { label: 'Sign in', icon: <PersonIcon />, onSelect: onSignIn },
-        { label: 'End guest visit', icon: <SignOutIcon />, onSelect: () => setConfirmEnd(true) },
-        { label: 'About VeggieBook', icon: <InfoIcon />, onSelect: onAbout },
+        {
+          label: 'End guest visit',
+          icon: <SignOutIcon />,
+          danger: true,
+          onSelect: () => setConfirmEnd(true),
+        },
       ]
     : [
         { label: 'Account settings', icon: <GearIcon />, onSelect: onAccount },
-        { label: 'About VeggieBook', icon: <InfoIcon />, onSelect: onAbout },
+        { label: 'Sign out', icon: <SignOutIcon />, danger: true, onSelect: signOut },
       ]
 
   function cardInfo(book: BookSummary): CardInfo {
@@ -162,15 +171,28 @@ export function HomeLibrary({
     }
   }
 
+  // An account signs out right away; nothing is lost.
+  async function signOut() {
+    setSignOutError(null)
+    try {
+      await onSignOut()
+      // On success the parent shows Welcome.
+    } catch (err) {
+      setSignOutError(
+        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+      )
+    }
+  }
+
   async function endGuestVisit() {
     if (ending) return
     setEnding(true)
-    setEndError(null)
+    setSignOutError(null)
     try {
-      await onEndGuest()
+      await onSignOut()
       // On success the parent shows Welcome.
     } catch (err) {
-      setEndError(
+      setSignOutError(
         err instanceof Error ? err.message : 'Something went wrong. Please try again.',
       )
       setEnding(false)
@@ -197,7 +219,7 @@ export function HomeLibrary({
               : `Signed in as ${email}`}
           </p>
         </div>
-        <MainMenu items={menuItems} />
+        <MainMenu items={menuItems} accountItems={accountItems} />
       </div>
 
       {/* Both create buttons are the same green: the two kinds of book are
@@ -243,7 +265,7 @@ export function HomeLibrary({
       )}
       {error && <p className="message">{error}</p>}
       {deleteError && <p className="message">{deleteError}</p>}
-      {endError && <p className="message">{endError}</p>}
+      {signOutError && <p className="message">{signOutError}</p>}
 
       {!loading && !error && books.length === 0 && (
         <p className="message">

@@ -6,7 +6,7 @@ import { Masthead } from './components/Masthead'
 import { SiteFooter } from './components/SiteFooter'
 import { PRIVACY } from './content/privacy'
 import { TERMS } from './content/terms'
-import { useAuth } from './hooks/useAuth'
+import { useAuth, type RegisterForm } from './hooks/useAuth'
 import { useBookFlow } from './hooks/useBookFlow'
 import { useBooks } from './hooks/useBooks'
 import { useRoute } from './hooks/useRoute'
@@ -15,14 +15,14 @@ import { useSecretsFlow } from './hooks/useSecretsFlow'
 import { useVeggieBookData } from './hooks/useVeggieBookData'
 import { About } from './pages/About'
 import { AccountSettings } from './pages/AccountSettings'
-import { AuthForm, type AuthMode } from './pages/AuthForm'
+import { AuthForm } from './pages/AuthForm'
 import { BookFlow } from './pages/BookFlow'
 import { BookViewer } from './pages/BookViewer'
 import { ChangeSecretCover } from './pages/ChangeSecretCover'
 import { ChangeVeggieCover } from './pages/ChangeVeggieCover'
+import { CreateAccount } from './pages/CreateAccount'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { HomeLibrary } from './pages/HomeLibrary'
-import { ResetPassword } from './pages/ResetPassword'
 import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
 import { Welcome } from './pages/Welcome'
@@ -131,7 +131,7 @@ export default function App() {
   //   sign in or create account, while already signed in to an account
   //     (a guest may use both, to move to a real account)
   //   an unknown or untidy address
-  // About, Terms, Privacy, and the password pages are open to everyone.
+  // About, Terms, Privacy, and Forgot password are open to everyone.
   useEffect(() => {
     if (status === 'loading') return
 
@@ -229,18 +229,22 @@ export default function App() {
 
   // --- signing in and out ---
 
-  // Both forms sign in right away. A failure throws and stays on the form.
-  async function submitAuth(
-    mode: AuthMode,
-    address: string,
-    password: string,
-    keepGuestBooks: boolean,
-  ) {
-    if (mode === 'register') await account.register(address, password, keepGuestBooks)
-    else await account.signIn(address, password, keepGuestBooks)
+  // Both sign in and Create Account sign in right away. A failure throws
+  // and stays on the form.
+  function afterSignIn() {
     flow.start()
     secrets.start()
     navigate('/', { replace: true })
+  }
+
+  async function submitSignIn(address: string, password: string, keepGuestBooks: boolean) {
+    await account.signIn(address, password, keepGuestBooks)
+    afterSignIn()
+  }
+
+  async function submitRegister(form: RegisterForm) {
+    await account.register(form)
+    afterSignIn()
   }
 
   // For a guest, this also deletes the guest and all their books.
@@ -267,16 +271,15 @@ export default function App() {
   const current =
     (needsAccount && !email) || (needsSession && !hasSession) ? 'home' : view
   const showWelcome = current === 'home' && status === 'visitor'
-  const authMode: AuthMode | null =
-    current === 'signin' || current === 'register' ? current : null
-  const passwordPage = current === 'forgotPassword' || current === 'resetPassword'
+  const authPage = current === 'signin' || current === 'register'
+  const passwordPage = current === 'forgotPassword'
   const readingPage =
     current === 'about' || current === 'terms' || current === 'privacy'
 
   // Welcome and every account screen hide the green bar. They show the logo
   // in the page and run a photograph to the bottom edge, which the masthead
   // would cut off at the top.
-  const onAuthScreen = showWelcome || authMode !== null || passwordPage
+  const onAuthScreen = showWelcome || authPage || passwordPage
 
   // The SecretsBook logo while making or reading a Secrets Book, as in the
   // original app; the VeggieBook logo everywhere else.
@@ -297,7 +300,7 @@ export default function App() {
       return goHome
     }
     if (current === 'forgotPassword') return () => goUp('/signin')
-    if (authMode || current === 'account' || readingPage) return goHome
+    if (authPage || current === 'account' || readingPage) return goHome
     return undefined
   }
 
@@ -356,23 +359,28 @@ export default function App() {
           onAccount={() => navigate('/account')}
           onRegister={() => navigate('/register')}
           onSignIn={() => navigate('/signin')}
-          onEndGuest={signOut}
+          onSignOut={signOut}
           onAbout={() => navigate('/about')}
           onDeleteBook={deleteBook}
           onViewBook={viewBook}
         />
       )}
 
-      {authMode && (
+      {current === 'signin' && (
         <AuthForm
-          key={authMode}
-          mode={authMode}
           guestBookCount={isGuest ? library.books.length : 0}
-          onSubmit={(address, password, keep) => submitAuth(authMode, address, password, keep)}
+          onSubmit={submitSignIn}
           onForgotPassword={() => navigate('/forgot-password')}
-          onSwitchMode={() =>
-            navigate(authMode === 'signin' ? '/register' : '/signin', { replace: true })
-          }
+          onCreateAccount={() => navigate('/register', { replace: true })}
+          onBack={backAction()}
+        />
+      )}
+
+      {current === 'register' && (
+        <CreateAccount
+          guestBookCount={isGuest ? library.books.length : 0}
+          onSubmit={submitRegister}
+          onSignIn={() => navigate('/signin', { replace: true })}
           onBack={backAction()}
         />
       )}
@@ -381,13 +389,6 @@ export default function App() {
         <ForgotPassword
           onBack={backAction()}
           onSignIn={() => navigate('/signin', { replace: true })}
-        />
-      )}
-
-      {current === 'resetPassword' && (
-        <ResetPassword
-          onSignIn={() => navigate('/signin', { replace: true })}
-          onForgotPassword={() => navigate('/forgot-password', { replace: true })}
         />
       )}
 

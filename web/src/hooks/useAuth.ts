@@ -8,7 +8,8 @@ import { apiFetch } from '../utils/api'
 //   guest      a temporary guest account (see Auth/GuestAccounts.cs). Books
 //              save like an account's, and are deleted on sign out or after
 //              24 hours.
-//   signedIn   a real account, with its roles: ["User"] or ["User", "Admin"]
+//   signedIn   a real account, with its username and roles: ["User"] or
+//              ["User", "Admin"]
 //
 // The session itself is the HttpOnly cookie the API sets. This hook only
 // mirrors what the API says.
@@ -24,9 +25,25 @@ export type AuthState =
   | { status: 'loading' }
   | { status: 'visitor' }
   | { status: 'guest'; key: string }
-  | { status: 'signedIn'; email: string; roles: string[] }
+  | { status: 'signedIn'; email: string; displayName: string | null; roles: string[] }
 
-type MeResponse = { email: string | null; roles: string[] }
+// Everything the Create Account form sends. displayName is the username;
+// blank means the API makes one up.
+export type RegisterForm = {
+  firstName: string
+  lastName: string
+  displayName: string
+  email: string
+  password: string
+  ageRange: string
+  pin: string
+  questionId: number
+  answer: string
+  agreeToTerms: boolean
+  keepGuestBooks: boolean
+}
+
+type MeResponse = { email: string | null; roles: string[]; displayName?: string | null }
 
 export function isAdmin(auth: AuthState): boolean {
   return auth.status === 'signedIn' && auth.roles.includes('Admin')
@@ -38,7 +55,8 @@ function newGuestKey() {
 
 function fromMe(me: MeResponse): AuthState {
   const roles = me.roles ?? []
-  if (me.email) return { status: 'signedIn', email: me.email, roles }
+  if (me.email)
+    return { status: 'signedIn', email: me.email, displayName: me.displayName ?? null, roles }
   if (roles.includes('Guest')) return { status: 'guest', key: newGuestKey() }
   return { status: 'visitor' }
 }
@@ -71,10 +89,10 @@ export function useAuth() {
 
   // Creating an account signs in right away. A guest's books either move
   // into the new account or are deleted, as the guest chose.
-  async function register(email: string, password: string, keepGuestBooks: boolean) {
+  async function register(form: RegisterForm) {
     const me = await apiFetch<MeResponse>('/auth/register', {
       method: 'POST',
-      body: { email, password, keepGuestBooks },
+      body: form,
     })
     setAuth(fromMe(me))
   }

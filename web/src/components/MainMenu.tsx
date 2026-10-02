@@ -1,10 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import { MenuIcon } from './LibraryIcons'
 
-// The ☰ Menu button on the home screen, and the list it opens: Account (or
-// Sign in for a guest), About VeggieBook, and future features as they are
-// added. One place for everything that is not making or reading a book,
-// so the home screen's heading never gets more crowded.
+// The ☰ Menu button on the home screen, and the list it opens.
+//
+// Two groups, with a line between them:
+//   items         features and information, such as About VeggieBook.
+//                 New features are added here.
+//   accountItems  the account: Account settings and Sign out, or for a
+//                 guest, Create account, Sign in, and End guest visit.
+//                 Kept at the bottom, the way most apps do it, so signing
+//                 out is always in the same easy place.
+//
+// An item marked danger (Sign out, End guest visit) shows in red.
 //
 // Labeled "Menu", not three lines alone: the original VeggieBook's research
 // found pantry clients did best with plainly labeled controls.
@@ -18,13 +25,15 @@ export type MainMenuItem = {
   label: string
   icon: React.ReactNode
   onSelect: () => void
+  danger?: boolean
 }
 
 type Props = {
   items: MainMenuItem[]
+  accountItems: MainMenuItem[]
 }
 
-export function MainMenu({ items }: Props) {
+export function MainMenu({ items, accountItems }: Props) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -57,6 +66,25 @@ export function MainMenu({ items }: Props) {
     }
   }, [open])
 
+  function row(item: MainMenuItem) {
+    return (
+      <li key={item.label} role="none">
+        <button
+          type="button"
+          role="menuitem"
+          className={item.danger ? 'menu-item is-danger' : 'menu-item'}
+          onClick={() => {
+            setOpen(false)
+            item.onSelect()
+          }}
+        >
+          {item.icon}
+          {item.label}
+        </button>
+      </li>
+    )
+  }
+
   return (
     <div className="menu main-menu" ref={rootRef}>
       <button
@@ -73,22 +101,11 @@ export function MainMenu({ items }: Props) {
 
       {open && (
         <ul className="menu-list" role="menu" ref={listRef}>
-          {items.map((item) => (
-            <li key={item.label} role="none">
-              <button
-                type="button"
-                role="menuitem"
-                className="menu-item"
-                onClick={() => {
-                  setOpen(false)
-                  item.onSelect()
-                }}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            </li>
-          ))}
+          {items.map(row)}
+          {items.length > 0 && accountItems.length > 0 && (
+            <li role="separator" className="main-menu-divider" />
+          )}
+          {accountItems.map(row)}
         </ul>
       )}
     </div>

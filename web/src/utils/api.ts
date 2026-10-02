@@ -4,17 +4,20 @@
 // session cookie automatically. Page code never sees that cookie: it is
 // HttpOnly, which is the point.
 //
-// The API reports problems as { error: "message" }, written for the user.
-// apiFetch throws an ApiError carrying that message and the status code, so
-// a screen can show the message as is, or react to a status such as 401.
+// The API reports problems as { error: "message" }, written for the user,
+// and some also carry { status: "code" }, such as "locked" or "pinClosed".
+// apiFetch throws an ApiError with the message, the status code, and that
+// short code, so a screen can show the message as is, or react to a code.
 
 export class ApiError extends Error {
   status: number
+  code: string | null
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code: string | null = null) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.code = code
   }
 }
 
@@ -68,6 +71,7 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
       errorMessage(data) ??
         FALLBACK[res.status] ??
         'Something went wrong. Please try again.',
+      errorCode(data),
     )
   }
 
@@ -78,6 +82,14 @@ function errorMessage(data: unknown): string | null {
   if (data && typeof data === 'object' && 'error' in data) {
     const error = (data as { error: unknown }).error
     if (typeof error === 'string') return error
+  }
+  return null
+}
+
+function errorCode(data: unknown): string | null {
+  if (data && typeof data === 'object' && 'status' in data) {
+    const status = (data as { status: unknown }).status
+    if (typeof status === 'string') return status
   }
   return null
 }

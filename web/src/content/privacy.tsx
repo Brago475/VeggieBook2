@@ -5,8 +5,8 @@ import { LegalContact, type LegalDocument } from '../components/LegalPage'
 
 export const PRIVACY: LegalDocument = {
   title: 'Privacy Policy',
-  version: '1.0',
-  updated: 'September 30, 2026',
+  version: '1.1',
+  updated: 'October 2, 2026',
   intro: (
     <p>
       This policy explains what information VeggieBook2 collects and how it is
@@ -27,11 +27,13 @@ export const PRIVACY: LegalDocument = {
             <li>Username</li>
             <li>Email address</li>
             <li>Age range (not your date of birth)</li>
+            <li>Your recovery PIN and security question and answer</li>
             <li>The books you create</li>
           </ul>
           <p>
-            Your password is never stored in readable form. We keep only a secure
-            one-way hash of it, which cannot be converted back into your password.
+            Your password, recovery PIN, and security answer are never stored in
+            readable form. We keep only a secure one-way hash of each, which
+            cannot be converted back into what you typed.
           </p>
         </>
       ),
@@ -42,8 +44,8 @@ export const PRIVACY: LegalDocument = {
       body: (
         <p>
           Please do not include sensitive information, such as health details,
-          identification numbers, or your home address, in your username or cover
-          photos.
+          identification numbers, or your home address, in your username, your
+          security answer, or your cover photos.
         </p>
       ),
     },
@@ -73,9 +75,9 @@ export const PRIVACY: LegalDocument = {
       body: (
         <p>
           We use your information only to operate your account: to sign you in,
-          store your books, and send account-related emails, such as confirmation
-          codes. We do not sell your information, display advertising, or send
-          marketing emails.
+          store your books, and help you recover your account. VeggieBook2 does
+          not send email at this time. We do not sell your information, display
+          advertising, or send marketing messages.
         </p>
       ),
     },
@@ -84,12 +86,11 @@ export const PRIVACY: LegalDocument = {
       heading: 'Research Studies',
       body: (
         <>
-          <p>Only individuals invited by email take part in a study. If you are invited:</p>
+          <p>Only individuals invited by the research team take part in a study. If you are invited:</p>
           <ul className="legal-list">
             <li>
               Study tracking is <strong>on</strong> for your account from the
-              start. Your invitation email states this before you create your
-              account.
+              start. You are told this before you create your account.
             </li>
             <li>
               While study tracking is on, the choices you make in the

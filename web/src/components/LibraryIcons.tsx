@@ -1,6 +1,6 @@
-// Small line icons for the home screen. Inline so the app takes no icon
-// dependency. All are decorative: each sits next to a text label that
-// already says what the button does.
+// Small line icons for the home screen and account cards. Inline so the
+// app takes no icon dependency. All are decorative: each sits next to a
+// text label that already says what the button does.
 
 type IconProps = { className?: string }
 
@@ -54,6 +54,18 @@ export function LockIcon({ className }: IconProps) {
     <Svg className={className}>
       <rect x="5" y="11" width="14" height="10" rx="2" />
       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </Svg>
+  )
+}
+
+// A key, for the Password recovery card.
+export function KeyIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <circle cx="7.5" cy="15.5" r="4.5" />
+      <path d="M10.7 12.3L20 3" />
+      <path d="M16 7l3 3" />
+      <path d="M13.5 9.5l2 2" />
     </Svg>
   )
 }

@@ -2,11 +2,14 @@ import { LegalContact, type LegalDocument } from '../components/LegalPage'
 
 // The Terms of Use. To change the text: edit it here, change version and
 // updated, and everyone is asked to agree to the new version.
+//
+// Keep version equal to TermsVersion in api/Auth/SignUpRules.cs, which is
+// what the API records when someone creates an account.
 
 export const TERMS: LegalDocument = {
   title: 'Terms of Use',
-  version: '1.0',
-  updated: 'September 30, 2026',
+  version: '1.1',
+  updated: 'October 2, 2026',
   intro: (
     <p>
       <strong>
@@ -39,18 +42,31 @@ export const TERMS: LegalDocument = {
     {
       id: 'eligibility',
       heading: 'Eligibility',
-      body: <p>You must be 16 years of age or older to create an account.</p>,
+      body: <p>You must be 18 years of age or older to create an account.</p>,
     },
     {
       id: 'your-account',
       heading: 'Your Account',
       body: (
-        <p>
-          You are responsible for keeping your password secure. You may delete
-          your account at any time from Account settings.{' '}
-          <strong>Deleted accounts cannot be recovered</strong>, and all books in
-          the account are deleted with it.
-        </p>
+        <>
+          <p>
+            You are responsible for your account. Keep your password, recovery PIN,
+            and security answer to yourself, and do not share your account with
+            anyone. VeggieBook2 is not responsible for anything that happens
+            through your account, including loss of access or loss of saved books.
+          </p>
+          <p>
+            If you forget your password, you can reset it with your recovery PIN or
+            your security question. If you forget all three, we may not be able to
+            restore your account. You can contact the VeggieBook2 team, but we
+            cannot promise to recover it.
+          </p>
+          <p>
+            You may delete your account at any time from Account settings.{' '}
+            <strong>Deleted accounts cannot be recovered</strong>, and all books in
+            the account are deleted with it.
+          </p>
+        </>
       ),
     },
     {
@@ -103,11 +119,10 @@ export const TERMS: LegalDocument = {
       body: (
         <p>
           VeggieBook2 is part of a research project, and studies may be conducted
-          from time to time. Only individuals invited by email take part. An
-          invitation will state that study tracking is turned on for the invited
-          account, and the participant may turn it off at any time in Account
-          settings. If you have not received an invitation, you are not part of a
-          study, and no study data is collected from your use of the application.
+          from time to time. Only individuals invited by the research team take
+          part. Participants are told that study tracking is turned on for their
+          account. If you have not been invited, you are not part of a study, and
+          no study data is collected from your use of the application.
         </p>
       ),
     },

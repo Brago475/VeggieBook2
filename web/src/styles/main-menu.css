@@ -2,7 +2,9 @@
 
    The button is the same white pill the Account button was, so the
    heading looks the same as before. The list it opens is the ⋮ menu's
-   list (menu.css); this file only widens it a little for longer labels. */
+   list (menu.css); this file widens it a little for longer labels, draws
+   a thin line between rows, a stronger line between the two groups, and
+   shows Sign out and End guest visit in red. */
 
 .main-menu {
   flex: 0 0 auto;
@@ -44,9 +46,33 @@
 }
 
 .main-menu .menu-list {
-  min-width: 210px;
+  min-width: 230px;
 }
 
 .main-menu .menu-item svg {
   color: var(--text-muted);
+}
+
+/* A thin line between rows, except above the first row and right below
+   the group line. */
+.main-menu .menu-list > li:not(:first-child):not(.main-menu-divider):not(.main-menu-divider + li) {
+  border-top: 1px solid var(--line);
+}
+
+/* The line between features (above) and the account (below). */
+.main-menu-divider {
+  height: 0;
+  margin: 6px 0;
+  list-style: none;
+  border-top: 2px solid var(--line-strong);
+}
+
+/* Sign out and End guest visit. */
+.main-menu .menu-item.is-danger,
+.main-menu .menu-item.is-danger svg {
+  color: var(--danger);
+}
+
+.main-menu .menu-item.is-danger:hover {
+  background: var(--danger-tint);
 }

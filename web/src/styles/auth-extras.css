@@ -1,5 +1,6 @@
 /* Additions to auth.css for the account screens: the form wrapper, the
-   forgot password link, and the guest books choice. */
+   forgot password link, the guest books choice, and the Create Account and
+   Forgot password pieces (sections, drop-downs, PIN, Terms checkbox). */
 
 /* The form only groups the fields for submitting. display: contents keeps
    its children laid out exactly as if they sat directly in .auth-main. */
@@ -54,4 +55,92 @@
 .guest-option-sub {
   font-size: 0.9em;
   opacity: 0.75;
+}
+
+/* Section titles inside a long form: About you, Sign-in details, Account
+   recovery. */
+.auth-section-title {
+  margin: 12px 0 -4px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--green-deep, #2f5d2f);
+  letter-spacing: 0.01em;
+}
+
+.auth-section-text {
+  margin: 0;
+  font-size: 0.9em;
+  opacity: 0.8;
+  line-height: 1.45;
+}
+
+/* A box with no icon on its left. */
+.pill-input.no-icon {
+  padding-left: 18px;
+}
+
+/* Drop-downs in the pill style, with a drawn arrow so they look the same
+   in every browser. */
+.pill-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 42px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%232f5d2f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+}
+
+.pill-select:invalid {
+  color: rgba(31, 45, 31, 0.55);
+}
+
+/* The PIN reads as six spaced digits. */
+.pin-input {
+  letter-spacing: 0.3em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* I am 18 or older, and I agree to the Terms... */
+.terms-agree {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.92em;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.terms-agree input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--green-deep, #2f5d2f);
+}
+
+.terms-agree a {
+  color: var(--green-deep, #2f5d2f);
+  font-weight: 600;
+}
+
+/* Forgot password: the security question, and a note above it. */
+.auth-question {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(47, 93, 47, 0.08);
+  font-weight: 600;
+  color: var(--green-deep, #2f5d2f);
+}
+
+.auth-notice {
+  margin: 8px 0 0;
+  font-size: 0.92em;
+  color: #8a5a00;
+}
+
+.auth-contact {
+  font-size: 0.95em;
+  line-height: 1.5;
 }

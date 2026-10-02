@@ -1,18 +1,19 @@
 import { useState, type FormEvent } from 'react'
+import { checkPassword, PASSWORD_HINT } from '../utils/passwordRule'
 import { LockIcon } from './LibraryIcons'
 import { PasswordField } from './PasswordField'
 
 // Change password, on the account settings screen.
 //
-// On success the API gives this device a fresh session and signs out every
-// other one. The fields clear and a confirmation says so.
+// The rule is the same as Create Account (utils/passwordRule.ts), checked
+// here first and again by the API. On success the API gives this device a
+// fresh session and signs out every other one. The fields clear and a
+// confirmation says so.
 
 type Props = {
   email: string
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
 }
-
-const MIN_PASSWORD = 12
 
 export function ChangePasswordForm({ email, onChangePassword }: Props) {
   const [current, setCurrent] = useState('')
@@ -26,8 +27,12 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
     if (busy) return
     setDone(false)
 
-    if (next.length < MIN_PASSWORD) {
-      setError(`New password must be at least ${MIN_PASSWORD} characters.`)
+    const problem =
+      (current ? null : 'Enter your current password.') ??
+      checkPassword(next) ??
+      (next === current ? "Your new password can't be the same as your old one." : null)
+    if (problem) {
+      setError(problem)
       return
     }
 
@@ -75,7 +80,7 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
         label="New password"
         autoComplete="new-password"
         placeholder="Enter a new password"
-        hint={`Use at least ${MIN_PASSWORD} characters.`}
+        hint={PASSWORD_HINT}
         value={next}
         onChange={setNext}
       />
