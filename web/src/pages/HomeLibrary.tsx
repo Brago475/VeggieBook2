@@ -17,10 +17,11 @@ import type { BookSummary, SecretCategory, Vegetable } from '../types'
 // Home screen: a heading that says who is using the site, the two create
 // buttons, then the books.
 //
-// Signed in, the books come from the account and are there on any device.
-// For a guest, they are kept on the server in a temporary guest account,
-// until the guest signs out or for up to 24 hours. The line under the
-// heading says which, so a guest is never surprised.
+// Signed in, the heading shows the username (or the email, for an older
+// account without one), and the books come from the account, on any
+// device. For a guest, they are kept on the server in a temporary guest
+// account, until the guest signs out or for up to 24 hours. The line under
+// the heading says which, so a guest is never surprised.
 //
 // Beside the heading, the ☰ Menu (MainMenu.tsx), in two groups. On top,
 // features and information: About VeggieBook, and future features as they
@@ -42,6 +43,8 @@ type Props = {
   // The account's email, or null for a guest. Visitors who are neither see
   // Welcome instead of this screen.
   email: string | null
+  // The account's username, or null for a guest or an older account.
+  displayName: string | null
   books: BookSummary[]
   vegetables: Vegetable[]
   secretCategories: SecretCategory[]
@@ -74,6 +77,7 @@ type CardInfo = {
 
 export function HomeLibrary({
   email,
+  displayName,
   books,
   vegetables,
   secretCategories,
@@ -216,7 +220,7 @@ export function HomeLibrary({
           <p className="library-sub">
             {isGuest
               ? 'Guest: your books are kept until you sign out, for up to 24 hours'
-              : `Signed in as ${email}`}
+              : `Signed in as ${displayName ?? email}`}
           </p>
         </div>
         <MainMenu items={menuItems} accountItems={accountItems} />

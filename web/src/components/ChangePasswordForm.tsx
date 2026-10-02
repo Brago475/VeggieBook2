@@ -3,6 +3,7 @@ import { verifyForPasswordChange } from '../utils/authApi'
 import { checkPassword, PASSWORD_HINT } from '../utils/passwordRule'
 import { LockIcon } from './LibraryIcons'
 import { PasswordField } from './PasswordField'
+import { PinField } from './PinField'
 
 // Change password, on the account settings screen, in two steps:
 //
@@ -11,9 +12,8 @@ import { PasswordField } from './PasswordField'
 //           to 3 times a day (shared with Forgot password).
 //   choose  the new password, twice.
 //
-// The current password box has no eye button and is not filled in by the
-// browser on its own, so nobody at an unlocked computer can reveal a saved
-// password here.
+// The current password box is not filled in by the browser on its own, so
+// its eye only shows what the person typed, never a saved password.
 //
 // On success the API gives this device a fresh session and signs out every
 // other one, and the card goes back to the first step.
@@ -197,26 +197,16 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
           autoComplete="off"
           value={current}
           onChange={setCurrent}
-          reveal={false}
           noAutofill
         />
       ) : (
-        <div className="field">
-          <label className="field-label" htmlFor="change-pin">
-            Your 6-digit recovery PIN
-          </label>
-          <input
-            id="change-pin"
-            className="field-input recovery-pin"
-            type="password"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            autoComplete="off"
-            maxLength={6}
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          />
-        </div>
+        <PinField
+          id="change-pin"
+          label="Your 6-digit recovery PIN"
+          value={pin}
+          onChange={setPin}
+          variant="card"
+        />
       )}
 
       {messages}

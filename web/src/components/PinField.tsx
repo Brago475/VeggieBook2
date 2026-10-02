@@ -1,8 +1,10 @@
-import { useState, type ReactNode } from 'react'
-import { EyeIcon, LockIcon } from './AuthIcons'
+import type { ReactNode } from 'react'
+import { PinBoxes } from './PinBoxes'
 
-// A 6-digit PIN box. Only digits can be typed, and it is hidden like a
-// password unless the eye button shows it. Phones open the number pad.
+// A labeled 6-digit PIN, drawn as six squares (PinBoxes).
+//
+//   variant "pill"  the sign-in screens: Create Account, Forgot password
+//   variant "card"  the account settings cards
 
 type Props = {
   id: string
@@ -10,43 +12,24 @@ type Props = {
   value: string
   onChange: (value: string) => void
   hint?: ReactNode
+  variant?: 'pill' | 'card'
 }
 
-export function PinField({ id, label, value, onChange, hint }: Props) {
-  const [show, setShow] = useState(false)
+export function PinField({ id, label, value, onChange, hint, variant = 'pill' }: Props) {
   const hintId = `${id}-hint`
+  const card = variant === 'card'
 
   return (
-    <div className="pill-field">
-      <label className="pill-label" htmlFor={id}>
+    <div className={card ? 'field' : 'pill-field'}>
+      <label className={card ? 'field-label' : 'pill-label'} htmlFor={id}>
         {label}
       </label>
-      <div className="pill-wrap">
-        <LockIcon />
-        <input
-          id={id}
-          className="pill-input has-action pin-input"
-          type={show ? 'text' : 'password'}
-          inputMode="numeric"
-          pattern="[0-9]*"
-          autoComplete="off"
-          maxLength={6}
-          required
-          value={value}
-          onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          aria-describedby={hint ? hintId : undefined}
-        />
-        <button
-          type="button"
-          className="pill-action"
-          onClick={() => setShow((v) => !v)}
-          aria-pressed={show}
-          aria-controls={id}
-          aria-label={show ? 'Hide PIN' : 'Show PIN'}
-        >
-          <EyeIcon off={show} />
-        </button>
-      </div>
+      <PinBoxes
+        id={id}
+        value={value}
+        onChange={onChange}
+        describedBy={hint ? hintId : undefined}
+      />
       {hint && (
         <p className="field-hint" id={hintId}>
           {hint}

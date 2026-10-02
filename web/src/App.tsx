@@ -81,6 +81,8 @@ export default function App() {
   const status = auth.status
 
   const email = auth.status === 'signedIn' ? auth.email : null
+  // The username shown on home; null for a guest or an older account.
+  const displayName = auth.status === 'signedIn' ? auth.displayName : null
   const isGuest = auth.status === 'guest'
   // A guest or an account: someone whose books the server keeps.
   const hasSession = email !== null || isGuest
@@ -349,6 +351,7 @@ export default function App() {
       {current === 'home' && !showWelcome && (
         <HomeLibrary
           email={email}
+          displayName={displayName}
           books={library.books}
           vegetables={vegetables}
           secretCategories={secretCategories.categories}

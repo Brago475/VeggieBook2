@@ -14,12 +14,13 @@ import {
 } from '../utils/recoveryRules'
 import { KeyIcon } from './LibraryIcons'
 import { PasswordField } from './PasswordField'
+import { PinField } from './PinField'
 import '../styles/recovery-card.css'
 
 // Password recovery, on the account settings screen: shows whether a PIN
 // and security question are set, and which question, and lets the owner
-// change them. Asks for the current password first, in a box with no eye
-// button that the browser does not fill in on its own.
+// change them. Asks for the current password first, in a box the browser
+// does not fill in on its own.
 //
 // Saving also clears a locked password reset (see AccountRecovery.cs),
 // since knowing the password proves it is their account.
@@ -145,49 +146,25 @@ export function RecoveryCard() {
             autoComplete="off"
             value={current}
             onChange={setCurrent}
-            reveal={false}
             noAutofill
           />
 
-          <div className="field">
-            <label className="field-label" htmlFor="recovery-pin">
-              New 6-digit PIN
-            </label>
-            <input
-              id="recovery-pin"
-              className="field-input recovery-pin"
-              type="password"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              autoComplete="off"
-              maxLength={6}
-              value={value.pin}
-              onChange={(e) => set('pin', e.target.value.replace(/\D/g, '').slice(0, 6))}
-              aria-describedby="recovery-pin-hint"
-            />
-            <p className="field-hint" id="recovery-pin-hint">
-              Avoid easy ones like 123456 or 111111.
-            </p>
-          </div>
+          <PinField
+            id="recovery-pin"
+            label="New 6-digit PIN"
+            value={value.pin}
+            onChange={(v) => set('pin', v)}
+            hint="Avoid easy ones like 123456 or 111111."
+            variant="card"
+          />
 
-          <div className="field">
-            <label className="field-label" htmlFor="recovery-pin-again">
-              Confirm PIN
-            </label>
-            <input
-              id="recovery-pin-again"
-              className="field-input recovery-pin"
-              type="password"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              autoComplete="off"
-              maxLength={6}
-              value={value.pinAgain}
-              onChange={(e) =>
-                set('pinAgain', e.target.value.replace(/\D/g, '').slice(0, 6))
-              }
-            />
-          </div>
+          <PinField
+            id="recovery-pin-again"
+            label="Confirm PIN"
+            value={value.pinAgain}
+            onChange={(v) => set('pinAgain', v)}
+            variant="card"
+          />
 
           <div className="field">
             <label className="field-label" htmlFor="recovery-question">
