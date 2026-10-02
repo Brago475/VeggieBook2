@@ -1,5 +1,5 @@
-import { coverSrc } from '../utils/coverSrc'
-import { SafeImage } from './SafeImage'
+import { coverSrc } from '../../utils/coverSrc'
+import { SafeImage } from '../common/SafeImage'
 
 // A book as it appears in the library, matching the original app: the
 // vegetable's photo fills the card, the chosen cover sits as a small

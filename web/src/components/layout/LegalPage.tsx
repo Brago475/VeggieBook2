@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { LeafDecor } from './LeafDecor'
+import { LeafDecor } from '../layout/LeafDecor'
 
 // The layout for the Terms of Use and the Privacy Policy. The words live in
 // src/content/terms.tsx and src/content/privacy.tsx, so the text can be

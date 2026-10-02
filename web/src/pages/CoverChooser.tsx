@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { BookCard } from '../components/BookCard'
-import { CoverOptions } from '../components/CoverOptions'
-import { NavBar } from '../components/NavBar'
+import { BookCard } from '../components/library/BookCard'
+import { CoverOptions } from '../components/veggie/CoverOptions'
+import { NavBar } from '../components/layout/NavBar'
 import type { Vegetable } from '../types'
 
 // Last screen of a VeggieBook: pick the cover, then save the book.

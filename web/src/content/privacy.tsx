@@ -1,4 +1,4 @@
-import { LegalContact, type LegalDocument } from '../components/LegalPage'
+import { LegalContact, type LegalDocument } from '../components/layout/LegalPage'
 
 // The Privacy Policy. To change the text: edit it here, change version and
 // updated, and everyone is asked to agree to the new version.

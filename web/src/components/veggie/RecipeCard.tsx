@@ -1,8 +1,8 @@
 import { RecipeSections } from './RecipeSections'
-import { SafeImage } from './SafeImage'
-import { useRecipeDetail } from '../hooks/useRecipeDetail'
-import type { RecipeSummary } from '../types'
-import { coverSrc } from '../utils/coverSrc'
+import { SafeImage } from '../common/SafeImage'
+import { useRecipeDetail } from '../../hooks/useRecipeDetail'
+import type { RecipeSummary } from '../../types'
+import { coverSrc } from '../../utils/coverSrc'
 
 // One recipe in the review flow.
 //

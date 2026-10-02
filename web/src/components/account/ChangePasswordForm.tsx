@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { verifyForPasswordChange } from '../utils/authApi'
-import { checkPassword, PASSWORD_HINT } from '../utils/passwordRule'
-import { LockIcon } from './LibraryIcons'
-import { PasswordField } from './PasswordField'
-import { PinField } from './PinField'
+import { verifyForPasswordChange } from '../../utils/authApi'
+import { checkPassword, PASSWORD_HINT } from '../../utils/passwordRule'
+import { LockIcon } from '../icons/LibraryIcons'
+import { PasswordField } from '../forms/PasswordField'
+import { PinField } from '../forms/PinField'
 
 // Change password, on the account settings screen, in two steps:
 //

@@ -1,5 +1,5 @@
 import { useLayoutEffect } from 'react'
-import { RecipeCard } from '../components/RecipeCard'
+import { RecipeCard } from '../components/veggie/RecipeCard'
 import type { RecipeSummary } from '../types'
 
 // The KEEP / DROP flow. One recipe at a time; kept ones become the book.

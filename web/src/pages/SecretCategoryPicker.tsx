@@ -1,6 +1,6 @@
-import { NavBar } from '../components/NavBar'
-import { ScreenLabel } from '../components/ScreenLabel'
-import { SecretCategoryRow } from '../components/SecretCategoryRow'
+import { NavBar } from '../components/layout/NavBar'
+import { ScreenLabel } from '../components/layout/ScreenLabel'
+import { SecretCategoryRow } from '../components/secrets/SecretCategoryRow'
 import type { SecretCategory } from '../types'
 
 // The first screen of a new Secrets Book, matching the original app:

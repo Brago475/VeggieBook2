@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { BookCard } from '../components/BookCard'
-import { BookSkeleton } from '../components/BookSkeleton'
-import { CoverOptions } from '../components/CoverOptions'
-import { NavBar } from '../components/NavBar'
+import { BookCard } from '../components/library/BookCard'
+import { BookSkeleton } from '../components/library/BookSkeleton'
+import { CoverOptions } from '../components/veggie/CoverOptions'
+import { NavBar } from '../components/layout/NavBar'
 import { useBookDetail, type BookDetail } from '../hooks/useBookDetail'
 import type { Vegetable } from '../types'
 

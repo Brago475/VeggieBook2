@@ -1,5 +1,5 @@
-import type { SecretCategory } from '../types'
-import { SafeImage } from './SafeImage'
+import type { SecretCategory } from '../../types'
+import { SafeImage } from '../common/SafeImage'
 
 // One row in the Secrets category picker, matching the original app: the
 // category's illustration on the left (toaster, sandwich, plate, fruit

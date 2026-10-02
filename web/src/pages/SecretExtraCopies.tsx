@@ -1,5 +1,5 @@
-import { NavBar } from '../components/NavBar'
-import { SafeImage } from '../components/SafeImage'
+import { NavBar } from '../components/layout/NavBar'
+import { SafeImage } from '../components/common/SafeImage'
 import type { Secret } from '../types'
 
 // The extra-copies step of a Secrets Book: the kept secrets as tiles, and

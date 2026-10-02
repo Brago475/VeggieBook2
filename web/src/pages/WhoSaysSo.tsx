@@ -1,5 +1,5 @@
-import { ScreenLabel } from '../components/ScreenLabel'
-import { SafeImage } from '../components/SafeImage'
+import { ScreenLabel } from '../components/layout/ScreenLabel'
+import { SafeImage } from '../components/common/SafeImage'
 
 // "Who Says So?", reached from the Secrets category picker.
 //

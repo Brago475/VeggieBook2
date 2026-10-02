@@ -1,4 +1,4 @@
-import { NavBar } from '../components/NavBar'
+import { NavBar } from '../components/layout/NavBar'
 
 // Sits between choosing a category and the first secret, as in the
 // original app: "We are getting Breakfast Secrets. You can review each

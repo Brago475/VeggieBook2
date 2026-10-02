@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { BookCard } from '../components/BookCard'
-import { NavBar } from '../components/NavBar'
-import { SecretCoverOptions } from '../components/SecretCoverOptions'
+import { BookCard } from '../components/library/BookCard'
+import { NavBar } from '../components/layout/NavBar'
+import { SecretCoverOptions } from '../components/secrets/SecretCoverOptions'
 import type { SecretCategory } from '../types'
 
 // Last screen of a Secrets Book: pick the cover, then save the book.

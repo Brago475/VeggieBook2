@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowIcon } from '../components/AuthIcons'
-import { AuthPasswordField } from '../components/AuthPasswordField'
-import { AuthShell } from '../components/AuthShell'
-import { EmailField } from '../components/EmailField'
-import { GuestBooksChoice } from '../components/GuestBooksChoice'
+import { ArrowIcon } from '../components/icons/AuthIcons'
+import { AuthPasswordField } from '../components/forms/AuthPasswordField'
+import { AuthShell } from '../components/auth/AuthShell'
+import { EmailField } from '../components/forms/EmailField'
+import { GuestBooksChoice } from '../components/auth/GuestBooksChoice'
 
 // Sign in. Create Account has its own page (CreateAccount.tsx), since it
 // asks for much more.

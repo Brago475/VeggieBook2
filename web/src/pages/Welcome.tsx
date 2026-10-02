@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { ArrowIcon, LeafIcon } from '../components/AuthIcons'
-import { LeafDecor } from '../components/LeafDecor'
-import { SafeImage } from '../components/SafeImage'
-import { BowlIcon, OpenBookIcon, SproutIcon } from '../components/StepIcons'
+import { ArrowIcon, LeafIcon } from '../components/icons/AuthIcons'
+import { LeafDecor } from '../components/layout/LeafDecor'
+import { SafeImage } from '../components/common/SafeImage'
+import { BowlIcon, OpenBookIcon, SproutIcon } from '../components/icons/StepIcons'
 import { AUTH_PHOTO } from '../utils/authPhoto'
 import { coverSrc } from '../utils/coverSrc'
 

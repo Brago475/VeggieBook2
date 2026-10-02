@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { getProfile, notifyProfileChanged, saveProfile, type Profile } from '../utils/profileApi'
-import { checkName, checkUsername } from '../utils/signUpRules'
-import { PersonIcon } from './LibraryIcons'
+import { getProfile, notifyProfileChanged, saveProfile, type Profile } from '../../utils/profileApi'
+import { checkName, checkUsername } from '../../utils/signUpRules'
+import { PersonIcon } from '../icons/LibraryIcons'
 
 // Profile, at the top of account settings: first name, last name, and
 // username, which can be changed here. The email is shown but not changed.

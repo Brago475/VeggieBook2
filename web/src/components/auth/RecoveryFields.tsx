@@ -1,8 +1,8 @@
-import type { RecoveryQuestion } from '../utils/authApi'
-import { MAX_ANSWER, type RecoveryValue } from '../utils/recoveryRules'
-import { PillSelect } from './PillSelect'
-import { PinField } from './PinField'
-import { TextPillField } from './TextPillField'
+import type { RecoveryQuestion } from '../../utils/authApi'
+import { MAX_ANSWER, type RecoveryValue } from '../../utils/recoveryRules'
+import { PillSelect } from '../forms/PillSelect'
+import { PinField } from '../forms/PinField'
+import { TextPillField } from '../forms/TextPillField'
 
 // The PIN, confirm PIN, security question, and answer. Used on Create
 // Account and at the end of Forgot password.

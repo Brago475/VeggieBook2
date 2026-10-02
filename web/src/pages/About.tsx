@@ -5,8 +5,8 @@ import {
   PaperIcon,
   PhoneIcon,
   SchoolIcon,
-} from '../components/AboutIcons'
-import { LeafDecor } from '../components/LeafDecor'
+} from '../components/icons/AboutIcons'
+import { LeafDecor } from '../components/layout/LeafDecor'
 
 // About VeggieBook: who created the original app, who funded it, who built
 // the phone apps, how it was rebuilt at Kean, and where to read the

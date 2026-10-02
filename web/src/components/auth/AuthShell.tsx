@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { AUTH_PHOTO } from '../utils/authPhoto'
-import { coverSrc } from '../utils/coverSrc'
-import { SafeImage } from './SafeImage'
-import { BackArrowIcon } from './StepIcons'
+import { AUTH_PHOTO } from '../../utils/authPhoto'
+import { coverSrc } from '../../utils/coverSrc'
+import { SafeImage } from '../common/SafeImage'
+import { BackArrowIcon } from '../icons/StepIcons'
 
 // The frame every account screen shares: the photograph across the top,
 // Back riding over it in a white pill, and the logo under it. Sign in,

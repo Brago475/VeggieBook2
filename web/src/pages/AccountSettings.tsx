@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { SignOutIcon, UserIcon } from '../components/AccountIcons'
-import { ChangePasswordForm } from '../components/ChangePasswordForm'
-import { DeleteAccountForm } from '../components/DeleteAccountForm'
-import { LeafDecor } from '../components/LeafDecor'
-import { ProfileCard } from '../components/ProfileCard'
-import { RecoveryCard } from '../components/RecoveryCard'
+import { SignOutIcon, UserIcon } from '../components/icons/AccountIcons'
+import { ChangePasswordForm } from '../components/account/ChangePasswordForm'
+import { DeleteAccountForm } from '../components/account/DeleteAccountForm'
+import { LeafDecor } from '../components/layout/LeafDecor'
+import { ProfileCard } from '../components/account/ProfileCard'
+import { RecoveryCard } from '../components/account/RecoveryCard'
 
 // Profile and settings: the profile (name and username), change password,
 // password recovery (PIN and security question), delete account, and sign

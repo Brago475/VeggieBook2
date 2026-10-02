@@ -1,16 +1,16 @@
 import { useState } from 'react'
-import { SignOutIcon } from '../components/AccountIcons'
-import { ActionMenu } from '../components/ActionMenu'
-import { BookCard } from '../components/BookCard'
-import { ConfirmDialog } from '../components/ConfirmDialog'
+import { SignOutIcon } from '../components/icons/AccountIcons'
+import { ActionMenu } from '../components/common/ActionMenu'
+import { BookCard } from '../components/library/BookCard'
+import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import {
   ChevronRightIcon,
   InfoIcon,
   LockIcon,
   PersonIcon,
   PlusIcon,
-} from '../components/LibraryIcons'
-import { MainMenu, type MainMenuItem } from '../components/MainMenu'
+} from '../components/icons/LibraryIcons'
+import { MainMenu, type MainMenuItem } from '../components/library/MainMenu'
 import type { BookSummary, SecretCategory, Vegetable } from '../types'
 
 // Home screen: a heading that says who is using the site, the two create

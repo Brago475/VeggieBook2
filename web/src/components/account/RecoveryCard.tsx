@@ -1,21 +1,21 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useRecoveryQuestions } from '../hooks/useRecoveryQuestions'
+import { useRecoveryQuestions } from '../../hooks/useRecoveryQuestions'
 import {
   getRecoverySettings,
   saveRecoverySettings,
   type RecoverySettings,
-} from '../utils/authApi'
+} from '../../utils/authApi'
 import {
   checkRecovery,
   EMPTY_RECOVERY,
   MAX_ANSWER,
   toNewRecovery,
   type RecoveryValue,
-} from '../utils/recoveryRules'
-import { KeyIcon } from './LibraryIcons'
-import { PasswordField } from './PasswordField'
-import { PinField } from './PinField'
-import '../styles/recovery-card.css'
+} from '../../utils/recoveryRules'
+import { KeyIcon } from '../icons/LibraryIcons'
+import { PasswordField } from '../forms/PasswordField'
+import { PinField } from '../forms/PinField'
+import '../../styles/recovery-card.css'
 
 // Password recovery, on the account settings screen: shows whether a PIN
 // and security question are set, and which question, and lets the owner

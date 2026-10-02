@@ -1,6 +1,6 @@
-import { ChoiceRow } from '../components/ChoiceRow'
-import { NavBar } from '../components/NavBar'
-import { QuestionHero } from '../components/QuestionHero'
+import { ChoiceRow } from '../components/veggie/ChoiceRow'
+import { NavBar } from '../components/layout/NavBar'
+import { QuestionHero } from '../components/veggie/QuestionHero'
 import type { Question, Vegetable } from '../types'
 
 // Question text contains %s where the vegetable name belongs. The original

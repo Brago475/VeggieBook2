@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { BookCard } from '../components/BookCard'
-import { BookSkeleton } from '../components/BookSkeleton'
-import { NavBar } from '../components/NavBar'
-import { SecretCoverOptions } from '../components/SecretCoverOptions'
+import { BookCard } from '../components/library/BookCard'
+import { BookSkeleton } from '../components/library/BookSkeleton'
+import { NavBar } from '../components/layout/NavBar'
+import { SecretCoverOptions } from '../components/secrets/SecretCoverOptions'
 import { useSecretBook, type SavedSecretsBook } from '../hooks/useSecretBook'
 import type { CategorySecrets, Secret, SecretCategory } from '../types'
 

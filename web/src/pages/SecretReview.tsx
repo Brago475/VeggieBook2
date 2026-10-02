@@ -1,5 +1,5 @@
 import { useLayoutEffect } from 'react'
-import { SecretCard } from '../components/SecretCard'
+import { SecretCard } from '../components/secrets/SecretCard'
 import type { CategorySecrets } from '../types'
 
 // KEEP / DROP for a Secrets Book. One secret at a time, the same as the

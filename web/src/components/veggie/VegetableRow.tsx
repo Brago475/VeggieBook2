@@ -1,5 +1,5 @@
-import type { Vegetable } from '../types'
-import { SafeImage } from './SafeImage'
+import type { Vegetable } from '../../types'
+import { SafeImage } from '../common/SafeImage'
 
 // One row in the vegetable picker: thumbnail on the left, name on the right.
 // The whole row is a button so the tap target is the full width.

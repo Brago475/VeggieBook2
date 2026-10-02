@@ -1,4 +1,4 @@
-import { NavBar } from '../components/NavBar'
+import { NavBar } from '../components/layout/NavBar'
 
 // Sits between the last question and the recipe review, explaining what
 // KEEP and DROP mean before the user meets those buttons. The original app

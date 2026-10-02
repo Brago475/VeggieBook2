@@ -1,6 +1,6 @@
-import type { Secret } from '../types'
-import { RichText } from './RichText'
-import { SafeImage } from './SafeImage'
+import type { Secret } from '../../types'
+import { RichText } from '../common/RichText'
+import { SafeImage } from '../common/SafeImage'
 
 // One secret, as the review step and a saved Secrets Book show it. Matches
 // the original app's secret page (templates/secret_mobile_en.html in the

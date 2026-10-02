@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from 'react'
-import '../styles/pin-boxes.css'
+import '../../styles/pin-boxes.css'
 
 // A 6-digit PIN shown as six small squares.
 //

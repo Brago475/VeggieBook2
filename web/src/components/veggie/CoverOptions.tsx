@@ -1,9 +1,9 @@
 import { useState, type ChangeEvent } from 'react'
-import { useCovers } from '../hooks/useCovers'
-import type { Vegetable } from '../types'
-import { coverSrc } from '../utils/coverSrc'
-import { resizeImage } from '../utils/resizeImage'
-import '../styles/covers.css'
+import { useCovers } from '../../hooks/useCovers'
+import type { Vegetable } from '../../types'
+import { coverSrc } from '../../utils/coverSrc'
+import { resizeImage } from '../../utils/resizeImage'
+import '../../styles/covers.css'
 
 // The three ways to set a book's cover:
 //

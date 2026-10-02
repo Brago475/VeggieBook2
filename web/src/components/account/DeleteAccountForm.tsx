@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { TrashIcon } from './AccountIcons'
-import { PasswordField } from './PasswordField'
+import { TrashIcon } from '../icons/AccountIcons'
+import { PasswordField } from '../forms/PasswordField'
 
 // Delete account, on the account settings screen.
 //

@@ -1,5 +1,5 @@
-import { NavBar } from '../components/NavBar'
-import { SafeImage } from '../components/SafeImage'
+import { NavBar } from '../components/layout/NavBar'
+import { SafeImage } from '../components/common/SafeImage'
 import type { RecipeSummary } from '../types'
 
 // After the review, users mark any kept recipes they want an extra printed

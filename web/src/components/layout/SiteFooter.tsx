@@ -1,6 +1,6 @@
-import { BookSproutIcon } from './FooterIcons'
-import { LeafDecor } from './LeafDecor'
-import { ChevronRightIcon } from './LibraryIcons'
+import { BookSproutIcon } from '../icons/FooterIcons'
+import { LeafDecor } from '../layout/LeafDecor'
+import { ChevronRightIcon } from '../icons/LibraryIcons'
 
 // Footer for the main screens: Welcome, home, a saved book, account, About,
 // and the Terms and Privacy pages. One soft green card: an icon and title, a

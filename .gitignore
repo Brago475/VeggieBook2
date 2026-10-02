@@ -1,14 +1,45 @@
-.DS_Store
+# VeggieBook2: files that must never be committed.
+#
+# Secrets live only on the server, in .env, which docker-compose reads.
+# If you add a new secret, put it in .env and list the variable name (not
+# the value) in .env.example.
+
+# --- Secrets and local settings ---
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.*.local.json
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+.cloudflared/
+
+# --- Database dumps and backups (kept on the server, never in git) ---
+backups/
+*.dump
+*.sql.gz
+*.bak
+
+# --- Build output ---
 node_modules/
 dist/
 bin/
 obj/
-.env
-.env.local
+
+# --- Logs ---
+*.log
+npm-debug.log*
+
+# --- Editors and OS ---
+.DS_Store
 *.user
 .vs/
 .vscode/
 .idea/
-appsettings.Development.json
+
+# --- Local working folders ---
 _source/
 _out/

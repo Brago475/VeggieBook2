@@ -1,9 +1,9 @@
 import { useState, type ChangeEvent } from 'react'
-import { useSecretCovers } from '../hooks/useSecrets'
-import type { SecretCategory } from '../types'
-import { coverSrc } from '../utils/coverSrc'
-import { resizeImage } from '../utils/resizeImage'
-import '../styles/covers.css'
+import { useSecretCovers } from '../../hooks/useSecrets'
+import type { SecretCategory } from '../../types'
+import { coverSrc } from '../../utils/coverSrc'
+import { resizeImage } from '../../utils/resizeImage'
+import '../../styles/covers.css'
 
 // The three ways to set a Secrets Book's cover, the same three as a
 // VeggieBook's (CoverOptions), with the same buttons, chips and tiles:

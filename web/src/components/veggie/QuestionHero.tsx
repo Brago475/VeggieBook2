@@ -1,5 +1,5 @@
-import type { Vegetable } from '../types'
-import { SafeImage } from './SafeImage'
+import type { Vegetable } from '../../types'
+import { SafeImage } from '../common/SafeImage'
 
 // The vegetable photo banner shown above every question, with the name
 // overlaid at the bottom left. Matches the original app's question screens.

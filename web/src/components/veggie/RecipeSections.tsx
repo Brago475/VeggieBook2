@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import { SafeImage } from './SafeImage'
-import type { RecipeDetail } from '../types'
-import { coverSrc } from '../utils/coverSrc'
+import { SafeImage } from '../common/SafeImage'
+import type { RecipeDetail } from '../../types'
+import { coverSrc } from '../../utils/coverSrc'
 
 // The body of one recipe: Ingredients, Summary, Instructions, Notes, and
 // Photos, each in a green outlined box with a tab label, as the original

@@ -1,4 +1,4 @@
-import { MailIcon } from './AuthIcons'
+import { MailIcon } from '../icons/AuthIcons'
 
 // The email box used on every account screen.
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { MenuIcon } from './LibraryIcons'
+import { MenuIcon } from '../icons/LibraryIcons'
 
 // The ☰ Menu button on the home screen, and the list it opens.
 //

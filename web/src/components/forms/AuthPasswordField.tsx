@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { EyeIcon, LockIcon } from './AuthIcons'
+import { EyeIcon, LockIcon } from '../icons/AuthIcons'
 
 // The password box on the sign-in screens (sign in, create account, reset
 // password), in the rounded pill style those screens use. The account

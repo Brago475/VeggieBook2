@@ -1,4 +1,4 @@
-import { RecipeSkeleton } from '../components/RecipeSkeleton'
+import { RecipeSkeleton } from '../components/veggie/RecipeSkeleton'
 import type { BookFlowState } from '../hooks/useBookFlow'
 import type { Question, Vegetable } from '../types'
 import { CoverChooser } from './CoverChooser'

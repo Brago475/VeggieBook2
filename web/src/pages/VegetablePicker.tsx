@@ -1,5 +1,5 @@
-import { ScreenLabel } from '../components/ScreenLabel'
-import { VegetableRow } from '../components/VegetableRow'
+import { ScreenLabel } from '../components/layout/ScreenLabel'
+import { VegetableRow } from '../components/veggie/VegetableRow'
 import type { Vegetable } from '../types'
 
 type Props = {

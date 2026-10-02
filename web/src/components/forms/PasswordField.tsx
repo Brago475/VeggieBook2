@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { EyeIcon, EyeOffIcon } from './AccountIcons'
+import { EyeIcon, EyeOffIcon } from '../icons/AccountIcons'
 
 // A password input for the account screen cards.
 //
