@@ -1,7 +1,7 @@
 import { percent } from '../../utils/math'
 
-// One bar split into kept (green) and taken out later (orange), with the
-// two totals under it.
+// One row: a label, a bar split into kept (green) and taken out later
+// (orange), and the two counts.
 
 type Props = {
   label: string
@@ -13,27 +13,19 @@ export function KeptRemovedBar({ label, kept, removed }: Props) {
   const total = kept + removed
 
   return (
-    <div className="split">
-      <div className="split-head">
-        <span className="split-label">{label}</span>
-        {total > 0 && <span className="split-pct">{percent(kept, total)}% kept</span>}
-      </div>
-      <div className="split-bar">
+    <div className="split-row">
+      <span className="split-label">{label}</span>
+      <div className="bar split-bar">
         {total > 0 && (
           <>
-            <div className="split-kept" style={{ width: `${(kept / total) * 100}%` }} />
-            <div className="split-removed" style={{ width: `${(removed / total) * 100}%` }} />
+            <div className="bar-fill" style={{ width: `${percent(kept, total, 1)}%` }} />
+            <div className="bar-fill is-warn" style={{ width: `${percent(removed, total, 1)}%` }} />
           </>
         )}
       </div>
-      <div className="split-legend">
-        <span>
-          <span className="legend-dot is-kept" /> Kept <strong>{kept}</strong>
-        </span>
-        <span>
-          <span className="legend-dot is-removed" /> Taken out <strong>{removed}</strong>
-        </span>
-      </div>
+      <span className="split-counts">
+        {kept} kept, <span className="warn-text">{removed} taken out</span>
+      </span>
     </div>
   )
 }

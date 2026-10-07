@@ -13,9 +13,8 @@ import '../styles/analytics.css'
 
 // Analytics from the data the app already keeps: accounts and saved books.
 // Real accounts only; guests are left out. No account is named here.
-//
-// Split into tabs so each view shows one topic. Study tracking (time per
-// question, sessions) will add more once the IRB is approved.
+// Each tab is its own view. Study tracking will add more once the IRB is
+// approved.
 
 type AnalyticsTab = 'summary' | 'books' | 'answers' | 'people' | 'statistics'
 
@@ -63,13 +62,10 @@ export function Analytics() {
   return (
     <>
       <div className="page-head">
-        <div>
-          <h1 className="page-title">Analytics</h1>
-          <p className="muted">How VeggieBook is used, from saved books in real accounts.</p>
-        </div>
+        <h1 className="page-title">Analytics</h1>
         <div className="page-actions">
-          {data && <span className="meta-pill">Updated {formatDateTime(data.generatedAt)}</span>}
-          <button type="button" className="button-secondary icon-button" onClick={refresh} disabled={loading}>
+          {data && <span className="muted small">Updated {formatDateTime(data.generatedAt)}</span>}
+          <button type="button" className="button-secondary" onClick={refresh} disabled={loading}>
             <StatIcon name="refresh" size={16} />
             {loading ? 'Loading...' : 'Refresh'}
           </button>
@@ -78,23 +74,21 @@ export function Analytics() {
 
       <Tabs tabs={tabs} value={tab} onChange={setTab} label="Analytics views" />
 
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
+      <div className="tab-content">
+        {error && (
+          <p className="error" role="alert">
+            {error}
+          </p>
+        )}
 
-      {!data && !error && <p className="muted">Loading...</p>}
+        {!data && !error && <p className="muted">Loading...</p>}
 
-      {data && (
-        <div className="tab-content">
-          {tab === 'summary' && <SummaryTab data={data} onSeeBooks={() => setTab('books')} />}
-          {tab === 'books' && <BooksTab data={data} />}
-          {tab === 'answers' && <AnswersTab data={data} />}
-          {tab === 'people' && <PeopleTab data={data} />}
-          {tab === 'statistics' && <StatisticsTab data={data} />}
-        </div>
-      )}
+        {data && tab === 'summary' && <SummaryTab data={data} />}
+        {data && tab === 'books' && <BooksTab data={data} />}
+        {data && tab === 'answers' && <AnswersTab data={data} />}
+        {data && tab === 'people' && <PeopleTab data={data} />}
+        {data && tab === 'statistics' && <StatisticsTab data={data} />}
+      </div>
     </>
   )
 }

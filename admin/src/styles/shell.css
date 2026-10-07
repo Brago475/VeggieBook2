@@ -1,9 +1,8 @@
 /* The frame around every admin screen: sidebar, top bar on narrow screens,
    and the main area. See components/layout/AdminShell.tsx.
 
-   The root admin styles live here too, because this file is loaded on every
-   signed-in screen and gold is used in the sidebar, the accounts list, and
-   the account page. */
+   The root admin badge (muted gold) lives here because it is used in the
+   sidebar, the accounts list, and the account page. */
 
 .shell {
   display: flex;
@@ -18,13 +17,12 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  width: 264px;
+  width: 248px;
   height: 100vh;
-  padding: var(--sp-5) var(--sp-4);
+  padding: var(--sp-5) var(--sp-3);
   overflow-y: auto;
   background: var(--surface);
   border-right: 1px solid var(--line);
-  transition: width 0.2s ease;
 }
 
 .sidebar-brand {
@@ -35,56 +33,66 @@
 }
 
 .sidebar-logo {
-  width: 140px;
+  width: 124px;
   height: auto;
 }
 
 .sidebar-mark {
   display: none;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
 }
 
 .shell-badge {
-  padding: 3px 10px;
+  padding: 2px 8px;
   font-size: 12px;
-  font-weight: 700;
-  color: var(--green-deep);
+  font-weight: 600;
+  color: var(--green);
   background: var(--green-tint);
   border-radius: 999px;
 }
 
+.sidebar-toggle,
 .sidebar-close {
-  display: none;
+  display: flex;
   margin-left: auto;
-  padding: var(--sp-1);
+  padding: 6px;
   color: var(--muted);
   background: none;
   border: none;
+  border-radius: var(--r-sm);
   cursor: pointer;
+}
+
+.sidebar-toggle:hover,
+.sidebar-close:hover {
+  color: var(--ink);
+  background: var(--subtle);
+}
+
+.sidebar-close {
+  display: none;
 }
 
 .sidebar-nav {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--sp-5);
-  flex: 1;
 }
 
 .nav-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .nav-group-label {
-  margin: 0 0 var(--sp-2);
+  margin: 0 0 var(--sp-1);
   padding: 0 var(--sp-3);
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #9aa393;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .nav-item {
@@ -92,46 +100,45 @@
   align-items: center;
   gap: var(--sp-3);
   width: 100%;
-  min-height: 44px;
+  min-height: 40px;
   padding: 0 var(--sp-3);
   font: inherit;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
   text-align: left;
   background: none;
   border: none;
   border-radius: var(--r-md);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .nav-item svg {
   flex-shrink: 0;
-  color: var(--green-deep);
+  color: var(--muted);
 }
 
 .nav-item:hover {
-  background: var(--green-tint);
+  background: var(--subtle);
 }
 
 .nav-item.is-active {
+  font-weight: 600;
   color: #fff;
-  background: var(--green-deep);
-  box-shadow: 0 4px 12px rgba(47, 93, 47, 0.25);
+  background: var(--green);
 }
 
 .nav-item.is-active svg {
   color: #fff;
 }
 
-/* A section that isn't built yet: still clickable, but dimmed. */
+/* A section that isn't built yet: still clickable, but lighter. */
 .nav-item.is-soon {
-  color: #a3aa9c;
+  color: #a1a59f;
 }
 
 .nav-item.is-soon svg {
-  color: #b9bfb2;
+  color: #c2c5bf;
 }
 
 .nav-item:focus {
@@ -143,25 +150,15 @@
   outline-offset: 1px;
 }
 
-.collapse-button {
-  margin-top: var(--sp-5);
-  color: var(--muted);
-}
-
-.collapse-button svg {
-  color: var(--muted);
-}
-
 /* Signed-in account at the bottom */
 
 .sidebar-user {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  margin-top: var(--sp-2);
-  padding: var(--sp-3);
-  background: var(--page);
-  border-radius: var(--r-lg);
+  margin-top: var(--sp-5);
+  padding: var(--sp-3) var(--sp-2) 0;
+  border-top: 1px solid var(--line);
 }
 
 .avatar {
@@ -169,29 +166,23 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  font-weight: 800;
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  font-weight: 700;
   color: #fff;
-  background: var(--green-deep);
+  background: var(--green);
   border-radius: 999px;
-}
-
-.avatar.is-root {
-  background: var(--root);
 }
 
 .sidebar-user-text {
   display: flex;
   flex: 1;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
   min-width: 0;
 }
 
 .sidebar-email {
-  max-width: 100%;
   overflow: hidden;
   font-size: 13px;
   font-weight: 600;
@@ -207,7 +198,7 @@
 .signout-button {
   display: flex;
   flex-shrink: 0;
-  padding: var(--sp-2);
+  padding: 6px;
   color: var(--muted);
   background: none;
   border: none;
@@ -216,8 +207,8 @@
 }
 
 .signout-button:hover {
-  color: var(--green-deep);
-  background: var(--surface);
+  color: var(--ink);
+  background: var(--subtle);
 }
 
 .sidebar-backdrop {
@@ -229,6 +220,7 @@
 .shell-body {
   flex: 1;
   min-width: 0;
+  background: var(--page);
 }
 
 .topbar {
@@ -236,7 +228,7 @@
 }
 
 .shell-main {
-  max-width: 1100px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: var(--sp-6);
 }
@@ -245,15 +237,20 @@
 
 @media (min-width: 901px) {
   .shell.is-collapsed .sidebar {
-    width: 84px;
-    padding-left: var(--sp-3);
-    padding-right: var(--sp-3);
+    width: 72px;
+    padding-left: var(--sp-2);
+    padding-right: var(--sp-2);
   }
 
   .shell.is-collapsed .sidebar-brand {
-    justify-content: center;
+    flex-direction: column;
+    gap: var(--sp-3);
     padding-left: 0;
     padding-right: 0;
+  }
+
+  .shell.is-collapsed .sidebar-toggle {
+    margin-left: 0;
   }
 
   .shell.is-collapsed .sidebar-logo,
@@ -268,14 +265,9 @@
     display: block;
   }
 
-  .shell.is-collapsed .nav-group {
+  .shell.is-collapsed .nav-group + .nav-group {
     padding-top: var(--sp-3);
     border-top: 1px solid var(--line);
-  }
-
-  .shell.is-collapsed .nav-group:first-child {
-    padding-top: 0;
-    border-top: none;
   }
 
   .shell.is-collapsed .nav-item {
@@ -285,7 +277,8 @@
 
   .shell.is-collapsed .sidebar-user {
     flex-direction: column;
-    padding: var(--sp-2);
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 
@@ -298,19 +291,18 @@
     z-index: 50;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
-    box-shadow: 0 0 40px rgba(31, 42, 31, 0.15);
   }
 
   .sidebar.is-open {
     transform: translateX(0);
   }
 
-  .sidebar-close {
-    display: block;
+  .sidebar-toggle {
+    display: none;
   }
 
-  .collapse-button {
-    display: none;
+  .sidebar-close {
+    display: flex;
   }
 
   .sidebar-backdrop {
@@ -318,7 +310,7 @@
     inset: 0;
     z-index: 40;
     display: block;
-    background: rgba(31, 42, 31, 0.3);
+    background: rgba(31, 36, 33, 0.3);
   }
 
   .topbar {
@@ -336,15 +328,14 @@
   .menu-button {
     display: flex;
     padding: var(--sp-1);
-    color: var(--green-deep);
+    color: var(--ink);
     background: none;
     border: none;
     cursor: pointer;
   }
 
   .topbar-title {
-    font-weight: 700;
-    color: var(--green-deep);
+    font-weight: 600;
   }
 
   .shell-main {
@@ -353,13 +344,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sidebar,
-  .nav-item {
+  .sidebar {
     transition: none;
   }
 }
 
-/* Root admin: gold instead of green. */
+/* Root admin badge: muted gold, used nowhere else. */
 
 .shell-badge.is-root,
 .badge.is-root {
@@ -368,6 +358,6 @@
 }
 
 .root-text {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--root);
 }

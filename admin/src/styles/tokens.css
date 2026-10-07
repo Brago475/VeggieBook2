@@ -1,35 +1,37 @@
-/* Design tokens for the admin site. The greens match the public site
-   (web/src/styles/tokens.css) so both feel like one product.
+/* Design tokens for the admin site.
 
-   Gold marks the root admin, so it stands apart from the green used for
-   every other admin and from the orange used for warnings. */
+   One accent color: VeggieBook green, for active items, buttons, numbers,
+   bars, and links. Everything else is neutral: white, dark gray text, light
+   gray borders and secondary text. Orange is used only for warnings (such
+   as "taken out"). A muted gold is used only for the root admin badge. */
 
 :root {
-  --green-deep: #2f5d2f;
-  --green: #6fa32c;
+  --green: #2f5d2f;
+  --green-hover: #264c26;
   --green-light: #8cc63e;
-  --green-tint: #eef3e6;
-  --green-soft: #e3ecd6;
+  --green-tint: #eef3e8;
 
-  --root: #8a6400;
-  --root-tint: #fbf1d3;
-
-  --ink: #1f2a1f;
-  --muted: #6b7065;
-  --line: #e7ece0;
+  --ink: #1f2421;
+  --muted: #6b7069;
+  --line: #e5e7e3;
+  --bar-empty: #eceeea;
+  --subtle: #f6f7f5;
   --surface: #ffffff;
-  --page: #f6f8f2;
+  --page: #ffffff;
 
-  --warn: #b5541c;
-  --warn-tint: #fbeee5;
-  --error: #b42318;
+  --warn: #c2410c;
+  --warn-tint: #fdf1ea;
 
-  --shadow: 0 1px 2px rgba(31, 42, 31, 0.04), 0 6px 20px rgba(31, 42, 31, 0.05);
+  --root: #8a6a1f;
+  --root-tint: #f6efdc;
 
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 20px;
+  /* Older names still used by the Accounts screens. */
+  --green-deep: var(--green);
+  --error: var(--warn);
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 12px;
 
   --sp-1: 4px;
   --sp-2: 8px;

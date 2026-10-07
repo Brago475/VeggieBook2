@@ -1,9 +1,10 @@
 import type { AnalyticsData } from '../../../types/analytics'
+import { percent, plural } from '../../../utils/math'
+import { NumberCard } from '../../common/NumberCard'
 import { Panel } from '../../common/Panel'
 import { AgeChart } from '../AgeChart'
-import { RankedList } from '../RankedList'
 
-// Who uses the app, without naming anyone: age ranges and languages.
+// People: age ranges and languages, without naming anyone.
 
 type Props = {
   data: AnalyticsData
@@ -14,21 +15,24 @@ export function PeopleTab({ data }: Props) {
   const totalBooks = s.veggieBooks + s.secretsBooks
 
   return (
-    <div className="panel-grid">
-      <Panel icon="users" title="Age ranges">
+    <>
+      <Panel title="Age ranges">
         <AgeChart ageRanges={data.ageRanges} />
       </Panel>
 
-      <Panel icon="globe" title="Languages">
-        <RankedList
-          emptyText="No books yet."
-          total={totalBooks}
-          items={[
-            { key: 'en', label: 'English', count: s.englishBooks },
-            { key: 'es', label: 'Spanish', count: s.spanishBooks },
-          ]}
-        />
-      </Panel>
-    </div>
+      <section className="section">
+        <h2 className="section-title">Languages</h2>
+        <div className="card-grid cols-2">
+          <NumberCard
+            value={`${percent(s.englishBooks, totalBooks)}%`}
+            label={`English, ${plural(s.englishBooks, 'book')}`}
+          />
+          <NumberCard
+            value={`${percent(s.spanishBooks, totalBooks)}%`}
+            label={`Spanish, ${plural(s.spanishBooks, 'book')}`}
+          />
+        </div>
+      </section>
+    </>
   )
 }

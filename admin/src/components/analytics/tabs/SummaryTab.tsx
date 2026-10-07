@@ -1,77 +1,40 @@
 import type { AnalyticsData } from '../../../types/analytics'
+import { NumberCard } from '../../common/NumberCard'
 import { Panel } from '../../common/Panel'
-import { SeeAllButton } from '../../common/SeeAllButton'
 import { ActivityChart } from '../ActivityChart'
-import { CoverBreakdown } from '../CoverBreakdown'
 import { KeyFindings } from '../KeyFindings'
-import { KpiCard } from '../KpiCard'
-import { RankedList } from '../RankedList'
 
-// The first Analytics tab: headline numbers, findings, activity, top
-// vegetables, and covers. "See all" opens the Books tab.
+// Summary: four headline numbers, activity over 12 weeks, and six key
+// findings.
 
 type Props = {
   data: AnalyticsData
-  onSeeBooks: () => void
 }
 
-export function SummaryTab({ data, onSeeBooks }: Props) {
+export function SummaryTab({ data }: Props) {
   const s = data.summary
   const recipes = data.descriptives.find((d) => d.variable === 'Recipes per VeggieBook')
-  const recipesMean = recipes && recipes.mean !== null ? recipes.mean.toFixed(1) : 'n/a'
 
   return (
     <>
-      <div className="kpi-grid">
-        <KpiCard icon="users" label="Accounts" value={String(s.accounts)} />
-        <KpiCard icon="book" label="VeggieBooks" value={String(s.veggieBooks)} />
-        <KpiCard icon="sparkle" label="Secrets Books" value={String(s.secretsBooks)} />
-        <KpiCard icon="list" label="Avg. recipes per book" value={recipesMean} />
+      <div className="card-grid cols-4">
+        <NumberCard value={String(s.accounts)} label="Accounts" />
+        <NumberCard value={String(s.veggieBooks)} label="VeggieBooks" />
+        <NumberCard value={String(s.secretsBooks)} label="Secrets Books" />
+        <NumberCard
+          value={recipes && recipes.mean !== null ? recipes.mean.toFixed(1) : 'n/a'}
+          label="Avg. recipes per book"
+        />
       </div>
 
-      <div className="panel-grid">
-        <Panel icon="bulb" title="Key findings">
-          <KeyFindings data={data} />
-        </Panel>
+      <Panel title="Activity, last 12 weeks">
+        <ActivityChart weeks={data.weeks} />
+      </Panel>
 
-        <Panel icon="activity" title="Activity" aside={<span className="meta-pill">Last 12 weeks</span>}>
-          <ActivityChart weeks={data.weeks} />
-        </Panel>
-      </div>
-
-      <div className="panel-grid">
-        <Panel
-          icon="leaf"
-          title="Top vegetables"
-          description="Share of VeggieBooks for each vegetable."
-          aside={<SeeAllButton onClick={onSeeBooks} />}
-        >
-          <RankedList
-            emptyText="No VeggieBooks yet."
-            total={s.veggieBooks}
-            items={data.vegetables.slice(0, 5).map((v) => ({
-              key: v.code,
-              label: v.name,
-              image: v.image,
-              count: v.books,
-            }))}
-          />
-        </Panel>
-
-        <Panel
-          icon="camera"
-          title="Covers"
-          description="Built-in covers versus personal photos."
-          aside={<SeeAllButton onClick={onSeeBooks} />}
-        >
-          <CoverBreakdown
-            builtIn={s.builtInCovers}
-            personal={s.personalCovers}
-            topCovers={data.topCovers}
-            limit={5}
-          />
-        </Panel>
-      </div>
+      <section className="section">
+        <h2 className="section-title">Key findings</h2>
+        <KeyFindings data={data} />
+      </section>
     </>
   )
 }

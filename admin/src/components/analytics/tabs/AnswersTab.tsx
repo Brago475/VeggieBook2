@@ -6,8 +6,7 @@ import { TopAnswers } from '../TopAnswers'
 // How people answered the VeggieBook questions.
 //
 // Hidden questions are left out. The original app never showed them on
-// screen and set them itself, so no one can answer them and they would
-// always show 0.
+// screen and set them itself, so no one can answer them.
 
 type Props = {
   data: AnalyticsData
@@ -18,11 +17,11 @@ export function AnswersTab({ data }: Props) {
 
   return (
     <>
-      <Panel icon="chat" title="Answers by question" description="Pick a question to see how people answered.">
+      <Panel title="Answers by question">
         <QuestionExplorer questions={questions} />
       </Panel>
 
-      <Panel icon="chart" title="Most picked answers" description="Across every question.">
+      <Panel title="Most picked answers">
         <TopAnswers questions={questions} />
       </Panel>
     </>

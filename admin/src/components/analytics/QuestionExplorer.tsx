@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { QuestionStats } from '../../types/analytics'
 import { fillVegetable } from '../../utils/text'
-import { StatIcon } from '../icons/StatIcons'
 
 // Pick a question on the left, see its answers on the right. Percent is out
 // of all VeggieBooks; a book can pick more than one answer. Only questions
@@ -36,34 +35,34 @@ export function QuestionExplorer({ questions }: Props) {
             >
               <span className="q-num">{i + 1}</span>
               <span className="q-text">{fillVegetable(q.text)}</span>
-              <StatIcon name="chevron" size={16} />
             </button>
           </li>
         ))}
       </ol>
 
       <div className="q-detail">
-        <p className="eyebrow">Question {index + 1}</p>
-        <h3 className="q-title">{fillVegetable(selected.text)}</h3>
+        <h3 className="q-title">
+          {index + 1}. {fillVegetable(selected.text)}
+        </h3>
 
-        <div className="table-card">
+        <div className="table-wrap">
           <table className="data-table">
             <thead>
               <tr>
                 <th>Answer</th>
                 <th className="num">Count</th>
                 <th className="num">Percent</th>
-                <th className="rate-col">Response</th>
+                <th className="bar-col" aria-label="Bar" />
               </tr>
             </thead>
             <tbody>
               {rows.map((c, i) => (
-                <tr key={c.attribute} className={i === 0 && c.count > 0 ? 'is-top' : undefined}>
+                <tr key={c.attribute}>
                   <td>{fillVegetable(c.text)}</td>
                   <td className="num">{c.count}</td>
-                  <td className="num">{c.percent}%</td>
-                  <td className="rate-col">
-                    <div className="bar-track">
+                  <td className={i === 0 && c.count > 0 ? 'num strong' : 'num'}>{c.percent}%</td>
+                  <td className="bar-col">
+                    <div className="bar">
                       <div className="bar-fill" style={{ width: `${Math.min(c.percent, 100)}%` }} />
                     </div>
                   </td>

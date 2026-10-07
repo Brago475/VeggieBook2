@@ -1,17 +1,8 @@
 import type { DescriptiveRow } from '../../types/analytics'
-import { StatIcon, type StatIconName } from '../icons/StatIcons'
 
 // SPSS-style descriptive statistics. Standard deviation is the sample
 // standard deviation (N - 1), as SPSS reports it. "n/a" means there is not
 // enough data for that value.
-
-const icons: Record<string, StatIconName> = {
-  'Recipes per VeggieBook': 'book',
-  'Secrets per Secrets Book': 'sparkle',
-  'Answers per VeggieBook': 'chat',
-  'Books per account': 'users',
-  'Extra copies per book': 'copy',
-}
 
 function show(value: number | null) {
   return value === null ? 'n/a' : value.toFixed(2)
@@ -23,7 +14,7 @@ type Props = {
 
 export function DescriptivesTable({ rows }: Props) {
   return (
-    <div className="table-card">
+    <div className="table-wrap">
       <table className="data-table">
         <thead>
           <tr>
@@ -39,16 +30,9 @@ export function DescriptivesTable({ rows }: Props) {
         <tbody>
           {rows.map((r) => (
             <tr key={r.variable}>
-              <td>
-                <span className="var-cell">
-                  <span className="var-icon">
-                    <StatIcon name={icons[r.variable] ?? 'chart'} size={16} />
-                  </span>
-                  {r.variable}
-                </span>
-              </td>
+              <td>{r.variable}</td>
               <td className="num">{r.n}</td>
-              <td className="num">{show(r.mean)}</td>
+              <td className="num strong">{show(r.mean)}</td>
               <td className="num">{show(r.median)}</td>
               <td className="num">{show(r.sd)}</td>
               <td className="num">{r.min === null ? 'n/a' : r.min}</td>

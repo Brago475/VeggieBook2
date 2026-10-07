@@ -6,12 +6,11 @@ import '../../styles/shell.css'
 // The frame around every admin screen: the sidebar with every section, the
 // signed-in account, and Sign out.
 //
-// Wide screens: the sidebar can be collapsed to icons only. The choice is
-// kept in this browser only (localStorage). If storage isn't available, it
-// simply starts open.
-// Narrow screens: the sidebar hides, and the menu button slides it in.
-//
-// Gold marks the root admin (badge and avatar); every other admin is green.
+// Wide screens: the button next to the logo collapses the sidebar to icons
+// and opens it again. The choice is kept in this browser (localStorage); if
+// storage isn't available, the sidebar simply starts open.
+// Narrow screens: the sidebar hides, the menu button opens it, and the X
+// closes it.
 
 export type { AdminTab }
 
@@ -62,6 +61,15 @@ export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: P
           <span className={isRoot ? 'shell-badge is-root' : 'shell-badge'}>Admin</span>
           <button
             type="button"
+            className="sidebar-toggle"
+            aria-label={collapsed ? 'Open sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Open sidebar' : 'Collapse sidebar'}
+            onClick={toggleCollapsed}
+          >
+            <NavIcon name={collapsed ? 'expand' : 'collapse'} />
+          </button>
+          <button
+            type="button"
             className="sidebar-close"
             aria-label="Close menu"
             onClick={() => setMenuOpen(false)}
@@ -96,19 +104,8 @@ export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: P
           ))}
         </nav>
 
-        <button
-          type="button"
-          className="nav-item collapse-button"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          title={collapsed ? 'Expand sidebar' : undefined}
-          onClick={toggleCollapsed}
-        >
-          <NavIcon name={collapsed ? 'expand' : 'collapse'} />
-          <span className="nav-text">Collapse</span>
-        </button>
-
         <div className="sidebar-user">
-          <span className={isRoot ? 'avatar is-root' : 'avatar'} aria-hidden="true">
+          <span className="avatar" aria-hidden="true">
             {email.charAt(0).toUpperCase()}
           </span>
           <div className="sidebar-user-text">

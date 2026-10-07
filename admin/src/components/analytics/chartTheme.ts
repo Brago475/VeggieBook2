@@ -1,19 +1,17 @@
-// Chart colors. Written out as hex because chart libraries draw SVG
-// attributes, which can't read the CSS variables in tokens.css. Keep these
-// matching those tokens.
+// Chart colors, written out because chart libraries draw SVG attributes,
+// which can't read CSS variables. Green for data, grays for everything
+// else, matching tokens.css.
 
 export const chart = {
-  deep: '#2f5d2f',
-  green: '#6fa32c',
-  light: '#8cc63e',
-  pale: '#cfe3b4',
-  gold: '#c99a1c',
-  axis: '#6b7065',
-  grid: '#e8ede1',
+  green: '#2f5d2f',
+  greenLight: '#8cc63e',
+  gray: '#a1a59f',
+  axis: '#6b7069',
+  grid: '#eceeea',
 }
 
 export const tooltipStyle = {
-  borderRadius: 12,
-  border: '1px solid #dfe5d6',
+  borderRadius: 10,
+  border: '1px solid #e5e7e3',
   fontSize: 13,
 }
