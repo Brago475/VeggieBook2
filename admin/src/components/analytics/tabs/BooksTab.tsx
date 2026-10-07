@@ -1,21 +1,31 @@
+import { useCallback, useState } from 'react'
 import type { AnalyticsData } from '../../../types/analytics'
 import { percent, plural } from '../../../utils/math'
 import { NumberCard } from '../../common/NumberCard'
 import { Panel } from '../../common/Panel'
+import { ContentDrawer } from '../../content/ContentDrawer'
+import { RecipeView } from '../../content/RecipeView'
+import { SecretView } from '../../content/SecretView'
 import { KeptRemovedBar } from '../KeptRemovedBar'
 import { PictureGrid } from '../PictureGrid'
 
 // Books: what was picked, what was kept, covers, and what was taken out.
+// A kept recipe or secret opens in a side panel when clicked.
 
 type Props = {
   data: AnalyticsData
 }
+
+type Opened = { kind: 'recipe' | 'secret'; id: number } | null
 
 function relative(count: number, max: number) {
   return max === 0 ? 0 : (count / max) * 100
 }
 
 export function BooksTab({ data }: Props) {
+  const [opened, setOpened] = useState<Opened>(null)
+  const close = useCallback(() => setOpened(null), [])
+
   const s = data.summary
   const totalBooks = s.veggieBooks + s.secretsBooks
   const maxRecipe = Math.max(0, ...data.topRecipes.map((r) => r.kept))
@@ -58,6 +68,7 @@ export function BooksTab({ data }: Props) {
         <h2 className="section-title">Most kept recipes</h2>
         <PictureGrid
           emptyText="No recipes kept yet."
+          onSelect={(key) => setOpened({ kind: 'recipe', id: Number(key) })}
           items={data.topRecipes.map((r) => ({
             key: String(r.id),
             image: r.photo,
@@ -75,6 +86,7 @@ export function BooksTab({ data }: Props) {
         <h2 className="section-title">Most kept secrets</h2>
         <PictureGrid
           emptyText="No secrets kept yet."
+          onSelect={(key) => setOpened({ kind: 'secret', id: Number(key) })}
           items={data.topSecrets.map((t) => ({
             key: String(t.id),
             image: t.image,
@@ -123,6 +135,12 @@ export function BooksTab({ data }: Props) {
           <KeptRemovedBar label="Secrets" kept={s.secretsKept} removed={s.secretsRemoved} />
         </div>
       </Panel>
+
+      {opened && (
+        <ContentDrawer label={opened.kind === 'recipe' ? 'Recipe' : 'Secret'} onClose={close}>
+          {opened.kind === 'recipe' ? <RecipeView id={opened.id} /> : <SecretView id={opened.id} />}
+        </ContentDrawer>
+      )}
     </>
   )
 }

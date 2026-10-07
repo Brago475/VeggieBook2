@@ -1,0 +1,204 @@
+/* Opening a recipe or secret: the side panel, what's inside it, and the
+   clickable picture cards that open it. See components/content/. */
+
+/* Clickable picture cards */
+
+.picture-card.is-clickable {
+  width: 100%;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.picture-card.is-clickable:hover .picture-img {
+  border-color: var(--green);
+}
+
+.picture-card.is-clickable:hover .picture-title {
+  color: var(--green);
+}
+
+.picture-card.is-clickable:focus {
+  outline: none;
+}
+
+.picture-card.is-clickable:focus-visible .picture-img {
+  outline: 2px solid var(--green-light);
+  outline-offset: 2px;
+}
+
+/* Side panel */
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(31, 36, 33, 0.3);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  width: min(620px, 100%);
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+}
+
+.drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.drawer-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.drawer-close {
+  display: flex;
+  padding: 6px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.drawer-close:hover {
+  color: var(--ink);
+  background: var(--subtle);
+}
+
+.drawer-body {
+  flex: 1;
+  padding: var(--sp-5);
+  overflow-y: auto;
+}
+
+/* Recipe and secret content */
+
+.content-view {
+  display: flex;
+  flex-direction: column;
+}
+
+.content-hero {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  margin-bottom: var(--sp-4);
+  border-radius: var(--r-lg);
+}
+
+.content-figure {
+  width: 100%;
+  height: auto;
+  margin: var(--sp-2) 0 var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.content-meta {
+  margin: 0 0 var(--sp-1);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.content-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.content-lead {
+  margin: var(--sp-3) 0 0;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.content-text {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.content-section {
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+
+.content-section-title {
+  margin: 0 0 var(--sp-3);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.content-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3) var(--sp-5);
+  margin: 0;
+}
+
+.content-facts dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.content-facts dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+
+.content-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding-left: var(--sp-5);
+  line-height: 1.55;
+}
+
+.content-list a {
+  font-weight: 600;
+  color: var(--green);
+}
+
+.content-photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.content-photos img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--r-lg);
+}
+
+@media (max-width: 560px) {
+  .drawer-body {
+    padding: var(--sp-4);
+  }
+
+  .content-facts,
+  .content-photos {
+    grid-template-columns: 1fr;
+  }
+}
