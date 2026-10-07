@@ -6,13 +6,24 @@ import '../../styles/shell.css'
 // The frame around every admin screen: the sidebar with every section, the
 // signed-in account, and Sign out.
 //
-// On a wide screen the sidebar is always shown. On a narrow one it hides,
-// and the menu button in the top bar slides it in. Sections that are not
-// built yet are dimmed but still open their "coming" page.
+// Wide screens: the sidebar can be collapsed to icons only. The choice is
+// kept in this browser only (localStorage). If storage isn't available, it
+// simply starts open.
+// Narrow screens: the sidebar hides, and the menu button slides it in.
 //
 // Gold marks the root admin (badge and avatar); every other admin is green.
 
 export type { AdminTab }
+
+const STORAGE_KEY = 'vb2-admin-sidebar'
+
+function readCollapsed(): boolean {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === 'collapsed'
+  } catch {
+    return false
+  }
+}
 
 type Props = {
   email: string
@@ -25,17 +36,29 @@ type Props = {
 
 export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(readCollapsed)
 
   function choose(next: AdminTab) {
     onTab(next)
     setMenuOpen(false)
   }
 
+  function toggleCollapsed() {
+    const next = !collapsed
+    setCollapsed(next)
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next ? 'collapsed' : 'open')
+    } catch {
+      // Storage not available; the choice lasts until the page reloads.
+    }
+  }
+
   return (
-    <div className="shell">
+    <div className={collapsed ? 'shell is-collapsed' : 'shell'}>
       <aside className={menuOpen ? 'sidebar is-open' : 'sidebar'}>
         <div className="sidebar-brand">
           <img className="sidebar-logo" src="/brand/logo-positive-en.png" alt="VeggieBook" />
+          <img className="sidebar-mark" src="/LogoVB2.png" alt="VeggieBook" />
           <span className={isRoot ? 'shell-badge is-root' : 'shell-badge'}>Admin</span>
           <button
             type="button"
@@ -61,16 +84,28 @@ export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: P
                     type="button"
                     className={classes.join(' ')}
                     aria-current={item.id === tab ? 'page' : undefined}
+                    title={collapsed ? item.label : undefined}
                     onClick={() => choose(item.id)}
                   >
                     <NavIcon name={item.icon} />
-                    <span>{item.label}</span>
+                    <span className="nav-text">{item.label}</span>
                   </button>
                 )
               })}
             </div>
           ))}
         </nav>
+
+        <button
+          type="button"
+          className="nav-item collapse-button"
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? 'Expand sidebar' : undefined}
+          onClick={toggleCollapsed}
+        >
+          <NavIcon name={collapsed ? 'expand' : 'collapse'} />
+          <span className="nav-text">Collapse</span>
+        </button>
 
         <div className="sidebar-user">
           <span className={isRoot ? 'avatar is-root' : 'avatar'} aria-hidden="true">

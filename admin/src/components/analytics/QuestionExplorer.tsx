@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import type { QuestionStats } from '../../types/analytics'
+import { fillVegetable } from '../../utils/text'
+import { StatIcon } from '../icons/StatIcons'
 
-// Pick a question on the left, see its answers on the right as a
-// frequency table (answer, count, percent). Percentages are out of all
-// VeggieBooks; a book can pick more than one answer.
+// Pick a question on the left, see its answers on the right. Percent is out
+// of all VeggieBooks; a book can pick more than one answer. Only questions
+// shown to users are passed in (see AnswersTab).
 
 type Props = {
   questions: QuestionStats[]
@@ -21,47 +23,48 @@ export function QuestionExplorer({ questions }: Props) {
   if (!selected) return <p className="muted">No questions found.</p>
 
   const rows = [...selected.choices].sort((a, b) => b.count - a.count)
-  const max = Math.max(1, ...rows.map((r) => r.count))
 
   return (
     <div className="explorer">
-      <ul className="explorer-list">
+      <ol className="q-list">
         {questions.map((q, i) => (
           <li key={q.id}>
             <button
               type="button"
-              className={q.id === selected.id ? 'explorer-item is-active' : 'explorer-item'}
+              className={q.id === selected.id ? 'q-item is-active' : 'q-item'}
               onClick={() => setSelectedId(q.id)}
             >
-              <span className="explorer-num">{i + 1}</span>
-              <span className="explorer-text">{q.text}</span>
+              <span className="q-num">{i + 1}</span>
+              <span className="q-text">{fillVegetable(q.text)}</span>
+              <StatIcon name="chevron" size={16} />
             </button>
           </li>
         ))}
-      </ul>
+      </ol>
 
-      <div className="explorer-detail">
-        <h3 className="explorer-question">{selected.text}</h3>
+      <div className="q-detail">
+        <p className="eyebrow">Question {index + 1}</p>
+        <h3 className="q-title">{fillVegetable(selected.text)}</h3>
 
-        <div className="stats-wrap">
-          <table className="freq-table">
+        <div className="table-card">
+          <table className="data-table">
             <thead>
               <tr>
                 <th>Answer</th>
-                <th>Count</th>
-                <th>Percent</th>
-                <th aria-label="Bar" />
+                <th className="num">Count</th>
+                <th className="num">Percent</th>
+                <th className="rate-col">Response</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((c, i) => (
                 <tr key={c.attribute} className={i === 0 && c.count > 0 ? 'is-top' : undefined}>
-                  <td>{c.text}</td>
-                  <td>{c.count}</td>
-                  <td>{c.percent}%</td>
-                  <td className="freq-bar-cell">
+                  <td>{fillVegetable(c.text)}</td>
+                  <td className="num">{c.count}</td>
+                  <td className="num">{c.percent}%</td>
+                  <td className="rate-col">
                     <div className="bar-track">
-                      <div className="bar-fill" style={{ width: `${(c.count / max) * 100}%` }} />
+                      <div className="bar-fill" style={{ width: `${Math.min(c.percent, 100)}%` }} />
                     </div>
                   </td>
                 </tr>

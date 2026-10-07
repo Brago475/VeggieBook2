@@ -1,5 +1,5 @@
-// Icons for the analytics screens: number cards and panel headers. Inline
-// SVG, the same style as NavIcons.tsx, taking the text color.
+// Icons for the analytics screens: number cards, panel headers, and table
+// rows. Inline SVG, the same style as NavIcons.tsx, taking the text color.
 
 export type StatIconName =
   | 'users'
@@ -18,6 +18,12 @@ export type StatIconName =
   | 'chart'
   | 'swap'
   | 'chevron'
+  | 'chat'
+  | 'target'
+  | 'lock'
+  | 'copy'
+  | 'trash'
+  | 'flask'
 
 const paths: Record<StatIconName, React.ReactNode> = {
   users: (
@@ -125,6 +131,42 @@ const paths: Record<StatIconName, React.ReactNode> = {
     </>
   ),
   chevron: <path d="m9 6 6 6-6 6" />,
+  chat: <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />,
+  target: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
+      <circle cx="12" cy="12" r="1" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </>
+  ),
+  copy: (
+    <>
+      <rect x="8" y="8" width="13" height="13" rx="2" />
+      <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+      <path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+      <path d="M9 7V4h6v3" />
+    </>
+  ),
+  flask: (
+    <>
+      <path d="M9 3h6" />
+      <path d="M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2h12.4a1.5 1.5 0 0 0 1.3-2L14 9V3" />
+      <path d="M7 15h10" />
+    </>
+  ),
 }
 
 type Props = {

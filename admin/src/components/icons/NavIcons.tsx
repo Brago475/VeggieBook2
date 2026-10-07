@@ -15,6 +15,8 @@ export type IconName =
   | 'menu'
   | 'close'
   | 'signout'
+  | 'collapse'
+  | 'expand'
 
 const paths: Record<IconName, React.ReactNode> = {
   home: (
@@ -91,6 +93,20 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4" />
       <path d="M10 16l-4-4 4-4" />
       <path d="M6 12h10" />
+    </>
+  ),
+  collapse: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+      <path d="m16 10-2 2 2 2" />
+    </>
+  ),
+  expand: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+      <path d="m14 10 2 2-2 2" />
     </>
   ),
 }

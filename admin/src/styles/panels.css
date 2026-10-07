@@ -54,22 +54,11 @@
   padding: var(--sp-2) var(--sp-5) var(--sp-5);
 }
 
-/* Two panels side by side, one column on narrow screens. */
+/* Panels always stack, one under another. The class stays so screens that
+   group panels keep their spacing. */
 .panel-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sp-5);
-  margin-top: var(--sp-5);
-}
-
-.panel-grid > .panel {
-  margin-top: 0;
-}
-
-@media (max-width: 1100px) {
-  .panel-grid {
-    grid-template-columns: 1fr;
-  }
+  display: flex;
+  flex-direction: column;
 }
 
 /* "See all" pill */
