@@ -16,6 +16,8 @@ namespace VeggieBook.Api.Admin;
 //                                         owner failed their security question
 //
 // Admins only (Roles.AdminPolicy). Guests never appear here.
+// Giving and removing the Admin role: AdminRolesController.
+// An account's books: AdminBooksController.
 //
 // What the admin can see, by design: email (only as the account's label, so
 // a locked-out user can be found), username, role, age range, dates, and
@@ -30,8 +32,10 @@ namespace VeggieBook.Api.Admin;
 [ApiController]
 [Route("api/admin/accounts")]
 [Authorize(Policy = Roles.AdminPolicy)]
-public class AdminAccountsController(AccountsContext db, UserManager<AppUser> users)
-    : ControllerBase
+public class AdminAccountsController(
+    AccountsContext db,
+    UserManager<AppUser> users,
+    IConfiguration config) : ControllerBase
 {
     private const int MaxResults = 25;
     private const int MaxSearchLength = 256;
@@ -112,6 +116,7 @@ public class AdminAccountsController(AccountsContext db, UserManager<AppUser> us
             email = account.Email,
             username = account.DisplayName,
             roles,
+            isRootAdmin = AdminRules.IsRoot(config, account.Email),
             ageRange = account.AgeRange,
             createdAt = account.CreatedAt,
             termsVersion = account.TermsVersion,
@@ -121,7 +126,7 @@ public class AdminAccountsController(AccountsContext db, UserManager<AppUser> us
             // admin can clear it (below).
             recoveryLockedAt = account.RecoveryLockedAt,
             // Sign-in locked for 15 minutes after 5 wrong passwords. Clears on
-            // its own, so the admin page only shows it.
+            // its own, so the admin site only shows it.
             signInLockedUntil = account.LockoutEnd > now ? account.LockoutEnd : null
         });
     }
