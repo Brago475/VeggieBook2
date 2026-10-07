@@ -1,10 +1,9 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { ComingSoon } from './components/common/ComingSoon'
 import { AdminShell } from './components/layout/AdminShell'
 import type { AdminTab } from './components/layout/navigation'
 import { useSession } from './hooks/useSession'
 import { Accounts } from './pages/Accounts'
-import { Analytics } from './pages/Analytics'
 import { Overview } from './pages/Overview'
 import { SignIn } from './pages/SignIn'
 
@@ -18,6 +17,13 @@ import { SignIn } from './pages/SignIn'
 // Screens are switched with a tab in state rather than a router. Sections
 // that are not built yet describe what is coming (see
 // components/layout/navigation.ts for which ones are ready).
+//
+// Analytics is loaded only when it is opened. It carries the chart library,
+// which is most of the site's size, so the other screens don't wait for it.
+
+const Analytics = lazy(() =>
+  import('./pages/Analytics').then((m) => ({ default: m.Analytics })),
+)
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
   studies: {
@@ -69,7 +75,11 @@ export function App() {
       onSignOut={signOut}
     >
       {tab === 'overview' && <Overview />}
-      {tab === 'analytics' && <Analytics />}
+      {tab === 'analytics' && (
+        <Suspense fallback={<p className="muted">Loading...</p>}>
+          <Analytics />
+        </Suspense>
+      )}
       {tab === 'accounts' && <Accounts currentEmail={session.email} />}
       {soon && <ComingSoon title={soon.title} text={soon.text} />}
     </AdminShell>
