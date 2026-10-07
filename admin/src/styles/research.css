@@ -1,0 +1,195 @@
+/* The Research page. Shared blocks (panels, tabs, cards, tables, bars)
+   are in panels.css; this file has only what is specific to Research.
+   The page header classes come from analytics.css. */
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+.page-head .page-title {
+  margin: 0;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.tab-content {
+  margin-top: var(--sp-5);
+}
+
+/* Filters */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 150px;
+}
+
+.filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.filter input,
+.filter select,
+.question-select {
+  padding: 9px var(--sp-3);
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.filter input:disabled,
+.filter select:disabled {
+  color: var(--muted);
+  background: var(--subtle);
+}
+
+.filter-reset {
+  margin-left: auto;
+}
+
+/* Which sheet */
+
+.sheet-switch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.switch-option {
+  padding: 8px var(--sp-4);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.switch-option.is-active {
+  color: #fff;
+  background: var(--green);
+  border-color: var(--green);
+}
+
+/* Downloads */
+
+.downloads {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.downloads .button-secondary {
+  padding: 6px var(--sp-3);
+  text-decoration: none;
+}
+
+/* The sheet: fixed header, fixed first column, scrolls both ways. */
+
+.sheet-scroll {
+  max-height: 560px;
+  overflow: auto;
+}
+
+.sheet-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.sheet-table td,
+.sheet-table th {
+  white-space: nowrap;
+}
+
+.sheet-table th:first-child,
+.sheet-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  font-weight: 600;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+
+.sheet-table th:first-child {
+  z-index: 3;
+  background: var(--subtle);
+}
+
+.empty-cell::before {
+  content: '';
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-top: var(--sp-4);
+}
+
+.pager-buttons {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+/* Questions */
+
+.question-label {
+  margin: 0 0 var(--sp-1);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.crosstab th .crosstab-n {
+  display: block;
+  font-weight: 400;
+}
+
+.crosstab td {
+  white-space: nowrap;
+}
+
+.studies-plan {
+  margin-top: var(--sp-4);
+}
+
+@media (max-width: 640px) {
+  .filter {
+    flex: 1 1 140px;
+  }
+
+  .filter-reset {
+    margin-left: 0;
+  }
+}

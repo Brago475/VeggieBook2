@@ -2,20 +2,14 @@ import type { IconName } from '../icons/NavIcons'
 
 // Every section of the admin site, in sidebar order.
 //
-// `ready` marks the sections that are built. The rest show a "Soon" tag in
-// the sidebar and a short description of what is coming. When a section is
+// `ready` marks the sections that are built. The rest are dimmed in the
+// sidebar and show a short description of what is coming. When a section is
 // built, set ready to true and add its page in App.tsx.
+//
+// Research combines what were planned as Studies, Questions, Answers, and
+// SPSS Data: one page with the anonymous research sheets.
 
-export type AdminTab =
-  | 'overview'
-  | 'analytics'
-  | 'accounts'
-  | 'studies'
-  | 'questions'
-  | 'answers'
-  | 'spss'
-  | 'reports'
-  | 'system'
+export type AdminTab = 'overview' | 'analytics' | 'accounts' | 'research' | 'reports' | 'system'
 
 export type NavItem = {
   id: AdminTab
@@ -44,10 +38,7 @@ export const navGroups: NavGroup[] = [
   {
     label: 'Research',
     items: [
-      { id: 'studies', label: 'Studies', icon: 'book', ready: false },
-      { id: 'questions', label: 'Questions', icon: 'question', ready: false },
-      { id: 'answers', label: 'Answers', icon: 'answers', ready: false },
-      { id: 'spss', label: 'SPSS Data', icon: 'table', ready: false },
+      { id: 'research', label: 'Research', icon: 'table', ready: true },
       { id: 'reports', label: 'Reports', icon: 'report', ready: false },
     ],
   },
