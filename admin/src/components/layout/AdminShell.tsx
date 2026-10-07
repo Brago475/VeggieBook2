@@ -2,7 +2,8 @@ import type { ReactNode } from 'react'
 import '../../styles/shell.css'
 
 // The frame around every admin screen: the title, the tabs, who is signed
-// in, and Sign out.
+// in, and Sign out. The Admin badge is gold for the root admin and green
+// for every other admin.
 
 export type AdminTab = 'overview' | 'accounts' | 'studies' | 'reports'
 
@@ -15,19 +16,20 @@ const tabs: { id: AdminTab; label: string }[] = [
 
 type Props = {
   email: string
+  isRoot: boolean
   tab: AdminTab
   onTab: (tab: AdminTab) => void
   onSignOut: () => Promise<void>
   children: ReactNode
 }
 
-export function AdminShell({ email, tab, onTab, onSignOut, children }: Props) {
+export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: Props) {
   return (
     <div className="shell">
       <header className="shell-header">
         <div className="shell-brand">
           <span className="shell-title">VeggieBook</span>
-          <span className="shell-badge">Admin</span>
+          <span className={isRoot ? 'shell-badge is-root' : 'shell-badge'}>Admin</span>
         </div>
 
         <nav className="shell-tabs" aria-label="Admin sections">

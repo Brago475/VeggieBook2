@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Me } from '../types/admin'
+import type { AdminSessionInfo, Me } from '../types/admin'
 import { api } from '../utils/api'
 
 // Who is signed in to the admin site.
@@ -7,16 +7,24 @@ import { api } from '../utils/api'
 // Only an account with the Admin role counts as signed in here. If someone
 // without it signs in, they are signed straight back out, so a normal user's
 // session never stays open on the admin site.
+//
+// Once an admin is confirmed, /api/admin/session says whether they are the
+// root admin, which the header shows with its own badge color.
 
 export type Session =
   | { status: 'loading' }
   | { status: 'signedOut' }
-  | { status: 'admin'; email: string }
+  | { status: 'admin'; email: string; isRoot: boolean }
 
 const NotAdmin = 'This account does not have admin access.'
 
 function isAdmin(me: Me) {
   return me.email !== null && me.roles.includes('Admin')
+}
+
+async function loadAdmin(): Promise<Session> {
+  const info = await api<AdminSessionInfo>('/admin/session')
+  return { status: 'admin', email: info.email, isRoot: info.isRootAdmin }
 }
 
 export function useSession() {
@@ -26,9 +34,9 @@ export function useSession() {
     let cancelled = false
 
     api<Me>('/auth/me')
-      .then((me) => {
-        if (cancelled) return
-        setSession(isAdmin(me) ? { status: 'admin', email: me.email! } : { status: 'signedOut' })
+      .then((me) => (isAdmin(me) ? loadAdmin() : ({ status: 'signedOut' } as Session)))
+      .then((s) => {
+        if (!cancelled) setSession(s)
       })
       .catch(() => {
         if (!cancelled) setSession({ status: 'signedOut' })
@@ -50,7 +58,7 @@ export function useSession() {
       throw new Error(NotAdmin)
     }
 
-    setSession({ status: 'admin', email: me.email! })
+    setSession(await loadAdmin())
   }, [])
 
   const signOut = useCallback(async () => {

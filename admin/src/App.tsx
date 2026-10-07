@@ -30,7 +30,13 @@ export function App() {
   }
 
   return (
-    <AdminShell email={session.email} tab={tab} onTab={setTab} onSignOut={signOut}>
+    <AdminShell
+      email={session.email}
+      isRoot={session.isRoot}
+      tab={tab}
+      onTab={setTab}
+      onSignOut={signOut}
+    >
       {tab === 'overview' && <Overview />}
       {tab === 'accounts' && <Accounts currentEmail={session.email} />}
       {tab === 'studies' && (

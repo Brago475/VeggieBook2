@@ -1,11 +1,17 @@
 /* Design tokens for the admin site. The greens match the public site
-   (web/src/styles/tokens.css) so both feel like one product. */
+   (web/src/styles/tokens.css) so both feel like one product.
+
+   Gold marks the root admin, so it stands apart from the green used for
+   every other admin and from the orange used for warnings. */
 
 :root {
   --green-deep: #2f5d2f;
   --green: #6fa32c;
   --green-light: #8cc63e;
   --green-tint: #eef3e6;
+
+  --root: #8a6400;
+  --root-tint: #fbf1d3;
 
   --ink: #1f2a1f;
   --muted: #6b7065;

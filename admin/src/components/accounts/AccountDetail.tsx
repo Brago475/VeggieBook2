@@ -9,6 +9,9 @@ import { BookCard } from './BookCard'
 //
 // Never shown here, because the API never sends them: first and last name,
 // password, recovery PIN, security question and answer, and uploaded photos.
+//
+// The root admin's Admin role is shown in gold, matching the header and the
+// accounts list.
 
 type Props = {
   id: string
@@ -70,8 +73,18 @@ export function AccountDetail({ id, currentEmail, onBack }: Props) {
                 <dd>{account.username}</dd>
                 <dt>Roles</dt>
                 <dd>
-                  {account.roles.join(', ')}
-                  {account.isRootAdmin && ' (root admin)'}
+                  {account.roles.map((role, i) => (
+                    <span key={role}>
+                      {i > 0 && ', '}
+                      <span
+                        className={
+                          role === 'Admin' && account.isRootAdmin ? 'root-text' : undefined
+                        }
+                      >
+                        {role}
+                      </span>
+                    </span>
+                  ))}
                 </dd>
                 <dt>Age range</dt>
                 <dd>{account.ageRange ?? 'Not given'}</dd>

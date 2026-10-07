@@ -1,4 +1,8 @@
-/* The frame around every admin screen. See components/layout/AdminShell.tsx. */
+/* The frame around every admin screen. See components/layout/AdminShell.tsx.
+
+   The root admin styles live here too, because this file is loaded on every
+   signed-in screen and gold is used in the header, the accounts list, and
+   the account page. */
 
 .shell-header {
   display: flex;
@@ -58,6 +62,17 @@
   background: var(--green-tint);
 }
 
+/* An outline only for keyboard users, in the site's green. A mouse click
+   shows the active tab's background instead. */
+.shell-tab:focus {
+  outline: none;
+}
+
+.shell-tab:focus-visible {
+  outline: 2px solid var(--green-light);
+  outline-offset: 2px;
+}
+
 .shell-user {
   display: flex;
   align-items: center;
@@ -85,4 +100,17 @@
   max-width: 1100px;
   margin: 0 auto;
   padding: var(--sp-5);
+}
+
+/* Root admin: gold instead of green. */
+
+.shell-badge.is-root,
+.badge.is-root {
+  color: var(--root);
+  background: var(--root-tint);
+}
+
+.root-text {
+  font-weight: 700;
+  color: var(--root);
 }

@@ -10,6 +10,12 @@ export type Me = {
   roles: string[]
 }
 
+// GET /api/admin/session
+export type AdminSessionInfo = {
+  email: string
+  isRootAdmin: boolean
+}
+
 // GET /api/admin/overview
 export type Overview = {
   accounts: number

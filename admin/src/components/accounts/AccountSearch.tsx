@@ -6,6 +6,9 @@ import { formatDate } from '../../utils/format'
 // Search accounts by email or username. With an empty search, the newest
 // accounts are listed. The API returns at most `limit` results, so a long
 // list asks the admin to narrow the search.
+//
+// The Admin badge is gold for the root admin and green for every other
+// admin, matching the header.
 
 type Props = {
   onOpen: (id: string) => void
@@ -106,10 +109,8 @@ export function AccountSearch({ onOpen, refreshKey }: Props) {
                     {/* An inner div, because display: flex on the cell
                         itself breaks the table's row borders. */}
                     <div className="badges">
-                      {r.isRootAdmin ? (
-                        <span className="badge">Root admin</span>
-                      ) : (
-                        r.isAdmin && <span className="badge">Admin</span>
+                      {r.isAdmin && (
+                        <span className={r.isRootAdmin ? 'badge is-root' : 'badge'}>Admin</span>
                       )}
                       {r.recoveryLocked && <span className="badge is-warn">Reset locked</span>}
                     </div>
