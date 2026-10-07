@@ -1,29 +1,41 @@
-/* The frame around every admin screen. See components/layout/AdminShell.tsx.
+/* The frame around every admin screen: sidebar, top bar on narrow screens,
+   and the main area. See components/layout/AdminShell.tsx.
 
    The root admin styles live here too, because this file is loaded on every
-   signed-in screen and gold is used in the header, the accounts list, and
+   signed-in screen and gold is used in the sidebar, the accounts list, and
    the account page. */
 
-.shell-header {
+.shell {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-4);
-  padding: var(--sp-3) var(--sp-5);
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  min-height: 100vh;
 }
 
-.shell-brand {
+/* Sidebar */
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 248px;
+  height: 100vh;
+  padding: var(--sp-5) var(--sp-3);
+  overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+
+.sidebar-brand {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
+  padding: 0 var(--sp-2) var(--sp-5);
 }
 
-.shell-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--green-deep);
+.sidebar-logo {
+  width: 132px;
+  height: auto;
 }
 
 .shell-badge {
@@ -33,73 +45,201 @@
   color: var(--green-deep);
   background: var(--green-tint);
   border-radius: 999px;
-  vertical-align: middle;
 }
 
-.shell-tabs {
-  display: flex;
-  gap: var(--sp-1);
-  flex: 1;
-}
-
-.shell-tab {
-  padding: var(--sp-2) var(--sp-3);
-  font: inherit;
-  font-weight: 600;
+.sidebar-close {
+  display: none;
+  margin-left: auto;
+  padding: var(--sp-1);
   color: var(--muted);
   background: none;
   border: none;
-  border-radius: var(--r-sm);
   cursor: pointer;
 }
 
-.shell-tab:hover {
-  background: var(--green-tint);
-}
-
-.shell-tab.is-active {
-  color: var(--green-deep);
-  background: var(--green-tint);
-}
-
-/* An outline only for keyboard users, in the site's green. A mouse click
-   shows the active tab's background instead. */
-.shell-tab:focus {
-  outline: none;
-}
-
-.shell-tab:focus-visible {
-  outline: 2px solid var(--green-light);
-  outline-offset: 2px;
-}
-
-.shell-user {
+.sidebar-nav {
   display: flex;
-  align-items: center;
-  gap: var(--sp-3);
+  flex-direction: column;
+  gap: var(--sp-4);
+  flex: 1;
 }
 
-.shell-email {
-  font-size: 13px;
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-group-label {
+  margin: 0 0 var(--sp-1);
+  padding: 0 var(--sp-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
-.shell-signout {
-  padding: var(--sp-2) var(--sp-3);
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 10px var(--sp-3);
   font: inherit;
-  font-size: 13px;
   font-weight: 600;
-  color: var(--green-deep);
+  color: var(--ink);
+  text-align: left;
   background: none;
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
+  border: none;
+  border-radius: var(--r-md);
   cursor: pointer;
 }
 
+.nav-item svg {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.nav-item:hover {
+  background: var(--green-tint);
+}
+
+.nav-item.is-active {
+  color: var(--green-deep);
+  background: var(--green-tint);
+}
+
+.nav-item.is-active svg {
+  color: var(--green-deep);
+}
+
+/* An outline only for keyboard users, in the site's green. */
+.nav-item:focus {
+  outline: none;
+}
+
+.nav-item:focus-visible {
+  outline: 2px solid var(--green-light);
+  outline-offset: 1px;
+}
+
+.nav-label {
+  flex: 1;
+}
+
+.nav-soon {
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.sidebar-user {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+
+.sidebar-email {
+  padding: 0 var(--sp-3);
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+/* Main area */
+
+.shell-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar {
+  display: none;
+}
+
 .shell-main {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: var(--sp-5);
+  padding: var(--sp-6) var(--sp-5);
+}
+
+/* Narrow screens: the sidebar slides in over the page. */
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 0 0 40px rgba(31, 42, 31, 0.15);
+  }
+
+  .sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .sidebar-close {
+    display: block;
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: block;
+    background: rgba(31, 42, 31, 0.3);
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .menu-button {
+    display: flex;
+    padding: var(--sp-1);
+    color: var(--green-deep);
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .topbar-title {
+    font-weight: 700;
+    color: var(--green-deep);
+  }
+
+  .shell-main {
+    padding: var(--sp-5) var(--sp-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
 }
 
 /* Root admin: gold instead of green. */
