@@ -1,4 +1,7 @@
-/* The Analytics screen. See pages/Analytics.tsx and components/analytics/. */
+/* The Analytics screen. See pages/Analytics.tsx and components/analytics/.
+   Panels and tabs are in panels.css. */
+
+/* Page header */
 
 .page-head {
   display: flex;
@@ -13,37 +16,123 @@
   margin-bottom: var(--sp-1);
 }
 
-.panel {
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.meta-pill {
+  padding: var(--sp-1) var(--sp-3);
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: 14px;
+}
+
+.tab-content {
   margin-top: var(--sp-4);
 }
 
-.panel-note {
-  margin-top: calc(var(--sp-2) * -1);
-  margin-bottom: var(--sp-3);
-}
+/* Number cards */
 
-.analytics-grid {
+.kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: var(--sp-4);
 }
 
-.block-title {
-  margin-top: var(--sp-6);
+.kpi {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
 }
 
-.subhead {
-  margin: var(--sp-4) 0 var(--sp-2);
+.kpi-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border-radius: var(--r-md);
+}
+
+.kpi-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-label {
+  margin-top: 2px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.kpi-detail {
+  margin-top: 2px;
+  font-size: 12px;
   color: var(--muted);
 }
+
+/* Key findings */
+
+.findings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.findings li {
+  position: relative;
+  padding-left: var(--sp-5);
+  line-height: 1.5;
+}
+
+.findings li::before {
+  content: '';
+  position: absolute;
+  top: 0.55em;
+  left: 4px;
+  width: 8px;
+  height: 8px;
+  background: var(--green-light);
+  border-radius: 999px;
+}
+
+/* Charts */
 
 .chart {
   width: 100%;
 }
 
-/* Bars shared by the ranked lists and the answers */
+/* Bars shared by the ranked lists and the frequency tables */
 
 .bar-track {
   height: 8px;
@@ -104,6 +193,7 @@
 
 .ranked-label {
   overflow: hidden;
+  font-size: 14px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -118,8 +208,16 @@
 }
 
 .ranked-count {
+  flex-shrink: 0;
+  font-size: 14px;
   font-weight: 700;
   color: var(--green-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.ranked-share {
+  font-weight: 500;
+  color: var(--muted);
 }
 
 .ranked-note {
@@ -139,7 +237,7 @@
 }
 
 .covers-donut > :first-child {
-  flex: 0 0 220px;
+  flex: 0 0 200px;
 }
 
 .legend {
@@ -149,6 +247,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  font-size: 14px;
 }
 
 .legend li {
@@ -159,6 +258,7 @@
 
 .legend strong {
   margin-left: var(--sp-2);
+  font-variant-numeric: tabular-nums;
 }
 
 .legend-dot {
@@ -167,9 +267,16 @@
   border-radius: 999px;
 }
 
+.subhead {
+  margin: var(--sp-5) 0 var(--sp-3);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
 .cover-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   gap: var(--sp-3);
 }
 
@@ -200,64 +307,163 @@
   border-radius: 999px;
 }
 
-/* Answers */
+/* Kept and taken out */
 
-.question-grid {
+.split-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--sp-5);
 }
 
-.question-text {
-  margin: 0 0 var(--sp-1);
-  font-size: 15px;
-  line-height: 1.4;
-}
-
-.choices {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-  margin: var(--sp-4) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.choice-top {
+.split-top {
   display: flex;
   justify-content: space-between;
   gap: var(--sp-3);
-  margin-bottom: var(--sp-1);
-  font-size: 14px;
+  margin-bottom: var(--sp-2);
 }
 
-.choice-num {
-  flex-shrink: 0;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.choice.is-top .choice-top span:first-child {
+.split-label {
   font-weight: 700;
+}
+
+.split-bar {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
+  background: var(--green-tint);
+  border-radius: 999px;
+}
+
+.split-kept {
+  background: var(--green);
+}
+
+.split-removed {
+  background: var(--warn);
+}
+
+.split-note {
+  margin-top: var(--sp-2);
+}
+
+/* Question explorer */
+
+.explorer {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: var(--sp-5);
+}
+
+.explorer-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  max-height: 520px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.explorer-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--sp-2);
+  width: 100%;
+  padding: var(--sp-3);
+  font: inherit;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.explorer-item:hover {
+  background: var(--page);
+}
+
+.explorer-item.is-active {
+  background: var(--green-tint);
+  border-color: var(--green-light);
+}
+
+.explorer-num {
+  grid-row: span 2;
+  font-size: 12px;
+  font-weight: 800;
   color: var(--green-deep);
 }
 
-.choice.is-top .bar-fill {
-  background: var(--green-deep);
+.explorer-text {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-/* Descriptive statistics */
+.explorer-top {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.explorer-detail {
+  min-width: 0;
+}
+
+.explorer-meta {
+  margin: 0 0 var(--sp-1);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.explorer-question {
+  margin: 0 0 var(--sp-2);
+  font-size: 18px;
+  line-height: 1.35;
+  color: var(--green-deep);
+}
+
+@media (max-width: 760px) {
+  .explorer {
+    grid-template-columns: 1fr;
+  }
+
+  .explorer-list {
+    max-height: 260px;
+  }
+}
+
+/* Frequency and statistics tables (SPSS style) */
 
 .stats-wrap {
+  margin-top: var(--sp-4);
   overflow-x: auto;
 }
 
+.panel-body > .stats-wrap:first-child {
+  margin-top: 0;
+}
+
+.freq-table,
 .stats-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
 
+.freq-table th,
+.freq-table td,
 .stats-table th,
 .stats-table td {
   padding: var(--sp-2) var(--sp-3);
@@ -266,14 +472,48 @@
   border-bottom: 1px solid var(--line);
 }
 
+.freq-table th:first-child,
+.freq-table td:first-child,
 .stats-table th:first-child,
 .stats-table td:first-child {
   text-align: left;
 }
 
+.freq-table td:nth-child(2),
+.freq-table th:nth-child(2) {
+  text-align: left;
+}
+
+.freq-table th,
 .stats-table th {
   font-size: 12px;
   font-weight: 700;
   color: var(--muted);
   background: var(--page);
+}
+
+.freq-table td:first-child,
+.freq-table td:nth-child(2) {
+  white-space: normal;
+}
+
+.freq-table tr.is-top td {
+  font-weight: 700;
+  color: var(--green-deep);
+}
+
+.freq-bar-cell {
+  width: 30%;
+  min-width: 100px;
+}
+
+/* How the numbers are calculated */
+
+.method {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+  padding-left: var(--sp-5);
+  line-height: 1.5;
 }

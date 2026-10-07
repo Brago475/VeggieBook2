@@ -1,0 +1,111 @@
+/* Panels and tabs, shared by every admin screen that uses them.
+   See components/common/Panel.tsx and components/common/Tabs.tsx. */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin-top: var(--sp-4);
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.panel-desc {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.panel-aside {
+  flex-shrink: 0;
+}
+
+.panel-body {
+  flex: 1;
+  padding: var(--sp-5);
+}
+
+.panel-foot {
+  margin-top: var(--sp-4);
+}
+
+/* Two panels side by side, one column on narrow screens. Panels inside
+   the grid drop their own top margin and use the grid gap instead. */
+.panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: var(--sp-4);
+  margin-top: var(--sp-4);
+}
+
+.panel-grid > .panel {
+  margin-top: 0;
+}
+
+/* Tabs */
+
+.tabs {
+  display: flex;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.tab {
+  flex-shrink: 0;
+  padding: var(--sp-2) var(--sp-4);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--green-deep);
+}
+
+.tab.is-active {
+  color: #fff;
+  background: var(--green-deep);
+}
+
+.tab:focus {
+  outline: none;
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--green-light);
+  outline-offset: 1px;
+}
+
+@media (max-width: 560px) {
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-head,
+  .panel-body {
+    padding: var(--sp-4);
+  }
+}
