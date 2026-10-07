@@ -21,7 +21,9 @@ namespace VeggieBook.Api.Research.Export;
 //   columns with a set of values   numbered codes (1, 2, 3...) with value
 //                                  labels
 //   number columns                 numeric
-//   everything else                text (participant ID, dates, times)
+//   everything else                text (participant ID, dates, times,
+//                                  recipe lists), up to SPSS's 32,767
+//                                  character limit
 //
 // This is the standard way SPSS handles questions where people can pick
 // more than one answer, and it means frequencies and cross-tabs work right
@@ -29,6 +31,8 @@ namespace VeggieBook.Api.Research.Export;
 
 public static class SpssExport
 {
+    private const int MaxStringBytes = 32767;
+
     private record Variable(
         string Name,
         string Label,
@@ -95,7 +99,7 @@ public static class SpssExport
                 .Select(s => Encoding.UTF8.GetByteCount(s))
                 .DefaultIfEmpty(1)
                 .Max(),
-            1, 255);
+            1, MaxStringBytes);
         yield return new Variable(column.Key, column.Label, $"A{width}", [],
             row => Convert.ToString(row.GetValueOrDefault(column.Key), CultureInfo.InvariantCulture) ?? "");
     }

@@ -16,6 +16,7 @@ type Props = {
 
 const sheets: { id: SheetName; label: string }[] = [
   { id: 'responses', label: 'Responses: one row per book' },
+  { id: 'items', label: 'Recipes and secrets: one row per item' },
   { id: 'participants', label: 'Participants: one row per person' },
 ]
 
@@ -26,7 +27,7 @@ export function DataTab({ sheetName, onSheetName, filters, version }: Props) {
 
   let coverage = 'n/a'
   if (sheet && sheet.rows.length > 0) {
-    const dateKey = sheetName === 'responses' ? 'date' : 'first_book_date'
+    const dateKey = sheetName === 'participants' ? 'first_book_date' : 'date'
     const dates = sheet.rows
       .map((r) => r[dateKey])
       .filter((d): d is string => typeof d === 'string')

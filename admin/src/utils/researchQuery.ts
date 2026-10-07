@@ -1,13 +1,18 @@
 import type { ExportFormat, ResearchFilters, SheetName } from '../types/research'
 
 // Turns the page's filters into the query string the research API reads.
-// Participants only uses the age filter; the others are about books.
+// Participants only uses the age filter; the others are about books, so
+// they apply to Responses and to Recipes and secrets.
 
 export const noFilters: ResearchFilters = { from: '', to: '', age: '', vegetable: '' }
 
+export function usesBookFilters(sheet: SheetName): boolean {
+  return sheet !== 'participants'
+}
+
 export function researchQuery(sheet: SheetName, f: ResearchFilters): string {
   const params = new URLSearchParams()
-  if (sheet === 'responses') {
+  if (usesBookFilters(sheet)) {
     if (f.from) params.set('from', f.from)
     if (f.to) params.set('to', f.to)
     if (f.vegetable) params.set('vegetable', f.vegetable)

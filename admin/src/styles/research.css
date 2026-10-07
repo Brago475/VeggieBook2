@@ -1,6 +1,5 @@
 /* The Research page. Shared blocks (panels, tabs, cards, tables, bars)
-   are in panels.css; this file has only what is specific to Research.
-   The page header classes come from analytics.css. */
+   are in panels.css; this file has only what is specific to Research. */
 
 .page-head {
   display: flex;
@@ -73,7 +72,7 @@
 /* Which sheet */
 
 .sheet-switch {
-  display: inline-flex;
+  display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
   margin-bottom: var(--sp-4);
@@ -111,10 +110,12 @@
   text-decoration: none;
 }
 
-/* The sheet: fixed header, fixed first column, scrolls both ways. */
+/* The sheet: at least half the screen tall, fixed header, fixed first
+   column, scrolls both ways. */
 
 .sheet-scroll {
-  max-height: 560px;
+  min-height: 50vh;
+  max-height: 75vh;
   overflow: auto;
 }
 
@@ -127,6 +128,15 @@
 .sheet-table td,
 .sheet-table th {
   white-space: nowrap;
+  vertical-align: top;
+}
+
+/* Answers and recipe lists wrap instead of stretching the table. */
+.sheet-table td.long,
+.sheet-table th.long {
+  min-width: 260px;
+  max-width: 440px;
+  white-space: normal;
 }
 
 .sheet-table th:first-child,
@@ -142,10 +152,6 @@
 .sheet-table th:first-child {
   z-index: 3;
   background: var(--subtle);
-}
-
-.empty-cell::before {
-  content: '';
 }
 
 .pager {

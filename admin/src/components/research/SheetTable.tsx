@@ -2,22 +2,32 @@ import { useState } from 'react'
 import type { Sheet } from '../../types/research'
 
 // A research sheet as a table: fixed header, the participant ID column
-// fixed on the left while scrolling sideways, and pages of 25 rows.
+// fixed on the left while scrolling sideways, and pages of 50 rows.
 //
 // Question columns are headed Q1, Q2...; hover a header to see its full
-// label. The Variables tab lists them all.
+// label. Long columns (answers and recipe lists) wrap instead of stretching
+// the table. The Variables tab lists every column.
 //
 // The parent gives this a new key when the sheet changes, so paging starts
 // over on page 1.
 
-const PAGE_SIZE = 25
+const PAGE_SIZE = 50
 
 type Props = {
   sheet: Sheet
 }
 
-function header(key: string, label: string) {
-  return /^q\d+$/.test(key) ? key.toUpperCase() : label
+function isQuestion(key: string) {
+  return /^q\d+$/.test(key)
+}
+
+function isLong(key: string) {
+  return isQuestion(key) || key.endsWith('_list') || key === 'item_title'
+}
+
+function cellClass(key: string, type: string) {
+  if (type === 'number') return 'num'
+  return isLong(key) ? 'long' : undefined
 }
 
 export function SheetTable({ sheet }: Props) {
@@ -38,8 +48,8 @@ export function SheetTable({ sheet }: Props) {
           <thead>
             <tr>
               {sheet.columns.map((c) => (
-                <th key={c.key} title={c.label} className={c.type === 'number' ? 'num' : undefined}>
-                  {header(c.key, c.label)}
+                <th key={c.key} title={c.label} className={cellClass(c.key, c.type)}>
+                  {isQuestion(c.key) ? c.key.toUpperCase() : c.label}
                 </th>
               ))}
             </tr>
@@ -50,12 +60,8 @@ export function SheetTable({ sheet }: Props) {
                 {sheet.columns.map((c) => {
                   const value = row[c.key]
                   return (
-                    <td key={c.key} className={c.type === 'number' ? 'num' : undefined}>
-                      {value === null || value === undefined ? (
-                        <span className="empty-cell" aria-label="empty" />
-                      ) : (
-                        value
-                      )}
+                    <td key={c.key} className={cellClass(c.key, c.type)}>
+                      {value === null || value === undefined ? '' : value}
                     </td>
                   )
                 })}

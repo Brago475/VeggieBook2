@@ -9,9 +9,14 @@ namespace VeggieBook.Api.Research;
 //
 //   Participants  one row per person
 //   Responses     one row per saved book
+//   Items         one row per recipe or secret in a saved book
 //
 // Who is included: real accounts that are not admins. Guests are temporary
 // and admin books are tests, so both are left out.
+//
+// What "taken out later" means: a recipe or secret removed from a saved
+// book (Kept = false). Recipes skipped during the review, before saving,
+// are not stored, so they can't appear here.
 //
 // Dates and times are shown in Eastern time (Kean is in New Jersey). If the
 // server can't find that time zone, they fall back to UTC and the column
@@ -40,6 +45,31 @@ public static class ResearchSheets
         TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Local.Zone);
 
     private record Person(Guid UserId, string ParticipantId, DateTime CreatedAt, string? AgeRange);
+
+    private record Item(string Type, int Id, bool Kept, int ExtraCopies);
+
+    private record BookRow(
+        Person Person,
+        int BookNo,
+        DateTime Local,
+        string Kind,
+        string Language,
+        string? VegetableCode,
+        int? SecretCategoryId,
+        string? CoverPath,
+        bool HasUpload,
+        List<string> Attributes,
+        List<Item> Items);
+
+    private record Content(
+        Dictionary<string, string> Vegetables,
+        Dictionary<int, string> Categories,
+        Dictionary<int, string> Recipes,
+        Dictionary<int, string> Secrets);
+
+    private record QuestionInfo(string Label, List<(string Attribute, string Text)> Choices);
+
+    // ---- Loading ----
 
     // Real, non-admin accounts with their research IDs, giving IDs to any
     // that don't have one yet.
@@ -70,37 +100,177 @@ public static class ResearchSheets
                     string.IsNullOrEmpty(u.AgeRange) ? null : u.AgeRange));
     }
 
+    // Every book of these people, numbered per person by date before any
+    // filter (so a person's 3rd book is always "3"), then filtered.
+    private static async Task<List<BookRow>> LoadBooksAsync(
+        AccountsContext db,
+        Dictionary<Guid, Person> people,
+        SheetFilter filter)
+    {
+        var userIds = people.Keys.ToList();
+
+        var raw = await db.Books
+            .AsNoTracking()
+            .Where(b => userIds.Contains(b.UserId))
+            .Select(b => new
+            {
+                b.UserId,
+                b.Kind,
+                b.Language,
+                b.VegetableCode,
+                b.SecretCategoryId,
+                b.CoverPath,
+                HasUpload = b.CoverUpload != null,
+                b.CreatedAt,
+                Attributes = b.Attributes.Select(a => a.Attribute).ToList(),
+                Selections = b.Selections
+                    .Select(s => new { s.ContentType, s.ContentId, s.Kept, s.ExtraCopies })
+                    .ToList()
+            })
+            .ToListAsync();
+
+        return raw
+            .GroupBy(b => b.UserId)
+            .SelectMany(g => g
+                .OrderBy(b => b.CreatedAt)
+                .Select((b, i) => new BookRow(
+                    people[b.UserId],
+                    i + 1,
+                    ToLocal(b.CreatedAt),
+                    b.Kind,
+                    b.Language,
+                    b.VegetableCode,
+                    b.SecretCategoryId,
+                    b.CoverPath,
+                    b.HasUpload,
+                    b.Attributes,
+                    b.Selections
+                        .Select(s => new Item(s.ContentType, s.ContentId, s.Kept, s.ExtraCopies))
+                        .ToList())))
+            .Where(b => filter.AgeRange is null || b.Person.AgeRange == filter.AgeRange)
+            .Where(b => filter.Vegetable is null || b.VegetableCode == filter.Vegetable)
+            .Where(b => filter.From is null || DateOnly.FromDateTime(b.Local) >= filter.From)
+            .Where(b => filter.To is null || DateOnly.FromDateTime(b.Local) <= filter.To)
+            .OrderBy(b => b.Person.ParticipantId)
+            .ThenBy(b => b.Local)
+            .ToList();
+    }
+
+    // Names and titles from the content database, in English.
+    private static async Task<Content> LoadContentAsync(VeggieBookContext content)
+    {
+        var vegetables = await content.Vegetables
+            .AsNoTracking()
+            .ToDictionaryAsync(v => v.Code, v => v.NameEn);
+
+        var categories = await content.SecretCategories
+            .AsNoTracking()
+            .ToDictionaryAsync(c => c.Id, c => c.NameEn);
+
+        var recipes = (await content.Recipes
+                .AsNoTracking()
+                .Select(r => new { r.Id, r.DisplayCode, r.TitleEn })
+                .ToListAsync())
+            .ToDictionary(r => r.Id, r => r.DisplayCode is null ? r.TitleEn : $"{r.DisplayCode} {r.TitleEn}");
+
+        var secrets = (await content.Secrets
+                .AsNoTracking()
+                .Select(s => new { s.Id, s.DisplayNumber, s.HeadlineEn })
+                .ToListAsync())
+            .ToDictionary(s => s.Id, s => $"#{s.DisplayNumber} {s.HeadlineEn}");
+
+        return new Content(vegetables, categories, recipes, secrets);
+    }
+
+    private static async Task<List<QuestionInfo>> LoadQuestionsAsync(VeggieBookContext content)
+    {
+        var questions = await content.Questions
+            .AsNoTracking()
+            .Where(q => !q.IsHidden)
+            .OrderBy(q => q.OrderPriority)
+            .Select(q => new
+            {
+                q.IntroEn,
+                q.Mnemonic,
+                Choices = q.Choices
+                    .OrderBy(c => c.SortOrder)
+                    .Select(c => new { c.Attribute, c.TextEn })
+                    .ToList()
+            })
+            .ToListAsync();
+
+        return questions
+            .Select(q => new QuestionInfo(
+                Fill(q.IntroEn ?? q.Mnemonic),
+                q.Choices.Select(c => (c.Attribute, Fill(c.TextEn))).ToList()))
+            .ToList();
+    }
+
+    // ---- Columns and cells shared by the book sheets ----
+
+    private static List<SheetColumn> BookColumns(Content c, Dictionary<Guid, Person> people) =>
+    [
+        new("participant_id", "Participant ID", "text"),
+        new("book_no", "Book number", "number"),
+        new("date", $"Date ({Local.Name})", "date"),
+        new("time", $"Time ({Local.Name})", "time"),
+        new("book_type", "Book type", "text", ["VeggieBook", "Secrets Book"]),
+        new("vegetable", "Vegetable", "text", c.Vegetables.Values.Order().ToList()),
+        new("secrets_category", "Secrets category", "text", c.Categories.Values.Order().ToList()),
+        new("language", "Language", "text", ["English", "Spanish"]),
+        new("cover", "Cover", "text", ["Built-in", "Personal"]),
+        new("cover_image", "Cover image (built-in only)", "text"),
+        new("age_range", "Age range", "text",
+            people.Values.Select(p => p.AgeRange).OfType<string>().Distinct().Order().ToList())
+    ];
+
+    private static Dictionary<string, object?> BookCells(BookRow b, Content c) => new()
+    {
+        ["participant_id"] = b.Person.ParticipantId,
+        ["book_no"] = b.BookNo,
+        ["date"] = b.Local.ToString("yyyy-MM-dd"),
+        ["time"] = b.Local.ToString("HH:mm"),
+        ["book_type"] = b.Kind == "secrets" ? "Secrets Book" : "VeggieBook",
+        ["vegetable"] = b.VegetableCode is null
+            ? null
+            : c.Vegetables.GetValueOrDefault(b.VegetableCode, b.VegetableCode),
+        ["secrets_category"] = b.SecretCategoryId is null
+            ? null
+            : c.Categories.GetValueOrDefault(b.SecretCategoryId.Value),
+        ["language"] = b.Language == "es" ? "Spanish" : "English",
+        ["cover"] = b.HasUpload ? "Personal" : "Built-in",
+        // The personal photo itself is never shown or exported.
+        ["cover_image"] = b.HasUpload ? null : b.CoverPath,
+        ["age_range"] = b.Person.AgeRange
+    };
+
+    private static string ItemName(Item item, Content c) => item.Type == "secret"
+        ? c.Secrets.GetValueOrDefault(item.Id, $"Secret {item.Id}")
+        : c.Recipes.GetValueOrDefault(item.Id, $"Recipe {item.Id}");
+
+    private static string? ItemList(BookRow b, Content c, string type, bool kept)
+    {
+        var names = b.Items
+            .Where(i => i.Type == type && i.Kept == kept)
+            .Select(i => ItemName(i, c))
+            .Order()
+            .ToList();
+        return names.Count == 0 ? null : string.Join("; ", names);
+    }
+
     // ---- Participants: one row per person ----
 
     public static async Task<Sheet> ParticipantsAsync(AccountsContext db, SheetFilter filter)
     {
         var people = await LoadPeopleAsync(db);
-        var userIds = people.Keys.ToList();
-
-        var books = (await db.Books
-                .AsNoTracking()
-                .Where(b => userIds.Contains(b.UserId))
-                .Select(b => new
-                {
-                    b.UserId,
-                    b.Kind,
-                    b.CreatedAt,
-                    Selections = b.Selections.Select(s => new { s.ContentType, s.Kept }).ToList()
-                })
-                .ToListAsync())
-            .ToLookup(b => b.UserId);
-
-        var ageValues = people.Values
-            .Select(p => p.AgeRange)
-            .OfType<string>()
-            .Distinct()
-            .Order()
-            .ToList();
+        var books = (await LoadBooksAsync(db, people, new SheetFilter(null, null, null, null)))
+            .ToLookup(b => b.Person.UserId);
 
         var columns = new List<SheetColumn>
         {
             new("participant_id", "Participant ID", "text"),
-            new("age_range", "Age range", "text", ageValues),
+            new("age_range", "Age range", "text",
+                people.Values.Select(p => p.AgeRange).OfType<string>().Distinct().Order().ToList()),
             new("joined_month", "Month joined", "text"),
             new("books", "Books saved", "number"),
             new("veggie_books", "VeggieBooks", "number"),
@@ -119,7 +289,7 @@ public static class ResearchSheets
             .Select(p =>
             {
                 var own = books[p.UserId].ToList();
-                var sel = own.SelectMany(b => b.Selections).ToList();
+                var items = own.SelectMany(b => b.Items).ToList();
                 return new Dictionary<string, object?>
                 {
                     ["participant_id"] = p.ParticipantId,
@@ -128,16 +298,12 @@ public static class ResearchSheets
                     ["books"] = own.Count,
                     ["veggie_books"] = own.Count(b => b.Kind == "veggie"),
                     ["secrets_books"] = own.Count(b => b.Kind == "secrets"),
-                    ["recipes_kept"] = sel.Count(s => s.ContentType == "recipe" && s.Kept),
-                    ["recipes_removed"] = sel.Count(s => s.ContentType == "recipe" && !s.Kept),
-                    ["secrets_kept"] = sel.Count(s => s.ContentType == "secret" && s.Kept),
-                    ["secrets_removed"] = sel.Count(s => s.ContentType == "secret" && !s.Kept),
-                    ["first_book_date"] = own.Count == 0
-                        ? null
-                        : ToLocal(own.Min(b => b.CreatedAt)).ToString("yyyy-MM-dd"),
-                    ["last_book_date"] = own.Count == 0
-                        ? null
-                        : ToLocal(own.Max(b => b.CreatedAt)).ToString("yyyy-MM-dd")
+                    ["recipes_kept"] = items.Count(i => i.Type == "recipe" && i.Kept),
+                    ["recipes_removed"] = items.Count(i => i.Type == "recipe" && !i.Kept),
+                    ["secrets_kept"] = items.Count(i => i.Type == "secret" && i.Kept),
+                    ["secrets_removed"] = items.Count(i => i.Type == "secret" && !i.Kept),
+                    ["first_book_date"] = own.Count == 0 ? null : own.Min(b => b.Local).ToString("yyyy-MM-dd"),
+                    ["last_book_date"] = own.Count == 0 ? null : own.Max(b => b.Local).ToString("yyyy-MM-dd")
                 };
             })
             .ToList();
@@ -153,90 +319,20 @@ public static class ResearchSheets
         SheetFilter filter)
     {
         var people = await LoadPeopleAsync(db);
-        var userIds = people.Keys.ToList();
+        var books = await LoadBooksAsync(db, people, filter);
+        var c = await LoadContentAsync(content);
+        var questions = await LoadQuestionsAsync(content);
+        var known = questions.SelectMany(q => q.Choices).Select(x => x.Attribute).ToHashSet();
 
-        var books = await db.Books
-            .AsNoTracking()
-            .Where(b => userIds.Contains(b.UserId))
-            .Select(b => new
-            {
-                b.UserId,
-                b.Kind,
-                b.Language,
-                b.VegetableCode,
-                b.SecretCategoryId,
-                HasUpload = b.CoverUpload != null,
-                b.CreatedAt,
-                Attributes = b.Attributes.Select(a => a.Attribute).ToList(),
-                Selections = b.Selections
-                    .Select(s => new { s.ContentType, s.Kept, s.ExtraCopies })
-                    .ToList()
-            })
-            .ToListAsync();
-
-        // Each person's books numbered by date, before any filter, so a
-        // person's 3rd book is always "3".
-        var bookNumbers = books
-            .GroupBy(b => b.UserId)
-            .SelectMany(g => g.OrderBy(b => b.CreatedAt).Select((b, i) => (b, n: i + 1)))
-            .ToDictionary(x => x.b, x => x.n);
-
-        var vegetables = await content.Vegetables
-            .AsNoTracking()
-            .ToDictionaryAsync(v => v.Code, v => v.NameEn);
-
-        var categories = await content.SecretCategories
-            .AsNoTracking()
-            .ToDictionaryAsync(c => c.Id, c => c.NameEn);
-
-        var questions = await content.Questions
-            .AsNoTracking()
-            .Where(q => !q.IsHidden)
-            .OrderBy(q => q.OrderPriority)
-            .Select(q => new
-            {
-                q.IntroEn,
-                q.Mnemonic,
-                Choices = q.Choices
-                    .OrderBy(c => c.SortOrder)
-                    .Select(c => new { c.Attribute, c.TextEn })
-                    .ToList()
-            })
-            .ToListAsync();
-
-        // Answer code (HasMicrowave) to its question number and its text.
-        var answerLookup = questions
-            .SelectMany((q, i) => q.Choices.Select(c => (c.Attribute, Question: i + 1, Text: Fill(c.TextEn))))
-            .GroupBy(x => x.Attribute)
-            .ToDictionary(g => g.Key, g => g.First());
-
-        var columns = new List<SheetColumn>
-        {
-            new("participant_id", "Participant ID", "text"),
-            new("book_no", "Book number", "number"),
-            new("date", $"Date ({Local.Name})", "date"),
-            new("time", $"Time ({Local.Name})", "time"),
-            new("book_type", "Book type", "text", ["VeggieBook", "Secrets Book"]),
-            new("vegetable", "Vegetable", "text",
-                vegetables.Values.Order().ToList()),
-            new("secrets_category", "Secrets category", "text",
-                categories.Values.Order().ToList()),
-            new("language", "Language", "text", ["English", "Spanish"]),
-            new("cover", "Cover", "text", ["Built-in", "Personal"]),
-            new("age_range", "Age range", "text",
-                people.Values.Select(p => p.AgeRange).OfType<string>().Distinct().Order().ToList())
-        };
-
+        var columns = BookColumns(c, people);
         for (var i = 0; i < questions.Count; i++)
         {
-            var q = questions[i];
             columns.Add(new SheetColumn(
                 $"q{i + 1}",
-                $"Q{i + 1}. {Fill(q.IntroEn ?? q.Mnemonic)}",
+                $"Q{i + 1}. {questions[i].Label}",
                 "text",
-                q.Choices.Select(c => Fill(c.TextEn)).ToList()));
+                questions[i].Choices.Select(x => x.Text).ToList()));
         }
-
         columns.AddRange(
         [
             new("answers", "Answers picked", "number"),
@@ -244,37 +340,17 @@ public static class ResearchSheets
             new("recipes_removed", "Recipes taken out later", "number"),
             new("secrets_kept", "Secrets kept", "number"),
             new("secrets_removed", "Secrets taken out later", "number"),
-            new("extra_copies", "Extra copies", "number")
+            new("extra_copies", "Extra copies", "number"),
+            new("recipes_kept_list", "Recipes kept (list)", "text"),
+            new("recipes_removed_list", "Recipes taken out later (list)", "text"),
+            new("secrets_kept_list", "Secrets kept (list)", "text"),
+            new("secrets_removed_list", "Secrets taken out later (list)", "text")
         ]);
 
         var rows = books
-            .Select(b => (Book: b, Person: people[b.UserId], Local: ToLocal(b.CreatedAt)))
-            .Where(x => filter.AgeRange is null || x.Person.AgeRange == filter.AgeRange)
-            .Where(x => filter.Vegetable is null || x.Book.VegetableCode == filter.Vegetable)
-            .Where(x => filter.From is null || DateOnly.FromDateTime(x.Local) >= filter.From)
-            .Where(x => filter.To is null || DateOnly.FromDateTime(x.Local) <= filter.To)
-            .OrderBy(x => x.Person.ParticipantId)
-            .ThenBy(x => x.Book.CreatedAt)
-            .Select(x =>
+            .Select(b =>
             {
-                var b = x.Book;
-                var row = new Dictionary<string, object?>
-                {
-                    ["participant_id"] = x.Person.ParticipantId,
-                    ["book_no"] = bookNumbers[b],
-                    ["date"] = x.Local.ToString("yyyy-MM-dd"),
-                    ["time"] = x.Local.ToString("HH:mm"),
-                    ["book_type"] = b.Kind == "secrets" ? "Secrets Book" : "VeggieBook",
-                    ["vegetable"] = b.VegetableCode is null
-                        ? null
-                        : vegetables.GetValueOrDefault(b.VegetableCode, b.VegetableCode),
-                    ["secrets_category"] = b.SecretCategoryId is null
-                        ? null
-                        : categories.GetValueOrDefault(b.SecretCategoryId.Value),
-                    ["language"] = b.Language == "es" ? "Spanish" : "English",
-                    ["cover"] = b.HasUpload ? "Personal" : "Built-in",
-                    ["age_range"] = x.Person.AgeRange
-                };
+                var row = BookCells(b, c);
 
                 // One column per question: the answers picked, in the order
                 // the question lists them. Empty for Secrets Books, which
@@ -282,23 +358,65 @@ public static class ResearchSheets
                 for (var i = 0; i < questions.Count; i++)
                 {
                     var picked = questions[i].Choices
-                        .Where(c => b.Attributes.Contains(c.Attribute))
-                        .Select(c => Fill(c.TextEn))
+                        .Where(x => b.Attributes.Contains(x.Attribute))
+                        .Select(x => x.Text)
                         .ToList();
                     row[$"q{i + 1}"] = picked.Count == 0 ? null : string.Join("; ", picked);
                 }
 
-                row["answers"] = b.Attributes.Count(a => answerLookup.ContainsKey(a));
-                row["recipes_kept"] = b.Selections.Count(s => s.ContentType == "recipe" && s.Kept);
-                row["recipes_removed"] = b.Selections.Count(s => s.ContentType == "recipe" && !s.Kept);
-                row["secrets_kept"] = b.Selections.Count(s => s.ContentType == "secret" && s.Kept);
-                row["secrets_removed"] = b.Selections.Count(s => s.ContentType == "secret" && !s.Kept);
-                row["extra_copies"] = b.Selections.Where(s => s.Kept).Sum(s => s.ExtraCopies);
+                row["answers"] = b.Attributes.Count(known.Contains);
+                row["recipes_kept"] = b.Items.Count(i => i.Type == "recipe" && i.Kept);
+                row["recipes_removed"] = b.Items.Count(i => i.Type == "recipe" && !i.Kept);
+                row["secrets_kept"] = b.Items.Count(i => i.Type == "secret" && i.Kept);
+                row["secrets_removed"] = b.Items.Count(i => i.Type == "secret" && !i.Kept);
+                row["extra_copies"] = b.Items.Where(i => i.Kept).Sum(i => i.ExtraCopies);
+                row["recipes_kept_list"] = ItemList(b, c, "recipe", kept: true);
+                row["recipes_removed_list"] = ItemList(b, c, "recipe", kept: false);
+                row["secrets_kept_list"] = ItemList(b, c, "secret", kept: true);
+                row["secrets_removed_list"] = ItemList(b, c, "secret", kept: false);
                 return row;
             })
             .ToList();
 
         return new Sheet("responses", "Responses", DateTime.UtcNow, columns, rows);
+    }
+
+    // ---- Items: one row per recipe or secret in a saved book ----
+
+    public static async Task<Sheet> ItemsAsync(
+        AccountsContext db,
+        VeggieBookContext content,
+        SheetFilter filter)
+    {
+        var people = await LoadPeopleAsync(db);
+        var books = await LoadBooksAsync(db, people, filter);
+        var c = await LoadContentAsync(content);
+
+        var columns = BookColumns(c, people);
+        columns.AddRange(
+        [
+            new("item_type", "Item type", "text", ["Recipe", "Secret"]),
+            new("item_title", "Item", "text"),
+            new("status", "Status", "text", ["Kept", "Taken out later"]),
+            new("extra_copies", "Extra copies", "number")
+        ]);
+
+        var rows = books
+            .SelectMany(b => b.Items
+                .OrderBy(i => i.Type)
+                .ThenBy(i => ItemName(i, c))
+                .Select(i =>
+                {
+                    var row = BookCells(b, c);
+                    row["item_type"] = i.Type == "secret" ? "Secret" : "Recipe";
+                    row["item_title"] = ItemName(i, c);
+                    row["status"] = i.Kept ? "Kept" : "Taken out later";
+                    row["extra_copies"] = i.Kept ? i.ExtraCopies : 0;
+                    return row;
+                }))
+            .ToList();
+
+        return new Sheet("items", "Recipes and secrets", DateTime.UtcNow, columns, rows);
     }
 
     // Choices for the page's filters.

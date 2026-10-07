@@ -1,5 +1,5 @@
 import type { ResearchFilters as Filters, ResearchOptions, SheetName } from '../../types/research'
-import { hasFilters, noFilters } from '../../utils/researchQuery'
+import { hasFilters, noFilters, usesBookFilters } from '../../utils/researchQuery'
 
 // The filters above the sheet: date range, age range, and vegetable.
 // Participants only uses age, so the others are turned off for it.
@@ -12,7 +12,7 @@ type Props = {
 }
 
 export function ResearchFilters({ sheet, filters, options, onChange }: Props) {
-  const bookFilters = sheet === 'responses'
+  const bookFilters = usesBookFilters(sheet)
 
   function set<K extends keyof Filters>(key: K, value: Filters[K]) {
     onChange({ ...filters, [key]: value })

@@ -11,6 +11,8 @@ namespace VeggieBook.Api.Admin;
 //
 //   GET /api/admin/research/participants          one row per participant
 //   GET /api/admin/research/responses             one row per saved book
+//   GET /api/admin/research/items                 one row per recipe or
+//                                                 secret in a saved book
 //   GET /api/admin/research/options               choices for the filters
 //   GET /api/admin/research/export/{sheet}?format=xlsx|csv|pdf|spss
 //                                                 a sheet as a download
@@ -38,8 +40,15 @@ public class AdminResearchController(AccountsContext db, VeggieBookContext conte
         [FromQuery] DateOnly? to,
         [FromQuery] string? age,
         [FromQuery] string? vegetable) =>
-        Ok(await ResearchSheets.ResponsesAsync(
-            db, content, new SheetFilter(from, to, Clean(age), Clean(vegetable))));
+        Ok(await ResearchSheets.ResponsesAsync(db, content, BookFilter(from, to, age, vegetable)));
+
+    [HttpGet("items")]
+    public async Task<IActionResult> Items(
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        [FromQuery] string? age,
+        [FromQuery] string? vegetable) =>
+        Ok(await ResearchSheets.ItemsAsync(db, content, BookFilter(from, to, age, vegetable)));
 
     [HttpGet("options")]
     public async Task<IActionResult> Options() =>
@@ -54,17 +63,20 @@ public class AdminResearchController(AccountsContext db, VeggieBookContext conte
         [FromQuery] string? age,
         [FromQuery] string? vegetable)
     {
-        var filter = new SheetFilter(from, to, Clean(age), Clean(vegetable));
+        var filter = sheet == "participants"
+            ? ParticipantFilter(age)
+            : BookFilter(from, to, age, vegetable);
 
         Sheet? data = sheet switch
         {
-            "participants" => await ResearchSheets.ParticipantsAsync(db, ParticipantFilter(age)),
+            "participants" => await ResearchSheets.ParticipantsAsync(db, filter),
             "responses" => await ResearchSheets.ResponsesAsync(db, content, filter),
+            "items" => await ResearchSheets.ItemsAsync(db, content, filter),
             _ => null
         };
         if (data is null) return NotFound(new { error = "Unknown sheet." });
 
-        var filters = Describe(sheet == "participants" ? ParticipantFilter(age) : filter);
+        var filters = Describe(filter);
         var baseName = $"veggiebook2-{data.Name}-{data.GeneratedAt:yyyy-MM-dd}";
 
         // Research data must never sit in a shared or proxy cache.
@@ -82,6 +94,9 @@ public class AdminResearchController(AccountsContext db, VeggieBookContext conte
     }
 
     private static SheetFilter ParticipantFilter(string? age) => new(null, null, Clean(age), null);
+
+    private static SheetFilter BookFilter(DateOnly? from, DateOnly? to, string? age, string? vegetable) =>
+        new(from, to, Clean(age), Clean(vegetable));
 
     private static string Describe(SheetFilter f)
     {

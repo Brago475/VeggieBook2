@@ -1,7 +1,7 @@
 // Shapes of the research API (api/Admin/AdminResearchController.cs and
 // api/Research/SheetModel.cs). If those change, change these to match.
 
-export type SheetName = 'responses' | 'participants'
+export type SheetName = 'responses' | 'items' | 'participants'
 
 export type SheetColumn = {
   key: string

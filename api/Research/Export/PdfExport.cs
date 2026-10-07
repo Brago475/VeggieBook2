@@ -15,6 +15,7 @@ namespace VeggieBook.Api.Research.Export;
 // A sheet too wide for one page is split into parts. The participant ID and
 // book number are repeated in every part, so rows can still be matched up.
 // Question columns are headed Q1, Q2...; the variables list spells them out.
+// Long text (answers, recipe lists) wraps inside its cell.
 
 public static class PdfExport
 {
@@ -110,9 +111,12 @@ public static class PdfExport
     private static double Width(SheetColumn column) => column switch
     {
         { Key: "participant_id" } => 3.1,
+        { Key: "item_title" } => 6.0,
+        { Key: "cover_image" } => 3.6,
         { Type: "number" } => 1.9,
         { Type: "date" } => 2.2,
         { Type: "time" } => 1.4,
+        _ when column.Key.EndsWith("_list", StringComparison.Ordinal) => 8.0,
         _ when IsQuestion(column) => 6.0,
         _ => 2.9
     };
