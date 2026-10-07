@@ -1,0 +1,32 @@
+/* Design tokens for the admin site. The greens match the public site
+   (web/src/styles/tokens.css) so both feel like one product. */
+
+:root {
+  --green-deep: #2f5d2f;
+  --green: #6fa32c;
+  --green-light: #8cc63e;
+  --green-tint: #eef3e6;
+
+  --ink: #1f2a1f;
+  --muted: #6b7065;
+  --line: #dfe5d6;
+  --surface: #ffffff;
+  --page: #f6f8f2;
+
+  --warn: #b5541c;
+  --warn-tint: #fbeee5;
+  --error: #b42318;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}

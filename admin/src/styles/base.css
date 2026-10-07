@@ -1,0 +1,86 @@
+/* Shared pieces used on every admin screen: page, cards, fields, buttons,
+   and messages. Screen-specific styles live in their own files. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--page);
+}
+
+.admin-loading {
+  padding: var(--sp-6);
+  text-align: center;
+  color: var(--muted);
+}
+
+.page-title {
+  margin: 0 0 var(--sp-4);
+  font-size: 22px;
+  color: var(--green-deep);
+}
+
+.card {
+  padding: var(--sp-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--error);
+  background: #fdecea;
+  border-radius: var(--r-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field input {
+  padding: var(--sp-3);
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.field input:focus {
+  outline: 2px solid var(--green-light);
+  outline-offset: 1px;
+}
+
+.button-primary {
+  padding: var(--sp-3) var(--sp-4);
+  font: inherit;
+  font-weight: 700;
+  color: #fff;
+  background: var(--green-deep);
+  border: none;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.button-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
