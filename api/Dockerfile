@@ -27,6 +27,14 @@ RUN dotnet publish -c Release -o /app --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+# The font the PDFs are drawn with. PDFsharp can't find fonts on Linux by
+# itself, so Research/Export/PdfFonts.cs reads these files directly. DejaVu
+# is free to use and embed, and covers Spanish accents. Installed here, the
+# PDFs work on any server that builds this image.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends fonts-dejavu-core \
+ && rm -rf /var/lib/apt/lists/*
+
 # Where the keys that encrypt session cookies live. docker-compose mounts a
 # volume here so the keys survive redeploys; without them every deploy would
 # sign everyone out.

@@ -13,6 +13,13 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+
+    <!-- Research exports. Both MIT licensed, chosen so licensing never
+         causes problems for an academic app. PDFsharp-MigraDoc is the
+         cross-platform build; the GDI and WPF builds only run on Windows.
+         MigraDoc is also used for the book PDFs. -->
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
   </ItemGroup>
 
 </Project>
