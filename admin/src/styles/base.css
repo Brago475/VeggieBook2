@@ -23,6 +23,13 @@ body {
   margin: 0 0 var(--sp-4);
   font-size: 22px;
   color: var(--green-deep);
+  overflow-wrap: anywhere;
+}
+
+.section-title {
+  margin: 0 0 var(--sp-3);
+  font-size: 16px;
+  color: var(--green-deep);
 }
 
 .card {
@@ -37,11 +44,29 @@ body {
   color: var(--muted);
 }
 
+.small {
+  font-size: 13px;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
 .error {
-  margin: 0;
+  margin: 0 0 var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
   color: var(--error);
   background: #fdecea;
+  border-radius: var(--r-md);
+}
+
+.note {
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--warn);
+  background: var(--warn-tint);
   border-radius: var(--r-md);
 }
 
@@ -69,18 +94,53 @@ body {
   outline-offset: 1px;
 }
 
-.button-primary {
+.button-primary,
+.button-secondary,
+.button-danger {
   padding: var(--sp-3) var(--sp-4);
   font: inherit;
   font-weight: 700;
-  color: #fff;
-  background: var(--green-deep);
-  border: none;
   border-radius: var(--r-md);
   cursor: pointer;
 }
 
-.button-primary:disabled {
+.button-primary {
+  color: #fff;
+  background: var(--green-deep);
+  border: 1px solid var(--green-deep);
+}
+
+.button-secondary {
+  color: var(--green-deep);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.button-danger {
+  color: #fff;
+  background: var(--error);
+  border: 1px solid var(--error);
+}
+
+.button-primary:disabled,
+.button-secondary:disabled,
+.button-danger:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.link-button {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--green-deep);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.link-button:hover {
+  text-decoration: underline;
 }

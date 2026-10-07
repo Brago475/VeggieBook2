@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ComingSoon } from './components/common/ComingSoon'
 import { AdminShell, type AdminTab } from './components/layout/AdminShell'
 import { useSession } from './hooks/useSession'
+import { Accounts } from './pages/Accounts'
 import { Overview } from './pages/Overview'
 import { SignIn } from './pages/SignIn'
 
@@ -31,9 +32,7 @@ export function App() {
   return (
     <AdminShell email={session.email} tab={tab} onTab={setTab} onSignOut={signOut}>
       {tab === 'overview' && <Overview />}
-      {tab === 'accounts' && (
-        <ComingSoon title="Accounts" text="Account search, details, and unlock are next." />
-      )}
+      {tab === 'accounts' && <Accounts currentEmail={session.email} />}
       {tab === 'studies' && (
         <ComingSoon
           title="Studies"

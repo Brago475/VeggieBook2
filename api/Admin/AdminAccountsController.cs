@@ -66,17 +66,31 @@ public class AdminAccountsController(
             .Take(MaxResults)
             .Select(u => new
             {
-                id = u.Id,
-                email = u.Email,
-                username = u.DisplayName,
-                isAdmin = db.UserRoles.Any(r => r.UserId == u.Id && r.RoleId == adminRoleId),
-                createdAt = u.CreatedAt,
-                bookCount = db.Books.Count(b => b.UserId == u.Id),
-                recoveryLocked = u.RecoveryLockedAt != null
+                u.Id,
+                u.Email,
+                u.DisplayName,
+                IsAdmin = db.UserRoles.Any(r => r.UserId == u.Id && r.RoleId == adminRoleId),
+                u.CreatedAt,
+                BookCount = db.Books.Count(b => b.UserId == u.Id),
+                RecoveryLocked = u.RecoveryLockedAt != null
             })
             .ToListAsync();
 
-        return Ok(new { results = rows, limit = MaxResults });
+        // The root admin is matched against Admin__RootEmail after the query,
+        // since that setting lives in the environment, not the database.
+        var results = rows.Select(r => new
+        {
+            id = r.Id,
+            email = r.Email,
+            username = r.DisplayName,
+            isAdmin = r.IsAdmin,
+            isRootAdmin = AdminRules.IsRoot(config, r.Email),
+            createdAt = r.CreatedAt,
+            bookCount = r.BookCount,
+            recoveryLocked = r.RecoveryLocked
+        });
+
+        return Ok(new { results, limit = MaxResults });
     }
 
     [HttpGet("{id:guid}")]

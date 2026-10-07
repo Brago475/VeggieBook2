@@ -1,0 +1,252 @@
+/* The Accounts tab: search, the results table, one account's details and
+   actions, and its books. See pages/Accounts.tsx and components/accounts/. */
+
+/* Search */
+
+.search {
+  display: flex;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-3);
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.search-input:focus {
+  outline: 2px solid var(--green-light);
+  outline-offset: 1px;
+}
+
+/* Results table. Scrolls sideways on a narrow screen instead of squeezing. */
+
+.table-wrap {
+  padding: 0;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.table th {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.table-row {
+  cursor: pointer;
+}
+
+.table-row:hover {
+  background: var(--green-tint);
+}
+
+.table-row:last-child td {
+  border-bottom: none;
+}
+
+.badges {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.badge {
+  padding: 2px var(--sp-2);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border-radius: 999px;
+}
+
+.badge.is-warn {
+  color: var(--warn);
+  background: var(--warn-tint);
+}
+
+/* One account */
+
+.back-button {
+  margin-bottom: var(--sp-4);
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--green-deep);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--sp-4);
+}
+
+.info {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0;
+}
+
+.info dt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.info dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.action-title {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Books */
+
+.books-title {
+  margin-top: var(--sp-6);
+}
+
+.book-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.book {
+  display: flex;
+  gap: var(--sp-5);
+}
+
+.book-cover {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 150px;
+  overflow: hidden;
+  background: var(--green-tint);
+  border-radius: var(--r-md);
+}
+
+.book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.book-cover-text {
+  padding: var(--sp-2);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--green-deep);
+}
+
+.book-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.book-title {
+  margin: 0 0 var(--sp-1);
+  font-size: 16px;
+}
+
+.book-section {
+  margin-top: var(--sp-4);
+}
+
+.book-section-title {
+  margin: 0 0 var(--sp-2);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+summary.book-section-title {
+  cursor: pointer;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+.chip {
+  padding: 2px var(--sp-2);
+  font-size: 12px;
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.item-list {
+  margin: 0;
+  padding-left: var(--sp-5);
+}
+
+.item-list li {
+  margin-bottom: var(--sp-1);
+}
+
+.item-code {
+  margin-right: var(--sp-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.item-extra {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (max-width: 560px) {
+  .book {
+    flex-direction: column;
+  }
+
+  .book-cover {
+    width: 100%;
+    height: 180px;
+  }
+}
