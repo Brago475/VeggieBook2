@@ -7,17 +7,21 @@ namespace VeggieBook.Api.Admin;
 // always be reached with at least one account. Changing or removing it is
 // done on the server.
 //
-// The root email can be overridden with Admin__RootEmail in the server's
-// environment, for example if the next team uses a different address.
+// Its email is set by Admin__RootEmail in the server's .env, not in the
+// code, so the public repository does not name the account. Program.cs calls
+// RequireRootEmail at startup, so the API refuses to start without it.
 
 public static class AdminRules
 {
-    public const string DefaultRootEmail = "admin@veggiebook2.com";
+    private const string Setting = "Admin:RootEmail";
 
-    public static string RootEmail(IConfiguration config) =>
-        config["Admin:RootEmail"] is { Length: > 0 } email ? email : DefaultRootEmail;
+    public static void RequireRootEmail(IConfiguration config)
+    {
+        if (string.IsNullOrWhiteSpace(config[Setting]))
+            throw new InvalidOperationException("Admin__RootEmail is not set.");
+    }
 
     public static bool IsRoot(IConfiguration config, string? email) =>
         email is not null
-        && string.Equals(email, RootEmail(config), StringComparison.OrdinalIgnoreCase);
+        && string.Equals(email, config[Setting], StringComparison.OrdinalIgnoreCase);
 }
