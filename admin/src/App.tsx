@@ -4,6 +4,7 @@ import { AdminShell } from './components/layout/AdminShell'
 import type { AdminTab } from './components/layout/navigation'
 import { useSession } from './hooks/useSession'
 import { Accounts } from './pages/Accounts'
+import { Analytics } from './pages/Analytics'
 import { Overview } from './pages/Overview'
 import { SignIn } from './pages/SignIn'
 
@@ -19,10 +20,6 @@ import { SignIn } from './pages/SignIn'
 // components/layout/navigation.ts for which ones are ready).
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
-  analytics: {
-    title: 'Analytics',
-    text: 'Charts from saved books: most picked vegetables and answers, covers, recipes kept and taken out, languages, age ranges, and activity over time.',
-  },
   studies: {
     title: 'Studies',
     text: 'Create studies, invite participants, and turn tracking on and off. Tracking stays off until the IRB is approved.',
@@ -72,6 +69,7 @@ export function App() {
       onSignOut={signOut}
     >
       {tab === 'overview' && <Overview />}
+      {tab === 'analytics' && <Analytics />}
       {tab === 'accounts' && <Accounts currentEmail={session.email} />}
       {soon && <ComingSoon title={soon.title} text={soon.text} />}
     </AdminShell>
