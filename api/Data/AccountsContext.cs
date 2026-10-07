@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VeggieBook.Api.Data;
 
-// Database context for user data: accounts, roles, and saved books.
+// Database context for user data: accounts, roles, saved books, and
+// research IDs.
 //
 // Separate from VeggieBookContext, which is read-only with tracking switched
 // off. Keeping writes in their own context means the content endpoints never
@@ -19,6 +20,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
 {
     public DbSet<Book> Books => Set<Book>();
     public DbSet<BookCoverUpload> BookCoverUploads => Set<BookCoverUpload>();
+    public DbSet<ResearchParticipant> ResearchParticipants => Set<ResearchParticipant>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -98,6 +100,16 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.SessionId).HasColumnName("session_id");
             e.Property(x => x.ContentType).HasColumnName("content_type");
             e.Property(x => x.Data).HasColumnName("data");
+        });
+
+        // See db/migrations/006_research_participant.sql.
+        b.Entity<ResearchParticipant>(e =>
+        {
+            e.ToTable("research_participant");
+            e.HasKey(x => x.UserId);
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.ParticipantId).HasColumnName("participant_id");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
     }
 
