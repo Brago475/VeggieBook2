@@ -1,32 +1,47 @@
-/* Panels and tabs, shared by every admin screen that uses them.
-   See components/common/Panel.tsx and components/common/Tabs.tsx. */
+/* Panels, tabs, and the "See all" pill, shared by every admin screen that
+   uses them. See components/common/. */
 
 .panel {
   display: flex;
   flex-direction: column;
   padding: 0;
-  margin-top: var(--sp-4);
+  margin-top: var(--sp-5);
 }
 
 .panel-head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
   gap: var(--sp-4);
-  padding: var(--sp-4) var(--sp-5);
-  border-bottom: 1px solid var(--line);
+  padding: var(--sp-5) var(--sp-5) var(--sp-4);
+}
+
+.panel-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border-radius: 999px;
+}
+
+.panel-heading {
+  flex: 1;
+  min-width: 0;
 }
 
 .panel-title {
   margin: 0;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 19px;
+  font-weight: 800;
   color: var(--ink);
 }
 
 .panel-desc {
   margin: 2px 0 0;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
 }
 
@@ -36,48 +51,70 @@
 
 .panel-body {
   flex: 1;
-  padding: var(--sp-5);
+  padding: var(--sp-2) var(--sp-5) var(--sp-5);
 }
 
-.panel-foot {
-  margin-top: var(--sp-4);
-}
-
-/* Two panels side by side, one column on narrow screens. Panels inside
-   the grid drop their own top margin and use the grid gap instead. */
+/* Two panels side by side, one column on narrow screens. */
 .panel-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: var(--sp-4);
-  margin-top: var(--sp-4);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-5);
+  margin-top: var(--sp-5);
 }
 
 .panel-grid > .panel {
   margin-top: 0;
 }
 
-/* Tabs */
+@media (max-width: 1100px) {
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* "See all" pill */
+
+.see-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-4);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.see-all:hover {
+  background: var(--green-soft);
+}
+
+/* Tabs: a soft track with the chosen tab raised in white. */
 
 .tabs {
-  display: flex;
-  gap: var(--sp-1);
-  padding: var(--sp-1);
+  display: inline-flex;
+  gap: 4px;
+  max-width: 100%;
+  padding: 5px;
   overflow-x: auto;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  background: var(--green-tint);
+  border-radius: 999px;
 }
 
 .tab {
   flex-shrink: 0;
-  padding: var(--sp-2) var(--sp-4);
+  padding: var(--sp-2) var(--sp-5);
   font: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--muted);
   background: none;
   border: none;
-  border-radius: var(--r-sm);
+  border-radius: 999px;
   cursor: pointer;
 }
 
@@ -86,8 +123,9 @@
 }
 
 .tab.is-active {
-  color: #fff;
-  background: var(--green-deep);
+  color: var(--green-deep);
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(31, 42, 31, 0.12);
 }
 
 .tab:focus {
@@ -100,12 +138,16 @@
 }
 
 @media (max-width: 560px) {
-  .panel-grid {
-    grid-template-columns: 1fr;
+  .panel-head {
+    padding: var(--sp-4) var(--sp-4) var(--sp-3);
   }
 
-  .panel-head,
   .panel-body {
-    padding: var(--sp-4);
+    padding: var(--sp-2) var(--sp-4) var(--sp-4);
+  }
+
+  .panel-icon {
+    width: 40px;
+    height: 40px;
   }
 }

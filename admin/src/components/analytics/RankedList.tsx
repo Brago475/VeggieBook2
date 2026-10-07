@@ -1,11 +1,12 @@
 import { percent } from '../../utils/math'
 import { imageUrl } from '../../utils/images'
 
-// A list ranked by count, with a bar for each row and an optional picture.
-// Used for vegetables, Secrets categories, recipes, secrets, and languages.
+// A ranked list with a picture, a name, a bar, and a value on the right.
 //
-// When `total` is given, each row also shows its share of that total, so
-// "3" reads as "3 · 60%".
+// mode "percent": the value is the share of `total`, and the bar is that
+// share. The exact count shows on hover.
+// mode "count": the value is the count, and the bar is relative to the
+// largest count (for lists where a share means nothing, like top recipes).
 
 export type RankedItem = {
   key: string
@@ -18,44 +19,47 @@ export type RankedItem = {
 
 type Props = {
   items: RankedItem[]
+  mode?: 'percent' | 'count'
   total?: number
   emptyText: string
 }
 
-export function RankedList({ items, total, emptyText }: Props) {
-  const max = Math.max(1, ...items.map((i) => i.count))
-
+export function RankedList({ items, mode = 'percent', total = 0, emptyText }: Props) {
   if (items.length === 0) return <p className="muted">{emptyText}</p>
+
+  const max = Math.max(1, ...items.map((i) => i.count))
 
   return (
     <ol className="ranked">
-      {items.map((item) => (
-        <li key={item.key} className="ranked-row">
-          {item.image !== undefined && (
-            <div className="ranked-img">
-              {item.image && <img src={imageUrl(item.image)} alt="" loading="lazy" />}
-            </div>
-          )}
-          <div className="ranked-body">
-            <div className="ranked-top">
+      {items.map((item) => {
+        const share = percent(item.count, total)
+        const width = mode === 'percent' ? share : (item.count / max) * 100
+        return (
+          <li key={item.key} className="ranked-row">
+            {item.image !== undefined && (
+              <div className="ranked-img">
+                {item.image && <img src={imageUrl(item.image)} alt="" loading="lazy" />}
+              </div>
+            )}
+            <div className="ranked-main">
               <span className="ranked-label">
                 {item.sub && <span className="ranked-sub">{item.sub}</span>}
                 {item.label}
               </span>
-              <span className="ranked-count">
-                {item.count}
-                {total !== undefined && (
-                  <span className="ranked-share"> · {percent(item.count, total)}%</span>
-                )}
-              </span>
+              <div className="bar-track">
+                <div className="bar-fill" style={{ width: `${width}%` }} />
+              </div>
+              {item.note && <span className="ranked-note">{item.note}</span>}
             </div>
-            <div className="bar-track">
-              <div className="bar-fill" style={{ width: `${(item.count / max) * 100}%` }} />
-            </div>
-            {item.note && <span className="ranked-note">{item.note}</span>}
-          </div>
-        </li>
-      ))}
+            <span
+              className="ranked-value"
+              title={mode === 'percent' ? `${item.count} of ${total}` : undefined}
+            >
+              {mode === 'percent' ? `${share}%` : item.count}
+            </span>
+          </li>
+        )
+      })}
     </ol>
   )
 }

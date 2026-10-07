@@ -3,14 +3,14 @@ import { NavIcon } from '../icons/NavIcons'
 import { navGroups, navLabel, type AdminTab } from './navigation'
 import '../../styles/shell.css'
 
-// The frame around every admin screen: the sidebar with every section, who
-// is signed in, and Sign out.
+// The frame around every admin screen: the sidebar with every section, the
+// signed-in account, and Sign out.
 //
 // On a wide screen the sidebar is always shown. On a narrow one it hides,
-// and the menu button in the top bar slides it in.
+// and the menu button in the top bar slides it in. Sections that are not
+// built yet are dimmed but still open their "coming" page.
 //
-// The Admin badge is gold for the root admin and green for every other
-// admin.
+// Gold marks the root admin (badge and avatar); every other admin is green.
 
 export type { AdminTab }
 
@@ -51,28 +51,45 @@ export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: P
           {navGroups.map((group) => (
             <div key={group.label} className="nav-group">
               <p className="nav-group-label">{group.label}</p>
-              {group.items.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={item.id === tab ? 'nav-item is-active' : 'nav-item'}
-                  aria-current={item.id === tab ? 'page' : undefined}
-                  onClick={() => choose(item.id)}
-                >
-                  <NavIcon name={item.icon} />
-                  <span className="nav-label">{item.label}</span>
-                  {!item.ready && <span className="nav-soon">Soon</span>}
-                </button>
-              ))}
+              {group.items.map((item) => {
+                const classes = ['nav-item']
+                if (item.id === tab) classes.push('is-active')
+                else if (!item.ready) classes.push('is-soon')
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={classes.join(' ')}
+                    aria-current={item.id === tab ? 'page' : undefined}
+                    onClick={() => choose(item.id)}
+                  >
+                    <NavIcon name={item.icon} />
+                    <span>{item.label}</span>
+                  </button>
+                )
+              })}
             </div>
           ))}
         </nav>
 
         <div className="sidebar-user">
-          <span className="sidebar-email">{email}</span>
-          <button type="button" className="nav-item" onClick={() => void onSignOut()}>
+          <span className={isRoot ? 'avatar is-root' : 'avatar'} aria-hidden="true">
+            {email.charAt(0).toUpperCase()}
+          </span>
+          <div className="sidebar-user-text">
+            <span className="sidebar-email" title={email}>
+              {email}
+            </span>
+            <span className="sidebar-role">Administrator</span>
+          </div>
+          <button
+            type="button"
+            className="signout-button"
+            aria-label="Sign out"
+            title="Sign out"
+            onClick={() => void onSignOut()}
+          >
             <NavIcon name="signout" />
-            <span className="nav-label">Sign out</span>
           </button>
         </div>
       </aside>

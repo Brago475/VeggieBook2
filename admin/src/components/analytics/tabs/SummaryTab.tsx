@@ -1,14 +1,14 @@
 import type { AnalyticsData } from '../../../types/analytics'
-import { percent } from '../../../utils/math'
 import { Panel } from '../../common/Panel'
+import { SeeAllButton } from '../../common/SeeAllButton'
 import { ActivityChart } from '../ActivityChart'
 import { CoverBreakdown } from '../CoverBreakdown'
 import { KeyFindings } from '../KeyFindings'
 import { KpiCard } from '../KpiCard'
 import { RankedList } from '../RankedList'
 
-// The first Analytics tab: headline numbers, findings, activity, and a
-// short look at vegetables and covers. "See all" opens the Books tab.
+// The first Analytics tab: headline numbers, findings, activity, top
+// vegetables, and covers. "See all" opens the Books tab.
 
 type Props = {
   data: AnalyticsData
@@ -17,65 +17,34 @@ type Props = {
 
 export function SummaryTab({ data, onSeeBooks }: Props) {
   const s = data.summary
-  const totalBooks = s.veggieBooks + s.secretsBooks
   const recipes = data.descriptives.find((d) => d.variable === 'Recipes per VeggieBook')
   const recipesMean = recipes && recipes.mean !== null ? recipes.mean.toFixed(1) : 'n/a'
-  const recipesMedian =
-    recipes && recipes.median !== null ? `Median ${recipes.median}` : 'No VeggieBooks yet'
 
   return (
     <>
       <div className="kpi-grid">
-        <KpiCard icon="users" label="Accounts" value={String(s.accounts)} detail="Guests not included" />
-        <KpiCard
-          icon="book"
-          label="VeggieBooks saved"
-          value={String(s.veggieBooks)}
-          detail={`${percent(s.veggieBooks, totalBooks)}% of all books`}
-        />
-        <KpiCard
-          icon="sparkle"
-          label="Secrets Books saved"
-          value={String(s.secretsBooks)}
-          detail={`${percent(s.secretsBooks, totalBooks)}% of all books`}
-        />
-        <KpiCard
-          icon="list"
-          label="Avg. recipes per VeggieBook"
-          value={recipesMean}
-          detail={recipesMedian}
-        />
-        <KpiCard
-          icon="image"
-          label="Personal covers"
-          value={`${percent(s.personalCovers, totalBooks)}%`}
-          detail={`${s.personalCovers} of ${totalBooks} books`}
-        />
-        <KpiCard
-          icon="globe"
-          label="Books in Spanish"
-          value={`${percent(s.spanishBooks, totalBooks)}%`}
-          detail={`${s.spanishBooks} of ${totalBooks} books`}
-        />
+        <KpiCard icon="users" label="Accounts" value={String(s.accounts)} />
+        <KpiCard icon="book" label="VeggieBooks" value={String(s.veggieBooks)} />
+        <KpiCard icon="sparkle" label="Secrets Books" value={String(s.secretsBooks)} />
+        <KpiCard icon="list" label="Avg. recipes per book" value={recipesMean} />
       </div>
 
-      <Panel title="Key findings" description="Written from the numbers on these tabs.">
-        <KeyFindings data={data} />
-      </Panel>
+      <div className="panel-grid">
+        <Panel icon="bulb" title="Key findings">
+          <KeyFindings data={data} />
+        </Panel>
 
-      <Panel title="Activity" description="New accounts and saved books per week, last 12 weeks.">
-        <ActivityChart weeks={data.weeks} />
-      </Panel>
+        <Panel icon="activity" title="Activity" aside={<span className="meta-pill">Last 12 weeks</span>}>
+          <ActivityChart weeks={data.weeks} />
+        </Panel>
+      </div>
 
       <div className="panel-grid">
         <Panel
+          icon="leaf"
           title="Top vegetables"
           description="Share of VeggieBooks for each vegetable."
-          aside={
-            <button type="button" className="link-button" onClick={onSeeBooks}>
-              See all
-            </button>
-          }
+          aside={<SeeAllButton onClick={onSeeBooks} />}
         >
           <RankedList
             emptyText="No VeggieBooks yet."
@@ -89,8 +58,18 @@ export function SummaryTab({ data, onSeeBooks }: Props) {
           />
         </Panel>
 
-        <Panel title="Covers" description="Built-in covers versus personal photos.">
-          <CoverBreakdown builtIn={s.builtInCovers} personal={s.personalCovers} topCovers={[]} />
+        <Panel
+          icon="camera"
+          title="Covers"
+          description="Built-in covers versus personal photos."
+          aside={<SeeAllButton onClick={onSeeBooks} />}
+        >
+          <CoverBreakdown
+            builtIn={s.builtInCovers}
+            personal={s.personalCovers}
+            topCovers={data.topCovers}
+            limit={5}
+          />
         </Panel>
       </div>
     </>

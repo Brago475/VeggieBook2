@@ -11,6 +11,7 @@ body {
   font-size: 15px;
   color: var(--ink);
   background: var(--page);
+  -webkit-font-smoothing: antialiased;
 }
 
 .admin-loading {
@@ -21,22 +22,25 @@ body {
 
 .page-title {
   margin: 0 0 var(--sp-4);
-  font-size: 22px;
-  color: var(--green-deep);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
   overflow-wrap: anywhere;
 }
 
 .section-title {
   margin: 0 0 var(--sp-3);
-  font-size: 16px;
-  color: var(--green-deep);
+  font-size: 17px;
+  color: var(--ink);
 }
 
 .card {
   padding: var(--sp-5);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow);
 }
 
 .muted {

@@ -1,5 +1,4 @@
 import type { AnalyticsData } from '../../../types/analytics'
-import { plural } from '../../../utils/math'
 import { Panel } from '../../common/Panel'
 import { CoverBreakdown } from '../CoverBreakdown'
 import { KeptRemovedBar } from '../KeptRemovedBar'
@@ -13,7 +12,7 @@ type Props = {
 }
 
 function takenOut(removed: number) {
-  return removed > 0 ? `Taken out later ${plural(removed, 'time')}` : null
+  return removed > 0 ? `${removed} taken out` : null
 }
 
 export function BooksTab({ data }: Props) {
@@ -22,7 +21,7 @@ export function BooksTab({ data }: Props) {
   return (
     <>
       <div className="panel-grid">
-        <Panel title="Vegetables picked" description="Every vegetable, by number of VeggieBooks.">
+        <Panel icon="leaf" title="Vegetables">
           <RankedList
             emptyText="No VeggieBooks yet."
             total={s.veggieBooks}
@@ -35,7 +34,7 @@ export function BooksTab({ data }: Props) {
           />
         </Panel>
 
-        <Panel title="Secrets categories picked" description="Every category, by number of Secrets Books.">
+        <Panel icon="sparkle" title="Secrets categories">
           <RankedList
             emptyText="No Secrets Books yet."
             total={s.secretsBooks}
@@ -49,7 +48,7 @@ export function BooksTab({ data }: Props) {
         </Panel>
       </div>
 
-      <Panel title="Kept and taken out" description="What happens to items after a book is saved.">
+      <Panel icon="swap" title="Kept and taken out">
         <div className="split-grid">
           <KeptRemovedBar label="Recipes" kept={s.recipesKept} removed={s.recipesRemoved} />
           <KeptRemovedBar label="Secrets" kept={s.secretsKept} removed={s.secretsRemoved} />
@@ -57,8 +56,9 @@ export function BooksTab({ data }: Props) {
       </Panel>
 
       <div className="panel-grid">
-        <Panel title="Most kept recipes" description="Top 10, by number of books that keep them.">
+        <Panel icon="list" title="Most kept recipes">
           <RankedList
+            mode="count"
             emptyText="No recipes kept yet."
             items={data.topRecipes.map((r) => ({
               key: String(r.id),
@@ -71,8 +71,9 @@ export function BooksTab({ data }: Props) {
           />
         </Panel>
 
-        <Panel title="Most kept secrets" description="Top 10, by number of books that keep them.">
+        <Panel icon="sparkle" title="Most kept secrets">
           <RankedList
+            mode="count"
             emptyText="No secrets kept yet."
             items={data.topSecrets.map((t) => ({
               key: String(t.id),
@@ -86,10 +87,7 @@ export function BooksTab({ data }: Props) {
         </Panel>
       </div>
 
-      <Panel
-        title="Covers"
-        description="Built-in covers versus personal photos, and the built-in covers used most. Personal photos are never shown."
-      >
+      <Panel icon="camera" title="Covers">
         <CoverBreakdown
           builtIn={s.builtInCovers}
           personal={s.personalCovers}

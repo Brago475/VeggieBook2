@@ -9,13 +9,14 @@
   --green: #6fa32c;
   --green-light: #8cc63e;
   --green-tint: #eef3e6;
+  --green-soft: #e3ecd6;
 
   --root: #8a6400;
   --root-tint: #fbf1d3;
 
   --ink: #1f2a1f;
   --muted: #6b7065;
-  --line: #dfe5d6;
+  --line: #e7ece0;
   --surface: #ffffff;
   --page: #f6f8f2;
 
@@ -23,9 +24,12 @@
   --warn-tint: #fbeee5;
   --error: #b42318;
 
+  --shadow: 0 1px 2px rgba(31, 42, 31, 0.04), 0 6px 20px rgba(31, 42, 31, 0.05);
+
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 16px;
+  --r-xl: 20px;
 
   --sp-1: 4px;
   --sp-2: 8px;

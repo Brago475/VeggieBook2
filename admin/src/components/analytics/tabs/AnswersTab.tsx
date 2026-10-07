@@ -12,17 +12,11 @@ type Props = {
 export function AnswersTab({ data }: Props) {
   return (
     <>
-      <Panel
-        title="Answers by question"
-        description="Pick a question to see how often each answer was chosen."
-      >
-        <QuestionExplorer questions={data.questions} totalBooks={data.summary.veggieBooks} />
+      <Panel icon="question" title="Answers by question">
+        <QuestionExplorer questions={data.questions} />
       </Panel>
 
-      <Panel
-        title="Most picked answers overall"
-        description="The 10 answers chosen most often, across every question."
-      >
+      <Panel icon="chart" title="Most picked answers">
         <TopAnswers questions={data.questions} />
       </Panel>
     </>

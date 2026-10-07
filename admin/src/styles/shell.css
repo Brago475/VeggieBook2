@@ -18,9 +18,9 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  width: 248px;
+  width: 264px;
   height: 100vh;
-  padding: var(--sp-5) var(--sp-3);
+  padding: var(--sp-5) var(--sp-4);
   overflow-y: auto;
   background: var(--surface);
   border-right: 1px solid var(--line);
@@ -30,16 +30,16 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  padding: 0 var(--sp-2) var(--sp-5);
+  padding: 0 var(--sp-2) var(--sp-6);
 }
 
 .sidebar-logo {
-  width: 132px;
+  width: 140px;
   height: auto;
 }
 
 .shell-badge {
-  padding: 2px var(--sp-2);
+  padding: 3px 10px;
   font-size: 12px;
   font-weight: 700;
   color: var(--green-deep);
@@ -60,24 +60,24 @@
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: var(--sp-5);
   flex: 1;
 }
 
 .nav-group {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .nav-group-label {
-  margin: 0 0 var(--sp-1);
+  margin: 0 0 var(--sp-2);
   padding: 0 var(--sp-3);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: #9aa393;
 }
 
 .nav-item {
@@ -85,8 +85,10 @@
   align-items: center;
   gap: var(--sp-3);
   width: 100%;
-  padding: 10px var(--sp-3);
+  min-height: 44px;
+  padding: 0 var(--sp-3);
   font: inherit;
+  font-size: 15px;
   font-weight: 600;
   color: var(--ink);
   text-align: left;
@@ -94,11 +96,12 @@
   border: none;
   border-radius: var(--r-md);
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .nav-item svg {
   flex-shrink: 0;
-  color: var(--muted);
+  color: var(--green-deep);
 }
 
 .nav-item:hover {
@@ -106,15 +109,24 @@
 }
 
 .nav-item.is-active {
-  color: var(--green-deep);
-  background: var(--green-tint);
+  color: #fff;
+  background: var(--green-deep);
+  box-shadow: 0 4px 12px rgba(47, 93, 47, 0.25);
 }
 
 .nav-item.is-active svg {
-  color: var(--green-deep);
+  color: #fff;
 }
 
-/* An outline only for keyboard users, in the site's green. */
+/* A section that isn't built yet: still clickable, but dimmed. */
+.nav-item.is-soon {
+  color: #a3aa9c;
+}
+
+.nav-item.is-soon svg {
+  color: #b9bfb2;
+}
+
 .nav-item:focus {
   outline: none;
 }
@@ -124,36 +136,72 @@
   outline-offset: 1px;
 }
 
-.nav-label {
-  flex: 1;
-}
-
-.nav-soon {
-  padding: 1px 6px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
-  background: var(--page);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-}
+/* Signed-in account at the bottom */
 
 .sidebar-user {
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
+  align-items: center;
+  gap: var(--sp-3);
   margin-top: var(--sp-5);
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--line);
+  padding: var(--sp-3);
+  background: var(--page);
+  border-radius: var(--r-lg);
+}
+
+.avatar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--green-deep);
+  border-radius: 999px;
+}
+
+.avatar.is-root {
+  background: var(--root);
+}
+
+.sidebar-user-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 .sidebar-email {
-  padding: 0 var(--sp-3);
+  max-width: 100%;
+  overflow: hidden;
   font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-role {
+  font-size: 12px;
   color: var(--muted);
-  overflow-wrap: anywhere;
+}
+
+.signout-button {
+  display: flex;
+  flex-shrink: 0;
+  padding: var(--sp-2);
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.signout-button:hover {
+  color: var(--green-deep);
+  background: var(--surface);
 }
 
 .sidebar-backdrop {
@@ -172,9 +220,9 @@
 }
 
 .shell-main {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: var(--sp-6) var(--sp-5);
+  padding: var(--sp-6) var(--sp-6);
 }
 
 /* Narrow screens: the sidebar slides in over the page. */
@@ -237,7 +285,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sidebar {
+  .sidebar,
+  .nav-item {
     transition: none;
   }
 }

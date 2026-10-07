@@ -15,11 +15,11 @@ export function PeopleTab({ data }: Props) {
 
   return (
     <div className="panel-grid">
-      <Panel title="Age ranges" description="Accounts by the age range picked at sign-up.">
+      <Panel icon="users" title="Age ranges">
         <AgeChart ageRanges={data.ageRanges} />
       </Panel>
 
-      <Panel title="Books by language" description="The language each book was made in.">
+      <Panel icon="globe" title="Languages">
         <RankedList
           emptyText="No books yet."
           total={totalBooks}
@@ -28,9 +28,6 @@ export function PeopleTab({ data }: Props) {
             { key: 'es', label: 'Spanish', count: s.spanishBooks },
           ]}
         />
-        <p className="muted small panel-foot">
-          {s.extraCopies} extra {s.extraCopies === 1 ? 'copy' : 'copies'} asked for across all books.
-        </p>
       </Panel>
     </div>
   )
