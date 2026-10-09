@@ -9,7 +9,7 @@ namespace VeggieBook.Api.Research.AllData;
 //
 //   people     real, non-admin accounts with their research IDs
 //   books      every saved book, numbered per person (1 = first book)
-//   content    vegetable, category, recipe, and secret names
+//   content    vegetable, category, recipe, and secret names and pictures
 //   questions  the visible profiling questions and their answer choices
 //
 // Same rules as ResearchSheets.cs: guests and admins are left out, rows are
@@ -43,8 +43,9 @@ internal record AdBook(
     HashSet<string> Attributes,
     List<AdItem> Items);
 
-// A recipe or secret: its code (BR-201 or #5832) and its title.
-internal record AdItemInfo(string? Code, string Title);
+// A recipe or secret: its code (BR-201 or #5832), its title, and its
+// picture (a path under /images, such as recipe/BR-201/photo1.jpg).
+internal record AdItemInfo(string? Code, string Title, string? Image);
 
 internal record AdContent(
     Dictionary<string, string> Vegetables,
@@ -199,7 +200,7 @@ internal static class AllDataSource
             .ToList();
     }
 
-    // Names and titles from the content database, in English.
+    // Names, titles, and pictures from the content database, in English.
     private static async Task<AdContent> LoadContentAsync(VeggieBookContext content)
     {
         var vegetables = await content.Vegetables
@@ -210,17 +211,24 @@ internal static class AllDataSource
             .AsNoTracking()
             .ToDictionaryAsync(c => c.Id, c => c.NameEn);
 
+        // A recipe's picture is its first photo.
         var recipes = (await content.Recipes
                 .AsNoTracking()
-                .Select(r => new { r.Id, r.DisplayCode, r.TitleEn })
+                .Select(r => new
+                {
+                    r.Id,
+                    r.DisplayCode,
+                    r.TitleEn,
+                    Photo = r.Photos.OrderBy(p => p.Position).Select(p => p.ImagePath).FirstOrDefault()
+                })
                 .ToListAsync())
-            .ToDictionary(r => r.Id, r => new AdItemInfo(r.DisplayCode, r.TitleEn));
+            .ToDictionary(r => r.Id, r => new AdItemInfo(r.DisplayCode, r.TitleEn, r.Photo));
 
         var secrets = (await content.Secrets
                 .AsNoTracking()
-                .Select(s => new { s.Id, s.DisplayNumber, s.HeadlineEn })
+                .Select(s => new { s.Id, s.DisplayNumber, s.HeadlineEn, s.ImagePathEn })
                 .ToListAsync())
-            .ToDictionary(s => s.Id, s => new AdItemInfo($"#{s.DisplayNumber}", s.HeadlineEn));
+            .ToDictionary(s => s.Id, s => new AdItemInfo($"#{s.DisplayNumber}", s.HeadlineEn, s.ImagePathEn));
 
         return new AdContent(vegetables, categories, recipes, secrets);
     }

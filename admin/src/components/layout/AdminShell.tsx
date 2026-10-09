@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { NavIcon } from '../icons/NavIcons'
 import { navItems, navLabel, type AdminTab } from './navigation'
+import { TopbarSlotContext } from './TopbarSlot'
 import '../../styles/shell.css'
+import '../../styles/topbar.css'
 
 // The frame around every admin screen: the sidebar with every section, the
 // signed-in account, and the top bar with a breadcrumb and the page title.
@@ -15,6 +17,9 @@ import '../../styles/shell.css'
 // The account box at the bottom shows ADMIN: red for the main (root) admin,
 // green for every other admin. It opens a small menu with Sign out, which
 // closes when you click anywhere else or press Escape.
+//
+// The top bar has a spot on the right for the page's own controls (see
+// TopbarSlot.tsx). All Data puts its search, filters, and downloads there.
 
 export type { AdminTab }
 
@@ -41,6 +46,7 @@ export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: P
   const [menuOpen, setMenuOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(readCollapsed)
   const [userMenu, setUserMenu] = useState(false)
+  const [slot, setSlot] = useState<HTMLDivElement | null>(null)
   const userRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -186,9 +192,12 @@ export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: P
             </span>
             <h1 className="topbar-title">{label}</h1>
           </div>
+          <div className="topbar-actions" ref={setSlot} />
         </header>
 
-        <main className="shell-main">{children}</main>
+        <TopbarSlotContext.Provider value={slot}>
+          <main className="shell-main">{children}</main>
+        </TopbarSlotContext.Provider>
       </div>
     </div>
   )

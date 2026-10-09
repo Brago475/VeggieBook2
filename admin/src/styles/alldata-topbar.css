@@ -1,0 +1,40 @@
+/* All Data's search, filters, and download buttons when they sit in the
+   top bar: one line of slightly smaller controls on the right that wraps
+   onto a second line when the screen is narrower. */
+
+.topbar-actions .ad-toolbar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.topbar-actions .ad-toolbar .filters {
+  gap: 8px;
+}
+
+.topbar-actions .ad-search,
+.topbar-actions .ad-select,
+.topbar-actions .ad-toolbar .filter,
+.topbar-actions .ad-toolbar .filter-reset,
+.topbar-actions .ad-download-all,
+.topbar-actions .ad-downloads .ad-download {
+  height: 36px;
+  font-size: 13.5px;
+}
+
+.topbar-actions .ad-search {
+  flex: 0 1 220px;
+}
+
+.topbar-actions .ad-toolbar-actions {
+  margin-left: 0;
+}
+
+.topbar-actions .ad-downloads {
+  gap: 6px;
+  padding-left: 8px;
+  border-left: 1px solid var(--line);
+}

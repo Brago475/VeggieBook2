@@ -1,0 +1,187 @@
+/* Recipe and secret pictures: small squares in the lists, and the card
+   with the full picture that opens on hover. */
+
+.ad-thumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #f4f4f5;
+  border: 1px solid var(--line);
+}
+
+.ad-thumb.is-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: #15803d;
+  background: #e3f6e9;
+  border-color: transparent;
+}
+
+.ad-thumb.is-empty.is-violet {
+  color: #6d28d9;
+  background: #f0e9fe;
+}
+
+/* Side panel list */
+
+.ad-item-group + .ad-item-group {
+  margin-top: 12px;
+}
+
+.ad-thumb-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ad-thumb-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 8px;
+  cursor: default;
+}
+
+.ad-thumb-row:hover,
+.ad-thumb-row:focus-visible {
+  background: #f4f4f5;
+  outline: none;
+}
+
+.ad-thumb-row.is-out .ad-thumb {
+  opacity: 0.55;
+}
+
+.ad-thumb-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ad-thumb-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #18181b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ad-thumb-row.is-out .ad-thumb-name {
+  color: #c2410c;
+}
+
+.ad-thumb-meta {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 11.5px;
+  color: #71717a;
+}
+
+/* Recipes and secrets table */
+
+.ad-title-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 6px;
+}
+
+.ad-title-cell .ad-thumb {
+  width: 32px;
+  height: 32px;
+}
+
+.ad-title-cell:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: 2px;
+}
+
+/* Hover card */
+
+.ad-preview {
+  position: fixed;
+  z-index: 80;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(24, 24, 27, 0.18);
+  pointer-events: none;
+  animation: ad-preview-in 0.12s ease-out;
+}
+
+@keyframes ad-preview-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ad-preview {
+    animation: none;
+  }
+}
+
+.ad-preview-img {
+  display: block;
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: #f4f4f5;
+}
+
+.ad-preview-img.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: #a1a1aa;
+}
+
+.ad-preview-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 14px;
+}
+
+.ad-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.ad-preview-title {
+  font-size: 15px;
+  line-height: 1.3;
+  color: #18181b;
+}
+
+.ad-preview-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.ad-preview-facts dt {
+  color: #71717a;
+}
+
+.ad-preview-facts dd {
+  margin: 0;
+  color: #18181b;
+}

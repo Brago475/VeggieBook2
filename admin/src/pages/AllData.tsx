@@ -8,6 +8,7 @@ import { ColumnToggles } from '../components/alldata/ColumnToggles'
 import { DownloadMenu } from '../components/alldata/DownloadMenu'
 import { ItemsTable } from '../components/alldata/ItemsTable'
 import { Segmented } from '../components/alldata/Segmented'
+import { TopbarActions } from '../components/layout/TopbarSlot'
 import { useAllData } from '../hooks/useAllData'
 import type { AllDataFile, AnswersView, BookTypeFilter, ColumnGroup, ItemStatusFilter } from '../types/allData'
 import type { ResearchFilters, ResearchOptions, SheetRow } from '../types/research'
@@ -19,6 +20,8 @@ import '../styles/alldata.css'
 import '../styles/alldata-filters.css'
 import '../styles/alldata-table.css'
 import '../styles/alldata-colors.css'
+import '../styles/alldata-preview.css'
+import '../styles/alldata-topbar.css'
 
 // The All Data page: everything collected, in two files.
 //
@@ -26,7 +29,8 @@ import '../styles/alldata-colors.css'
 //                        answer, and counts of recipes and secrets
 //   Recipes and secrets  one row per recipe or secret, grouped by book
 //
-// The Excel, PDF, and CSV buttons download both files together.
+// The search, filters, and the Excel, PDF, and CSV buttons sit in the top
+// bar; each button downloads both files together.
 // Rows are keyed by the anonymous research ID; no email or name appears.
 
 const fileTabs: { id: AllDataFile; label: string }[] = [
@@ -181,17 +185,19 @@ export function AllData() {
 
       <AllDataCards cards={cards} />
 
-      <AllDataToolbar
-        search={search}
-        onSearch={setSearch}
-        searchHint={file === 'books' ? 'Search by research ID' : 'Search research ID or recipe'}
-        bookType={bookType}
-        onBookType={setBookType}
-        filters={filters}
-        options={options}
-        onFilters={setFilters}
-        actions={<DownloadMenu filters={filters} itemAnswers={itemAnswers} />}
-      />
+      <TopbarActions>
+        <AllDataToolbar
+          search={search}
+          onSearch={setSearch}
+          searchHint={file === 'books' ? 'Search by research ID' : 'Search research ID or recipe'}
+          bookType={bookType}
+          onBookType={setBookType}
+          filters={filters}
+          options={options}
+          onFilters={setFilters}
+          actions={<DownloadMenu filters={filters} itemAnswers={itemAnswers} />}
+        />
+      </TopbarActions>
 
       {error && (
         <p className="error" role="alert">

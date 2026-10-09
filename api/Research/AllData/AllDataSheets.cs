@@ -11,9 +11,10 @@ namespace VeggieBook.Api.Research.AllData;
 //                        no questions. This is the shape SPSS wants.
 //
 //   Recipes and secrets  one row per recipe or secret in a saved book, with
-//                        its status. With answers = true, the book's 0/1
-//                        answer columns are repeated on every row, so the
-//                        file works by itself without merging.
+//                        its status and its picture's file path. With
+//                        answers = true, the book's 0/1 answer columns are
+//                        repeated on every row, so the file works by itself
+//                        without merging.
 //
 // Both files share participant_id and book_no, which link them.
 
@@ -78,7 +79,8 @@ public static class AllDataSheets
             new("item_code", "Item code", "text"),
             new("item_title", "Item", "text"),
             new("status", "Status", "text", ["Kept", "Taken out later"]),
-            new("extra_copies", "Extra copies", "number")
+            new("extra_copies", "Extra copies", "number"),
+            new("item_image", "Picture file (under /images)", "text")
         ]);
         columns.AddRange(AnswerColumns(questions));
 
@@ -97,6 +99,7 @@ public static class AllDataSheets
                     row["item_title"] = x.Info.Title;
                     row["status"] = x.Item.Kept ? "Kept" : "Taken out later";
                     row["extra_copies"] = x.Item.Kept ? x.Item.ExtraCopies : 0;
+                    row["item_image"] = x.Info.Image;
                     AddAnswers(row, b, questions);
                     return row;
                 }))
@@ -169,6 +172,6 @@ public static class AllDataSheets
     }
 
     private static AdItemInfo Info(AdItem item, AdContent c) => item.Type == "secret"
-        ? c.Secrets.GetValueOrDefault(item.Id, new AdItemInfo(null, $"Secret {item.Id}"))
-        : c.Recipes.GetValueOrDefault(item.Id, new AdItemInfo(null, $"Recipe {item.Id}"));
+        ? c.Secrets.GetValueOrDefault(item.Id, new AdItemInfo(null, $"Secret {item.Id}", null))
+        : c.Recipes.GetValueOrDefault(item.Id, new AdItemInfo(null, $"Recipe {item.Id}", null));
 }

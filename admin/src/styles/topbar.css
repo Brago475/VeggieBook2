@@ -1,0 +1,22 @@
+/* The page's own controls on the right of the top bar (see
+   components/layout/TopbarSlot.tsx). Empty on pages that don't use it.
+   The bar wraps onto a second line when the controls don't fit. */
+
+.topbar {
+  flex-wrap: wrap;
+  row-gap: var(--sp-2);
+}
+
+.topbar-actions {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.topbar-actions:empty {
+  display: none;
+}

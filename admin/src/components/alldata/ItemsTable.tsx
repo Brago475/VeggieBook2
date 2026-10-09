@@ -3,10 +3,12 @@ import type { AllDataQuestion, ItemStatusFilter } from '../../types/allData'
 import type { SheetRow } from '../../types/research'
 import { bookKey, bookSubject, bookTitle, shortDate, shortTime } from '../../utils/allDataFormat'
 import { shortAnswer } from '../../utils/answerNames'
+import { ItemPreviewCard, ItemThumb, useItemPreview } from './ItemPreview'
 
 // File 2 on screen: one row per recipe or secret, grouped under a bar for
-// each book that opens and closes. With showAnswers on, the book's 0/1
-// answers are repeated on every row, the same as the download.
+// each book that opens and closes. Each item shows a small picture; hover
+// it to see the full picture and its details. With showAnswers on, the
+// book's 0/1 answers are repeated on every row, the same as the download.
 //
 // The parent gives this a new key when the rows change, so paging starts
 // over on page 1.
@@ -54,6 +56,7 @@ function groupByBook(rows: SheetRow[], status: ItemStatusFilter): BookGroup[] {
 export function ItemsTable({ rows, questions, status, showAnswers }: Props) {
   const [page, setPage] = useState(0)
   const [open, setOpen] = useState<Record<string, boolean>>({})
+  const { preview, handlers } = useItemPreview()
 
   const groups = groupByBook(rows, status)
   if (groups.length === 0) return <p className="muted ad-empty">No recipes or secrets match these filters.</p>
@@ -153,7 +156,12 @@ export function ItemsTable({ rows, questions, status, showAnswers }: Props) {
                         <td>
                           <span className="ad-code">{String(r.item_code ?? '')}</span>
                         </td>
-                        <td className={out ? 'ad-item-title is-out' : 'ad-item-title'}>{String(r.item_title ?? '')}</td>
+                        <td className={out ? 'ad-item-title is-out' : 'ad-item-title'}>
+                          <span className="ad-title-cell" tabIndex={0} {...handlers(r)}>
+                            <ItemThumb row={r} />
+                            {String(r.item_title ?? '')}
+                          </span>
+                        </td>
                         <td>
                           <span className={secret ? 'ad-type is-violet' : 'ad-type is-green'}>{String(r.item_type ?? '')}</span>
                         </td>
@@ -181,6 +189,8 @@ export function ItemsTable({ rows, questions, status, showAnswers }: Props) {
           })}
         </table>
       </div>
+
+      <ItemPreviewCard preview={preview} />
 
       <div className="ad-pager">
         <span className="muted small">
