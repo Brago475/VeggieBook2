@@ -186,18 +186,41 @@ public static class SpssExport
         return sb.ToString();
     }
 
-    private static string BuildReadme(string baseName) =>
-        $"""
-        VeggieBook2 research data for SPSS
+    // Plain lines joined together (no multi-line string), so pasting the
+    // file can never break it.
+    private static string BuildReadme(string baseName)
+    {
+        string[] lines =
+        [
+            "VeggieBook2 research data for SPSS",
+            "",
+            "1. Unzip both files into the same folder.",
+            $"2. In SPSS, open {baseName}.sps (File > Open > Syntax).",
+            "3. Choose Run > All.",
+            "",
+            $"SPSS loads {baseName}.csv and sets every variable label and value label.",
+            "If it can't find the CSV, edit the FILE line near the top of the .sps",
+            "file to the CSV's full path, then run it again.",
+            "",
+            "Question answers are one variable each: q1_1 is the first answer to",
+            "question 1, with 1 = picked and 0 = not picked. Blank means the book",
+            "had no questions (Secrets Books).",
+            "",
+            "The data is anonymous: rows are keyed by research ID, with no names",
+            "or emails. Also opens in PSPP, the free alternative to SPSS."
+        ];
+        return string.Join("\r\n", lines) + "\r\n";
+    }
 
-        1. Unzip both files into the same folder.
-        2. In SPSS, open {baseName}.sps (File > Open > Syntax).
-        3. Choose Run > All.
+    // SPSS strings use single quotes; a quote inside is doubled.
+    private static string Quote(string text, int max) =>
+        (text.Length > max ? text[..max] : text).Replace("'", "''");
 
-        SPSS loads {baseName}.csv and sets every variable label and value label.
-        If it can't find the CSV, edit the FILE line near the top of the .sps
-        file to the CSV's full path, then run it again.
-
-        Question answers are one variable each: q1_1 is the first answer to
-        question 1, with 1 = picked and 0 = not picked. Blank means the book
-        had no questions (Secrets
+    private static void Write(ZipArchive archive, string name, string content)
+    {
+        var entry = archive.CreateEntry(name, CompressionLevel.Optimal);
+        using var stream = entry.Open();
+        var bytes = Encoding.UTF8.GetBytes(content);
+        stream.Write(bytes);
+    }
+}
