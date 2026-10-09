@@ -6,7 +6,9 @@ using VeggieBook.Api.Research.Export;
 namespace VeggieBook.Api.Research.AllData;
 
 // Both All Data files as one download, for the page's PDF, CSV, and SPSS
-// buttons (Excel is AllDataExcel.cs).
+// buttons (Excel is AllDataExcel.cs). Column names are in words in every
+// format (see AllDataReadable.cs): "Q1: Microwave" in the PDF and CSV,
+// Q1_Microwave in SPSS, where names can't have spaces.
 //
 //   Pdf   one PDF: Books first, then Recipes and secrets. Each part is made
 //         by the existing PdfExport, then the pages are joined.
@@ -18,12 +20,12 @@ namespace VeggieBook.Api.Research.AllData;
 
 public static class AllDataFiles
 {
-    public static byte[] Pdf(Sheet books, Sheet items, string filters)
+    public static byte[] Pdf(Sheet books, Sheet items, IReadOnlyList<AllDataQuestion> questions, string filters)
     {
         byte[][] parts =
         [
-            AllDataBytes.From(PdfExport.Build(books, filters)),
-            AllDataBytes.From(PdfExport.Build(items, filters))
+            AllDataBytes.From(PdfExport.Build(AllDataReadable.ForPeople(books, questions), filters)),
+            AllDataBytes.From(PdfExport.Build(AllDataReadable.ForPeople(items, questions), filters))
         ];
 
         using var output = new PdfDocument();
@@ -41,25 +43,32 @@ public static class AllDataFiles
         return stream.ToArray();
     }
 
-    public static byte[] Csv(Sheet books, Sheet items)
+    public static byte[] Csv(Sheet books, Sheet items, IReadOnlyList<AllDataQuestion> questions)
     {
         using var stream = new MemoryStream();
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
-            Add(zip, "books.csv", AllDataBytes.From(CsvExport.Build(books)));
-            Add(zip, "recipes-and-secrets.csv", AllDataBytes.From(CsvExport.Build(items)));
+            Add(zip, "books.csv", AllDataBytes.From(CsvExport.Build(AllDataReadable.ForPeople(books, questions))));
+            Add(zip, "recipes-and-secrets.csv",
+                AllDataBytes.From(CsvExport.Build(AllDataReadable.ForPeople(items, questions))));
         }
         return stream.ToArray();
     }
 
-    public static byte[] Spss(Sheet books, Sheet items, string filters, string stamp)
+    public static byte[] Spss(
+        Sheet books,
+        Sheet items,
+        IReadOnlyList<AllDataQuestion> questions,
+        string filters,
+        string stamp)
     {
         using var stream = new MemoryStream();
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
-            CopyInto(zip, "books/", AllDataBytes.From(SpssExport.Build(books, filters, $"veggiebook2-books-{stamp}")));
-            CopyInto(zip, "recipes-and-secrets/",
-                AllDataBytes.From(SpssExport.Build(items, filters, $"veggiebook2-recipes-and-secrets-{stamp}")));
+            CopyInto(zip, "books/", AllDataBytes.From(SpssExport.Build(
+                AllDataReadable.ForSpss(books, questions), filters, $"veggiebook2-books-{stamp}")));
+            CopyInto(zip, "recipes-and-secrets/", AllDataBytes.From(SpssExport.Build(
+                AllDataReadable.ForSpss(items, questions), filters, $"veggiebook2-recipes-and-secrets-{stamp}")));
         }
         return stream.ToArray();
     }

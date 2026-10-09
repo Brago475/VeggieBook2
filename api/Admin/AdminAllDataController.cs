@@ -16,7 +16,8 @@ namespace VeggieBook.Api.Admin;
 //                                        book's 0/1 answers on every row)
 //   GET /api/admin/all-data/questions    every question and answer choice
 //   GET /api/admin/all-data/export?format=xlsx|pdf|csv|spss|zip
-//                                        both files together:
+//                                        both files together, with column
+//                                        names in words:
 //                                          xlsx  one workbook with both
 //                                          pdf   one PDF with both
 //                                          csv   a zip of two CSV files
@@ -27,7 +28,7 @@ namespace VeggieBook.Api.Admin;
 //                                        answers=true adds the book's
 //                                        answers to the recipe rows
 //   GET /api/admin/all-data/export/{books|items}?format=xlsx|csv|spss
-//                                        one file by itself
+//                                        one file by itself (short names)
 //
 // Filters (all optional): from and to (yyyy-MM-dd, Eastern), age, vegetable
 // (a vegetable code such as BROCCOLI).
@@ -86,9 +87,10 @@ public class AdminAllDataController(AccountsContext db, VeggieBookContext conten
         {
             "xlsx" or null => File(
                 AllDataExcel.Build(books, items, questions, filters), XlsxType, $"{baseName}.xlsx"),
-            "pdf" => File(AllDataFiles.Pdf(books, items, filters), "application/pdf", $"{baseName}.pdf"),
-            "csv" => File(AllDataFiles.Csv(books, items), "application/zip", $"{baseName}-csv.zip"),
-            "spss" => File(AllDataFiles.Spss(books, items, filters, stamp), "application/zip", $"{baseName}-spss.zip"),
+            "pdf" => File(AllDataFiles.Pdf(books, items, questions, filters), "application/pdf", $"{baseName}.pdf"),
+            "csv" => File(AllDataFiles.Csv(books, items, questions), "application/zip", $"{baseName}-csv.zip"),
+            "spss" => File(
+                AllDataFiles.Spss(books, items, questions, filters, stamp), "application/zip", $"{baseName}-spss.zip"),
             "zip" => File(
                 AllDataPackage.Build(books, items, questions, filters, stamp),
                 "application/zip",

@@ -18,8 +18,8 @@ namespace VeggieBook.Api.Research.Export;
 //                                  Blank when the book has no questions
 //                                  (Secrets Books), so SPSS treats it as
 //                                  missing, not as "not picked".
-//   answer columns (q1_1, q1_2...) already 0/1 (the All Data files): kept
-//                                  as they are, with their full question
+//   answer columns (q1_1 or        already 0/1 (the All Data files): kept
+//   Q1_Microwave)                  as they are, with their full question
 //                                  and answer as the label and 0/1
 //                                  labeled "Not picked" and "Picked".
 //   columns with a set of values   numbered codes (1, 2, 3...) with value
@@ -119,13 +119,16 @@ public static class SpssExport
     private static bool IsQuestion(SheetColumn column) =>
         column.Key.Length > 1 && column.Key[0] == 'q' && column.Key[1..].All(char.IsAsciiDigit);
 
-    // q1_1, q2_6...: one answer that is already a 0/1 number.
+    // One answer that is already a 0/1 number: a Q or q, the question
+    // number, then an underscore (q1_1, Q1_Microwave, Q2_With_Latino_flavors).
     private static bool IsAnswer(SheetColumn column)
     {
-        if (column.Type != "number" || column.Key.Length < 4 || column.Key[0] != 'q') return false;
-        var parts = column.Key[1..].Split('_');
-        return parts.Length == 2
-            && parts.All(p => p.Length > 0 && p.All(char.IsAsciiDigit));
+        var key = column.Key;
+        if (column.Type != "number" || key.Length < 3 || char.ToLowerInvariant(key[0]) != 'q') return false;
+
+        var i = 1;
+        while (i < key.Length && char.IsAsciiDigit(key[i])) i++;
+        return i > 1 && i < key.Length - 1 && key[i] == '_';
     }
 
     private static string BuildData(Sheet sheet, List<Variable> variables)
@@ -202,9 +205,10 @@ public static class SpssExport
             "If it can't find the CSV, edit the FILE line near the top of the .sps",
             "file to the CSV's full path, then run it again.",
             "",
-            "Question answers are one variable each: q1_1 is the first answer to",
-            "question 1, with 1 = picked and 0 = not picked. Blank means the book",
-            "had no questions (Secrets Books).",
+            "Each answer is its own variable, named after its question and answer",
+            "(for example Q1_Microwave), with 1 = picked and 0 = not picked. The",
+            "full question is the variable's label. Blank means the book had no",
+            "questions (Secrets Books).",
             "",
             "The data is anonymous: rows are keyed by research ID, with no names",
             "or emails. Also opens in PSPP, the free alternative to SPSS."

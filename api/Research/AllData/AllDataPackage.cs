@@ -11,6 +11,8 @@ namespace VeggieBook.Api.Research.AllData;
 //   csv/recipes-and-secrets.csv      file 2 as CSV
 //   spss/...                         both files for SPSS (from SpssExport)
 //   README.txt                       what is inside and how the files link
+//
+// Column names are in words in every file (see AllDataReadable.cs).
 
 public static class AllDataPackage
 {
@@ -25,10 +27,12 @@ public static class AllDataPackage
         using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
             Add(zip, $"veggiebook2-all-data-{stamp}.xlsx", AllDataExcel.Build(books, items, questions, filters));
-            Add(zip, "csv/books.csv", Bytes(CsvExport.Build(books)));
-            Add(zip, "csv/recipes-and-secrets.csv", Bytes(CsvExport.Build(items)));
-            CopyInto(zip, "spss/", Bytes(SpssExport.Build(books, filters, $"veggiebook2-books-{stamp}")));
-            CopyInto(zip, "spss/", Bytes(SpssExport.Build(items, filters, $"veggiebook2-recipes-and-secrets-{stamp}")));
+            Add(zip, "csv/books.csv", Bytes(CsvExport.Build(AllDataReadable.ForPeople(books, questions))));
+            Add(zip, "csv/recipes-and-secrets.csv", Bytes(CsvExport.Build(AllDataReadable.ForPeople(items, questions))));
+            CopyInto(zip, "spss/", Bytes(SpssExport.Build(
+                AllDataReadable.ForSpss(books, questions), filters, $"veggiebook2-books-{stamp}")));
+            CopyInto(zip, "spss/", Bytes(SpssExport.Build(
+                AllDataReadable.ForSpss(items, questions), filters, $"veggiebook2-recipes-and-secrets-{stamp}")));
             Add(zip, "README.txt", Encoding.UTF8.GetBytes(Readme(books, items, filters)));
         }
         return stream.ToArray();
@@ -72,29 +76,36 @@ public static class AllDataPackage
         }
     }
 
-    private static string Readme(Sheet books, Sheet items, string filters) =>
-        $"""
-        VeggieBook2 research data: all data
-        Made {books.GeneratedAt:yyyy-MM-dd HH:mm} UTC. Filters: {filters}.
-
-        Two files, in three formats:
-
-          Books                 {books.Rows.Count} rows, one per saved book.
-          Recipes and secrets   {items.Rows.Count} rows, one per recipe or secret in a book.
-
-        The Excel file has both, plus a Variables tab (every column explained)
-        and a Questions tab (every question and answer, word for word).
-        The csv folder has each file as CSV. The spss folder has each file
-        with its SPSS syntax.
-
-        Answers: each answer choice is its own column (q1_1, q1_2...).
-        1 = picked, 0 = not picked, empty = Secrets Book (no questions).
-
-        Linking: both files share participant_id and book_no. In SPSS, open
-        Recipes and secrets, then Data > Merge Files > Add Variables, matching
-        on those two columns, to bring in the book's answers.
-
-        Privacy: anonymous. Rows are keyed by research ID; no names or
-        emails are included.
-        """;
+    // Plain lines joined together (no multi-line string), so pasting the
+    // file can never break it.
+    private static string Readme(Sheet books, Sheet items, string filters)
+    {
+        string[] lines =
+        [
+            "VeggieBook2 research data: all data",
+            $"Made {books.GeneratedAt:yyyy-MM-dd HH:mm} UTC. Filters: {filters}.",
+            "",
+            "Two files, in three formats:",
+            "",
+            $"  Books                 {books.Rows.Count} rows, one per saved book.",
+            $"  Recipes and secrets   {items.Rows.Count} rows, one per recipe or secret in a book.",
+            "",
+            "The Excel file has both, plus a Variables tab (every column explained)",
+            "and a Questions tab (every question and answer, word for word).",
+            "The csv folder has each file as CSV. The spss folder has each file",
+            "with its SPSS syntax.",
+            "",
+            "Column names are in words: answers read like \"Q1: Microwave\"",
+            "(Q1_Microwave in SPSS). 1 = picked, 0 = not picked, empty = Secrets",
+            "Book (no questions).",
+            "",
+            "Linking: both files share the research ID and book number. In SPSS,",
+            "open Recipes and secrets, then Data > Merge Files > Add Variables,",
+            "matching on those two columns, to bring in the book's answers.",
+            "",
+            "Privacy: anonymous. Rows are keyed by research ID; no names or",
+            "emails are included."
+        ];
+        return string.Join("\r\n", lines) + "\r\n";
+    }
 }
