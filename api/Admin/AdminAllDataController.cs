@@ -15,10 +15,15 @@ namespace VeggieBook.Api.Admin;
 //                                        secret (answers=true repeats the
 //                                        book's 0/1 answers on every row)
 //   GET /api/admin/all-data/questions    every question and answer choice
-//   GET /api/admin/all-data/export?format=zip|xlsx
-//                                        both files: zip = Download all
-//                                        (Excel, CSV, SPSS), xlsx = one
-//                                        workbook with both
+//   GET /api/admin/all-data/export?format=xlsx|pdf|csv|zip
+//                                        both files together:
+//                                          xlsx  one workbook with both
+//                                          pdf   one PDF with both
+//                                          csv   a zip of two CSV files
+//                                          zip   everything (Excel, CSV,
+//                                                SPSS, README)
+//                                        answers=true adds the book's
+//                                        answers to the recipe rows
 //   GET /api/admin/all-data/export/{books|items}?format=xlsx|csv|spss
 //                                        one file by itself
 //
@@ -32,6 +37,8 @@ namespace VeggieBook.Api.Admin;
 [Authorize(Policy = Roles.AdminPolicy)]
 public class AdminAllDataController(AccountsContext db, VeggieBookContext content) : ControllerBase
 {
+    private const string XlsxType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
     [HttpGet("books")]
     public async Task<IActionResult> Books(
         [FromQuery] DateOnly? from,
@@ -60,28 +67,29 @@ public class AdminAllDataController(AccountsContext db, VeggieBookContext conten
         [FromQuery] DateOnly? from,
         [FromQuery] DateOnly? to,
         [FromQuery] string? age,
-        [FromQuery] string? vegetable)
+        [FromQuery] string? vegetable,
+        [FromQuery] bool answers = false)
     {
         var filter = Filter(from, to, age, vegetable);
         var books = await AllDataSheets.BooksAsync(db, content, filter);
-        var items = await AllDataSheets.ItemsAsync(db, content, filter, withAnswers: false);
+        var items = await AllDataSheets.ItemsAsync(db, content, filter, answers);
         var questions = await AllDataSource.LoadQuestionsAsync(content);
         var filters = Describe(filter);
-        var stamp = books.GeneratedAt.ToString("yyyy-MM-dd");
+        var baseName = $"veggiebook2-all-data-{books.GeneratedAt:yyyy-MM-dd}";
 
         Response.Headers.CacheControl = "no-store";
 
         return format switch
         {
-            "zip" or null => File(
-                AllDataPackage.Build(books, items, questions, filters, stamp),
+            "xlsx" or null => File(
+                AllDataExcel.Build(books, items, questions, filters), XlsxType, $"{baseName}.xlsx"),
+            "pdf" => File(AllDataFiles.Pdf(books, items, filters), "application/pdf", $"{baseName}.pdf"),
+            "csv" => File(AllDataFiles.Csv(books, items), "application/zip", $"{baseName}-csv.zip"),
+            "zip" => File(
+                AllDataPackage.Build(books, items, questions, filters, books.GeneratedAt.ToString("yyyy-MM-dd")),
                 "application/zip",
-                $"veggiebook2-all-data-{stamp}.zip"),
-            "xlsx" => File(
-                AllDataExcel.Build(books, items, questions, filters),
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                $"veggiebook2-all-data-{stamp}.xlsx"),
-            _ => BadRequest(new { error = "Format must be zip or xlsx." })
+                $"{baseName}.zip"),
+            _ => BadRequest(new { error = "Format must be xlsx, pdf, csv, or zip." })
         };
     }
 
@@ -115,8 +123,7 @@ public class AdminAllDataController(AccountsContext db, VeggieBookContext conten
         return format switch
         {
             "csv" => File(CsvExport.Build(data), "text/csv; charset=utf-8", $"{baseName}.csv"),
-            "xlsx" => File(ExcelExport.Build(data, filters),
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{baseName}.xlsx"),
+            "xlsx" => File(ExcelExport.Build(data, filters), XlsxType, $"{baseName}.xlsx"),
             "spss" => File(SpssExport.Build(data, filters, baseName), "application/zip", $"{baseName}-spss.zip"),
             _ => BadRequest(new { error = "Format must be xlsx, csv, or spss." })
         };

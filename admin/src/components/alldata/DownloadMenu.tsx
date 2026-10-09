@@ -1,10 +1,16 @@
 import type { ResearchFilters } from '../../types/research'
 import { allDataDownload } from '../../utils/allDataQuery'
 
-// "Download all" gives one .zip with both files as Excel, CSV, and SPSS.
-// "More downloads" opens the single-file downloads. Plain links: the
-// browser saves what the API sends, using the page's session. Every link
-// carries the page's filters.
+// Three buttons, each downloading all the data (both files) with the
+// page's filters:
+//
+//   Excel  one workbook: Books, Recipes and secrets, Variables, Questions
+//   PDF    one PDF with both files
+//   CSV    a zip of books.csv and recipes-and-secrets.csv
+//
+// With "Book answers on each row" on, the recipe rows include the book's
+// answers in every format. Plain links: the browser saves what the API
+// sends, using the page's session.
 
 type Props = {
   filters: ResearchFilters
@@ -12,57 +18,28 @@ type Props = {
 }
 
 const formats = [
-  { format: 'xlsx', label: 'Excel' },
-  { format: 'csv', label: 'CSV' },
-  { format: 'spss', label: 'SPSS' },
+  { format: 'xlsx', label: 'Excel', title: 'Both files in one Excel workbook' },
+  { format: 'pdf', label: 'PDF', title: 'Both files in one PDF' },
+  { format: 'csv', label: 'CSV', title: 'Both files as CSV, in one zip' },
 ]
 
 export function DownloadMenu({ filters, itemAnswers }: Props) {
-  const itemsExtra: Record<string, string> = itemAnswers ? { answers: 'true' } : {}
+  const extra: Record<string, string> = itemAnswers ? { answers: 'true' } : {}
 
   return (
-    <div className="ad-downloads">
-      <details className="ad-more">
-        <summary className="button-secondary">More downloads</summary>
-        <div className="ad-more-menu">
-          <a className="ad-more-item" href={allDataDownload('export', filters, { format: 'xlsx' })} download>
-            <strong>Both files, one Excel workbook</strong>
-            <span>Books, Recipes and secrets, Variables, Questions</span>
-          </a>
-
-          <div className="ad-more-group">
-            <span className="ad-more-title">Books only</span>
-            <div className="ad-more-links">
-              {formats.map((f) => (
-                <a key={f.format} href={allDataDownload('export/books', filters, { format: f.format })} download>
-                  {f.label}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="ad-more-group">
-            <span className="ad-more-title">
-              Recipes and secrets only{itemAnswers ? ', with book answers' : ''}
-            </span>
-            <div className="ad-more-links">
-              {formats.map((f) => (
-                <a
-                  key={f.format}
-                  href={allDataDownload('export/items', filters, { format: f.format, ...itemsExtra })}
-                  download
-                >
-                  {f.label}
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </details>
-
-      <a className="ad-download-all" href={allDataDownload('export', filters, { format: 'zip' })} download>
-        Download all
-      </a>
+    <div className="ad-downloads" role="group" aria-label="Download all data">
+      <span className="muted small">Download all</span>
+      {formats.map((f, i) => (
+        <a
+          key={f.format}
+          className={i === 0 ? 'ad-download-all' : 'button-secondary ad-download'}
+          href={allDataDownload('export', filters, { format: f.format, ...extra })}
+          title={f.title}
+          download
+        >
+          {f.label}
+        </a>
+      ))}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 /* The shared research filters (dates, age range, vegetable) when they sit
    on the All Data page. The Research page styled them in research.css,
-   which this page doesn't load, so they get the All Data look here. */
+   which this page doesn't load, so they get the All Data look here.
+   Also the download buttons, which sit on the same toolbar. */
 
 .ad-toolbar .filters {
   display: flex;
@@ -49,4 +50,21 @@
 
 .ad-toolbar .filter-reset {
   height: 40px;
+}
+
+/* ---- Download buttons ---- */
+
+.ad-downloads .ad-download {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 16px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ad-downloads .ad-download:hover {
+  border-color: var(--vb);
+  background: var(--vb-tint);
+  color: var(--ink);
 }
