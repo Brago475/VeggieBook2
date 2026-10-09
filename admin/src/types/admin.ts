@@ -24,6 +24,11 @@ export type WeekCount = {
   secrets: number
 }
 
+export type NameCount = {
+  name: string
+  count: number
+}
+
 export type TopAnswer = {
   answer: string
   question: string // Q1, Q2...
@@ -41,13 +46,27 @@ export type RecentItem = {
 
 export type Overview = {
   participants: number
-  newThisWeek: number
+  newThisWeek: number // joined in the last 7 days
   veggieBooks: number
   secretsBooks: number
   answersRecorded: number
   recoveryLocked: number
   activeGuests: number
-  weekly: WeekCount[]
+  weekly: WeekCount[] // last 8 weeks, oldest first
+  joinedWeekly: number[] // same 8 weeks
+  answersWeekly: number[] // same 8 weeks
+  byVegetable: NameCount[]
+  byCategory: NameCount[]
+  ageRanges: NameCount[]
+  languages: { english: number; spanish: number }
+  covers: { builtin: number; personal: number }
+  items: {
+    recipesKept: number
+    recipesRemoved: number
+    secretsKept: number
+    secretsRemoved: number
+  }
+  heat: number[][] // 7 days (Monday first) by 8 three-hour blocks
   topAnswers: TopAnswer[]
   recent: RecentItem[]
 }

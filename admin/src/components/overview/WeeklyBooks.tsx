@@ -1,8 +1,9 @@
 import type { WeekCount } from '../../types/admin'
 
-// Books saved per week as stacked bars: VeggieBooks in dark gray at the
-// bottom, Secrets Books in light gray on top. The total sits above each bar
-// and the week's Monday under it. The current week is the last bar.
+// Books saved per week as stacked bars: VeggieBooks in green at the bottom,
+// Secrets Books in light green on top. The total sits above each bar and
+// the week's Monday under it. The current week is the last bar. Bars grow
+// up one after another when the chart first appears.
 
 type Props = {
   weeks: WeekCount[]
@@ -34,7 +35,7 @@ export function WeeklyBooks({ weeks }: Props) {
               title={`Week of ${weekLabel(w.weekStart)}: ${w.veggie} VeggieBooks, ${w.secrets} Secrets Books`}
             >
               <span className={last ? 'weekly-total is-current' : 'weekly-total'}>{total}</span>
-              <div className="weekly-stack">
+              <div className="weekly-stack" style={{ animationDelay: `${i * 60}ms` }}>
                 <div className="weekly-secrets" style={{ height: (w.secrets / max) * CHART_HEIGHT }} />
                 <div className="weekly-veggie" style={{ height: (w.veggie / max) * CHART_HEIGHT }} />
               </div>

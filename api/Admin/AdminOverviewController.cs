@@ -11,7 +11,7 @@ namespace VeggieBook.Api.Admin;
 //
 //   GET /api/admin/overview
 //
-// Admins only (Roles.AdminPolicy).
+// Admins only (Roles.AdminPolicy). The page calls this again every minute.
 //
 // Who counts: "participants" are real accounts that are not admins, the
 // same people the research sheets use. Guests are temporary and admin books
@@ -19,16 +19,25 @@ namespace VeggieBook.Api.Admin;
 // are about the site itself (locked password resets and guests right now).
 //
 // What it returns:
-//   counts       participants, new this week, books, answers recorded
-//   weekly       books saved per week for the last 8 weeks, Monday to
-//                Sunday in Eastern time
-//   topAnswers   the 5 answers the most people picked, from the Most chosen
-//                tally (Research/ChoiceTally.cs), so the numbers match
-//   recent       the latest books saved and accounts joined, by research ID
-//                only; no email or name is read
+//   counts         participants, new in the last 7 days, books, answers
+//   weekly         books saved per week, last 8 weeks (Monday to Sunday,
+//                  Eastern time); joinedWeekly and answersWeekly the same
+//                  way, for the trend lines on the cards
+//   byVegetable    VeggieBooks per vegetable, every active vegetable
+//   byCategory     Secrets Books per category
+//   ageRanges      participants per age range
+//   languages,     book counts for the three rings
+//   covers
+//   items          recipes and secrets kept, and taken out later
+//   heat           books saved by day of week (Monday first) and 3-hour
+//                  block of the day (midnight first), Eastern time
+//   topAnswers     the 5 answers the most people picked, from the Most
+//                  chosen tally (Research/ChoiceTally.cs), so they match
+//   recent         the latest books saved and accounts joined, by research
+//                  ID only; no email or name is read
 //
-// "Answers recorded" counts answers on the questions that people see; the
-// hidden questions the original app filled in by itself are not counted.
+// "Answers" counts answers on the questions that people see; the hidden
+// questions the original app filled in by itself are not counted.
 
 [ApiController]
 [Route("api/admin/overview")]
@@ -37,6 +46,7 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
 {
     private const int Weeks = 8;
     private const int RecentCount = 8;
+    private const int Blocks = 8; // 3-hour blocks in a day
 
     [HttpGet]
     public async Task<IActionResult> Get()
@@ -56,50 +66,175 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
         var books = db.Books.AsNoTracking()
             .Where(b => people.Any(u => u.Id == b.UserId));
 
-        // Counts
+        // Load what the charts need. The study has hundreds of people at
+        // most, so this is small enough to work on in memory.
 
-        var participants = await people.CountAsync();
-        var newThisWeek = await people.CountAsync(u => u.CreatedAt >= weekAgo);
-        var veggieBooks = await books.CountAsync(b => b.Kind == "veggie");
-        var secretsBooks = await books.CountAsync(b => b.Kind == "secrets");
+        var joins = await people
+            .Select(u => new { u.Id, u.CreatedAt, u.AgeRange })
+            .ToListAsync();
+
+        var allBooks = await books
+            .Select(b => new
+            {
+                b.Kind,
+                b.Language,
+                b.VegetableCode,
+                b.SecretCategoryId,
+                Personal = b.CoverUpload != null,
+                b.CreatedAt
+            })
+            .ToListAsync();
+
         var recoveryLocked = await realAccounts.CountAsync(u => u.RecoveryLockedAt != null);
         var activeGuests = await db.Users.AsNoTracking()
             .CountAsync(u => u.GuestExpiresAt != null && u.GuestExpiresAt > now);
 
-        // Books per week, Eastern weeks starting Monday
+        // Weeks: Eastern, starting Monday, the last one being this week.
 
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now, zone));
         var thisMonday = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
         var firstMonday = thisMonday.AddDays(-7 * (Weeks - 1));
-        var fromUtc = TimeZoneInfo.ConvertTimeToUtc(firstMonday.ToDateTime(TimeOnly.MinValue), zone);
 
-        var recentBooks = await books
-            .Where(b => b.CreatedAt >= fromUtc)
-            .Select(b => new { b.CreatedAt, b.Kind })
-            .ToListAsync();
+        int WeekOf(DateOnly day)
+        {
+            var diff = day.DayNumber - firstMonday.DayNumber;
+            return diff < 0 ? -1 : diff / 7;
+        }
 
-        var byWeek = recentBooks
-            .Select(b => new
+        int WeekOfUtc(DateTime utc) => WeekOf(DateOnly.FromDateTime(ToZone(utc, zone)));
+
+        int[] PerWeek<T>(IEnumerable<T> items, Func<T, int> week)
+        {
+            var counts = new int[Weeks];
+            foreach (var item in items)
             {
-                Week = (DateOnly.FromDateTime(ToZone(b.CreatedAt, zone)).DayNumber - firstMonday.DayNumber) / 7,
-                b.Kind
-            })
-            .Where(b => b.Week >= 0 && b.Week < Weeks)
-            .ToList();
+                var w = week(item);
+                if (w >= 0 && w < Weeks) counts[w]++;
+            }
+            return counts;
+        }
 
         var weekly = Enumerable.Range(0, Weeks)
             .Select(i => new
             {
                 weekStart = firstMonday.AddDays(7 * i).ToString("yyyy-MM-dd"),
-                veggie = byWeek.Count(b => b.Week == i && b.Kind == "veggie"),
-                secrets = byWeek.Count(b => b.Week == i && b.Kind == "secrets")
+                veggie = allBooks.Count(b => b.Kind == "veggie" && WeekOfUtc(b.CreatedAt) == i),
+                secrets = allBooks.Count(b => b.Kind == "secrets" && WeekOfUtc(b.CreatedAt) == i)
             })
             .ToList();
+
+        var joinedWeekly = PerWeek(joins, j => WeekOfUtc(j.CreatedAt));
+
+        // Answers, from the Responses sheet so they match the research data.
+
+        var responses = await ResearchSheets.ResponsesAsync(db, content, new SheetFilter(null, null, null, null));
+        var answersRecorded = 0;
+        var answersWeekly = new int[Weeks];
+        foreach (var row in responses.Rows)
+        {
+            var n = Convert.ToInt32(row.GetValueOrDefault("answers") ?? 0);
+            answersRecorded += n;
+            if (row.GetValueOrDefault("date") is string date && DateOnly.TryParse(date, out var day))
+            {
+                var w = WeekOf(day);
+                if (w >= 0 && w < Weeks) answersWeekly[w] += n;
+            }
+        }
+
+        // Books by vegetable and by Secrets category
+
+        var vegetableNames = await content.Vegetables
+            .AsNoTracking()
+            .ToDictionaryAsync(v => v.Code, v => v.NameEn);
+
+        var activeVegetables = await content.Vegetables
+            .AsNoTracking()
+            .Where(v => v.Active)
+            .OrderBy(v => v.SortOrder)
+            .Select(v => new { v.Code, v.NameEn })
+            .ToListAsync();
+
+        var byVegetable = activeVegetables
+            .Select(v => new
+            {
+                name = v.NameEn,
+                count = allBooks.Count(b => b.Kind == "veggie" && b.VegetableCode == v.Code)
+            })
+            .OrderByDescending(v => v.count)
+            .ThenBy(v => v.name)
+            .ToList();
+
+        var categoryNames = await content.SecretCategories
+            .AsNoTracking()
+            .ToDictionaryAsync(c => c.Id, c => c.NameEn);
+
+        var byCategory = categoryNames
+            .Select(c => new
+            {
+                name = c.Value,
+                count = allBooks.Count(b => b.Kind == "secrets" && b.SecretCategoryId == c.Key)
+            })
+            .OrderByDescending(c => c.count)
+            .ThenBy(c => c.name)
+            .ToList();
+
+        // Participants by age range; no age range given goes last.
+
+        var ageRanges = joins
+            .GroupBy(j => string.IsNullOrEmpty(j.AgeRange) ? null : j.AgeRange)
+            .Select(g => new { name = g.Key ?? "Not given", count = g.Count(), missing = g.Key is null })
+            .OrderBy(a => a.missing)
+            .ThenBy(a => a.name)
+            .Select(a => new { a.name, a.count })
+            .ToList();
+
+        // Rings
+
+        var languages = new
+        {
+            english = allBooks.Count(b => b.Language != "es"),
+            spanish = allBooks.Count(b => b.Language == "es")
+        };
+
+        var covers = new
+        {
+            builtin = allBooks.Count(b => !b.Personal),
+            personal = allBooks.Count(b => b.Personal)
+        };
+
+        // Kept and taken out later, per kind of item
+
+        var itemGroups = await books
+            .SelectMany(b => b.Selections)
+            .GroupBy(s => new { s.ContentType, s.Kept })
+            .Select(g => new { g.Key.ContentType, g.Key.Kept, Count = g.Count() })
+            .ToListAsync();
+
+        int Items(string type, bool kept) =>
+            itemGroups.Where(g => g.ContentType == type && g.Kept == kept).Sum(g => g.Count);
+
+        var items = new
+        {
+            recipesKept = Items("recipe", true),
+            recipesRemoved = Items("recipe", false),
+            secretsKept = Items("secret", true),
+            secretsRemoved = Items("secret", false)
+        };
+
+        // When books are saved: day of week (Monday first) by 3-hour block
+
+        var heat = new int[7][];
+        for (var d = 0; d < 7; d++) heat[d] = new int[Blocks];
+        foreach (var b in allBooks)
+        {
+            var local = ToZone(b.CreatedAt, zone);
+            var day = ((int)local.DayOfWeek + 6) % 7;
+            heat[day][local.Hour / 3]++;
+        }
 
         // Top answers, from the same tally as the Most chosen sheet
 
         var tally = await ChoiceTally.BuildAsync(db, content, new SheetFilter(null, null, null, null));
-        var answersRecorded = tally.Rows.Sum(r => Convert.ToInt32(r["books"]));
 
         var topAnswers = tally.Rows
             .Where(r => Convert.ToInt32(r["people"]) > 0)
@@ -119,13 +254,6 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
 
         var ids = await ParticipantIds.EnsureAsync(db);
 
-        var vegetables = await content.Vegetables
-            .AsNoTracking()
-            .ToDictionaryAsync(v => v.Code, v => v.NameEn);
-        var categories = await content.SecretCategories
-            .AsNoTracking()
-            .ToDictionaryAsync(c => c.Id, c => c.NameEn);
-
         var latestBooks = await books
             .OrderByDescending(b => b.CreatedAt)
             .Take(RecentCount)
@@ -140,12 +268,6 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             })
             .ToListAsync();
 
-        var latestJoins = await people
-            .OrderByDescending(u => u.CreatedAt)
-            .Take(RecentCount)
-            .Select(u => new { u.Id, u.CreatedAt, u.AgeRange })
-            .ToListAsync();
-
         var recent = latestBooks
             .Select(b =>
             {
@@ -153,12 +275,12 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
                 string title;
                 if (isSecrets)
                 {
-                    var name = b.SecretCategoryId is int id ? categories.GetValueOrDefault(id, "") : "";
+                    var name = b.SecretCategoryId is int id ? categoryNames.GetValueOrDefault(id, "") : "";
                     title = BookTitle(name, "Secrets Book");
                 }
                 else
                 {
-                    var name = b.VegetableCode is string code ? vegetables.GetValueOrDefault(code, code) : "";
+                    var name = b.VegetableCode is string code ? vegetableNames.GetValueOrDefault(code, code) : "";
                     title = BookTitle(name, "VeggieBook");
                 }
                 return new RecentItem(
@@ -168,12 +290,15 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
                     (isSecrets ? Plural(b.Kept, "secret") : Plural(b.Kept, "recipe")) + " kept",
                     b.CreatedAt);
             })
-            .Concat(latestJoins.Select(u => new RecentItem(
-                "joined",
-                ids.GetValueOrDefault(u.Id, ""),
-                "Joined",
-                string.IsNullOrEmpty(u.AgeRange) ? "No age range given" : $"Age {u.AgeRange}",
-                u.CreatedAt)))
+            .Concat(joins
+                .OrderByDescending(j => j.CreatedAt)
+                .Take(RecentCount)
+                .Select(j => new RecentItem(
+                    "joined",
+                    ids.GetValueOrDefault(j.Id, ""),
+                    "Joined",
+                    string.IsNullOrEmpty(j.AgeRange) ? "No age range given" : $"Age {j.AgeRange}",
+                    j.CreatedAt)))
             .Where(r => r.ResearchId != "")
             .OrderByDescending(r => r.At)
             .Take(RecentCount)
@@ -191,14 +316,23 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
 
         return Ok(new
         {
-            participants,
-            newThisWeek,
-            veggieBooks,
-            secretsBooks,
+            participants = joins.Count,
+            newThisWeek = joins.Count(j => j.CreatedAt >= weekAgo),
+            veggieBooks = allBooks.Count(b => b.Kind == "veggie"),
+            secretsBooks = allBooks.Count(b => b.Kind == "secrets"),
             answersRecorded,
             recoveryLocked,
             activeGuests,
             weekly,
+            joinedWeekly,
+            answersWeekly,
+            byVegetable,
+            byCategory,
+            ageRanges,
+            languages,
+            covers,
+            items,
+            heat,
             topAnswers,
             recent
         });

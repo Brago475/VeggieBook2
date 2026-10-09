@@ -1,6 +1,7 @@
 /* The Overview page. See pages/Overview.tsx and components/overview/.
-   Mostly neutral, with soft green in the charts and colored dots in
-   recent activity (green for a saved book, blue for a new person). */
+   Mostly neutral, with soft green in the charts, light orange for items
+   taken out later, and colored dots in recent activity (green for a saved
+   book, blue for a new person). Shared chart pieces are in charts.css. */
 
 .overview {
   display: flex;
@@ -11,13 +12,65 @@
   margin: 0 0 var(--sp-4);
 }
 
-/* Rows of panels: the first panel wider, or two even halves. */
+/* Live line */
+
+.live {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-4);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.live-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  background: var(--vb);
+  border-radius: 999px;
+}
+
+.live-dot::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: var(--vb);
+  border-radius: 999px;
+  animation: live-pulse 2s ease-out infinite;
+}
+
+.live.is-failed {
+  color: var(--warn);
+}
+
+.live.is-failed .live-dot,
+.live.is-failed .live-dot::after {
+  background: var(--warn);
+}
+
+@keyframes live-pulse {
+  from {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.8);
+  }
+}
+
+/* Rows of panels: wide then narrow, narrow then wide, or two halves. */
 
 .overview-row {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: var(--sp-4);
   margin-top: var(--sp-5);
+}
+
+.overview-row.is-reverse {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
 }
 
 .overview-row.is-even {
@@ -30,6 +83,7 @@
 
 @media (max-width: 1000px) {
   .overview-row,
+  .overview-row.is-reverse,
   .overview-row.is-even {
     grid-template-columns: 1fr;
   }
@@ -68,6 +122,8 @@
   flex-direction: column;
   width: 100%;
   max-width: 44px;
+  transform-origin: bottom;
+  animation: weekly-grow 0.7s ease-out both;
 }
 
 .weekly-veggie {
@@ -80,6 +136,15 @@
 
 .weekly-stack > div:first-child {
   border-radius: 4px 4px 0 0;
+}
+
+@keyframes weekly-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
 }
 
 .weekly-labels {
@@ -122,12 +187,17 @@
   border-radius: 2px;
 }
 
-.swatch.is-veggie {
+.swatch.is-veggie,
+.swatch.is-kept {
   background: var(--bar-fill);
 }
 
 .swatch.is-secrets {
   background: var(--bar-light);
+}
+
+.swatch.is-removed {
+  background: #f5c9a6;
 }
 
 /* Active study */
@@ -153,6 +223,158 @@
 
 .study-body .button-secondary {
   margin-top: auto;
+}
+
+/* When books are saved */
+
+.heat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.heat-grid {
+  display: grid;
+  grid-template-columns: 36px repeat(8, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.heat-row {
+  display: contents;
+}
+
+.heat-col {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.heat-day {
+  font-size: 12px;
+  color: var(--ink);
+  align-self: center;
+}
+
+.heat-cell {
+  display: block;
+  height: 26px;
+  border-radius: 4px;
+  animation: heat-in 0.4s ease-out both;
+}
+
+.heat-cell.level-0 {
+  background: #f1f4f1;
+}
+
+.heat-cell.level-1 {
+  background: #dcefe2;
+}
+
+.heat-cell.level-2 {
+  background: #b9dec5;
+}
+
+.heat-cell.level-3 {
+  background: #7cc095;
+}
+
+.heat-cell.level-4 {
+  background: #3f9a5b;
+}
+
+.heat-cell.level-5 {
+  background: #1f7a43;
+}
+
+.heat-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 40px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.heat-legend .heat-cell {
+  width: 14px;
+  height: 14px;
+  animation: none;
+}
+
+@keyframes heat-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Kept vs taken out */
+
+.splits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.split {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.split-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.split-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.split-bar {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
+  background: var(--bar-empty);
+  border-radius: 999px;
+  transform-origin: left;
+  animation: weekly-grow-x 0.8s ease-out both;
+}
+
+.split-kept {
+  background: var(--bar-fill);
+}
+
+.split-removed {
+  background: #f5c9a6;
+}
+
+.split-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.split-counts span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@keyframes weekly-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 /* Most chosen answers */
@@ -249,4 +471,15 @@
   font-size: 12px;
   background: var(--subtle);
   border-radius: var(--r-sm);
+}
+
+/* Reduce motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot::after,
+  .weekly-stack,
+  .heat-cell,
+  .split-bar {
+    animation: none;
+  }
 }

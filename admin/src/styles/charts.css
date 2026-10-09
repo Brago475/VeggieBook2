@@ -1,0 +1,333 @@
+/* Shared chart pieces: animated stat cards, trend lines, rings, and bar
+   lists. See components/common/StatCard, Sparkline, DonutChart, BarList.
+
+   Motion is short and soft. Everything here stops moving for people who
+   have reduce motion turned on (bottom of the file). */
+
+/* Stat card: slides in, a green shine sweeps across, and it flashes green
+   when its number changes. */
+
+.card.stat-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  animation: stat-in 0.5s ease-out both;
+}
+
+.card.stat-card::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgba(22, 163, 74, 0.12) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: stat-sheen 1.3s ease-out 0.35s both;
+}
+
+.card.stat-card.is-flash-a {
+  animation: stat-flash-a 1.6s ease-out;
+}
+
+.card.stat-card.is-flash-b {
+  animation: stat-flash-b 1.6s ease-out;
+}
+
+.card.stat-card.is-flash-a::after {
+  animation: stat-sheen-a 1.2s ease-out both;
+}
+
+.card.stat-card.is-flash-b::after {
+  animation: stat-sheen-b 1.2s ease-out both;
+}
+
+.stat-body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+}
+
+.stat-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-note {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@keyframes stat-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes stat-sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Two copies so a second change restarts the animation. */
+@keyframes stat-sheen-a {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes stat-sheen-b {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes stat-flash-a {
+  0% {
+    border-color: var(--vb);
+    box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.22);
+  }
+  100% {
+    border-color: var(--line);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+}
+
+@keyframes stat-flash-b {
+  0% {
+    border-color: var(--vb);
+    box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.22);
+  }
+  100% {
+    border-color: var(--line);
+    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+  }
+}
+
+/* Trend line */
+
+.sparkline {
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.spark-area {
+  fill: var(--tone-green-bg);
+}
+
+.spark-line {
+  fill: none;
+  stroke: var(--bar-fill);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: spark-draw 1s ease-out 0.4s forwards;
+}
+
+.spark-dot {
+  fill: var(--surface);
+  stroke: var(--bar-fill);
+  stroke-width: 2;
+}
+
+@keyframes spark-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Rings */
+
+.donut-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-5);
+}
+
+@media (max-width: 1200px) {
+  .donut-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.donut {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+}
+
+.donut-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.donut-body {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.donut-svg {
+  flex-shrink: 0;
+  width: 110px;
+  height: 110px;
+  animation: donut-in 0.7s ease-out both;
+}
+
+.donut-track {
+  fill: none;
+  stroke: var(--bar-empty);
+  stroke-width: 14;
+}
+
+.donut-total {
+  font-size: 20px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: var(--ink);
+}
+
+.donut-unit {
+  font-size: 10px;
+  text-anchor: middle;
+  fill: var(--muted);
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  list-style: none;
+}
+
+.donut-legend li {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  column-gap: var(--sp-2);
+  align-items: center;
+}
+
+.donut-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.donut-count {
+  grid-column: 2;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes donut-in {
+  from {
+    opacity: 0;
+    transform: rotate(-60deg) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Bar list */
+
+.barlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barlist-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.barlist-line {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: 14px;
+}
+
+.barlist-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.barlist-row.is-zero .barlist-line {
+  color: var(--faint);
+}
+
+.barlist-fill {
+  transform-origin: left;
+  animation: bar-grow 0.7s ease-out both;
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Reduce motion: no movement anywhere. */
+
+@media (prefers-reduced-motion: reduce) {
+  .card.stat-card,
+  .card.stat-card::after,
+  .card.stat-card.is-flash-a,
+  .card.stat-card.is-flash-b,
+  .card.stat-card.is-flash-a::after,
+  .card.stat-card.is-flash-b::after,
+  .donut-svg,
+  .barlist-fill {
+    animation: none;
+  }
+
+  .card.stat-card::after {
+    display: none;
+  }
+
+  .spark-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
