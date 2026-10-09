@@ -18,6 +18,10 @@ namespace VeggieBook.Api.Research.Export;
 //                                  Blank when the book has no questions
 //                                  (Secrets Books), so SPSS treats it as
 //                                  missing, not as "not picked".
+//   answer columns (q1_1, q1_2...) already 0/1 (the All Data files): kept
+//                                  as they are, with their full question
+//                                  and answer as the label and 0/1
+//                                  labeled "Not picked" and "Picked".
 //   columns with a set of values   numbered codes (1, 2, 3...) with value
 //                                  labels
 //   number columns                 numeric
@@ -74,6 +78,14 @@ public static class SpssExport
             yield break;
         }
 
+        if (IsAnswer(column))
+        {
+            yield return new Variable(column.Key, column.Label, "F1.0",
+                [("0", "Not picked"), ("1", "Picked")],
+                row => Convert.ToString(row.GetValueOrDefault(column.Key), CultureInfo.InvariantCulture) ?? "");
+            yield break;
+        }
+
         if (column.Type == "number")
         {
             yield return new Variable(column.Key, column.Label, "F8.0", [],
@@ -106,6 +118,15 @@ public static class SpssExport
 
     private static bool IsQuestion(SheetColumn column) =>
         column.Key.Length > 1 && column.Key[0] == 'q' && column.Key[1..].All(char.IsAsciiDigit);
+
+    // q1_1, q2_6...: one answer that is already a 0/1 number.
+    private static bool IsAnswer(SheetColumn column)
+    {
+        if (column.Type != "number" || column.Key.Length < 4 || column.Key[0] != 'q') return false;
+        var parts = column.Key[1..].Split('_');
+        return parts.Length == 2
+            && parts.All(p => p.Length > 0 && p.All(char.IsAsciiDigit));
+    }
 
     private static string BuildData(Sheet sheet, List<Variable> variables)
     {
@@ -179,21 +200,4 @@ public static class SpssExport
 
         Question answers are one variable each: q1_1 is the first answer to
         question 1, with 1 = picked and 0 = not picked. Blank means the book
-        had no questions (Secrets Books).
-
-        The data is anonymous: rows are keyed by research ID, with no names
-        or emails. Also opens in PSPP, the free alternative to SPSS.
-        """;
-
-    // SPSS strings use single quotes; a quote inside is doubled.
-    private static string Quote(string text, int max) =>
-        (text.Length > max ? text[..max] : text).Replace("'", "''");
-
-    private static void Write(ZipArchive archive, string name, string content)
-    {
-        var entry = archive.CreateEntry(name, CompressionLevel.Optimal);
-        using var stream = entry.Open();
-        var bytes = Encoding.UTF8.GetBytes(content);
-        stream.Write(bytes);
-    }
-}
+        had no questions (Secrets

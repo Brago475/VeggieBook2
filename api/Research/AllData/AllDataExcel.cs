@@ -3,29 +3,29 @@ using ClosedXML.Excel;
 
 namespace VeggieBook.Api.Research.AllData;
 
-// Both All Data files in one Excel workbook, made to be read by people:
+// Both All Data files in one Excel workbook that people can read and SPSS
+// can import:
 //
 //   Books                one row per book, answers as 0/1 columns
 //   Recipes and secrets  one row per recipe or secret
 //   Variables            every column of both sheets: short name, label,
 //                        type, and possible values
-//   Questions            every question and answer, word for word, with
-//                        the short name of the column that holds it
+//   Questions            every question and answer, word for word
 //   About                what the file is, the filters, when it was made
 //
-// The two data sheets have two header rows. Row 1 holds the question,
-// written out in full across its answer columns. Row 2 holds each
-// column's name in words (Research ID, Date saved, Microwave, Crock Pot...).
-// The data starts on row 3. The short names SPSS uses (q1_1, q1_2...) are
-// in the Variables and Questions tabs.
+// Each data sheet has one header row with names in words: "Research ID",
+// "Date saved", and for answers "Q1: Microwave". Hovering an answer header
+// shows the full question. One header row is what SPSS expects: File >
+// Import Data > Excel, with "Read variable names from the first row" on.
+// SPSS turns each header into a short name (Q1Microwave) and keeps the
+// words as the label.
 //
-// Opens in Excel, Google Sheets, Numbers, and LibreOffice.
+// Opens in Excel, Google Sheets, Numbers, LibreOffice, SPSS, and PSPP.
 
 public static class AllDataExcel
 {
     private const double MaxColumnWidth = 60;
     private const double MinColumnWidth = 14;
-    private const int HeaderRows = 2;
     private const string HeaderFill = "#F4F4F5";
     private const string QuestionFill = "#E3F6E9";
 
@@ -57,60 +57,42 @@ public static class AllDataExcel
             .SelectMany(q => q.Choices.Select(x => (x.Key, Question: q, x.Text)))
             .ToDictionary(t => t.Key);
 
-        var c = 0;
-        while (c < columns.Count)
+        for (var c = 0; c < columns.Count; c++)
         {
-            if (answerOf.TryGetValue(columns[c].Key, out var first))
+            var cell = ws.Cell(1, c + 1);
+            if (answerOf.TryGetValue(columns[c].Key, out var answer))
             {
-                // One question: its answers side by side in row 2, the
-                // question written once across all of them in row 1.
-                var start = c;
-                while (c < columns.Count
-                    && answerOf.TryGetValue(columns[c].Key, out var next)
-                    && next.Question.No == first.Question.No)
-                {
-                    ws.Cell(2, c + 1).Value = next.Text;
-                    c++;
-                }
-
-                var question = ws.Range(1, start + 1, 1, c);
-                question.Merge();
-                question.FirstCell().Value = $"Q{first.Question.No}. {first.Question.Label}";
-                question.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                question.Style.Fill.BackgroundColor = XLColor.FromHtml(QuestionFill);
-                question.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                question.Style.Border.OutsideBorderColor = XLColor.FromHtml("#D4D4D8");
+                cell.Value = $"Q{answer.Question.No}: {answer.Text}";
+                cell.CreateComment().AddText($"Q{answer.Question.No}. {answer.Question.Label} {answer.Text} (1 = picked, 0 = not picked)");
+                cell.Style.Fill.BackgroundColor = XLColor.FromHtml(QuestionFill);
             }
             else
             {
-                ws.Cell(2, c + 1).Value = columns[c].Label;
-                c++;
+                cell.Value = columns[c].Label;
+                cell.Style.Fill.BackgroundColor = XLColor.FromHtml(HeaderFill);
             }
         }
 
         for (var r = 0; r < sheet.Rows.Count; r++)
         {
             var row = sheet.Rows[r];
-            for (var col = 0; col < columns.Count; col++)
-                SetValue(ws.Cell(r + HeaderRows + 1, col + 1), columns[col], row.GetValueOrDefault(columns[col].Key));
+            for (var c = 0; c < columns.Count; c++)
+                SetValue(ws.Cell(r + 2, c + 1), columns[c], row.GetValueOrDefault(columns[c].Key));
         }
 
         if (columns.Count > 0)
         {
-            var header = ws.Range(1, 1, HeaderRows, columns.Count);
+            var header = ws.Range(1, 1, 1, columns.Count);
             header.Style.Font.Bold = true;
             header.Style.Alignment.WrapText = true;
             header.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
-            ws.Range(2, 1, 2, columns.Count).Style.Fill.BackgroundColor = XLColor.FromHtml(HeaderFill);
             ws.Row(1).Height = 48;
-            ws.Row(2).Height = 64;
-
-            ws.Range(2, 1, Math.Max(2, sheet.Rows.Count + HeaderRows), columns.Count).SetAutoFilter();
+            ws.Range(1, 1, Math.Max(1, sheet.Rows.Count + 1), columns.Count).SetAutoFilter();
         }
 
-        ws.SheetView.FreezeRows(HeaderRows);
+        ws.SheetView.FreezeRows(1);
         ws.SheetView.FreezeColumns(1);
-        FitColumns(ws, HeaderRows + 1);
+        FitColumns(ws, 2);
     }
 
     private static void SetValue(IXLCell cell, SheetColumn column, object? value)
@@ -198,7 +180,8 @@ public static class AllDataExcel
             ("Recipes and secrets", $"{items.Rows.Count} rows, one per recipe or secret in a book"),
             ("Linking", "Both sheets share participant_id and book_no."),
             ("Answers", "Each answer is its own column: 1 = picked, 0 = not picked, empty for Secrets Books."),
-            ("Headers", "Row 1 shows the question, row 2 the answer or column name; the data starts on row 3."),
+            ("Headers", "One header row in words; answers read like \"Q1: Microwave\". Hover an answer header for the full question."),
+            ("SPSS", "File > Import Data > Excel, with \"Read variable names from the first row\" on. Or use the SPSS download, which also labels 0 and 1."),
             ("Privacy", "Anonymous. Rows are keyed by research ID; no names or emails are included."),
             ("Variables", "The Variables tab lists every column's name, label, and values.")
         ];
@@ -219,8 +202,9 @@ public static class AllDataExcel
         header.Style.Fill.BackgroundColor = XLColor.FromHtml(HeaderFill);
     }
 
-    // Widths from the content, starting at `fromRow` so long question text
-    // in a header doesn't stretch a column; then kept between the limits.
+    // Widths from the content, starting at `fromRow` so a long header
+    // doesn't stretch a column (it wraps instead); then kept between the
+    // limits.
     private static void FitColumns(IXLWorksheet ws, int fromRow = 1)
     {
         ws.Columns().AdjustToContents(fromRow);

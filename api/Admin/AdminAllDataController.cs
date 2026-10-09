@@ -15,11 +15,13 @@ namespace VeggieBook.Api.Admin;
 //                                        secret (answers=true repeats the
 //                                        book's 0/1 answers on every row)
 //   GET /api/admin/all-data/questions    every question and answer choice
-//   GET /api/admin/all-data/export?format=xlsx|pdf|csv|zip
+//   GET /api/admin/all-data/export?format=xlsx|pdf|csv|spss|zip
 //                                        both files together:
 //                                          xlsx  one workbook with both
 //                                          pdf   one PDF with both
 //                                          csv   a zip of two CSV files
+//                                          spss  a zip ready for SPSS, with
+//                                                every label set
 //                                          zip   everything (Excel, CSV,
 //                                                SPSS, README)
 //                                        answers=true adds the book's
@@ -75,7 +77,8 @@ public class AdminAllDataController(AccountsContext db, VeggieBookContext conten
         var items = await AllDataSheets.ItemsAsync(db, content, filter, answers);
         var questions = await AllDataSource.LoadQuestionsAsync(content);
         var filters = Describe(filter);
-        var baseName = $"veggiebook2-all-data-{books.GeneratedAt:yyyy-MM-dd}";
+        var stamp = books.GeneratedAt.ToString("yyyy-MM-dd");
+        var baseName = $"veggiebook2-all-data-{stamp}";
 
         Response.Headers.CacheControl = "no-store";
 
@@ -85,11 +88,12 @@ public class AdminAllDataController(AccountsContext db, VeggieBookContext conten
                 AllDataExcel.Build(books, items, questions, filters), XlsxType, $"{baseName}.xlsx"),
             "pdf" => File(AllDataFiles.Pdf(books, items, filters), "application/pdf", $"{baseName}.pdf"),
             "csv" => File(AllDataFiles.Csv(books, items), "application/zip", $"{baseName}-csv.zip"),
+            "spss" => File(AllDataFiles.Spss(books, items, filters, stamp), "application/zip", $"{baseName}-spss.zip"),
             "zip" => File(
-                AllDataPackage.Build(books, items, questions, filters, books.GeneratedAt.ToString("yyyy-MM-dd")),
+                AllDataPackage.Build(books, items, questions, filters, stamp),
                 "application/zip",
                 $"{baseName}.zip"),
-            _ => BadRequest(new { error = "Format must be xlsx, pdf, csv, or zip." })
+            _ => BadRequest(new { error = "Format must be xlsx, pdf, csv, spss, or zip." })
         };
     }
 

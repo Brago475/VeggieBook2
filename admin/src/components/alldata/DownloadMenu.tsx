@@ -2,10 +2,13 @@ import type { ResearchFilters } from '../../types/research'
 import { allDataDownload } from '../../utils/allDataQuery'
 import { AllDataIcon, type AllDataIconName } from './AllDataIcons'
 
-// Three buttons, each downloading all the data (both files) with the
+// Four buttons, each downloading all the data (both files) with the
 // page's filters:
 //
-//   Excel  one workbook: Books, Recipes and secrets, Variables, Questions
+//   Excel  one workbook, headers in words ("Q1: Microwave"); opens in
+//          Excel and also imports into SPSS
+//   SPSS   files made for SPSS: every question and answer labeled, and
+//          0/1 shown as Not picked / Picked
 //   PDF    one PDF with both files
 //   CSV    a zip of books.csv and recipes-and-secrets.csv
 //
@@ -19,7 +22,8 @@ type Props = {
 }
 
 const formats: { format: string; label: string; title: string; icon: AllDataIconName }[] = [
-  { format: 'xlsx', label: 'Excel', title: 'Both files in one Excel workbook', icon: 'sheet' },
+  { format: 'xlsx', label: 'Excel', title: 'Both files in one Excel workbook (also imports into SPSS)', icon: 'sheet' },
+  { format: 'spss', label: 'SPSS', title: 'Both files ready for SPSS, with every label set', icon: 'layers' },
   { format: 'pdf', label: 'PDF', title: 'Both files in one PDF', icon: 'file' },
   { format: 'csv', label: 'CSV', title: 'Both files as CSV, in one zip', icon: 'file' },
 ]
