@@ -23,13 +23,20 @@ type Props = {
   onSelect: (key: string) => void
 }
 
+// The top header row. The research ID gets its own cell, fixed on the left
+// with the column under it; every other group is one wide cell whose label
+// slides along while scrolling sideways, so it is always readable.
 function groupSpans(columns: DisplayColumn[]) {
-  const spans: { group: DisplayColumn['group']; span: number }[] = []
-  for (const c of columns) {
+  const spans: { group: DisplayColumn['group']; span: number; sticky: boolean; label: boolean }[] = []
+  columns.forEach((c, i) => {
     const last = spans[spans.length - 1]
-    if (last && last.group === c.group) last.span += 1
-    else spans.push({ group: c.group, span: 1 })
-  }
+    if (i > 0 && last && last.group === c.group && !last.sticky) {
+      last.span += 1
+      return
+    }
+    const sameGroupBefore = last !== undefined && last.group === c.group
+    spans.push({ group: c.group, span: 1, sticky: c.kind === 'id', label: !sameGroupBefore })
+  })
   return spans
 }
 
@@ -101,9 +108,9 @@ export function BooksTable({ rows, columns, selected, onSelect }: Props) {
                 <th
                   key={`${g.group}-${i}`}
                   colSpan={g.span}
-                  className={`ad-group is-${g.group}${i === 0 ? ' is-sticky' : ''}`}
+                  className={`ad-group is-${g.group}${g.sticky ? ' is-sticky' : ''}`}
                 >
-                  {groupLabels[g.group]}
+                  {g.label && <span className="ad-group-label">{groupLabels[g.group]}</span>}
                 </th>
               ))}
             </tr>

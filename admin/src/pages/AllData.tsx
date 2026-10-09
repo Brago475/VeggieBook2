@@ -16,6 +16,8 @@ import { bookColumns } from '../utils/allDataColumns'
 import { bookKey, dateRange } from '../utils/allDataFormat'
 import { noFilters } from '../utils/researchQuery'
 import '../styles/alldata.css'
+import '../styles/alldata-filters.css'
+import '../styles/alldata-table.css'
 
 // The All Data page: everything collected, in two files.
 //
@@ -48,6 +50,7 @@ export function AllData() {
   const [search, setSearch] = useState('')
   const [bookType, setBookType] = useState<BookTypeFilter>('')
   const [selected, setSelected] = useState<string | null>(null)
+  const [panelClosed, setPanelClosed] = useState(false)
   const [answersView, setAnswersView] = useState<AnswersView>('chips')
   const [groups, setGroups] = useState<Record<ColumnGroup, boolean>>(allGroups)
   const [columnsOpen, setColumnsOpen] = useState(false)
@@ -98,7 +101,17 @@ export function AllData() {
   }, [items])
 
   const columns = useMemo(() => bookColumns(questions, answersView, groups), [questions, answersView, groups])
-  const selectedBook = selected ? bookRows.find((r) => bookKey(r) === selected) ?? null : null
+  // The side panel is always open on a book: the one clicked, or the first
+  // row until one is clicked. The close button hides it until the next click.
+  const selectedBook = panelClosed
+    ? null
+    : (selected ? bookRows.find((r) => bookKey(r) === selected) : undefined) ?? bookRows[0] ?? null
+  const selectedKey = selectedBook ? bookKey(selectedBook) : null
+
+  function openBook(key: string) {
+    setSelected(key)
+    setPanelClosed(false)
+  }
 
   const veggieCount = bookRows.filter((r) => r.book_type === 'VeggieBook').length
   const secretsCount = bookRows.length - veggieCount
@@ -206,16 +219,16 @@ export function AllData() {
               key={`${books.generatedAt}-${bookType}-${search}`}
               rows={bookRows}
               columns={columns}
-              selected={selected}
-              onSelect={setSelected}
+              selected={selectedKey}
+              onSelect={openBook}
             />
             {selectedBook && (
               <BookPanel
-                key={selected}
+                key={selectedKey}
                 book={selectedBook}
                 items={itemsByBook.get(bookKey(selectedBook)) ?? []}
                 questions={questions}
-                onClose={() => setSelected(null)}
+                onClose={() => setPanelClosed(true)}
               />
             )}
           </div>

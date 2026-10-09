@@ -1,0 +1,52 @@
+/* The shared research filters (dates, age range, vegetable) when they sit
+   on the All Data page. The Research page styled them in research.css,
+   which this page doesn't load, so they get the All Data look here. */
+
+.ad-toolbar .filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.ad-toolbar .filter {
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.ad-toolbar .filter:focus-within {
+  border-color: var(--vb);
+}
+
+.ad-toolbar .filter-label {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.ad-toolbar .filter input,
+.ad-toolbar .filter select {
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ad-toolbar .filter input:disabled,
+.ad-toolbar .filter select:disabled {
+  color: var(--faint);
+}
+
+.ad-toolbar .filter-reset {
+  height: 40px;
+}
