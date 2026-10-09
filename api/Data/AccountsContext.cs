@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VeggieBook.Api.Data;
 
-// Database context for user data: accounts, roles, saved books, and
-// research IDs.
+// Database context for user data: accounts, roles, saved books, research
+// IDs, and the activity log.
 //
 // Separate from VeggieBookContext, which is read-only with tracking switched
 // off. Keeping writes in their own context means the content endpoints never
@@ -21,6 +21,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
     public DbSet<Book> Books => Set<Book>();
     public DbSet<BookCoverUpload> BookCoverUploads => Set<BookCoverUpload>();
     public DbSet<ResearchParticipant> ResearchParticipants => Set<ResearchParticipant>();
+    public DbSet<ActivityEntry> ActivityLog => Set<ActivityEntry>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -110,6 +111,21 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.UserId).HasColumnName("user_id");
             e.Property(x => x.ParticipantId).HasColumnName("participant_id");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        // See db/migrations/007_activity_log.sql.
+        b.Entity<ActivityEntry>(e =>
+        {
+            e.ToTable("activity_log");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.At).HasColumnName("at");
+            e.Property(x => x.Kind).HasColumnName("kind");
+            e.Property(x => x.ParticipantId).HasColumnName("participant_id");
+            e.Property(x => x.BookKind).HasColumnName("book_kind");
+            e.Property(x => x.VegetableCode).HasColumnName("vegetable_code");
+            e.Property(x => x.SecretCategoryId).HasColumnName("secret_category_id");
+            e.Property(x => x.ItemCount).HasColumnName("item_count");
         });
     }
 

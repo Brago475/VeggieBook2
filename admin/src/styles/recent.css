@@ -1,0 +1,92 @@
+/* Recent activity on the Overview page.
+   See components/overview/RecentActivity.tsx. */
+
+.recent {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-item {
+  display: flex;
+  gap: var(--sp-3);
+  margin: 0 calc(var(--sp-2) * -1);
+  padding: var(--sp-3) var(--sp-2);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.recent-item:last-child {
+  border-bottom: none;
+}
+
+/* A line that appeared on this refresh: slides in at the top with a soft
+   green highlight that fades out. */
+.recent-item.is-new {
+  animation: recent-new 2.6s ease-out;
+}
+
+@keyframes recent-new {
+  0% {
+    opacity: 0;
+    background: var(--vb-tint);
+    transform: translateY(-8px);
+  }
+  15% {
+    opacity: 1;
+    background: var(--vb-tint);
+    transform: none;
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.recent-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 999px;
+}
+
+.recent-dot.is-saved {
+  background: var(--tone-green);
+}
+
+.recent-dot.is-joined {
+  background: var(--tone-blue);
+}
+
+.recent-dot.is-book-deleted {
+  background: var(--warn);
+}
+
+.recent-dot.is-account-deleted {
+  background: var(--root);
+}
+
+.recent-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.id-chip {
+  padding: 1px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: var(--subtle);
+  border-radius: var(--r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-item.is-new {
+    animation: none;
+    background: var(--vb-tint);
+  }
+}

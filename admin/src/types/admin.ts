@@ -36,8 +36,10 @@ export type TopAnswer = {
   percent: number // of people with at least one VeggieBook
 }
 
+// book: a book saved; joined: a new account; book_deleted and
+// account_deleted come from the activity log.
 export type RecentItem = {
-  type: 'book' | 'joined'
+  type: 'book' | 'joined' | 'book_deleted' | 'account_deleted'
   researchId: string
   title: string
   detail: string

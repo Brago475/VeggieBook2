@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Controllers;
 using VeggieBook.Api.Covers;
@@ -29,6 +30,9 @@ namespace VeggieBook.Api.Books;
 // Both kinds of book are listed, opened and deleted here. A Secrets Book is
 // saved by SecretBooksController (POST /api/books/secrets), since it is
 // built differently; everything after saving is the same.
+//
+// Deleting a book writes a line to the activity log (Activity/ActivityLog.cs)
+// so the admin site can show it; the log never blocks the delete.
 
 public record BookRecipe(int Id, int ExtraCopies);
 
@@ -43,8 +47,10 @@ public record CreateBookRequest(
 [ApiController]
 [Route("api/books")]
 [Authorize]
-public class BooksController(AccountsContext db, VeggieBookContext content)
-    : ControllerBase
+public class BooksController(
+    AccountsContext db,
+    VeggieBookContext content,
+    ILogger<BooksController> logger) : ControllerBase
 {
     // Limits on what one account can store. At 50 books with a 400 KB cover
     // each, one account holds at most about 20 MB.
@@ -289,15 +295,38 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
 
     // Deletes in one statement. The database removes the book's answers,
     // recipes, and uploaded cover through ON DELETE CASCADE.
+    //
+    // Before deleting, it reads what the book was (kind, vegetable or
+    // category, how many items it kept) for the activity log line, which is
+    // saved once the delete has gone through.
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var uid = CurrentUserId;
+
+        var info = await db.Books
+            .AsNoTracking()
+            .Where(b => b.Id == id && b.UserId == uid)
+            .Select(b => new
+            {
+                b.Kind,
+                b.VegetableCode,
+                b.SecretCategoryId,
+                Items = b.Selections.Count(s => s.Kept)
+            })
+            .FirstOrDefaultAsync();
+        if (info is null) return NotFound();
+
+        var entry = await ActivityLog.ForBookAsync(
+            db, logger, uid, info.Kind, info.VegetableCode, info.SecretCategoryId, info.Items);
+
         var removed = await db.Books
             .Where(b => b.Id == id && b.UserId == uid)
             .ExecuteDeleteAsync();
+        if (removed == 0) return NotFound();
 
-        return removed == 0 ? NotFound() : NoContent();
+        await ActivityLog.SaveAsync(db, logger, entry);
+        return NoContent();
     }
 
     // Takes one recipe out of a saved book. The row is kept with Kept set to

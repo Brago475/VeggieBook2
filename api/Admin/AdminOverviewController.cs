@@ -33,8 +33,8 @@ namespace VeggieBook.Api.Admin;
 //                  block of the day (midnight first), Eastern time
 //   topAnswers     the 5 answers the most people picked, from the Most
 //                  chosen tally (Research/ChoiceTally.cs), so they match
-//   recent         the latest books saved and accounts joined, by research
-//                  ID only; no email or name is read
+//   recent         latest saves, joins, and deletions, by research ID only
+//                  (OverviewRecent.cs)
 //
 // "Answers" counts answers on the questions that people see; the hidden
 // questions the original app filled in by itself are not counted.
@@ -70,7 +70,7 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
         // most, so this is small enough to work on in memory.
 
         var joins = await people
-            .Select(u => new { u.Id, u.CreatedAt, u.AgeRange })
+            .Select(u => new { u.CreatedAt, u.AgeRange })
             .ToListAsync();
 
         var allBooks = await books
@@ -103,17 +103,6 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
 
         int WeekOfUtc(DateTime utc) => WeekOf(DateOnly.FromDateTime(ToZone(utc, zone)));
 
-        int[] PerWeek<T>(IEnumerable<T> items, Func<T, int> week)
-        {
-            var counts = new int[Weeks];
-            foreach (var item in items)
-            {
-                var w = week(item);
-                if (w >= 0 && w < Weeks) counts[w]++;
-            }
-            return counts;
-        }
-
         var weekly = Enumerable.Range(0, Weeks)
             .Select(i => new
             {
@@ -123,7 +112,12 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             })
             .ToList();
 
-        var joinedWeekly = PerWeek(joins, j => WeekOfUtc(j.CreatedAt));
+        var joinedWeekly = new int[Weeks];
+        foreach (var j in joins)
+        {
+            var w = WeekOfUtc(j.CreatedAt);
+            if (w >= 0 && w < Weeks) joinedWeekly[w]++;
+        }
 
         // Answers, from the Responses sheet so they match the research data.
 
@@ -250,67 +244,10 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             })
             .ToList();
 
-        // Recent activity, by research ID only
+        // Recent activity: saves, joins, and deletions
 
-        var ids = await ParticipantIds.EnsureAsync(db);
-
-        var latestBooks = await books
-            .OrderByDescending(b => b.CreatedAt)
-            .Take(RecentCount)
-            .Select(b => new
-            {
-                b.UserId,
-                b.Kind,
-                b.VegetableCode,
-                b.SecretCategoryId,
-                b.CreatedAt,
-                Kept = b.Selections.Count(s => s.Kept)
-            })
-            .ToListAsync();
-
-        var recent = latestBooks
-            .Select(b =>
-            {
-                var isSecrets = b.Kind == "secrets";
-                string title;
-                if (isSecrets)
-                {
-                    var name = b.SecretCategoryId is int id ? categoryNames.GetValueOrDefault(id, "") : "";
-                    title = BookTitle(name, "Secrets Book");
-                }
-                else
-                {
-                    var name = b.VegetableCode is string code ? vegetableNames.GetValueOrDefault(code, code) : "";
-                    title = BookTitle(name, "VeggieBook");
-                }
-                return new RecentItem(
-                    "book",
-                    ids.GetValueOrDefault(b.UserId, ""),
-                    title,
-                    (isSecrets ? Plural(b.Kept, "secret") : Plural(b.Kept, "recipe")) + " kept",
-                    b.CreatedAt);
-            })
-            .Concat(joins
-                .OrderByDescending(j => j.CreatedAt)
-                .Take(RecentCount)
-                .Select(j => new RecentItem(
-                    "joined",
-                    ids.GetValueOrDefault(j.Id, ""),
-                    "Joined",
-                    string.IsNullOrEmpty(j.AgeRange) ? "No age range given" : $"Age {j.AgeRange}",
-                    j.CreatedAt)))
-            .Where(r => r.ResearchId != "")
-            .OrderByDescending(r => r.At)
-            .Take(RecentCount)
-            .Select(r => new
-            {
-                type = r.Type,
-                researchId = r.ResearchId,
-                title = r.Title,
-                detail = r.Detail,
-                at = DateTime.SpecifyKind(r.At, DateTimeKind.Utc)
-            })
-            .ToList();
+        var recent = await OverviewRecent.BuildAsync(
+            db, people, books, vegetableNames, categoryNames, RecentCount);
 
         Response.Headers.CacheControl = "no-store";
 
@@ -337,21 +274,6 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             recent
         });
     }
-
-    private record RecentItem(string Type, string ResearchId, string Title, string Detail, DateTime At);
-
-    // "Saved a Cabbage VeggieBook", "Saved a Breakfast Secrets Book". A
-    // category that already ends in "Secrets" (such as "Shopping Secrets")
-    // becomes "Saved a Shopping Secrets Book" instead of repeating the word.
-    private static string BookTitle(string name, string kind)
-    {
-        if (string.IsNullOrWhiteSpace(name)) return $"Saved a {kind}";
-        if (kind == "Secrets Book" && name.EndsWith("Secrets", StringComparison.OrdinalIgnoreCase))
-            return $"Saved a {name} Book";
-        return $"Saved a {name} {kind}";
-    }
-
-    private static string Plural(int n, string word) => n == 1 ? $"1 {word}" : $"{n} {word}s";
 
     private static DateTime ToZone(DateTime utc, TimeZoneInfo zone) =>
         TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), zone);

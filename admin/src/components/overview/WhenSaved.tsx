@@ -1,22 +1,23 @@
 // When books are saved: a grid of day of week (rows, Monday first) by
 // 3-hour block of the day (columns, midnight first), in Eastern time.
-// Darker green means more books. Hover a cell for its count.
+// Each column is labeled with its time range. Darker green means more
+// books. Hover a cell for its count.
 
 type Props = {
   heat: number[][]
 }
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const BLOCKS = ['12a', '3a', '6a', '9a', '12p', '3p', '6p', '9p']
+const BLOCKS = ['12-3 AM', '3-6 AM', '6-9 AM', '9 AM-12', '12-3 PM', '3-6 PM', '6-9 PM', '9 PM-12']
 const BLOCK_NAMES = [
-  '12 to 3 AM',
+  'midnight to 3 AM',
   '3 to 6 AM',
   '6 to 9 AM',
-  '9 AM to 12 PM',
-  '12 to 3 PM',
+  '9 AM to noon',
+  'noon to 3 PM',
   '3 to 6 PM',
   '6 to 9 PM',
-  '9 PM to 12 AM',
+  '9 PM to midnight',
 ]
 
 function level(value: number, max: number): number {

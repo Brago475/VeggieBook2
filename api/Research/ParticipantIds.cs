@@ -11,6 +11,9 @@ namespace VeggieBook.Api.Research;
 // sheet, so new accounts appear with an ID the first time a sheet loads.
 // Guests never get one.
 //
+// ForUserAsync does the same for one account, for the activity log, which
+// needs the ID at the moment a book or account is deleted.
+//
 // The characters come from a cryptographic random source, so an ID says
 // nothing about the account or when it was made. 31 characters, 8 places:
 // about 850 billion possible IDs, so a clash is practically impossible, and
@@ -78,5 +81,47 @@ public static class ParticipantIds
         }
 
         return ids;
+    }
+
+    // One account's ID, made now if it doesn't have one yet. Only the new
+    // ID row is added and saved, so anything else the context is tracking
+    // (such as an account about to be deleted) is left alone.
+    public static async Task<string> ForUserAsync(AccountsContext db, Guid userId)
+    {
+        var existing = await db.ResearchParticipants
+            .AsNoTracking()
+            .Where(p => p.UserId == userId)
+            .Select(p => p.ParticipantId)
+            .FirstOrDefaultAsync();
+        if (existing is not null) return existing;
+
+        var used = (await db.ResearchParticipants
+                .AsNoTracking()
+                .Select(p => p.ParticipantId)
+                .ToListAsync())
+            .ToHashSet();
+
+        string id;
+        do { id = NewId(); } while (used.Contains(id));
+
+        var row = new ResearchParticipant { UserId = userId, ParticipantId = id, CreatedAt = DateTime.UtcNow };
+        db.ResearchParticipants.Add(row);
+
+        try
+        {
+            await db.SaveChangesAsync();
+            return id;
+        }
+        catch (DbUpdateException)
+        {
+            // Someone else gave this account an ID at the same moment. Drop
+            // ours and use theirs.
+            db.Entry(row).State = EntityState.Detached;
+            return await db.ResearchParticipants
+                .AsNoTracking()
+                .Where(p => p.UserId == userId)
+                .Select(p => p.ParticipantId)
+                .FirstAsync();
+        }
     }
 }
