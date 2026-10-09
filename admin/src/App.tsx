@@ -4,8 +4,8 @@ import { AdminShell } from './components/layout/AdminShell'
 import type { AdminTab } from './components/layout/navigation'
 import { useSession } from './hooks/useSession'
 import { Accounts } from './pages/Accounts'
+import { AllData } from './pages/AllData'
 import { Overview } from './pages/Overview'
-import { Research } from './pages/Research'
 import { SignIn } from './pages/SignIn'
 
 // The admin site for VeggieBook2, served at admin.veggiebook2.com.
@@ -19,9 +19,10 @@ import { SignIn } from './pages/SignIn'
 // that are not built yet describe what is coming (see
 // components/layout/navigation.ts for which ones are ready).
 //
-// While the redesign is in progress, three sections show an older screen:
-// All Data shows Research, Question Analytics shows Analytics, and Settings
-// shows Accounts. Each gets its new page in a later step.
+// While the redesign is in progress, two sections show an older screen:
+// Question Analytics shows Analytics, and Settings shows Accounts. Each gets
+// its new page in a later step. The old Research page (pages/Research.tsx)
+// is no longer opened from the menu; All Data replaces it.
 //
 // Analytics is loaded only when it is opened. It carries the chart library,
 // which is most of the site's size, so the other screens don't wait for it.
@@ -80,7 +81,7 @@ export function App() {
       onSignOut={signOut}
     >
       {tab === 'overview' && <Overview onOpen={setTab} />}
-      {tab === 'data' && <Research />}
+      {tab === 'data' && <AllData />}
       {tab === 'questions' && (
         <Suspense fallback={<p className="muted">Loading...</p>}>
           <Analytics />
