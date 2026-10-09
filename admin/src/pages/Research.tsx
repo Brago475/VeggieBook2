@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ResearchFilters } from '../components/research/ResearchFilters'
 import { DataTab } from '../components/research/tabs/DataTab'
+import { MostChosenTab } from '../components/research/tabs/MostChosenTab'
 import { QuestionsTab } from '../components/research/tabs/QuestionsTab'
 import { StudiesTab } from '../components/research/tabs/StudiesTab'
 import { VariablesTab } from '../components/research/tabs/VariablesTab'
@@ -15,16 +16,25 @@ import '../styles/research.css'
 // No email or name appears anywhere on this page.
 //
 // The chosen sheet and the filters live here, so they carry across the
-// Data, Variables, and Questions tabs. Refresh loads every sheet again.
+// Data, Variables, Questions, and Most chosen tabs. Refresh loads every
+// sheet again.
 
-type ResearchTab = 'data' | 'variables' | 'questions' | 'studies'
+type ResearchTab = 'data' | 'variables' | 'questions' | 'chosen' | 'studies'
 
 const tabs: { id: ResearchTab; label: string }[] = [
   { id: 'data', label: 'Data' },
   { id: 'variables', label: 'Variables' },
   { id: 'questions', label: 'Questions' },
+  { id: 'chosen', label: 'Most chosen' },
   { id: 'studies', label: 'Studies' },
 ]
+
+// Which sheet the filter bar describes on each tab that shows it.
+function filterSheet(tab: ResearchTab, sheetName: SheetName): SheetName {
+  if (tab === 'questions') return 'responses'
+  if (tab === 'chosen') return 'choices'
+  return sheetName
+}
 
 export function Research() {
   const [tab, setTab] = useState<ResearchTab>('data')
@@ -47,7 +57,7 @@ export function Research() {
     }
   }, [version])
 
-  const showFilters = tab === 'data' || tab === 'questions'
+  const showFilters = tab === 'data' || tab === 'questions' || tab === 'chosen'
 
   return (
     <>
@@ -67,7 +77,7 @@ export function Research() {
       <div className="tab-content">
         {showFilters && (
           <ResearchFilters
-            sheet={tab === 'questions' ? 'responses' : sheetName}
+            sheet={filterSheet(tab, sheetName)}
             filters={filters}
             options={options}
             onChange={setFilters}
@@ -84,6 +94,7 @@ export function Research() {
         )}
         {tab === 'variables' && <VariablesTab sheetName={sheetName} filters={filters} version={version} />}
         {tab === 'questions' && <QuestionsTab filters={filters} version={version} />}
+        {tab === 'chosen' && <MostChosenTab filters={filters} version={version} />}
         {tab === 'studies' && <StudiesTab />}
       </div>
     </>

@@ -1,7 +1,10 @@
 // Shapes of the research API (api/Admin/AdminResearchController.cs and
 // api/Research/SheetModel.cs). If those change, change these to match.
+//
+// choices is the Most chosen sheet (api/Research/ChoiceTally.cs): one row
+// per answer, ranked. It has its own tab instead of being on the Data tab.
 
-export type SheetName = 'responses' | 'items' | 'participants'
+export type SheetName = 'responses' | 'items' | 'participants' | 'choices'
 
 export type SheetColumn = {
   key: string

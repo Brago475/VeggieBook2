@@ -13,6 +13,9 @@ namespace VeggieBook.Api.Admin;
 //   GET /api/admin/research/responses             one row per saved book
 //   GET /api/admin/research/items                 one row per recipe or
 //                                                 secret in a saved book
+//   GET /api/admin/research/choices               one row per answer,
+//                                                 ranked by how often it
+//                                                 was picked
 //   GET /api/admin/research/options               choices for the filters
 //   GET /api/admin/research/export/{sheet}?format=xlsx|csv|pdf|spss
 //                                                 a sheet as a download
@@ -21,8 +24,9 @@ namespace VeggieBook.Api.Admin;
 // (a vegetable code such as BROCCOLI). Participants only uses age.
 //
 // Admins only (Roles.AdminPolicy). The sheets are built in
-// Research/ResearchSheets.cs and the files in Research/Export/. Every row
-// is keyed by the anonymous research ID; no email or name is read.
+// Research/ResearchSheets.cs and Research/ChoiceTally.cs, and the files in
+// Research/Export/. Every row is keyed by the anonymous research ID or, for
+// Most chosen, by answer; no email or name is read.
 
 [ApiController]
 [Route("api/admin/research")]
@@ -50,6 +54,14 @@ public class AdminResearchController(AccountsContext db, VeggieBookContext conte
         [FromQuery] string? vegetable) =>
         Ok(await ResearchSheets.ItemsAsync(db, content, BookFilter(from, to, age, vegetable)));
 
+    [HttpGet("choices")]
+    public async Task<IActionResult> Choices(
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        [FromQuery] string? age,
+        [FromQuery] string? vegetable) =>
+        Ok(await ChoiceTally.BuildAsync(db, content, BookFilter(from, to, age, vegetable)));
+
     [HttpGet("options")]
     public async Task<IActionResult> Options() =>
         Ok(await ResearchSheets.OptionsAsync(db, content));
@@ -72,6 +84,7 @@ public class AdminResearchController(AccountsContext db, VeggieBookContext conte
             "participants" => await ResearchSheets.ParticipantsAsync(db, filter),
             "responses" => await ResearchSheets.ResponsesAsync(db, content, filter),
             "items" => await ResearchSheets.ItemsAsync(db, content, filter),
+            "choices" => await ChoiceTally.BuildAsync(db, content, filter),
             _ => null
         };
         if (data is null) return NotFound(new { error = "Unknown sheet." });
