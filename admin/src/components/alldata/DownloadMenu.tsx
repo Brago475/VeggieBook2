@@ -1,5 +1,6 @@
 import type { ResearchFilters } from '../../types/research'
 import { allDataDownload } from '../../utils/allDataQuery'
+import { AllDataIcon, type AllDataIconName } from './AllDataIcons'
 
 // Three buttons, each downloading all the data (both files) with the
 // page's filters:
@@ -17,10 +18,10 @@ type Props = {
   itemAnswers: boolean
 }
 
-const formats = [
-  { format: 'xlsx', label: 'Excel', title: 'Both files in one Excel workbook' },
-  { format: 'pdf', label: 'PDF', title: 'Both files in one PDF' },
-  { format: 'csv', label: 'CSV', title: 'Both files as CSV, in one zip' },
+const formats: { format: string; label: string; title: string; icon: AllDataIconName }[] = [
+  { format: 'xlsx', label: 'Excel', title: 'Both files in one Excel workbook', icon: 'sheet' },
+  { format: 'pdf', label: 'PDF', title: 'Both files in one PDF', icon: 'file' },
+  { format: 'csv', label: 'CSV', title: 'Both files as CSV, in one zip', icon: 'file' },
 ]
 
 export function DownloadMenu({ filters, itemAnswers }: Props) {
@@ -28,15 +29,16 @@ export function DownloadMenu({ filters, itemAnswers }: Props) {
 
   return (
     <div className="ad-downloads" role="group" aria-label="Download all data">
-      <span className="muted small">Download all</span>
+      <span className="ad-downloads-label">Download all</span>
       {formats.map((f, i) => (
         <a
           key={f.format}
-          className={i === 0 ? 'ad-download-all' : 'button-secondary ad-download'}
+          className={i === 0 ? 'ad-dl is-main' : 'ad-dl'}
           href={allDataDownload('export', filters, { format: f.format, ...extra })}
           title={f.title}
           download
         >
+          <AllDataIcon name={f.icon} size={17} />
           {f.label}
         </a>
       ))}

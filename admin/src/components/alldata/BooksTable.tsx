@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { SheetRow } from '../../types/research'
 import type { DisplayColumn } from '../../utils/allDataColumns'
 import { groupLabels } from '../../utils/allDataColumns'
 import { bookKey, bookSubject, isSecrets, shortDate, shortDay, shortTime } from '../../utils/allDataFormat'
 import { shortAnswer } from '../../utils/answerNames'
+import { AllDataIcon } from './AllDataIcons'
 
-// File 1 on screen: one row per book. A top header row names each group
-// (Person, Book, Answers, Recipes and secrets); the research ID stays
-// fixed on the left while scrolling sideways. Click a row to open it in
-// the side panel.
+// File 1 on screen: one row per book, in a card. `head` (the Answers as
+// switch and Columns) sits at the top of the card, with the row count on
+// the right. A header row names each group (Person, Book, Answers,
+// Recipes and secrets); the research ID stays fixed on the left while
+// scrolling sideways. Click a row to open it in the side panel.
 //
 // The parent gives this a new key when the rows change, so paging starts
 // over on page 1.
@@ -21,6 +23,7 @@ type Props = {
   columns: DisplayColumn[]
   selected: string | null
   onSelect: (key: string) => void
+  head: ReactNode
 }
 
 // The top header row. The research ID gets its own cell, fixed on the left
@@ -98,84 +101,93 @@ function alignClass(column: DisplayColumn) {
   return column.kind === 'num' || column.kind === 'bin' ? 'num' : undefined
 }
 
-export function BooksTable({ rows, columns, selected, onSelect }: Props) {
+export function BooksTable({ rows, columns, selected, onSelect, head }: Props) {
   const [page, setPage] = useState(0)
 
-  if (rows.length === 0) return <p className="muted ad-empty">No books match these filters.</p>
-
-  const pages = Math.ceil(rows.length / PAGE_SIZE)
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
   const start = page * PAGE_SIZE
   const shown = rows.slice(start, start + PAGE_SIZE)
 
   return (
     <div className="ad-table-card">
-      <div className="ad-scroll">
-        <table className="ad-table">
-          <thead>
-            <tr className="ad-group-row">
-              {groupSpans(columns).map((g, i) => (
-                <th
-                  key={`${g.group}-${i}`}
-                  colSpan={g.span}
-                  className={`ad-group is-${g.group}${g.sticky ? ' is-sticky' : ''}`}
-                >
-                  {g.label && <span className="ad-group-label">{groupLabels[g.group]}</span>}
-                </th>
-              ))}
-            </tr>
-            <tr>
-              {columns.map((c) => (
-                <th
-                  key={c.key}
-                  title={c.title}
-                  className={[alignClass(c), c.kind === 'id' ? 'is-sticky' : '', c.group === 'answers' ? 'is-answer' : '']
-                    .filter(Boolean)
-                    .join(' ')}
-                >
-                  {c.small && <span className="ad-th-small">{c.small}</span>}
-                  {c.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {shown.map((row) => {
-              const key = bookKey(row)
-              const isSelected = key === selected
-              return (
-                <tr
-                  key={key}
-                  className={isSelected ? 'is-selected' : undefined}
-                  onClick={() => onSelect(key)}
-                  aria-selected={isSelected}
-                >
-                  {columns.map((c) => (
-                    <td key={c.key} className={[alignClass(c), c.kind === 'id' ? 'is-sticky' : ''].filter(Boolean).join(' ')}>
-                      <Cell row={row} column={c} />
-                    </td>
-                  ))}
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      <div className="ad-card-head-row">
+        <div className="ad-card-head-left">{head}</div>
+        <span className="ad-count">
+          {rows.length === 0 ? 'No books' : `Books ${start + 1} to ${start + shown.length} of ${rows.length}`}
+        </span>
       </div>
 
+      {rows.length === 0 && <p className="muted ad-empty">No books match these filters.</p>}
+
+      {rows.length > 0 && (
+        <div className="ad-scroll">
+          <table className="ad-table">
+            <thead>
+              <tr className="ad-group-row">
+                {groupSpans(columns).map((g, i) => (
+                  <th
+                    key={`${g.group}-${i}`}
+                    colSpan={g.span}
+                    className={`ad-group is-${g.group}${g.sticky ? ' is-sticky' : ''}`}
+                  >
+                    {g.label && <span className="ad-group-label">{groupLabels[g.group]}</span>}
+                  </th>
+                ))}
+              </tr>
+              <tr>
+                {columns.map((c) => (
+                  <th
+                    key={c.key}
+                    title={c.title}
+                    className={[alignClass(c), c.kind === 'id' ? 'is-sticky' : '', c.group === 'answers' ? 'is-answer' : '']
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    {c.small && <span className="ad-th-small">{c.small}</span>}
+                    {c.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((row) => {
+                const key = bookKey(row)
+                const isSelected = key === selected
+                return (
+                  <tr
+                    key={key}
+                    className={isSelected ? 'is-selected' : undefined}
+                    onClick={() => onSelect(key)}
+                    aria-selected={isSelected}
+                  >
+                    {columns.map((c) => (
+                      <td key={c.key} className={[alignClass(c), c.kind === 'id' ? 'is-sticky' : ''].filter(Boolean).join(' ')}>
+                        <Cell row={row} column={c} />
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       <div className="ad-pager">
-        <span className="muted small">
-          Books {start + 1} to {start + shown.length} of {rows.length}. Click a row for details.
-        </span>
+        <span className="muted small">Click a row to see its answers and recipes on the right.</span>
         <div className="ad-pager-buttons">
-          <button type="button" className="button-secondary" onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
+          <button type="button" className="ad-page-btn" onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
+            <AllDataIcon name="left" size={16} />
             Previous
           </button>
           <button
             type="button"
-            className="button-secondary"
+            className="ad-page-btn"
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= pages - 1}
           >
             Next
+            <AllDataIcon name="right" size={16} />
           </button>
         </div>
       </div>

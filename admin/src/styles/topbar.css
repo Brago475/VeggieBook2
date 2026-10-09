@@ -1,10 +1,12 @@
-/* The page's own controls on the right of the top bar (see
-   components/layout/TopbarSlot.tsx). Empty on pages that don't use it.
-   The bar wraps onto a second line when the controls don't fit. */
+/* The page's own controls in the top bar (see
+   components/layout/TopbarSlot.tsx):
+     .topbar-actions  right of the title
+     .topbar-below    a full-width row under the title
+   Both take no space on pages that don't use them. */
 
 .topbar {
   flex-wrap: wrap;
-  row-gap: var(--sp-2);
+  row-gap: var(--sp-3);
 }
 
 .topbar-actions {
@@ -17,6 +19,16 @@
   min-width: 0;
 }
 
-.topbar-actions:empty {
+.topbar-below {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.topbar-actions:empty,
+.topbar-below:empty {
   display: none;
 }

@@ -1,12 +1,12 @@
-import type { ReactNode } from 'react'
 import type { BookTypeFilter } from '../../types/allData'
 import type { ResearchFilters as Filters, ResearchOptions } from '../../types/research'
 import { ResearchFilters } from '../research/ResearchFilters'
+import { AllDataIcon } from './AllDataIcons'
 
-// Search, book type, the shared research filters (dates, age range,
-// vegetable), and the download buttons, all in one line that sits in the
-// top bar and wraps when it doesn't fit. Search and book type work on the
-// loaded rows; the others reload the data.
+// The filter row under the page title: search, book type, the shared
+// research filters (dates, age range, vegetable), and Clear filters.
+// Search and book type work on the loaded rows; the others reload the
+// data. Clear filters resets all of them at once.
 
 type Props = {
   search: string
@@ -17,7 +17,8 @@ type Props = {
   filters: Filters
   options: ResearchOptions | null
   onFilters: (next: Filters) => void
-  actions: ReactNode
+  onClear: () => void
+  canClear: boolean
 }
 
 export function AllDataToolbar({
@@ -29,15 +30,13 @@ export function AllDataToolbar({
   filters,
   options,
   onFilters,
-  actions,
+  onClear,
+  canClear,
 }: Props) {
   return (
     <div className="ad-toolbar">
       <label className="ad-search">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" />
-          <path d="M20 20l-3.5-3.5" />
-        </svg>
+        <AllDataIcon name="search" size={16} />
         <input
           type="search"
           aria-label={searchHint}
@@ -58,7 +57,10 @@ export function AllDataToolbar({
 
       <ResearchFilters sheet="responses" filters={filters} options={options} onChange={onFilters} />
 
-      <div className="ad-toolbar-actions">{actions}</div>
+      <button type="button" className="ad-clear" onClick={onClear} disabled={!canClear}>
+        <AllDataIcon name="filter" size={16} />
+        Clear filters
+      </button>
     </div>
   )
 }

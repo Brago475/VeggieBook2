@@ -3,13 +3,17 @@ import type { AllDataQuestion } from '../../types/allData'
 import type { SheetRow } from '../../types/research'
 import { bookTitle, isSecrets, shortDate, shortTime } from '../../utils/allDataFormat'
 import { questionHint, questionName, withVegetable } from '../../utils/answerNames'
+import { AllDataIcon } from './AllDataIcons'
+import { ItemPreviewCard, ItemThumb, useItemPreview } from './ItemPreview'
 
 // The side panel for one book, with two tabs so it is clear where things
 // are:
 //
 //   Questions  the answers, grouped by question with the real wording and
 //              every choice (picked ones checked)
-//   Recipes    the recipes (or secrets) in the book: kept, then taken out
+//   Recipes    the recipes (or secrets) in the book, each with a small
+//              picture: kept, then taken out. Hover one to see the full
+//              picture and its details.
 //
 // Secrets Books have no questions, so they open on their secrets. The
 // list comes from file 2, so it matches the Recipes and secrets download.
@@ -23,13 +27,10 @@ type Props = {
   onClose: () => void
 }
 
-function itemName(row: SheetRow) {
-  return String(row.item_title ?? '')
-}
-
 export function BookPanel({ book, items, questions, onClose }: Props) {
   const secrets = isSecrets(book)
   const [tab, setTab] = useState<PanelTab>(secrets ? 'items' : 'questions')
+  const { preview, handlers } = useItemPreview()
   const vegetable = typeof book.vegetable === 'string' ? book.vegetable : null
 
   const kept = items.filter((r) => r.status === 'Kept')
@@ -44,11 +45,15 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
 
   return (
     <aside className="ad-panel" aria-label="Book details">
-      <div className="ad-panel-head">
+      <div className={secrets ? 'ad-panel-head is-violet' : 'ad-panel-head'}>
         <div className="ad-panel-title">
-          <span className="ad-id">{String(book.participant_id)}</span>
+          <span className="ad-panel-id">
+            <span className="ad-panel-id-label">Research ID:</span>
+            <span className="ad-id">{String(book.participant_id)}</span>
+          </span>
           <strong>{bookTitle(book)}</strong>
           <span className="ad-panel-when">
+            <AllDataIcon name="calendar" size={16} className="ad-panel-cal" />
             <span className="ad-date">
               {String(book.day ?? '')}, {shortDate(book.date)}
             </span>
@@ -57,9 +62,7 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
           </span>
         </div>
         <button type="button" className="ad-panel-close" aria-label="Close" onClick={onClose}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
+          <AllDataIcon name="close" size={18} />
         </button>
       </div>
 
@@ -121,36 +124,46 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
 
       {tab === 'items' && (
         <div className="ad-panel-section">
-          <div className="ad-list-head">
-            <span className="ad-panel-label">KEPT</span>
-            <span className="ad-pill is-kept">{kept.length}</span>
-          </div>
-          {kept.length === 0 && <p className="ad-faint small">None</p>}
-          <ul className="ad-item-list">
-            {kept.map((r, i) => (
-              <li key={`${r.item_code}-${r.item_title}-${i}`}>
-                <span className="ad-code">{String(r.item_code ?? '')}</span>
-                <span className="ad-item-name">{itemName(r)}</span>
-                {Number(r.extra_copies ?? 0) > 0 && <span className="ad-copies">+{String(r.extra_copies)}</span>}
-              </li>
-            ))}
-          </ul>
-
-          <div className="ad-list-head ad-list-gap">
-            <span className="ad-panel-label">TAKEN OUT LATER</span>
-            <span className={out.length > 0 ? 'ad-pill is-out' : 'ad-pill'}>{out.length}</span>
-          </div>
-          {out.length === 0 && <p className="ad-faint small">None</p>}
-          <ul className="ad-item-list is-out">
-            {out.map((r, i) => (
-              <li key={`${r.item_code}-${r.item_title}-${i}`}>
-                <span className="ad-code">{String(r.item_code ?? '')}</span>
-                <span className="ad-item-name">{itemName(r)}</span>
-              </li>
-            ))}
-          </ul>
+          <span className="ad-panel-hint">Hover a {secrets ? 'secret' : 'recipe'} to see its picture and details.</span>
+          {[
+            { label: 'KEPT', list: kept, out: false },
+            { label: 'TAKEN OUT LATER', list: out, out: true },
+          ].map((group) => (
+            <div key={group.label} className="ad-item-group">
+              <div className="ad-list-head">
+                <span className="ad-panel-label">{group.label}</span>
+                <span className={group.out ? (group.list.length > 0 ? 'ad-pill is-out' : 'ad-pill') : 'ad-pill is-kept'}>
+                  {group.list.length}
+                </span>
+              </div>
+              {group.list.length === 0 && <p className="ad-faint small">None</p>}
+              <ul className="ad-thumb-list">
+                {group.list.map((r, i) => (
+                  <li
+                    key={`${r.item_code}-${r.item_title}-${i}`}
+                    className={group.out ? 'ad-thumb-row is-out' : 'ad-thumb-row'}
+                    tabIndex={0}
+                    {...handlers(r)}
+                  >
+                    <ItemThumb row={r} />
+                    <span className="ad-thumb-text">
+                      <span className="ad-thumb-name">{String(r.item_title ?? '')}</span>
+                      <span className="ad-thumb-meta">
+                        {r.item_code ? String(r.item_code) : String(r.item_type ?? '')}
+                        {Number(r.extra_copies ?? 0) > 0 && (
+                          <span className="ad-copies"> +{String(r.extra_copies)} copies</span>
+                        )}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       )}
+
+      <ItemPreviewCard preview={preview} />
     </aside>
   )
 }

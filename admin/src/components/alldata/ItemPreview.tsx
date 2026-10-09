@@ -16,8 +16,8 @@ export type Preview = {
   rect: DOMRect
 }
 
-const CARD_WIDTH = 300
-const CARD_HEIGHT = 430
+const CARD_WIDTH = 320
+const CARD_HEIGHT = 460
 const GAP = 12
 
 export function useItemPreview() {

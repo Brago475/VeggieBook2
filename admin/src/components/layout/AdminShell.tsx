@@ -18,8 +18,9 @@ import '../../styles/topbar.css'
 // green for every other admin. It opens a small menu with Sign out, which
 // closes when you click anywhere else or press Escape.
 //
-// The top bar has a spot on the right for the page's own controls (see
-// TopbarSlot.tsx). All Data puts its search, filters, and downloads there.
+// The top bar has two spots for the page's own controls (see
+// TopbarSlot.tsx): one right of the title, and a full-width row under it.
+// All Data puts its downloads on the right and its filters underneath.
 
 export type { AdminTab }
 
@@ -46,7 +47,8 @@ export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: P
   const [menuOpen, setMenuOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(readCollapsed)
   const [userMenu, setUserMenu] = useState(false)
-  const [slot, setSlot] = useState<HTMLDivElement | null>(null)
+  const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null)
+  const [belowSlot, setBelowSlot] = useState<HTMLDivElement | null>(null)
   const userRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -192,10 +194,11 @@ export function AdminShell({ email, isRoot, tab, onTab, onSignOut, children }: P
             </span>
             <h1 className="topbar-title">{label}</h1>
           </div>
-          <div className="topbar-actions" ref={setSlot} />
+          <div className="topbar-actions" ref={setActionsSlot} />
+          <div className="topbar-below" ref={setBelowSlot} />
         </header>
 
-        <TopbarSlotContext.Provider value={slot}>
+        <TopbarSlotContext.Provider value={{ actions: actionsSlot, below: belowSlot }}>
           <main className="shell-main">{children}</main>
         </TopbarSlotContext.Provider>
       </div>

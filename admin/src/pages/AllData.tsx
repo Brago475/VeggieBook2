@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AllDataCards } from '../components/alldata/AllDataCards'
 import type { AllDataCard } from '../components/alldata/AllDataCards'
+import { AllDataIcon } from '../components/alldata/AllDataIcons'
 import { AllDataToolbar } from '../components/alldata/AllDataToolbar'
 import { BookPanel } from '../components/alldata/BookPanel'
 import { BooksTable } from '../components/alldata/BooksTable'
@@ -8,20 +9,21 @@ import { ColumnToggles } from '../components/alldata/ColumnToggles'
 import { DownloadMenu } from '../components/alldata/DownloadMenu'
 import { ItemsTable } from '../components/alldata/ItemsTable'
 import { Segmented } from '../components/alldata/Segmented'
-import { TopbarActions } from '../components/layout/TopbarSlot'
+import { TopbarActions, TopbarBelow } from '../components/layout/TopbarSlot'
 import { useAllData } from '../hooks/useAllData'
 import type { AllDataFile, AnswersView, BookTypeFilter, ColumnGroup, ItemStatusFilter } from '../types/allData'
 import type { ResearchFilters, ResearchOptions, SheetRow } from '../types/research'
 import { api } from '../utils/api'
 import { bookColumns } from '../utils/allDataColumns'
 import { bookKey, dateRange } from '../utils/allDataFormat'
-import { noFilters } from '../utils/researchQuery'
+import { hasFilters, noFilters } from '../utils/researchQuery'
 import '../styles/alldata.css'
 import '../styles/alldata-filters.css'
 import '../styles/alldata-table.css'
 import '../styles/alldata-colors.css'
 import '../styles/alldata-preview.css'
 import '../styles/alldata-topbar.css'
+import '../styles/alldata-look.css'
 
 // The All Data page: everything collected, in two files.
 //
@@ -29,13 +31,13 @@ import '../styles/alldata-topbar.css'
 //                        answer, and counts of recipes and secrets
 //   Recipes and secrets  one row per recipe or secret, grouped by book
 //
-// The search, filters, and the Excel, PDF, and CSV buttons sit in the top
-// bar; each button downloads both files together.
+// The top bar holds the Excel, PDF, and CSV buttons (each downloads both
+// files together) and Refresh, with the search and filters under them.
 // Rows are keyed by the anonymous research ID; no email or name appears.
 
-const fileTabs: { id: AllDataFile; label: string }[] = [
-  { id: 'books', label: 'Books' },
-  { id: 'items', label: 'Recipes and secrets' },
+const fileTabs: { id: AllDataFile; label: string; icon: 'book' | 'pot' }[] = [
+  { id: 'books', label: 'Books', icon: 'book' },
+  { id: 'items', label: 'Recipes and secrets', icon: 'pot' },
 ]
 
 const allGroups: Record<ColumnGroup, boolean> = { person: true, book: true, answers: true, items: true }
@@ -118,6 +120,12 @@ export function AllData() {
     setPanelClosed(false)
   }
 
+  function clearAll() {
+    setFilters(noFilters)
+    setSearch('')
+    setBookType('')
+  }
+
   const veggieCount = bookRows.filter((r) => r.book_type === 'VeggieBook').length
   const secretsCount = bookRows.length - veggieCount
   const people = new Set(bookRows.map((r) => r.participant_id)).size
@@ -125,10 +133,10 @@ export function AllData() {
   const cards: AllDataCard[] =
     file === 'books'
       ? [
-          { label: 'VeggieBooks', value: String(veggieCount), mark: 'V', tone: 'green' },
-          { label: 'Secrets Books', value: String(secretsCount), mark: 'S', tone: 'violet' },
-          { label: 'Participants', value: String(people), mark: 'P', tone: 'blue' },
-          { label: 'Dates covered', value: dateRange(bookRows), mark: 'D', tone: 'blue' },
+          { label: 'VeggieBooks', value: String(veggieCount), icon: 'book', tone: 'green' },
+          { label: 'Secrets Books', value: String(secretsCount), icon: 'lock', tone: 'violet' },
+          { label: 'Participants', value: String(people), icon: 'people', tone: 'blue' },
+          { label: 'Dates covered', value: dateRange(bookRows), icon: 'calendar', tone: 'green' },
         ]
       : (() => {
           const kept = itemRows.filter((r) => r.status === 'Kept').length
@@ -136,17 +144,41 @@ export function AllData() {
           const pct = (n: number) => (itemRows.length ? `${Math.round((n / itemRows.length) * 100)}%` : '')
           const different = new Set(itemRows.map((r) => `${r.item_type}:${r.item_code ?? ''}:${r.item_title}`)).size
           return [
-            { label: 'Recipes and secrets', value: String(itemRows.length), mark: '#', note: `in ${bookRows.length} books`, tone: 'blue' },
-            { label: 'Still kept', value: String(kept), mark: 'K', note: pct(kept), tone: 'green' },
-            { label: 'Taken out later', value: String(out), mark: 'T', note: pct(out), tone: 'orange', warn: out > 0 },
-            { label: 'Different recipes and secrets', value: String(different), mark: 'R', tone: 'violet' },
+            { label: 'Recipes and secrets', value: String(itemRows.length), icon: 'list', note: `in ${bookRows.length} books`, tone: 'blue' },
+            { label: 'Still kept', value: String(kept), icon: 'check', note: pct(kept), tone: 'green' },
+            { label: 'Taken out later', value: String(out), icon: 'out', note: pct(out), tone: 'orange', warn: out > 0 },
+            { label: 'Different recipes and secrets', value: String(different), icon: 'layers', tone: 'violet' },
           ]
         })()
 
   const tabCounts: Record<AllDataFile, number> = { books: bookRows.length, items: itemRows.length }
+  const refreshing = loading && books !== null
 
   return (
     <div className="ad-page">
+      <TopbarActions>
+        <DownloadMenu filters={filters} itemAnswers={itemAnswers} />
+        <button type="button" className="ad-dl ad-refresh" onClick={() => setVersion((v) => v + 1)}>
+          <AllDataIcon name="refresh" size={17} className={refreshing ? 'ad-refresh-icon is-spinning' : 'ad-refresh-icon'} />
+          {refreshing ? 'Updating...' : 'Refresh'}
+        </button>
+      </TopbarActions>
+
+      <TopbarBelow>
+        <AllDataToolbar
+          search={search}
+          onSearch={setSearch}
+          searchHint={file === 'books' ? 'Search by research ID...' : 'Search research ID or recipe...'}
+          bookType={bookType}
+          onBookType={setBookType}
+          filters={filters}
+          options={options}
+          onFilters={setFilters}
+          onClear={clearAll}
+          canClear={hasFilters(filters) || search !== '' || bookType !== ''}
+        />
+      </TopbarBelow>
+
       <div className="ad-tabs" role="tablist" aria-label="File">
         {fileTabs.map((t) => (
           <button
@@ -157,47 +189,16 @@ export function AllData() {
             className={t.id === file ? 'ad-tab is-active' : 'ad-tab'}
             onClick={() => setFile(t.id)}
           >
+            <AllDataIcon name={t.icon} size={20} />
             {t.label}
             <span className="ad-tab-note">
               one row per {t.id === 'books' ? 'book' : 'recipe'} ({tabCounts[t.id]})
             </span>
           </button>
         ))}
-        <button type="button" className="button-secondary ad-refresh" onClick={() => setVersion((v) => v + 1)}>
-          <svg
-            className={loading && books ? 'ad-refresh-icon is-spinning' : 'ad-refresh-icon'}
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-            <path d="M21 3v6h-6" />
-          </svg>
-          {loading && books ? 'Updating...' : 'Refresh'}
-        </button>
       </div>
 
       <AllDataCards cards={cards} />
-
-      <TopbarActions>
-        <AllDataToolbar
-          search={search}
-          onSearch={setSearch}
-          searchHint={file === 'books' ? 'Search by research ID' : 'Search research ID or recipe'}
-          bookType={bookType}
-          onBookType={setBookType}
-          filters={filters}
-          options={options}
-          onFilters={setFilters}
-          actions={<DownloadMenu filters={filters} itemAnswers={itemAnswers} />}
-        />
-      </TopbarActions>
 
       {error && (
         <p className="error" role="alert">
@@ -208,29 +209,6 @@ export function AllData() {
 
       {books && items && file === 'books' && (
         <>
-          <div className="ad-view-bar">
-            <div className="ad-view-left">
-              <span className="muted small">Answers as</span>
-              <Segmented
-                label="Answers as"
-                value={answersView}
-                onChange={setAnswersView}
-                options={[
-                  { id: 'chips', label: 'Picked answers' },
-                  { id: 'binary', label: '0/1 columns (SPSS)' },
-                ]}
-              />
-              <button
-                type="button"
-                className={columnsOpen ? 'button-secondary is-pressed' : 'button-secondary'}
-                aria-expanded={columnsOpen}
-                onClick={() => setColumnsOpen((o) => !o)}
-              >
-                Columns
-              </button>
-            </div>
-          </div>
-
           {columnsOpen && <ColumnToggles shown={groups} onChange={setGroups} />}
 
           <div className={selectedBook ? 'ad-split has-panel' : 'ad-split'}>
@@ -240,6 +218,29 @@ export function AllData() {
               columns={columns}
               selected={selectedKey}
               onSelect={openBook}
+              head={
+                <>
+                  <span className="ad-head-label">Answers as</span>
+                  <Segmented
+                    label="Answers as"
+                    value={answersView}
+                    onChange={setAnswersView}
+                    options={[
+                      { id: 'chips', label: 'Picked answers' },
+                      { id: 'binary', label: '0/1 columns (SPSS)' },
+                    ]}
+                  />
+                  <button
+                    type="button"
+                    className={columnsOpen ? 'ad-head-btn is-pressed' : 'ad-head-btn'}
+                    aria-expanded={columnsOpen}
+                    onClick={() => setColumnsOpen((o) => !o)}
+                  >
+                    Columns
+                    <AllDataIcon name="down" size={16} />
+                  </button>
+                </>
+              }
             />
             {selectedBook && (
               <BookPanel
@@ -255,10 +256,15 @@ export function AllData() {
       )}
 
       {books && items && file === 'items' && (
-        <>
-          <div className="ad-view-bar">
-            <div className="ad-view-left">
-              <span className="muted small">Status</span>
+        <ItemsTable
+          key={`${items.generatedAt}-${bookType}-${search}-${status}`}
+          rows={itemRows}
+          questions={questions}
+          status={status}
+          showAnswers={itemAnswers}
+          head={
+            <>
+              <span className="ad-head-label">Status</span>
               <Segmented
                 label="Status"
                 value={status}
@@ -272,23 +278,15 @@ export function AllData() {
               <button
                 type="button"
                 aria-pressed={itemAnswers}
-                className={itemAnswers ? 'ad-chip-toggle is-on' : 'ad-chip-toggle'}
+                className={itemAnswers ? 'ad-head-btn is-on' : 'ad-head-btn'}
                 onClick={() => setItemAnswers((a) => !a)}
               >
                 <span aria-hidden="true">{itemAnswers ? '✓' : '+'}</span>
                 Book answers on each row
               </button>
-            </div>
-          </div>
-
-          <ItemsTable
-            key={`${items.generatedAt}-${bookType}-${search}-${status}`}
-            rows={itemRows}
-            questions={questions}
-            status={status}
-            showAnswers={itemAnswers}
-          />
-        </>
+            </>
+          }
+        />
       )}
     </div>
   )
