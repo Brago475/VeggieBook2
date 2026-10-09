@@ -67,10 +67,15 @@ export function Overview({ onOpen }: Props) {
       )}
 
       <div className="card-grid cols-4">
-        <NumberCard icon="users" label="Participants" value={data.participants.toLocaleString()} />
-        <NumberCard icon="clock" label="New this week" value={data.newThisWeek.toLocaleString()} />
-        <NumberCard icon="book" label="Books saved" value={books.toLocaleString()} />
-        <NumberCard icon="answers" label="Answers recorded" value={data.answersRecorded.toLocaleString()} />
+        <NumberCard icon="users" tone="green" label="Participants" value={data.participants.toLocaleString()} />
+        <NumberCard icon="clock" tone="blue" label="New this week" value={data.newThisWeek.toLocaleString()} />
+        <NumberCard icon="book" tone="amber" label="Books saved" value={books.toLocaleString()} />
+        <NumberCard
+          icon="answers"
+          tone="violet"
+          label="Answers recorded"
+          value={data.answersRecorded.toLocaleString()}
+        />
       </div>
 
       <div className="overview-row">

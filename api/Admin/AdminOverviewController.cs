@@ -150,14 +150,22 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             .Select(b =>
             {
                 var isSecrets = b.Kind == "secrets";
-                var name = isSecrets
-                    ? (b.SecretCategoryId is int id ? categories.GetValueOrDefault(id, "a") : "a")
-                    : (b.VegetableCode is string code ? vegetables.GetValueOrDefault(code, code) : "a");
+                string title;
+                if (isSecrets)
+                {
+                    var name = b.SecretCategoryId is int id ? categories.GetValueOrDefault(id, "") : "";
+                    title = BookTitle(name, "Secrets Book");
+                }
+                else
+                {
+                    var name = b.VegetableCode is string code ? vegetables.GetValueOrDefault(code, code) : "";
+                    title = BookTitle(name, "VeggieBook");
+                }
                 return new RecentItem(
                     "book",
                     ids.GetValueOrDefault(b.UserId, ""),
-                    isSecrets ? $"Saved a {name} Secrets Book" : $"Saved a {name} VeggieBook",
-                    isSecrets ? Plural(b.Kept, "secret") + " kept" : Plural(b.Kept, "recipe") + " kept",
+                    title,
+                    (isSecrets ? Plural(b.Kept, "secret") : Plural(b.Kept, "recipe")) + " kept",
                     b.CreatedAt);
             })
             .Concat(latestJoins.Select(u => new RecentItem(
@@ -197,6 +205,17 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
     }
 
     private record RecentItem(string Type, string ResearchId, string Title, string Detail, DateTime At);
+
+    // "Saved a Cabbage VeggieBook", "Saved a Breakfast Secrets Book". A
+    // category that already ends in "Secrets" (such as "Shopping Secrets")
+    // becomes "Saved a Shopping Secrets Book" instead of repeating the word.
+    private static string BookTitle(string name, string kind)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return $"Saved a {kind}";
+        if (kind == "Secrets Book" && name.EndsWith("Secrets", StringComparison.OrdinalIgnoreCase))
+            return $"Saved a {name} Book";
+        return $"Saved a {name} {kind}";
+    }
 
     private static string Plural(int n, string word) => n == 1 ? $"1 {word}" : $"{n} {word}s";
 

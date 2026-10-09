@@ -1,6 +1,6 @@
 /* The Overview page. See pages/Overview.tsx and components/overview/.
-   Neutral like the rest of the site: dark gray and light gray bars, green
-   only for "this is a saved book" dots in recent activity. */
+   Mostly neutral, with soft green in the charts and colored dots in
+   recent activity (green for a saved book, blue for a new person). */
 
 .overview {
   display: flex;
@@ -24,7 +24,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.overview-row .panel {
+.overview-row .card.panel {
   margin-top: 0;
 }
 
@@ -75,8 +75,7 @@
 }
 
 .weekly-secrets {
-  background: #c4c4c9;
-  border-radius: 4px 4px 0 0;
+  background: var(--bar-light);
 }
 
 .weekly-stack > div:first-child {
@@ -128,12 +127,12 @@
 }
 
 .swatch.is-secrets {
-  background: #c4c4c9;
+  background: var(--bar-light);
 }
 
 /* Active study */
 
-.study-card {
+.card.panel.study-card {
   display: flex;
   flex-direction: column;
 }
@@ -228,12 +227,12 @@
   width: 8px;
   height: 8px;
   margin-top: 6px;
-  background: var(--faint);
+  background: var(--tone-blue);
   border-radius: 999px;
 }
 
 .recent-dot.is-book {
-  background: var(--ok);
+  background: var(--tone-green);
 }
 
 .recent-text {

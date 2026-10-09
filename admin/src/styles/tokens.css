@@ -1,7 +1,18 @@
 /* Design tokens for the admin site.
 
-   Side bar, colors, context and icons 
-   
+   The look is plain and neutral: white, light gray, and near-black, with
+   thin borders, plus a few soft tints used sparingly.
+
+   Where color shows up:
+     --vb       fresh green, for sidebar hover, the active bar, and other
+                admins' ADMIN label
+     --tone-*   soft tints behind number card icons (green, blue, amber,
+                violet), one per card
+     --bar-*    green bars in charts and lists
+     --ok       green, for good states (Saved, On)
+     --warn     orange, for problems (Left early, taken out, errors)
+     --root     red, only for the main admin's ADMIN label and badge
+
    --green and its variants are older names that many screens still use for
    active items, numbers, and bars. They now point at the neutral accent, so
    those screens follow the new look without changes. New code should use
@@ -26,8 +37,18 @@
   --vb: #16a34a;
   --vb-tint: #e7f8ed;
 
-  --bar-empty: #ececee;
-  --bar-fill: #52525b;
+  --bar-empty: #edf0ed;
+  --bar-fill: #3f9a5b;
+  --bar-light: #b9dec5;
+
+  --tone-green: #1f8a4c;
+  --tone-green-bg: #e7f6ec;
+  --tone-blue: #2f6fb3;
+  --tone-blue-bg: #e8f0fb;
+  --tone-amber: #b7791f;
+  --tone-amber-bg: #fdf3e1;
+  --tone-violet: #6b4fbb;
+  --tone-violet-bg: #f1ecfb;
 
   --ok: #15803d;
   --ok-tint: #ecf6ef;

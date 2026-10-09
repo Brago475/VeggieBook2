@@ -2,12 +2,17 @@
    bars, tables, and status pills. Every admin screen uses these, so they
    all look the same. See components/common/.
 
-   Neutral throughout. Green and orange appear only in status text and
-   pills (.status), never as decoration. */
+   Mostly neutral. Soft color shows up only in number card icons (one tint
+   per card), green bars, and status text.
 
-/* Panel: a white box with a plain heading. */
+   Panels and number cards are written as .card.panel and .card.number-card
+   so they always beat the plain .card padding in base.css, whatever order
+   the style files load in. */
 
-.panel {
+/* Panel: a white box with a plain heading. The heading's line runs the
+   full width of the box. */
+
+.card.panel {
   margin-top: var(--sp-5);
   padding: 0;
 }
@@ -78,10 +83,10 @@
   }
 }
 
-/* Number card: a gray header strip with an optional icon and the label,
-   a line, then the number in large dark type. */
+/* Number card: a header strip with a tinted icon and the label, a line
+   the full width of the card, then the number in large dark type. */
 
-.number-card {
+.card.number-card {
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -100,11 +105,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   color: var(--muted);
   background: var(--subtle);
   border-radius: var(--r-md);
+}
+
+.number-icon.is-green {
+  color: var(--tone-green);
+  background: var(--tone-green-bg);
+}
+
+.number-icon.is-blue {
+  color: var(--tone-blue);
+  background: var(--tone-blue-bg);
+}
+
+.number-icon.is-amber {
+  color: var(--tone-amber);
+  background: var(--tone-amber-bg);
+}
+
+.number-icon.is-violet {
+  color: var(--tone-violet);
+  background: var(--tone-violet-bg);
 }
 
 .number-label {
@@ -128,7 +153,7 @@
   color: var(--warn);
 }
 
-/* Bar: thin, dark gray, same height everywhere. */
+/* Bar: thin, green, same height everywhere. */
 
 .bar {
   display: flex;
@@ -141,6 +166,7 @@
 .bar-fill {
   height: 100%;
   background: var(--bar-fill);
+  border-radius: 999px;
 }
 
 .bar-fill.is-warn {
@@ -176,7 +202,7 @@
 
 .tab.is-active {
   color: var(--ink);
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--vb);
 }
 
 .tab:focus {
@@ -184,7 +210,7 @@
 }
 
 .tab:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--vb);
   outline-offset: 2px;
 }
 
@@ -243,8 +269,7 @@
   min-width: 120px;
 }
 
-/* Status: small colored text for a row's state. The only place green and
-   orange show up in tables. */
+/* Status: small colored text for a row's state. */
 
 .status {
   font-size: 13px;
