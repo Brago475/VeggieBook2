@@ -18,6 +18,7 @@ import { noFilters } from '../utils/researchQuery'
 import '../styles/alldata.css'
 import '../styles/alldata-filters.css'
 import '../styles/alldata-table.css'
+import '../styles/alldata-colors.css'
 
 // The All Data page: everything collected, in two files.
 //
@@ -25,7 +26,7 @@ import '../styles/alldata-table.css'
 //                        answer, and counts of recipes and secrets
 //   Recipes and secrets  one row per recipe or secret, grouped by book
 //
-// "Download all" gives both files as Excel, CSV, and SPSS in one zip.
+// The Excel, PDF, and CSV buttons download both files together.
 // Rows are keyed by the anonymous research ID; no email or name appears.
 
 const fileTabs: { id: AllDataFile; label: string }[] = [
@@ -120,10 +121,10 @@ export function AllData() {
   const cards: AllDataCard[] =
     file === 'books'
       ? [
-          { label: 'VeggieBooks', value: String(veggieCount), mark: 'V' },
-          { label: 'Secrets Books', value: String(secretsCount), mark: 'S' },
-          { label: 'Participants', value: String(people), mark: 'P' },
-          { label: 'Dates covered', value: dateRange(bookRows), mark: 'D' },
+          { label: 'VeggieBooks', value: String(veggieCount), mark: 'V', tone: 'green' },
+          { label: 'Secrets Books', value: String(secretsCount), mark: 'S', tone: 'violet' },
+          { label: 'Participants', value: String(people), mark: 'P', tone: 'blue' },
+          { label: 'Dates covered', value: dateRange(bookRows), mark: 'D', tone: 'blue' },
         ]
       : (() => {
           const kept = itemRows.filter((r) => r.status === 'Kept').length
@@ -131,10 +132,10 @@ export function AllData() {
           const pct = (n: number) => (itemRows.length ? `${Math.round((n / itemRows.length) * 100)}%` : '')
           const different = new Set(itemRows.map((r) => `${r.item_type}:${r.item_code ?? ''}:${r.item_title}`)).size
           return [
-            { label: 'Rows (items)', value: String(itemRows.length), mark: '#', note: `in ${bookRows.length} books` },
-            { label: 'Still kept', value: String(kept), mark: 'K', note: pct(kept) },
-            { label: 'Taken out later', value: String(out), mark: 'T', note: pct(out), warn: out > 0 },
-            { label: 'Different recipes and secrets', value: String(different), mark: 'R' },
+            { label: 'Recipes and secrets', value: String(itemRows.length), mark: '#', note: `in ${bookRows.length} books`, tone: 'blue' },
+            { label: 'Still kept', value: String(kept), mark: 'K', note: pct(kept), tone: 'green' },
+            { label: 'Taken out later', value: String(out), mark: 'T', note: pct(out), tone: 'orange', warn: out > 0 },
+            { label: 'Different recipes and secrets', value: String(different), mark: 'R', tone: 'violet' },
           ]
         })()
 
@@ -159,6 +160,21 @@ export function AllData() {
           </button>
         ))}
         <button type="button" className="button-secondary ad-refresh" onClick={() => setVersion((v) => v + 1)}>
+          <svg
+            className={loading && books ? 'ad-refresh-icon is-spinning' : 'ad-refresh-icon'}
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+            <path d="M21 3v6h-6" />
+          </svg>
           {loading && books ? 'Updating...' : 'Refresh'}
         </button>
       </div>
@@ -207,9 +223,6 @@ export function AllData() {
                 Columns
               </button>
             </div>
-            <span className="muted small">
-              {bookRows.length} books ({veggieCount} VeggieBooks, {secretsCount} Secrets Books), {columns.length} columns
-            </span>
           </div>
 
           {columnsOpen && <ColumnToggles shown={groups} onChange={setGroups} />}
@@ -232,12 +245,6 @@ export function AllData() {
               />
             )}
           </div>
-
-          <p className="ad-note">
-            <strong>Recipes stay out of this table.</strong> Each row shows only counts. The full list opens in the side
-            panel, and every recipe has its own row in the Recipes and secrets file, linked by research ID and book
-            number.
-          </p>
         </>
       )}
 
@@ -266,7 +273,6 @@ export function AllData() {
                 Book answers on each row
               </button>
             </div>
-            <span className="muted small">{itemRows.length} rows</span>
           </div>
 
           <ItemsTable
@@ -276,32 +282,6 @@ export function AllData() {
             status={status}
             showAnswers={itemAnswers}
           />
-
-          <div className="ad-explain">
-            <div className="ad-explain-card">
-              <span className="ad-panel-label">WHAT DOWNLOAD ALL GIVES YOU</span>
-              <p>
-                <span className="ad-tag">File 1</span> <strong>Books.</strong> One row per book: person, date, time,
-                answers as 0/1, and counts.
-              </p>
-              <p>
-                <span className="ad-tag">File 2</span> <strong>Recipes and secrets.</strong> One row per recipe or secret,
-                with its status.
-              </p>
-              <p>
-                <span className="ad-tag">Guide</span> <strong>Variables and Questions.</strong> What every column means
-                and the full question wording.
-              </p>
-            </div>
-            <div className="ad-explain-card">
-              <span className="ad-panel-label">HOW THE TWO FILES CONNECT</span>
-              <p>
-                Both files share <strong>Research ID</strong> and <strong>Book no.</strong> In SPSS, open Recipes and
-                secrets, then Data, Merge Files, Add Variables, matching on those two. Or turn on{' '}
-                <strong>Book answers on each row</strong> so the file works by itself.
-              </p>
-            </div>
-          </div>
         </>
       )}
     </div>

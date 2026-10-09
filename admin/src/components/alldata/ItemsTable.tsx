@@ -119,9 +119,13 @@ export function ItemsTable({ rows, questions, status, showAnswers }: Props) {
                       </span>
                       <span className="ad-id">{String(g.first.participant_id)}</span>
                       <strong>{bookTitle(g.first)}</strong>
-                      <span className="muted small">
-                        Book {String(g.first.book_no)}, {String(g.first.day ?? '').slice(0, 3)} {shortDate(g.first.date)},{' '}
-                        {shortTime(g.first.time)}
+                      <span className="ad-book-when">
+                        Book {String(g.first.book_no)}
+                        <span className="ad-dot" aria-hidden="true" />
+                        <span className="ad-date">
+                          {String(g.first.day ?? '').slice(0, 3)} {shortDate(g.first.date)}
+                        </span>
+                        <span className="ad-time">{shortTime(g.first.time)}</span>
                       </span>
                       <span className="ad-book-counts">
                         <span className="ad-pill is-kept">{g.kept} kept</span>
@@ -134,20 +138,25 @@ export function ItemsTable({ rows, questions, status, showAnswers }: Props) {
                 {opened &&
                   g.rows.map((r, j) => {
                     const out = r.status !== 'Kept'
+                    const secret = r.item_type === 'Secret'
                     const copies = Number(r.extra_copies ?? 0)
                     return (
                       <tr key={j} className="ad-item-row">
                         <td className="is-sticky">
                           <span className="ad-id is-quiet">{String(r.participant_id)}</span>
                         </td>
-                        <td>{String(r.age_range ?? '')}</td>
+                        <td>{r.age_range ? String(r.age_range) : <span className="ad-faint">Not given</span>}</td>
                         <td className="num">{String(r.book_no)}</td>
-                        <td>{bookSubject(r)}</td>
+                        <td>
+                          <span className={secret ? 'ad-badge is-violet' : 'ad-badge is-green'}>{bookSubject(r)}</span>
+                        </td>
                         <td>
                           <span className="ad-code">{String(r.item_code ?? '')}</span>
                         </td>
                         <td className={out ? 'ad-item-title is-out' : 'ad-item-title'}>{String(r.item_title ?? '')}</td>
-                        <td>{String(r.item_type ?? '')}</td>
+                        <td>
+                          <span className={secret ? 'ad-type is-violet' : 'ad-type is-green'}>{String(r.item_type ?? '')}</span>
+                        </td>
                         <td>
                           <span className={out ? 'ad-pill is-out' : 'ad-pill is-kept'}>{out ? 'Taken out' : 'Kept'}</span>
                         </td>

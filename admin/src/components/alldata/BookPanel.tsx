@@ -4,12 +4,17 @@ import type { SheetRow } from '../../types/research'
 import { bookTitle, isSecrets, shortDate, shortTime } from '../../utils/allDataFormat'
 import { questionHint, questionName, withVegetable } from '../../utils/answerNames'
 
-// The side panel for one book: its answers, grouped by question with the
-// question's real wording and every choice (picked ones checked), then the
-// recipes and secrets in it. The recipes come from file 2, so the panel
-// shows exactly what the Recipes and secrets file has for this book.
+// The side panel for one book, with two tabs so it is clear where things
+// are:
+//
+//   Questions  the answers, grouped by question with the real wording and
+//              every choice (picked ones checked)
+//   Recipes    the recipes (or secrets) in the book: kept, then taken out
+//
+// Secrets Books have no questions, so they open on their secrets. The
+// list comes from file 2, so it matches the Recipes and secrets download.
 
-const FIRST_ITEMS = 5
+type PanelTab = 'questions' | 'items'
 
 type Props = {
   book: SheetRow
@@ -19,19 +24,23 @@ type Props = {
 }
 
 function itemName(row: SheetRow) {
-  return row.item_code ? `${row.item_code} ${row.item_title}` : String(row.item_title ?? '')
+  return String(row.item_title ?? '')
 }
 
 export function BookPanel({ book, items, questions, onClose }: Props) {
-  const [expanded, setExpanded] = useState(false)
   const secrets = isSecrets(book)
+  const [tab, setTab] = useState<PanelTab>(secrets ? 'items' : 'questions')
   const vegetable = typeof book.vegetable === 'string' ? book.vegetable : null
 
   const kept = items.filter((r) => r.status === 'Kept')
   const out = items.filter((r) => r.status !== 'Kept')
-  const keptShown = expanded ? kept : kept.slice(0, FIRST_ITEMS)
-  const copies = kept.reduce((sum, r) => sum + Number(r.extra_copies ?? 0), 0)
-  const keptLabel = secrets ? 'SECRETS KEPT' : 'RECIPES KEPT'
+  const picked = questions.reduce((sum, q) => sum + q.choices.filter((c) => book[c.key] === 1).length, 0)
+  const itemsLabel = secrets ? 'Secrets' : 'Recipes'
+
+  const tabs: { id: PanelTab; label: string; count: number; hidden: boolean }[] = [
+    { id: 'questions', label: 'Questions', count: picked, hidden: secrets },
+    { id: 'items', label: itemsLabel, count: items.length, hidden: false },
+  ]
 
   return (
     <aside className="ad-panel" aria-label="Book details">
@@ -39,9 +48,12 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
         <div className="ad-panel-title">
           <span className="ad-id">{String(book.participant_id)}</span>
           <strong>{bookTitle(book)}</strong>
-          <span className="muted small">
-            {String(book.day ?? '')}, {shortDate(book.date)}, {shortTime(book.time)}. Book {String(book.book_no)} for
-            this person.
+          <span className="ad-panel-when">
+            <span className="ad-date">
+              {String(book.day ?? '')}, {shortDate(book.date)}
+            </span>
+            <span className="ad-time">{shortTime(book.time)}</span>
+            <span className="ad-panel-bookno">Book {String(book.book_no)}</span>
           </span>
         </div>
         <button type="button" className="ad-panel-close" aria-label="Close" onClick={onClose}>
@@ -51,12 +63,29 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
         </button>
       </div>
 
-      <div className="ad-panel-section">
-        <span className="ad-panel-label">ANSWERS BY QUESTION</span>
-        {secrets && <p className="ad-faint small">Secrets Books have no questions.</p>}
-        {!secrets &&
-          questions.map((q) => {
-            const picked = q.choices.filter((c) => book[c.key] === 1).length
+      <div className="ad-panel-tabs" role="tablist" aria-label="Book details">
+        {tabs
+          .filter((t) => !t.hidden)
+          .map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              className={tab === t.id ? 'ad-panel-tab is-active' : 'ad-panel-tab'}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+              <span className="ad-panel-tab-count">{t.count}</span>
+            </button>
+          ))}
+      </div>
+
+      {tab === 'questions' && !secrets && (
+        <div className="ad-panel-section">
+          <span className="ad-panel-hint">Checked answers are the ones this person picked.</span>
+          {questions.map((q) => {
+            const count = q.choices.filter((c) => book[c.key] === 1).length
             return (
               <div key={q.no} className="ad-question">
                 <div className="ad-question-head">
@@ -64,8 +93,8 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
                     <span className="ad-q-no">Q{q.no}</span>
                     <span className="ad-q-name">{questionName(q.no)}</span>
                   </span>
-                  <span className="muted small">
-                    {picked} of {q.choices.length}
+                  <span className="ad-q-count">
+                    {count} of {q.choices.length}
                   </span>
                 </div>
                 <p className="ad-question-text">{withVegetable(q.label, vegetable)}</p>
@@ -87,36 +116,41 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
               </div>
             )
           })}
-      </div>
+        </div>
+      )}
 
-      <div className="ad-panel-section">
-        <span className="ad-panel-label">
-          {keptLabel} ({kept.length})
-        </span>
-        {kept.length === 0 && <p className="ad-faint small">None</p>}
-        <ul className="ad-items">
-          {keptShown.map((r, i) => (
-            <li key={`${r.item_code}-${r.item_title}-${i}`}>
-              {itemName(r)}
-              {Number(r.extra_copies ?? 0) > 0 && <span className="muted small"> +{String(r.extra_copies)} copies</span>}
-            </li>
-          ))}
-        </ul>
-        {kept.length > FIRST_ITEMS && (
-          <button type="button" className="ad-link" onClick={() => setExpanded((e) => !e)}>
-            {expanded ? 'Show less' : `Show all ${kept.length}`}
-          </button>
-        )}
-        {copies > 0 && <p className="muted small">{copies} extra copies in this book.</p>}
+      {tab === 'items' && (
+        <div className="ad-panel-section">
+          <div className="ad-list-head">
+            <span className="ad-panel-label">KEPT</span>
+            <span className="ad-pill is-kept">{kept.length}</span>
+          </div>
+          {kept.length === 0 && <p className="ad-faint small">None</p>}
+          <ul className="ad-item-list">
+            {kept.map((r, i) => (
+              <li key={`${r.item_code}-${r.item_title}-${i}`}>
+                <span className="ad-code">{String(r.item_code ?? '')}</span>
+                <span className="ad-item-name">{itemName(r)}</span>
+                {Number(r.extra_copies ?? 0) > 0 && <span className="ad-copies">+{String(r.extra_copies)}</span>}
+              </li>
+            ))}
+          </ul>
 
-        <span className="ad-panel-label ad-panel-label-gap">TAKEN OUT LATER ({out.length})</span>
-        {out.length === 0 && <p className="ad-faint small">None</p>}
-        <ul className="ad-items is-out">
-          {out.map((r, i) => (
-            <li key={`${r.item_code}-${r.item_title}-${i}`}>{itemName(r)}</li>
-          ))}
-        </ul>
-      </div>
+          <div className="ad-list-head ad-list-gap">
+            <span className="ad-panel-label">TAKEN OUT LATER</span>
+            <span className={out.length > 0 ? 'ad-pill is-out' : 'ad-pill'}>{out.length}</span>
+          </div>
+          {out.length === 0 && <p className="ad-faint small">None</p>}
+          <ul className="ad-item-list is-out">
+            {out.map((r, i) => (
+              <li key={`${r.item_code}-${r.item_title}-${i}`}>
+                <span className="ad-code">{String(r.item_code ?? '')}</span>
+                <span className="ad-item-name">{itemName(r)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </aside>
   )
 }

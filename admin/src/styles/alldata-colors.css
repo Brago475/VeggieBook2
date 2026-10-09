@@ -1,0 +1,433 @@
+/* All Data: colors and contrast. Four colors only, each with one meaning:
+     green   VeggieBooks, kept, picked answers
+     violet  Secrets Books
+     blue    people, dates and times
+     orange  taken out later
+   Everything else stays black, gray, and white. */
+
+.ad-page {
+  --ad-green: #15803d;
+  --ad-green-tint: #e3f6e9;
+  --ad-violet: #6d28d9;
+  --ad-violet-tint: #f0e9fe;
+  --ad-blue: #1d4ed8;
+  --ad-blue-tint: #e6eefd;
+  --ad-orange: #c2410c;
+  --ad-orange-tint: #ffeedf;
+  --ad-text: #18181b;
+  --ad-soft: #52525b;
+  --ad-line: #e4e4e7;
+}
+
+/* ---- Cards ---- */
+
+.ad-card {
+  border-color: var(--ad-line);
+}
+
+.ad-card-label {
+  font-weight: 600;
+  color: var(--ad-text);
+}
+
+.ad-card-value {
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.ad-card-note {
+  font-weight: 600;
+}
+
+.ad-card.is-green .ad-card-mark {
+  background: var(--ad-green-tint);
+  color: var(--ad-green);
+}
+
+.ad-card.is-violet .ad-card-mark {
+  background: var(--ad-violet-tint);
+  color: var(--ad-violet);
+}
+
+.ad-card.is-blue .ad-card-mark {
+  background: var(--ad-blue-tint);
+  color: var(--ad-blue);
+}
+
+.ad-card.is-orange .ad-card-mark {
+  background: var(--ad-orange-tint);
+  color: var(--ad-orange);
+}
+
+.ad-card-value.is-warn {
+  color: var(--ad-orange);
+}
+
+/* ---- Refresh ---- */
+
+.ad-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ad-refresh-icon.is-spinning {
+  animation: ad-spin 0.9s linear infinite;
+}
+
+@keyframes ad-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ad-refresh-icon.is-spinning {
+    animation: none;
+  }
+}
+
+/* ---- Tabs ---- */
+
+.ad-tab {
+  font-size: 15px;
+  color: var(--ad-soft);
+}
+
+.ad-tab.is-active {
+  color: var(--ad-text);
+  box-shadow: inset 0 -3px 0 var(--ad-green);
+}
+
+/* ---- Tables: stronger text and headers ---- */
+
+.ad-table {
+  font-size: 14px;
+  color: var(--ad-text);
+}
+
+.ad-table th {
+  font-weight: 700;
+  color: var(--ad-soft);
+  background: #fafafa;
+}
+
+.ad-table td {
+  border-bottom-color: var(--ad-line);
+}
+
+.ad-group-row th {
+  color: var(--ad-text);
+}
+
+.ad-group-row th.is-book {
+  background: var(--ad-blue-tint);
+  color: var(--ad-blue);
+}
+
+.ad-group-row th.is-answers {
+  background: var(--ad-green-tint);
+  color: var(--ad-green);
+}
+
+.ad-group-row th.is-items {
+  background: #f4f4f5;
+}
+
+/* The research ID's own header cell: the label sits at its normal place. */
+.ad-group-row th.is-sticky .ad-group-label {
+  position: static;
+}
+
+.ad-table th.is-answer {
+  color: var(--ad-green);
+}
+
+.ad-table tbody tr:hover td {
+  background: #f7f7f8;
+}
+
+.ad-table tbody tr.is-selected td {
+  background: var(--ad-green-tint);
+}
+
+.ad-table tbody tr.is-selected td.is-sticky {
+  box-shadow: inset 3px 0 0 var(--ad-green), inset -1px 0 0 var(--ad-line);
+}
+
+/* ---- Values ---- */
+
+.ad-date {
+  font-weight: 700;
+  color: var(--ad-blue);
+}
+
+.ad-time {
+  color: var(--ad-soft);
+  font-weight: 500;
+}
+
+.ad-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ad-badge.is-green {
+  background: var(--ad-green-tint);
+  color: var(--ad-green);
+}
+
+.ad-badge.is-violet {
+  background: var(--ad-violet-tint);
+  color: var(--ad-violet);
+}
+
+.ad-type {
+  font-weight: 600;
+}
+
+.ad-type.is-green {
+  color: var(--ad-green);
+}
+
+.ad-type.is-violet {
+  color: var(--ad-violet);
+}
+
+.ad-kept {
+  font-weight: 700;
+  color: var(--ad-green);
+}
+
+.ad-out {
+  color: var(--ad-orange);
+  font-weight: 700;
+}
+
+.ad-chip {
+  background: var(--ad-green-tint);
+  color: #14532d;
+  font-weight: 600;
+}
+
+.ad-bin.is-on {
+  background: var(--ad-green-tint);
+  color: var(--ad-green);
+}
+
+.ad-pill {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.ad-pill.is-kept {
+  background: var(--ad-green-tint);
+  color: var(--ad-green);
+}
+
+.ad-pill.is-out {
+  background: var(--ad-orange-tint);
+  color: var(--ad-orange);
+}
+
+/* ---- Recipes and secrets table ---- */
+
+.ad-book-row td {
+  background: #f1f1f3;
+  border-top: 1px solid #d4d4d8;
+  border-bottom: 1px solid #d4d4d8;
+}
+
+.ad-book-bar strong {
+  font-size: 15px;
+}
+
+.ad-book-when {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ad-soft);
+  font-weight: 600;
+}
+
+.ad-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: #a1a1aa;
+}
+
+.ad-items-table tbody tr.ad-item-row:hover td {
+  background: #fafafa;
+}
+
+.ad-item-title {
+  color: var(--ad-text);
+}
+
+.ad-item-title.is-out {
+  color: var(--ad-orange);
+}
+
+/* ---- Side panel ---- */
+
+.ad-panel {
+  border-color: var(--ad-line);
+}
+
+.ad-panel-title strong {
+  font-size: 17px;
+}
+
+.ad-panel-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.ad-panel-bookno {
+  font-weight: 600;
+  color: var(--ad-soft);
+  background: #f4f4f5;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.ad-panel-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid var(--ad-line);
+}
+
+.ad-panel-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 8px 10px 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ad-soft);
+  cursor: pointer;
+}
+
+.ad-panel-tab:hover {
+  color: var(--ad-text);
+}
+
+.ad-panel-tab.is-active {
+  color: var(--ad-text);
+  box-shadow: inset 0 -3px 0 var(--ad-green);
+}
+
+.ad-panel-tab-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f4f4f5;
+  font-size: 12px;
+  text-align: center;
+}
+
+.ad-panel-tab.is-active .ad-panel-tab-count {
+  background: var(--ad-green-tint);
+  color: var(--ad-green);
+}
+
+.ad-panel-hint {
+  font-size: 12.5px;
+  color: var(--ad-soft);
+}
+
+.ad-q-no {
+  background: var(--ad-green-tint);
+  color: var(--ad-green);
+}
+
+.ad-q-name {
+  color: var(--ad-text);
+}
+
+.ad-q-count {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ad-green);
+}
+
+.ad-question-text {
+  font-size: 13.5px;
+  color: var(--ad-text);
+}
+
+.ad-choice {
+  color: #8b8b93;
+}
+
+.ad-choice.is-on {
+  color: var(--ad-text);
+}
+
+.ad-choice.is-on .ad-check {
+  border-color: var(--ad-green);
+  background: var(--ad-green);
+}
+
+.ad-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ad-list-gap {
+  margin-top: 10px;
+}
+
+.ad-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-item-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f0f0f2;
+  font-size: 13.5px;
+}
+
+.ad-item-list li:last-child {
+  border-bottom: 0;
+}
+
+.ad-item-list .ad-code {
+  flex: 0 0 56px;
+}
+
+.ad-item-name {
+  flex: 1 1 auto;
+  font-weight: 600;
+  color: var(--ad-text);
+}
+
+.ad-item-list.is-out .ad-item-name {
+  color: var(--ad-orange);
+}
+
+.ad-copies {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ad-blue);
+}

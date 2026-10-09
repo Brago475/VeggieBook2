@@ -47,13 +47,13 @@ function Cell({ row, column }: { row: SheetRow; column: DisplayColumn }) {
     case 'id':
       return <span className="ad-id">{String(value ?? '')}</span>
     case 'date':
-      return <>{shortDate(value)}</>
+      return <span className="ad-date">{shortDate(value)}</span>
     case 'time':
-      return <>{shortTime(value)}</>
+      return <span className="ad-time">{shortTime(value)}</span>
     case 'day':
       return <>{shortDay(value)}</>
     case 'subject':
-      return <>{bookSubject(row)}</>
+      return <span className={isSecrets(row) ? 'ad-badge is-violet' : 'ad-badge is-green'}>{bookSubject(row)}</span>
     case 'chips': {
       if (isSecrets(row)) return <span className="ad-faint">n/a</span>
       const picked = (column.question?.choices ?? [])
@@ -77,10 +77,19 @@ function Cell({ row, column }: { row: SheetRow; column: DisplayColumn }) {
     case 'num': {
       if (value === null || value === undefined) return <span className="ad-faint">-</span>
       const out = (column.key === 'recipes_removed' || column.key === 'secrets_removed') && Number(value) > 0
+      const kept = (column.key === 'recipes_kept' || column.key === 'secrets_kept') && Number(value) > 0
       const zero = Number(value) === 0
-      return <span className={out ? 'ad-out' : zero ? 'ad-faint' : undefined}>{String(value)}</span>
+      return (
+        <span className={out ? 'ad-out' : kept ? 'ad-kept' : zero ? 'ad-faint' : 'strong'}>{String(value)}</span>
+      )
     }
     default:
+      if (column.key === 'book_type') {
+        return <span className={isSecrets(row) ? 'ad-type is-violet' : 'ad-type is-green'}>{String(value ?? '')}</span>
+      }
+      if (column.key === 'age_range' && (value === null || value === undefined)) {
+        return <span className="ad-faint">Not given</span>
+      }
       return <>{value === null || value === undefined ? '' : String(value)}</>
   }
 }
