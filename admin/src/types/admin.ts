@@ -17,13 +17,39 @@ export type AdminSessionInfo = {
 }
 
 // GET /api/admin/overview
+
+export type WeekCount = {
+  weekStart: string // yyyy-MM-dd, the Monday the week starts on (Eastern)
+  veggie: number
+  secrets: number
+}
+
+export type TopAnswer = {
+  answer: string
+  question: string // Q1, Q2...
+  people: number
+  percent: number // of people with at least one VeggieBook
+}
+
+export type RecentItem = {
+  type: 'book' | 'joined'
+  researchId: string
+  title: string
+  detail: string
+  at: string
+}
+
 export type Overview = {
-  accounts: number
-  newAccountsThisWeek: number
-  recoveryLocked: number
-  activeGuests: number
+  participants: number
+  newThisWeek: number
   veggieBooks: number
   secretsBooks: number
+  answersRecorded: number
+  recoveryLocked: number
+  activeGuests: number
+  weekly: WeekCount[]
+  topAnswers: TopAnswer[]
+  recent: RecentItem[]
 }
 
 // GET /api/admin/accounts?q=

@@ -1,37 +1,54 @@
 /* Design tokens for the admin site.
 
-   One accent color: VeggieBook green, for active items, buttons, numbers,
-   bars, and links. Everything else is neutral: white, dark gray text, light
-   gray borders and secondary text. Orange is used only for warnings (such
-   as "taken out"). A muted gold is used only for the root admin badge. */
+   Side bar, colors, context and icons 
+   
+   --green and its variants are older names that many screens still use for
+   active items, numbers, and bars. They now point at the neutral accent, so
+   those screens follow the new look without changes. New code should use
+   --accent, --vb, --ok, and --warn instead. */
 
 :root {
-  --green: #2f5d2f;
-  --green-hover: #264c26;
-  --green-light: #8cc63e;
-  --green-tint: #eef3e8;
+  --accent: #18181b;
+  --accent-hover: #000000;
 
-  --ink: #1f2421;
-  --muted: #6b7069;
-  --line: #e5e7e3;
-  --bar-empty: #eceeea;
-  --subtle: #f6f7f5;
+  --ink: #18181b;
+  --muted: #6b6f76;
+  --faint: #a1a1aa;
+  --line: #e4e4e7;
+  --line-strong: #d4d4d8;
+  --subtle: #f4f4f5;
   --surface: #ffffff;
   --page: #ffffff;
+
+  --sidebar: #f7f7f8;
+  --active: #e8e8ea;
+
+  --vb: #16a34a;
+  --vb-tint: #e7f8ed;
+
+  --bar-empty: #ececee;
+  --bar-fill: #52525b;
+
+  --ok: #15803d;
+  --ok-tint: #ecf6ef;
 
   --warn: #c2410c;
   --warn-tint: #fdf1ea;
 
-  --root: #8a6a1f;
-  --root-tint: #f6efdc;
+  --root: #c62828;
+  --root-tint: #fdecec;
 
-  /* Older names still used by the Accounts screens. */
-  --green-deep: var(--green);
+  /* Older names, kept so existing screens keep working. */
+  --green: var(--accent);
+  --green-hover: var(--accent-hover);
+  --green-light: var(--faint);
+  --green-tint: var(--subtle);
+  --green-deep: var(--accent);
   --error: var(--warn);
 
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 12px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 8px;
 
   --sp-1: 4px;
   --sp-2: 8px;

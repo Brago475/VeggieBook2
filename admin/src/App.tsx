@@ -19,6 +19,10 @@ import { SignIn } from './pages/SignIn'
 // that are not built yet describe what is coming (see
 // components/layout/navigation.ts for which ones are ready).
 //
+// While the redesign is in progress, three sections show an older screen:
+// All Data shows Research, Question Analytics shows Analytics, and Settings
+// shows Accounts. Each gets its new page in a later step.
+//
 // Analytics is loaded only when it is opened. It carries the chart library,
 // which is most of the site's size, so the other screens don't wait for it.
 
@@ -27,13 +31,29 @@ const Analytics = lazy(() =>
 )
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
-  reports: {
-    title: 'Reports',
-    text: 'Ready-made reports for a study: frequencies, percentages, means, medians, standard deviations, and cross-tabs, per person and in total.',
+  participants: {
+    title: 'Participants',
+    text: 'Everyone by research ID: age range, books, last active, and whether tracking is on. This is where you choose people for a study.',
   },
-  system: {
-    title: 'System',
-    text: 'Server and database health, and a log of admin actions such as unlocks and role changes.',
+  studies: {
+    title: 'Studies',
+    text: 'Start or stop a study, choose its accounts, send the in-app notice, and see who has seen it.',
+  },
+  books: {
+    title: 'Books',
+    text: 'Every saved book and what happened to it: saved, edited later, left early, or deleted.',
+  },
+  activity: {
+    title: 'Activity',
+    text: 'When people use the app, how they move through a book, where they leave, and which devices they use.',
+  },
+  content: {
+    title: 'Content',
+    text: 'The recipes and secrets, read-only, opening the same way they do in the app.',
+  },
+  export: {
+    title: 'Export',
+    text: 'Download everything at once for SPSS, Excel, CSV, or R, with a codebook, linked by research ID.',
   },
 }
 
@@ -59,14 +79,14 @@ export function App() {
       onTab={setTab}
       onSignOut={signOut}
     >
-      {tab === 'overview' && <Overview />}
-      {tab === 'analytics' && (
+      {tab === 'overview' && <Overview onOpen={setTab} />}
+      {tab === 'data' && <Research />}
+      {tab === 'questions' && (
         <Suspense fallback={<p className="muted">Loading...</p>}>
           <Analytics />
         </Suspense>
       )}
-      {tab === 'accounts' && <Accounts currentEmail={session.email} />}
-      {tab === 'research' && <Research />}
+      {tab === 'settings' && <Accounts currentEmail={session.email} />}
       {soon && <ComingSoon title={soon.title} text={soon.text} />}
     </AdminShell>
   )

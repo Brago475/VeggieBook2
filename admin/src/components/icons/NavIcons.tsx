@@ -1,6 +1,7 @@
-// Line icons for the admin sidebar. Drawn here as inline SVG, the same way
-// the public site keeps its icons, so no icon library is needed.
-// They take the text color, so they follow the active and hover colors.
+// Line icons for the admin sidebar and number cards. Drawn here as inline
+// SVG, the same way the public site keeps its icons, so no icon library is
+// needed. They take the text color, so they follow the active and hover
+// colors.
 
 export type IconName =
   | 'home'
@@ -12,11 +13,18 @@ export type IconName =
   | 'table'
   | 'report'
   | 'server'
+  | 'study'
+  | 'activity'
+  | 'content'
+  | 'export'
+  | 'settings'
+  | 'clock'
   | 'menu'
   | 'close'
   | 'signout'
   | 'collapse'
   | 'expand'
+  | 'updown'
 
 const paths: Record<IconName, React.ReactNode> = {
   home: (
@@ -86,6 +94,39 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M7 16.5h.01" />
     </>
   ),
+  study: (
+    <>
+      <path d="M9 3h6" />
+      <path d="M10 3v6l-5 9.5A1.7 1.7 0 0 0 6.5 21h11a1.7 1.7 0 0 0 1.5-2.5L14 9V3" />
+      <path d="M7.5 15h9" />
+    </>
+  ),
+  activity: <path d="M3 12h4l3-7 4 14 3-7h4" />,
+  content: (
+    <>
+      <path d="M3 5.5c3-1.3 6-1.3 9 .8v13.5c-3-2-6-2-9-.8z" />
+      <path d="M21 5.5c-3-1.3-6-1.3-9 .8v13.5c3-2 6-2 9-.8z" />
+    </>
+  ),
+  export: (
+    <>
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M4 21h16" />
+    </>
+  ),
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.8 1.2V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-2.8-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.8H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.2-2.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 2.8-1.2V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.8 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0 1.2 2.8H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+    </>
+  ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
   menu: <path d="M4 6h16M4 12h16M4 18h16" />,
   close: <path d="M6 6l12 12M18 6 6 18" />,
   signout: (
@@ -97,16 +138,22 @@ const paths: Record<IconName, React.ReactNode> = {
   ),
   collapse: (
     <>
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M9 4v16" />
-      <path d="m16 10-2 2 2 2" />
+      <path d="M4 4v16" />
+      <path d="M20 12H9" />
+      <path d="m13 8-4 4 4 4" />
     </>
   ),
   expand: (
     <>
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M9 4v16" />
-      <path d="m14 10 2 2-2 2" />
+      <path d="M20 4v16" />
+      <path d="M4 12h11" />
+      <path d="m11 8 4 4-4 4" />
+    </>
+  ),
+  updown: (
+    <>
+      <path d="m8 9 4-4 4 4" />
+      <path d="m8 15 4 4 4-4" />
     </>
   ),
 }

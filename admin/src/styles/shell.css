@@ -1,8 +1,14 @@
-/* The frame around every admin screen: sidebar, top bar on narrow screens,
-   and the main area. See components/layout/AdminShell.tsx.
+/* The frame around every admin screen: sidebar, top bar, and main area.
+   See components/layout/AdminShell.tsx.
 
-   The root admin badge (muted gold) lives here because it is used in the
-   sidebar, the accounts list, and the account page. */
+   Sidebar: light gray, one flat list in bold black. Hovering an item tints
+   it green; the chosen page sits on a slightly darker gray with a green
+   bar on its left edge. Sections not built yet are lighter gray.
+   The signed-in account sits at the bottom in a bordered box that opens a
+   small menu; its ADMIN label is red for the main admin and green for
+   everyone else.
+
+   Top bar: a breadcrumb over the page title, with a line under it. */
 
 .shell {
   display: flex;
@@ -19,9 +25,9 @@
   flex-shrink: 0;
   width: 248px;
   height: 100vh;
-  padding: var(--sp-5) var(--sp-3);
+  padding: var(--sp-5) var(--sp-3) var(--sp-3);
   overflow-y: auto;
-  background: var(--surface);
+  background: var(--sidebar);
   border-right: 1px solid var(--line);
 }
 
@@ -29,45 +35,43 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  padding: 0 var(--sp-2) var(--sp-6);
+  padding: 0 var(--sp-2) var(--sp-5);
 }
 
 .sidebar-logo {
-  width: 124px;
+  width: 120px;
   height: auto;
 }
 
 .sidebar-mark {
   display: none;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
 }
 
-.shell-badge {
-  padding: 2px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--green);
-  background: var(--green-tint);
-  border-radius: 999px;
-}
+/* Collapse and close: plain icon buttons with a soft round hover. */
 
 .sidebar-toggle,
 .sidebar-close {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   margin-left: auto;
-  padding: 6px;
+  padding: 0;
   color: var(--muted);
   background: none;
   border: none;
-  border-radius: var(--r-sm);
+  border-radius: 999px;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .sidebar-toggle:hover,
 .sidebar-close:hover {
-  color: var(--ink);
-  background: var(--subtle);
+  color: var(--vb);
+  background: var(--vb-tint);
 }
 
 .sidebar-close {
@@ -78,21 +82,7 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: var(--sp-5);
-}
-
-.nav-group {
-  display: flex;
-  flex-direction: column;
   gap: 2px;
-}
-
-.nav-group-label {
-  margin: 0 0 var(--sp-1);
-  padding: 0 var(--sp-3);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
 }
 
 .nav-item {
@@ -100,45 +90,61 @@
   align-items: center;
   gap: var(--sp-3);
   width: 100%;
-  min-height: 40px;
+  min-height: 42px;
   padding: 0 var(--sp-3);
   font: inherit;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--ink);
   text-align: left;
   background: none;
   border: none;
   border-radius: var(--r-md);
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .nav-item svg {
   flex-shrink: 0;
-  color: var(--muted);
+  color: var(--ink);
+  transition: color 0.15s ease;
 }
 
 .nav-item:hover {
-  background: var(--subtle);
+  color: var(--vb);
+  background: var(--vb-tint);
+}
+
+.nav-item:hover svg {
+  color: var(--vb);
 }
 
 .nav-item.is-active {
-  font-weight: 600;
-  color: #fff;
-  background: var(--green);
+  color: var(--ink);
+  background: var(--active);
+  box-shadow: inset 3px 0 0 var(--vb);
 }
 
 .nav-item.is-active svg {
-  color: #fff;
+  color: var(--ink);
 }
 
 /* A section that isn't built yet: still clickable, but lighter. */
 .nav-item.is-soon {
-  color: #a1a59f;
+  font-weight: 500;
+  color: var(--faint);
 }
 
 .nav-item.is-soon svg {
-  color: #c2c5bf;
+  color: #c9c9ce;
+}
+
+.nav-item.is-soon:hover {
+  color: var(--vb);
+}
+
+.nav-item.is-soon:hover svg {
+  color: var(--vb);
 }
 
 .nav-item:focus {
@@ -146,19 +152,41 @@
 }
 
 .nav-item:focus-visible {
-  outline: 2px solid var(--green-light);
+  outline: 2px solid var(--vb);
   outline-offset: 1px;
 }
 
-/* Signed-in account at the bottom */
+/* Signed-in account at the bottom, with its menu */
 
 .sidebar-user {
+  position: relative;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line);
+}
+
+.user-chip {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  margin-top: var(--sp-5);
-  padding: var(--sp-3) var(--sp-2) 0;
-  border-top: 1px solid var(--line);
+  width: 100%;
+  padding: var(--sp-2);
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+}
+
+.user-chip:hover {
+  border-color: var(--line-strong);
+}
+
+.user-chip svg {
+  flex-shrink: 0;
+  color: var(--muted);
 }
 
 .avatar {
@@ -166,19 +194,20 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  font-size: 14px;
+  width: 32px;
+  height: 32px;
+  font-size: 13px;
   font-weight: 700;
-  color: #fff;
-  background: var(--green);
-  border-radius: 999px;
+  color: var(--ink);
+  background: var(--active);
+  border-radius: var(--r-md);
 }
 
 .sidebar-user-text {
   display: flex;
   flex: 1;
   flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
 
@@ -190,25 +219,51 @@
   white-space: nowrap;
 }
 
+/* ADMIN label: red for the main admin, green for the rest. */
 .sidebar-role {
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--vb);
 }
 
-.signout-button {
+.sidebar-role.is-root {
+  color: var(--root);
+}
+
+.user-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 4px);
+  left: 0;
+  z-index: 60;
+  padding: var(--sp-1);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: 0 8px 24px rgba(24, 24, 27, 0.08);
+}
+
+.user-menu-item {
   display: flex;
-  flex-shrink: 0;
-  padding: 6px;
-  color: var(--muted);
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
   background: none;
   border: none;
-  border-radius: var(--r-sm);
+  border-radius: var(--r-md);
   cursor: pointer;
 }
 
-.signout-button:hover {
-  color: var(--ink);
-  background: var(--subtle);
+.user-menu-item:hover {
+  color: var(--vb);
+  background: var(--vb-tint);
 }
 
 .sidebar-backdrop {
@@ -224,13 +279,62 @@
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-6);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.menu-button {
   display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.menu-button:hover {
+  color: var(--vb);
+  background: var(--vb-tint);
+}
+
+.topbar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.breadcrumb-current {
+  color: var(--ink);
+}
+
+.topbar-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .shell-main {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: var(--sp-6);
+  max-width: 1440px;
+  padding: var(--sp-5) var(--sp-6) var(--sp-6);
 }
 
 /* Collapsed sidebar: icons only. Wide screens only. */
@@ -254,10 +358,9 @@
   }
 
   .shell.is-collapsed .sidebar-logo,
-  .shell.is-collapsed .shell-badge,
   .shell.is-collapsed .nav-text,
-  .shell.is-collapsed .nav-group-label,
-  .shell.is-collapsed .sidebar-user-text {
+  .shell.is-collapsed .sidebar-user-text,
+  .shell.is-collapsed .user-chip-arrow {
     display: none;
   }
 
@@ -265,20 +368,21 @@
     display: block;
   }
 
-  .shell.is-collapsed .nav-group + .nav-group {
-    padding-top: var(--sp-3);
-    border-top: 1px solid var(--line);
-  }
-
   .shell.is-collapsed .nav-item {
     justify-content: center;
     padding: 0;
   }
 
-  .shell.is-collapsed .sidebar-user {
-    flex-direction: column;
-    padding-left: 0;
-    padding-right: 0;
+  .shell.is-collapsed .user-chip {
+    justify-content: center;
+    padding: var(--sp-1);
+    border: none;
+    background: none;
+  }
+
+  .shell.is-collapsed .user-menu {
+    right: auto;
+    width: 180px;
   }
 }
 
@@ -310,32 +414,19 @@
     inset: 0;
     z-index: 40;
     display: block;
-    background: rgba(31, 36, 33, 0.3);
-  }
-
-  .topbar {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: var(--sp-3) var(--sp-4);
-    background: var(--surface);
-    border-bottom: 1px solid var(--line);
+    background: rgba(24, 24, 27, 0.3);
   }
 
   .menu-button {
     display: flex;
-    padding: var(--sp-1);
-    color: var(--ink);
-    background: none;
-    border: none;
-    cursor: pointer;
+  }
+
+  .topbar {
+    padding: var(--sp-3) var(--sp-4);
   }
 
   .topbar-title {
-    font-weight: 600;
+    font-size: 18px;
   }
 
   .shell-main {
@@ -344,12 +435,26 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sidebar {
+  .sidebar,
+  .nav-item,
+  .nav-item svg,
+  .sidebar-toggle,
+  .sidebar-close {
     transition: none;
   }
 }
 
-/* Root admin badge: muted gold, used nowhere else. */
+/* Main admin badge: red, used nowhere else. Other admins get the plain
+   gray badge. */
+
+.shell-badge {
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--subtle);
+  border-radius: 999px;
+}
 
 .shell-badge.is-root,
 .badge.is-root {
@@ -358,6 +463,6 @@
 }
 
 .root-text {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--root);
 }

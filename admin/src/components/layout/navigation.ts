@@ -1,15 +1,26 @@
 import type { IconName } from '../icons/NavIcons'
 
-// Every section of the admin site, in sidebar order.
+// Every section of the admin site, in sidebar order. One flat list.
 //
 // `ready` marks the sections that are built. The rest are dimmed in the
 // sidebar and show a short description of what is coming. When a section is
 // built, set ready to true and add its page in App.tsx.
 //
-// Research combines what were planned as Studies, Questions, Answers, and
-// SPSS Data: one page with the anonymous research sheets.
+// While the new pages are being built, some sections show an older screen:
+// All Data shows the Research page, Question Analytics shows the Analytics
+// page, and Settings shows the Accounts page (see App.tsx).
 
-export type AdminTab = 'overview' | 'analytics' | 'accounts' | 'research' | 'reports' | 'system'
+export type AdminTab =
+  | 'overview'
+  | 'participants'
+  | 'studies'
+  | 'data'
+  | 'books'
+  | 'questions'
+  | 'activity'
+  | 'content'
+  | 'export'
+  | 'settings'
 
 export type NavItem = {
   id: AdminTab
@@ -18,40 +29,19 @@ export type NavItem = {
   ready: boolean
 }
 
-export type NavGroup = {
-  label: string
-  items: NavItem[]
-}
-
-export const navGroups: NavGroup[] = [
-  {
-    label: 'Dashboard',
-    items: [
-      { id: 'overview', label: 'Overview', icon: 'home', ready: true },
-      { id: 'analytics', label: 'Analytics', icon: 'chart', ready: true },
-    ],
-  },
-  {
-    label: 'People',
-    items: [{ id: 'accounts', label: 'Accounts', icon: 'users', ready: true }],
-  },
-  {
-    label: 'Research',
-    items: [
-      { id: 'research', label: 'Research', icon: 'table', ready: true },
-      { id: 'reports', label: 'Reports', icon: 'report', ready: false },
-    ],
-  },
-  {
-    label: 'Admin',
-    items: [{ id: 'system', label: 'System', icon: 'server', ready: false }],
-  },
+export const navItems: NavItem[] = [
+  { id: 'overview', label: 'Overview', icon: 'home', ready: true },
+  { id: 'participants', label: 'Participants', icon: 'users', ready: false },
+  { id: 'studies', label: 'Studies', icon: 'study', ready: false },
+  { id: 'data', label: 'All Data', icon: 'table', ready: true },
+  { id: 'books', label: 'Books', icon: 'book', ready: false },
+  { id: 'questions', label: 'Question Analytics', icon: 'chart', ready: true },
+  { id: 'activity', label: 'Activity', icon: 'activity', ready: false },
+  { id: 'content', label: 'Content', icon: 'content', ready: false },
+  { id: 'export', label: 'Export', icon: 'export', ready: false },
+  { id: 'settings', label: 'Settings', icon: 'settings', ready: true },
 ]
 
 export function navLabel(tab: AdminTab): string {
-  for (const group of navGroups) {
-    const item = group.items.find((i) => i.id === tab)
-    if (item) return item.label
-  }
-  return ''
+  return navItems.find((i) => i.id === tab)?.label ?? ''
 }
