@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace VeggieBook.Api.Data;
 
 // Database context for user data: accounts, roles, saved books, research
-// IDs, and the activity log.
+// IDs, studies and tracking, and the activity log.
 //
 // Separate from VeggieBookContext, which is read-only with tracking switched
 // off. Keeping writes in their own context means the content endpoints never
@@ -22,6 +22,9 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
     public DbSet<BookCoverUpload> BookCoverUploads => Set<BookCoverUpload>();
     public DbSet<ResearchParticipant> ResearchParticipants => Set<ResearchParticipant>();
     public DbSet<ActivityEntry> ActivityLog => Set<ActivityEntry>();
+    public DbSet<TrackingChange> TrackingChanges => Set<TrackingChange>();
+    public DbSet<Study> Studies => Set<Study>();
+    public DbSet<StudyNotice> StudyNotices => Set<StudyNotice>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -126,6 +129,42 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.VegetableCode).HasColumnName("vegetable_code");
             e.Property(x => x.SecretCategoryId).HasColumnName("secret_category_id");
             e.Property(x => x.ItemCount).HasColumnName("item_count");
+        });
+
+        // See db/migrations/008_studies.sql.
+        b.Entity<TrackingChange>(e =>
+        {
+            e.ToTable("research_tracking_change");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.TrackingOn).HasColumnName("tracking_on");
+            e.Property(x => x.ChangedBy).HasColumnName("changed_by");
+            e.Property(x => x.AdminId).HasColumnName("admin_id");
+            e.Property(x => x.At).HasColumnName("at");
+        });
+
+        b.Entity<Study>(e =>
+        {
+            e.ToTable("study");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.Number).HasColumnName("number");
+            e.Property(x => x.StartedAt).HasColumnName("started_at");
+            e.Property(x => x.EndedAt).HasColumnName("ended_at");
+            e.Property(x => x.StartedBy).HasColumnName("started_by");
+            e.Property(x => x.EndedBy).HasColumnName("ended_by");
+        });
+
+        b.Entity<StudyNotice>(e =>
+        {
+            e.ToTable("study_notice");
+            e.HasKey(x => new { x.StudyId, x.UserId });
+            e.Property(x => x.StudyId).HasColumnName("study_id");
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.ShownAt).HasColumnName("shown_at");
+            e.Property(x => x.Answer).HasColumnName("answer");
+            e.Property(x => x.AnsweredAt).HasColumnName("answered_at");
         });
     }
 
