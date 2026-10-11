@@ -8,11 +8,12 @@ import { shortAnswer } from '../../utils/answerNames'
 import { noFilters } from '../../utils/researchQuery'
 import { OffIdList } from './OffIdList'
 import { StudyIcon } from './StudyIcons'
-import { plural, studyRange } from './studyFormat'
+import { plural, studyFullTitle, studyRange } from './studyFormat'
 
-// "Data from Study N": every book saved during the picked study, by people
-// whose tracking was on when they saved it. The same rows as All Data with
-// that study picked, so the downloads here and there are the same files.
+// "Data from Fall pilot (Study 2)": every book saved during the picked
+// study, by people whose tracking was on when they saved it. The same rows
+// as All Data with that study picked, so the downloads here and there are
+// the same files.
 //
 //   Head    the study's dates, how many books and tracked people, the four
 //           downloads (Excel, SPSS, PDF, CSV) and Open in All Data
@@ -65,7 +66,7 @@ export function StudyBooks({ study, onOpenData }: Props) {
     <section className="tl-data" aria-labelledby="tl-data-title">
       <div className="tl-data-head">
         <div className="tl-data-title">
-          <h2 id="tl-data-title">Data from Study {study.number}</h2>
+          <h2 id="tl-data-title">Data from {studyFullTitle(study)}</h2>
           <span className="tl-data-when">
             <StudyIcon name="calendar" size={14} />
             {studyRange(study.startedAt, study.endedAt)}. {plural(study.booksSaved, 'book', 'books')},{' '}

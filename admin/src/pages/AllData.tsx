@@ -9,7 +9,7 @@ import { ColumnToggles } from '../components/alldata/ColumnToggles'
 import { DownloadMenu } from '../components/alldata/DownloadMenu'
 import { ItemsTable } from '../components/alldata/ItemsTable'
 import { Segmented } from '../components/alldata/Segmented'
-import { StudyPicker } from '../components/alldata/StudyPicker'
+import { StudyView } from '../components/alldata/StudyView'
 import { TopbarActions, TopbarBelow } from '../components/layout/TopbarSlot'
 import { useAllData } from '../hooks/useAllData'
 import type { AllDataFile, AnswersView, BookTypeFilter, ColumnGroup, ItemStatusFilter } from '../types/allData'
@@ -37,7 +37,7 @@ import '../styles/alldata-responsive.css'
 // both files together) and Refresh, with the search and filters under them.
 // Rows are keyed by the anonymous research ID; no email or name appears.
 //
-// The Study bar above the tabs folds open to pick a study (or All time).
+// Above the tabs, "Show: All data | One study" picks what the page shows.
 // With a study picked, the tables, cards, and downloads hold only the books
 // saved during it. The Studies page's "Open in All Data" opens this page
 // with its study already picked (initialStudy).
@@ -192,7 +192,7 @@ export function AllData({ initialStudy = null }: Props) {
         />
       </TopbarBelow>
 
-      <StudyPicker study={study} onStudy={setStudy} books={bookRows.length} />
+      <StudyView study={study} onStudy={setStudy} books={bookRows.length} />
 
       <div className="ad-tabs" role="tablist" aria-label="File">
         {fileTabs.map((t) => (

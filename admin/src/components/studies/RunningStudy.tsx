@@ -1,12 +1,15 @@
+import { useState } from 'react'
 import type { StudySummary } from '../../types/studies'
 import { StudyIcon, type StudyIconName } from './StudyIcons'
-import { fullDate, plural } from './studyFormat'
+import { StudyNameEditor } from './StudyNameEditor'
+import { fullDate, plural, studyTitle } from './studyFormat'
 
 // The card at the top of the Studies page.
 //
-//   A study is running   its number, when it was switched on, how many days
-//                        it has run, and four numbers: tracked, tracking
-//                        off, joined from the notice, and books saved
+//   A study is running   its name (with a Rename button), its number, when
+//                        it was switched on, how many days it has run, and
+//                        four numbers: tracked, tracking off, joined from
+//                        the notice, and books saved
 //   None is running      when the last one ended, and a button to start the
 //                        next (it opens the switch's confirm step)
 
@@ -15,11 +18,14 @@ type Props = {
   latest: StudySummary
   nextNumber: number
   onStart: () => void
+  onRename: (study: StudySummary, name: string) => Promise<string | null>
 }
 
 type Stat = { label: string; value: number; tone: 'green' | 'orange' | 'blue'; icon: StudyIconName }
 
-export function RunningStudy({ running, latest, nextNumber, onStart }: Props) {
+export function RunningStudy({ running, latest, nextNumber, onStart, onRename }: Props) {
+  const [editing, setEditing] = useState(false)
+
   if (!running) {
     return (
       <section className="tl-now">
@@ -29,8 +35,8 @@ export function RunningStudy({ running, latest, nextNumber, onStart }: Props) {
         <div className="tl-now-title">
           <strong>No study running</strong>
           <span className="tl-now-when">
-            Study {latest.number} ended {latest.endedAt ? fullDate(latest.endedAt) : ''}. Nothing is recorded
-            until a study is switched on.
+            {studyTitle(latest)} ended {latest.endedAt ? fullDate(latest.endedAt) : ''}. Nothing is recorded until
+            a study is switched on.
           </span>
         </div>
         <button type="button" className="st-button is-green tl-now-start" onClick={onStart}>
@@ -55,11 +61,26 @@ export function RunningStudy({ running, latest, nextNumber, onStart }: Props) {
       </span>
       <div className="tl-now-title">
         <span className="tl-now-name">
-          <strong>Study {running.number}</strong>
-          <span className="st-pill is-running">
-            <i />
-            Running
-          </span>
+          {editing ? (
+            <StudyNameEditor
+              study={running}
+              onSave={(name) => onRename(running, name)}
+              onDone={() => setEditing(false)}
+            />
+          ) : (
+            <>
+              <strong>{studyTitle(running)}</strong>
+              {running.name && <span className="se-number">Study {running.number}</span>}
+              <span className="st-pill is-running">
+                <i />
+                Running
+              </span>
+              <button type="button" className="se-rename" onClick={() => setEditing(true)}>
+                <StudyIcon name="pencil" size={14} />
+                Rename
+              </button>
+            </>
+          )}
         </span>
         <span className="tl-now-when">
           <StudyIcon name="calendar" size={14} />

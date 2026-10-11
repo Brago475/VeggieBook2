@@ -1,54 +1,26 @@
-/* The folding Study bar on All Data. See components/alldata/StudyPicker.tsx.
-   The small timeline inside it comes from studies-timeline.css
-   (.tl-bar.is-mini). Blue marks the picked study, like on the Studies
-   page. */
+/* "Show: All data | One study" on All Data. See
+   components/alldata/StudyView.tsx. Blue marks a picked study, like on the
+   Studies page; green marks a running one. */
 
-.ads {
+.adv {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 14px;
 }
 
-.ads.is-open {
+.adv.is-study {
   border-color: #c7d7fe;
 }
 
-.ads-line {
+.adv-row {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-right: 8px;
-}
-
-.ads-toggle {
-  display: flex;
-  flex: 1;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
-  min-width: 0;
-  padding: 10px 14px;
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  color: var(--ink);
-  background: none;
-  border: none;
-  border-radius: 14px;
-  cursor: pointer;
+  gap: 12px 16px;
+  padding: 14px 16px;
 }
 
-.ads-toggle svg {
-  flex: none;
-  color: #1d4ed8;
-}
-
-.ads-toggle:focus-visible {
-  outline: 2px solid #1d4ed8;
-  outline-offset: -2px;
-}
-
-.ads-label {
+.adv-label {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -56,131 +28,244 @@
   color: var(--muted);
 }
 
-.ads-current {
-  font-weight: 600;
-}
+/* ---- All data | One study ---- */
 
-.ads-current.is-picked {
+.adv-switch {
   display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  padding: 3px 10px;
-  font-weight: 400;
-  color: #1e3a8a;
-  background: #eff4ff;
-  border-radius: 999px;
+  gap: 4px;
+  padding: 4px;
+  background: #f4f4f5;
+  border-radius: 10px;
 }
 
-.ads-count {
-  font-size: 13px;
+.adv-option {
+  height: 34px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
   color: #52525b;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.ads-chevron {
+.adv-option:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.adv-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.adv-option.is-on {
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.adv-option.is-on.is-study {
+  color: #1d4ed8;
+}
+
+.adv-option:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 1px;
+}
+
+.adv-text {
+  font-size: 14px;
+  color: #3f3f46;
+}
+
+/* ---- The study list ---- */
+
+.adv-select {
+  position: relative;
+  flex: 0 1 420px;
+  min-width: min(100%, 260px);
+}
+
+.adv-select-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid #93b4fd;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.adv-select-button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 1px;
+}
+
+.adv-chevron {
   display: flex;
   margin-left: auto;
-  transition: transform 0.15s ease;
-}
-
-.ads-chevron svg {
   color: var(--muted);
 }
 
-.ads.is-open .ads-chevron {
-  transform: rotate(180deg);
+.adv-number {
+  font-size: 13px;
+  color: var(--muted);
 }
 
-.ads-clear {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  color: #52525b;
-  background: #f4f4f5;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.ads-clear:hover {
-  color: var(--ink);
-  background: #e4e4e7;
-}
-
-.ads-body {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px 16px 14px;
-  border-top: 1px solid #f0f0f2;
-}
-
-.ads-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 10px;
-}
-
-.ads-chip {
+.adv-running {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 34px;
-  padding: 0 12px;
-  font: inherit;
-  font-size: 13px;
+  gap: 5px;
+  padding: 2px 8px;
+  font-size: 11px;
   font-weight: 700;
-  color: var(--ink);
-  background: var(--surface);
-  border: 1px solid var(--line);
+  color: #14532d;
+  background: #dcf2e3;
   border-radius: 999px;
-  cursor: pointer;
 }
 
-.ads-chip:hover {
-  border-color: #93b4fd;
-}
-
-.ads-chip.is-on {
-  color: #ffffff;
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-}
-
-.ads-chip-dates {
-  font-weight: 500;
-  color: #52525b;
-}
-
-.ads-chip.is-on .ads-chip-dates {
-  color: #dbe6ff;
-}
-
-.ads-dot {
+.adv-running i {
   width: 7px;
   height: 7px;
   background: #15803d;
   border-radius: 999px;
 }
 
-.ads-chip.is-on .ads-dot {
-  background: #86efac;
+.adv-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  width: max(100%, 440px);
+  max-width: calc(100vw - 32px);
+  max-height: 360px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
 }
 
-.ads-note,
-.ads-empty {
-  margin: 6px 0 0;
-  font-size: 13px;
+.adv-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f0f0f2;
+  cursor: pointer;
+}
+
+.adv-list li:last-child .adv-item {
+  border-bottom: none;
+}
+
+.adv-item:hover {
+  background: #fafafa;
+}
+
+.adv-item.is-on {
+  background: #eff4ff;
+}
+
+.adv-swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  background: #7cc095;
+  border-radius: 3px;
+}
+
+.adv-swatch.is-running {
+  background: #15803d;
+}
+
+.adv-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.adv-item-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.adv-item-dates {
+  font-size: 12px;
   color: #52525b;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ads-chevron {
-    transition: none;
-  }
+.adv-item-books {
+  margin-left: auto;
+  font-size: 13px;
+  color: #3f3f46;
+  white-space: nowrap;
+}
+
+.adv-check {
+  display: flex;
+  width: 16px;
+  color: #1d4ed8;
+}
+
+/* ---- The blue line under it ---- */
+
+.adv-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #1e3a8a;
+  background: #eff4ff;
+  border-top: 1px solid #dbe6ff;
+  border-radius: 0 0 13px 13px;
+}
+
+.adv-note svg {
+  flex: none;
+  color: #1d4ed8;
+}
+
+.adv-note-text {
+  flex: 1 1 320px;
+}
+
+.adv-note-count {
+  white-space: nowrap;
+}
+
+.adv-all {
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1d4ed8;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
 }

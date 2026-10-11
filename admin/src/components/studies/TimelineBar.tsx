@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { StudySummary } from '../../types/studies'
-import { studyRange } from './studyFormat'
+import { studyFullTitle, studyRange, studyTitle } from './studyFormat'
 import { timelineScale } from './timelineScale'
 
 // The timeline bar: one block per study, placed by its dates, with month
@@ -10,22 +10,20 @@ import { timelineScale } from './timelineScale'
 //   Ended study     light green
 //   Picked study    blue ring around it
 //
-// Each block is a button: clicking it picks that study. Used full size on
-// the Studies page and small (mini) on All Data.
+// Each block is a button: clicking it picks that study.
 
 type Props = {
   studies: StudySummary[]
   selected: number | null // study id
   onSelect: (study: StudySummary) => void
-  mini?: boolean
 }
 
-export function TimelineBar({ studies, selected, onSelect, mini = false }: Props) {
+export function TimelineBar({ studies, selected, onSelect }: Props) {
   // Today, to the minute the page was opened.
   const scale = useMemo(() => timelineScale(studies, new Date()), [studies])
 
   return (
-    <div className={mini ? 'tl-bar is-mini' : 'tl-bar'}>
+    <div className="tl-bar">
       <div className="tl-track">
         {scale.months.map((m) => (
           <span key={m.label + m.at} className="tl-grid" style={{ left: `${m.at}%` }} aria-hidden="true" />
@@ -42,12 +40,10 @@ export function TimelineBar({ studies, selected, onSelect, mini = false }: Props
               className={classes.join(' ')}
               style={{ left: `${left}%`, width: `${width}%` }}
               aria-pressed={study.id === selected}
-              title={`Study ${study.number}: ${studyRange(study.startedAt, study.endedAt)}`}
+              title={`${studyFullTitle(study)}: ${studyRange(study.startedAt, study.endedAt)}`}
               onClick={() => onSelect(study)}
             >
-              <span className="tl-span-name">
-                {mini ? study.number : `Study ${study.number}`}
-              </span>
+              <span className="tl-span-name">{studyTitle(study)}</span>
             </button>
           )
         })}

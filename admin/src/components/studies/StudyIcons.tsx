@@ -1,7 +1,7 @@
 // Small line icons for the Studies and Participants pages. Drawn as inline
 // SVG like the rest of the admin site, and they take the text color.
 
-export type StudyIconName = 'flask' | 'signal' | 'off' | 'bell' | 'book' | 'calendar' | 'users' | 'table' | 'close' | 'play' | 'stop'
+export type StudyIconName = 'flask' | 'signal' | 'off' | 'bell' | 'book' | 'calendar' | 'users' | 'table' | 'close' | 'play' | 'stop' | 'check' | 'pencil' | 'trash' | 'alert'
 
 const paths: Record<StudyIconName, React.ReactNode> = {
   flask: (
@@ -62,6 +62,29 @@ const paths: Record<StudyIconName, React.ReactNode> = {
   close: <path d="M6 6l12 12M18 6 6 18" />,
   play: <path d="M7 5v14l12-7z" />,
   stop: <rect x="6" y="6" width="12" height="12" rx="2" />,
+  check: <path d="M20 6 9 17l-5-5" />,
+  pencil: (
+    <>
+      <path d="M4 20h4L19 9l-4-4L4 16z" />
+      <path d="M13.5 6.5l4 4" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+      <path d="M6 7l1 13h10l1-13" />
+      <path d="M9 7V4h6v3" />
+    </>
+  ),
+  alert: (
+    <>
+      <path d="M12 3 2 20h20z" />
+      <path d="M12 10v4" />
+      <path d="M12 17h.01" />
+    </>
+  ),
 }
 
 type Props = {

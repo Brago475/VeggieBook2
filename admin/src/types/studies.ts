@@ -13,6 +13,7 @@ export type OffPerson = {
 export type StudySummary = {
   id: number
   number: number
+  name: string | null // given by an admin; null shows as "Study 3"
   startedAt: string
   endedAt: string | null
   running: boolean

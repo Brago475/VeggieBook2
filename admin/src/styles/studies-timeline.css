@@ -1,6 +1,6 @@
 /* The Studies page timeline: the card for the study running now, the
    Timeline card (bar and list), and the picked study's data. Also the
-   timeline bar itself, which All Data shows small (.tl-bar.is-mini).
+   timeline bar itself.
    See components/studies/. Pills, buttons, badges, and ID chips come from
    studies.css.
 
@@ -263,38 +263,6 @@
   white-space: nowrap;
 }
 
-/* Small version, for All Data. */
-
-.tl-bar.is-mini {
-  margin-top: 16px;
-}
-
-.tl-bar.is-mini .tl-track {
-  height: 34px;
-  border-radius: 8px;
-}
-
-.tl-bar.is-mini .tl-span {
-  top: 7px;
-  height: 20px;
-  padding: 0 6px;
-  font-size: 11px;
-  border-radius: 6px;
-}
-
-.tl-bar.is-mini .tl-today-label {
-  top: -15px;
-  font-size: 10px;
-}
-
-.tl-bar.is-mini .tl-months {
-  height: 15px;
-}
-
-.tl-bar.is-mini .tl-months span {
-  font-size: 10px;
-}
-
 /* ---- List of studies ---- */
 
 .tl-list {
@@ -305,28 +273,13 @@
 }
 
 .tl-row {
-  display: grid;
-  grid-template-columns: 14px minmax(140px, 1fr) minmax(220px, 2fr) 110px 110px 130px;
+  display: flex;
   align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 22px;
-  font: inherit;
-  font-size: 14px;
-  text-align: left;
-  color: var(--ink);
-  background: none;
-  border: none;
   border-bottom: 1px solid #f0f0f2;
-  cursor: pointer;
 }
 
-.tl-list li:last-child .tl-row {
+.tl-list li.tl-row:last-child {
   border-bottom: none;
-}
-
-.tl-row:hover {
-  background: #fafafa;
 }
 
 .tl-row.is-selected {
@@ -334,9 +287,49 @@
   box-shadow: inset 4px 0 0 #1d4ed8;
 }
 
-.tl-row:focus-visible {
+.tl-row-pick {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 14px minmax(160px, 1.2fr) minmax(220px, 2fr) 110px 110px 120px;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 8px 12px 22px;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  color: var(--ink);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.tl-row-pick:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.tl-row-pick:focus-visible {
   outline: 2px solid #1d4ed8;
   outline-offset: -2px;
+}
+
+.tl-row.is-selected .tl-row-action {
+  color: #1d4ed8;
+}
+
+.tl-row-editing {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 22px;
+}
+
+.tl-row-tools {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  padding-right: 18px;
 }
 
 .tl-row-name {
@@ -370,10 +363,6 @@
   justify-self: end;
   font-weight: 700;
   color: #15803d;
-}
-
-.tl-row.is-selected .tl-row-action {
-  color: #1d4ed8;
 }
 
 /* ---- Data of the picked study ---- */
@@ -543,9 +532,10 @@
   color: #9a3412;
 }
 
-/* Narrow screens: each study row wraps onto two lines. */
+/* Narrow screens: each study row wraps onto two lines; the rename and
+   delete buttons stay on the right. */
 @media (max-width: 900px) {
-  .tl-row {
+  .tl-row-pick {
     display: flex;
     flex-wrap: wrap;
     gap: 6px 14px;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { StudiesResponse } from '../../types/studies'
 import { OffIdList } from './OffIdList'
 import { StudyIcon } from './StudyIcons'
-import { fullDate, plural } from './studyFormat'
+import { fullDate, plural, studyTitle } from './studyFormat'
 
 // The study on/off switch, for the top bar, and its confirm dialog.
 //
@@ -12,8 +12,9 @@ import { fullDate, plural } from './studyFormat'
 //   Switching on    Study N starts now. Shows how many people will be
 //                   tracked and the research IDs of those with tracking off
 //                   (the ones who turned it off themselves get the notice).
-//   Switching off   Study N ends now and nothing more is recorded until a
-//                   study is switched on again (which starts Study N+1).
+//   Switching off   the running study (shown by its name) ends now and
+//                   nothing more is recorded until a study is switched on
+//                   again (which starts Study N+1).
 //
 // The dialog closes on Cancel, the X, Escape, or a click outside it.
 //
@@ -79,7 +80,7 @@ export function StudySwitch({ data, onSwitch, openRequest = 0 }: Props) {
         <span className="st-switch-track" aria-hidden="true">
           <span className="st-switch-thumb" />
         </span>
-        <span className="st-switch-text">{turningOn ? 'Study off' : `Study ${running!.number} on`}</span>
+        <span className="st-switch-text">{turningOn ? 'Study off' : `${studyTitle(running!)} on`}</span>
       </button>
 
       {open && (
@@ -98,7 +99,7 @@ export function StudySwitch({ data, onSwitch, openRequest = 0 }: Props) {
               </span>
               <div className="st-dialog-title">
                 <strong id="st-dialog-title">
-                  {turningOn ? `Start Study ${data.nextNumber}` : `Switch off Study ${running!.number}`}
+                  {turningOn ? `Start Study ${data.nextNumber}` : `Switch off ${studyTitle(running!)}`}
                 </strong>
                 <span>
                   {turningOn
@@ -145,7 +146,7 @@ export function StudySwitch({ data, onSwitch, openRequest = 0 }: Props) {
                 </>
               ) : (
                 <p className="st-dialog-text">
-                  Nothing more is recorded once Study {running!.number} is off. Switching on again starts
+                  Nothing more is recorded once {studyTitle(running!)} is off. Switching on again starts
                   Study {data.nextNumber}.
                 </p>
               )}

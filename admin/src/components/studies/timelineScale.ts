@@ -1,7 +1,6 @@
 import type { StudySummary } from '../../types/studies'
 
-// The math behind the study timeline, shared by the Studies page and the
-// mini timeline on All Data.
+// The math behind the study timeline on the Studies page.
 //
 // The timeline starts on the first day of the month the first study began
 // and ends at the end of the month of today (or of the last study, if that

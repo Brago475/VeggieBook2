@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import type { StudiesResponse, StudySummary } from '../types/studies'
 import { api } from '../utils/api'
 
-// Loads the Studies page and switches a study on or off.
+// Loads the Studies page, switches a study on or off, and renames or
+// deletes a study.
 //
-// After switching, the whole page loads again, so the list, the numbers,
-// and the preview all agree with the server. A failed switch keeps the page
-// as it was and returns the API's message for the dialog to show.
+// After each change, the whole page loads again, so the list, the numbers,
+// and the preview all agree with the server. A failed change keeps the page
+// as it was and returns the API's message for the page to show.
 
 export function useStudies() {
   const [data, setData] = useState<StudiesResponse | null>(null)
@@ -29,11 +30,12 @@ export function useStudies() {
     void load()
   }, [load])
 
-  // Returns null when it worked, or the error message.
-  const switchStudy = useCallback(
-    async (on: boolean): Promise<string | null> => {
+  // Runs one change, then loads again. Returns null when it worked, or the
+  // error message.
+  const change = useCallback(
+    async (run: () => Promise<unknown>): Promise<string | null> => {
       try {
-        await api<StudySummary>(on ? '/admin/studies/start' : '/admin/studies/stop', { method: 'POST' })
+        await run()
         await load()
         return null
       } catch (err) {
@@ -44,5 +46,25 @@ export function useStudies() {
     [load],
   )
 
-  return { data, error, loading, reload: load, switchStudy }
+  const switchStudy = useCallback(
+    (on: boolean) =>
+      change(() => api<StudySummary>(on ? '/admin/studies/start' : '/admin/studies/stop', { method: 'POST' })),
+    [change],
+  )
+
+  // An empty name goes back to plain "Study N".
+  const renameStudy = useCallback(
+    (id: number, name: string) =>
+      change(() => api<StudySummary>(`/admin/studies/${id}/name`, { method: 'POST', body: { name } })),
+    [change],
+  )
+
+  // confirm is what the admin typed; it must match the study's name.
+  const deleteStudy = useCallback(
+    (id: number, confirm: string) =>
+      change(() => api(`/admin/studies/${id}`, { method: 'DELETE', body: { confirm } })),
+    [change],
+  )
+
+  return { data, error, loading, reload: load, switchStudy, renameStudy, deleteStudy }
 }
