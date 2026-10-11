@@ -15,8 +15,15 @@ namespace VeggieBook.Api.Research.AllData;
 // Same rules as ResearchSheets.cs: guests and admins are left out, rows are
 // keyed by the anonymous research ID, and no email or name is read.
 //
-// With a study (AllDataStudy.cs), only books saved while that study ran,
-// by people whose tracking was on at that moment, are kept.
+// Only books saved while the person's tracking was on are kept, always:
+// someone who turned tracking off (or was turned off by an admin) is not
+// tracked from that moment until it is back on, so the books they save in
+// that time never appear here or in any download. Books saved before they
+// turned it off stay. See Research/TrackingHistory.cs.
+//
+// With a study (AllDataStudy.cs), only books saved while that study ran are
+// kept as well.
+//
 // Dates and times are Eastern (Kean is in New Jersey), or UTC if the server
 // can't find that time zone.
 
@@ -87,7 +94,8 @@ internal static class AllDataSource
         StudyWindow? study = null)
     {
         var people = await LoadPeopleAsync(db);
-        var books = await LoadBooksAsync(db, people, filter, study);
+        var history = study?.History ?? await TrackingHistory.LoadAsync(db);
+        var books = await LoadBooksAsync(db, people, filter, history, study);
         var names = await LoadContentAsync(content);
         return new AdData(people, books, names);
     }
@@ -149,11 +157,14 @@ internal static class AllDataSource
     }
 
     // Every book of these people, numbered per person by date before any
-    // filter (so a person's 3rd book is always "3"), then filtered.
+    // filter (so a person's 3rd book is always "3"), then filtered: first
+    // books saved while tracking was off are dropped, then the study and
+    // the page's filters.
     private static async Task<List<AdBook>> LoadBooksAsync(
         AccountsContext db,
         Dictionary<Guid, AdPerson> people,
         SheetFilter filter,
+        TrackingHistory history,
         StudyWindow? study)
     {
         var userIds = people.Keys.ToList();
@@ -201,6 +212,7 @@ internal static class AllDataSource
                             .ToList()))));
 
         return numbered
+            .Where(x => history.At(x.UserId, x.SavedAt).On)
             .Where(x => study is null || study.Includes(x.UserId, x.SavedAt))
             .Select(x => x.Book)
             .Where(b => filter.AgeRange is null || b.Person.AgeRange == filter.AgeRange)

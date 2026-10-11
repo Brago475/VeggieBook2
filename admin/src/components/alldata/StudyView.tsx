@@ -7,8 +7,9 @@ import '../../styles/alldata-study.css'
 
 // "Show: All data | One study" on All Data.
 //
-//   All data    every book ever saved, any date, all together (the page as
-//               it always was)
+//   All data    every book saved while the person's tracking was on, any
+//               date, all together. Books saved while someone had tracking
+//               off are never shown (api/Research/AllData/AllDataSource.cs).
 //   One study   a list of studies to pick from: name, number, Running if it
 //               is running, dates with times (so two studies on the same day
 //               are easy to tell apart), and how many books. Under the
@@ -106,8 +107,8 @@ export function StudyView({ study, onStudy, books }: Props) {
         {!oneStudy && (
           <span className="adv-text">
             {studies.length === 0
-              ? 'Every book ever saved. No studies yet.'
-              : 'Every book ever saved, any date: before, during, and between studies.'}
+              ? 'Every book saved with tracking on. No studies yet.'
+              : 'Every book saved with tracking on, any date: before, during, and between studies.'}
           </span>
         )}
 
