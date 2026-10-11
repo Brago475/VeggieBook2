@@ -2,8 +2,7 @@
 // 3-hour block of the day (columns, midnight first), in Eastern time.
 //
 //   - a line on top names the busiest time
-//   - each cell shows its count; darker green means more books, and the
-//     busiest cell has an orange outline
+//   - each cell shows its count; the darker the green, the busier
 //   - the last column is each day's total with a small bar
 //   - a Fewer to More key underneath
 //
@@ -84,22 +83,17 @@ export function WhenSaved({ heat }: Props) {
               <span className="heat-day" role="rowheader">
                 {DAYS[d]}
               </span>
-              {row.map((v, b) => {
-                const lvl = level(v, max)
-                const classes = ['heat-cell', `level-${lvl}`]
-                if (v === max) classes.push('is-top')
-                return (
-                  <span
-                    key={b}
-                    role="cell"
-                    className={classes.join(' ')}
-                    style={{ animationDelay: `${(d * 8 + b) * 12}ms` }}
-                    title={`${DAYS[d]}, ${RANGES[b]}: ${books(v)}`}
-                  >
-                    {v > 0 ? v : ''}
-                  </span>
-                )
-              })}
+              {row.map((v, b) => (
+                <span
+                  key={b}
+                  role="cell"
+                  className={`heat-cell level-${level(v, max)}`}
+                  style={{ animationDelay: `${(d * 8 + b) * 12}ms` }}
+                  title={`${DAYS[d]}, ${RANGES[b]}: ${books(v)}`}
+                >
+                  {v > 0 ? v : ''}
+                </span>
+              ))}
               <span className="heat-total" role="cell">
                 <i style={{ width: `${(dayTotals[d] / maxDay) * 36}px` }} aria-hidden="true" />
                 {dayTotals[d]}

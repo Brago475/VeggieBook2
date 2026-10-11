@@ -5,10 +5,10 @@ import type { WeekCount } from '../../types/admin'
 // Secrets Books in violet on top, with:
 //
 //   - a scale on the left and light grid lines across
-//   - a dashed orange line for the weekly average
+//   - a dashed orange line for the weekly average, explained in a small
+//     key under the chart (so its label never covers a bar or a number)
 //   - the total above each bar (bold when above zero)
-//   - the busiest week on a soft green background, and the current week
-//     labeled "This week" in blue on a soft blue background
+//   - the current week labeled "This week" in blue
 //   - hovering (or tabbing to) a week shows its dates and the split
 //
 // WeeklyLegend shows the two totals as chips, for the panel's title row.
@@ -72,25 +72,15 @@ export function WeeklyBooks({ weeks }: Props) {
             <span key={t} className={t === 0 ? 'weekly-grid is-base' : 'weekly-grid'} style={{ bottom: px(t) }} />
           ))}
 
-          {average > 0 && (
-            <>
-              <span className="weekly-average" style={{ bottom: px(average) }} />
-              <span className="weekly-average-label" style={{ bottom: px(average) + 4 }}>
-                Average {oneDecimal(average)} a week
-              </span>
-            </>
-          )}
+          {average > 0 && <span className="weekly-average" style={{ bottom: px(average) }} />}
 
           <div className="weekly-bars">
             {weeks.map((w, i) => {
               const total = totals[i]
-              const classes = ['weekly-col']
-              if (i === last) classes.push('is-current')
-              else if (total === max) classes.push('is-peak')
               return (
                 <div
                   key={w.weekStart}
-                  className={classes.join(' ')}
+                  className="weekly-col"
                   tabIndex={0}
                   aria-label={`${weekRange(w.weekStart)}: ${w.veggie} VeggieBooks, ${w.secrets} Secrets Books`}
                   onMouseEnter={() => setHovered(i)}
@@ -133,6 +123,13 @@ export function WeeklyBooks({ weeks }: Props) {
           </span>
         ))}
       </div>
+
+      {average > 0 && (
+        <div className="weekly-key">
+          <i aria-hidden="true" />
+          Average {oneDecimal(average)} a week
+        </div>
+      )}
     </div>
   )
 }

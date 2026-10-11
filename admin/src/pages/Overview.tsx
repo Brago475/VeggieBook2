@@ -8,7 +8,6 @@ import { LiveStatus } from '../components/overview/LiveStatus'
 import { PictureRings } from '../components/overview/PictureRings'
 import { RecentActivity } from '../components/overview/RecentActivity'
 import { StudyCard } from '../components/overview/StudyCard'
-import { TopAnswersList } from '../components/overview/TopAnswersList'
 import { WeeklyBooks, WeeklyLegend } from '../components/overview/WeeklyBooks'
 import { WhenSaved } from '../components/overview/WhenSaved'
 import { useOverview } from '../hooks/useOverview'
@@ -26,7 +25,9 @@ import '../styles/overview.css'
 //     with the ones not picked yet as small chips underneath)
 //   participants by age (columns) | when books are saved
 //   book details (three rings) | kept vs taken out
-//   most chosen answers, full width
+//
+// Answers in detail are on the Question Analytics page, so they aren't
+// repeated here.
 //
 // Numbers that need tracking (time per question, where people stop) are
 // added once tracking is built, rather than showing empty or made-up
@@ -186,19 +187,6 @@ export function Overview({ onOpen }: Props) {
 
         <Panel title="Kept vs taken out later">
           <KeptRemoved items={data.items} />
-        </Panel>
-      </div>
-
-      <div className="overview-row is-full">
-        <Panel
-          title="Most chosen answers"
-          aside={
-            <button type="button" className="link-button" onClick={() => onOpen('questions')}>
-              See all questions
-            </button>
-          }
-        >
-          <TopAnswersList answers={data.topAnswers} />
         </Panel>
       </div>
     </div>

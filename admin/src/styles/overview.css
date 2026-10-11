@@ -1,9 +1,9 @@
 /* The Overview page. See pages/Overview.tsx and components/overview/.
-   Mostly neutral, with green for VeggieBooks and counts, violet for Secrets
-   Books, blue for this week, and orange for the average line, the busiest
-   time, and items taken out later. Shared chart pieces are in charts.css,
-   recent activity in recent.css, the picture rings in overview-rings.css,
-   and the age columns in overview-age.css.
+   Mostly neutral, with green for VeggieBooks and counts (darker green
+   means more), violet for Secrets Books, blue for this week, and orange
+   for the average line and items taken out later. Shared chart pieces are
+   in charts.css, recent activity in recent.css, the picture rings in
+   overview-rings.css, and the age columns in overview-age.css.
 
    Fits any screen: rows of panels sit side by side when there is room and
    stack when there isn't; the weekly bars and labels shrink with their
@@ -137,9 +137,9 @@
 }
 
 /* Books per week: a scale on the left, grid lines, a dashed average line,
-   stacked bars (green VeggieBooks, violet Secrets Books), the busiest week
-   on a soft green background, this week on a soft blue one, and a card
-   with the dates and split when a week is hovered. */
+   stacked bars (green VeggieBooks, violet Secrets Books), and a card with
+   the dates and split when a week is hovered. The average is explained in
+   a small key under the dates. */
 
 .weekly {
   display: flex;
@@ -189,18 +189,6 @@
   pointer-events: none;
 }
 
-.weekly-average-label {
-  position: absolute;
-  right: 0;
-  z-index: 1;
-  padding: 0 4px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #b45309;
-  background: var(--surface);
-  pointer-events: none;
-}
-
 .weekly-bars {
   position: absolute;
   inset: 0;
@@ -216,17 +204,9 @@
   justify-content: flex-end;
   gap: 6px;
   min-width: 0;
-  border-radius: 10px 10px 0 0;
+  border-radius: 8px;
   outline: none;
   cursor: default;
-}
-
-.weekly-col.is-peak {
-  background: rgba(21, 128, 61, 0.05);
-}
-
-.weekly-col.is-current {
-  background: rgba(37, 99, 235, 0.06);
 }
 
 .weekly-col:focus-visible {
@@ -335,6 +315,22 @@
   color: #1d4ed8;
 }
 
+/* The key for the average line, under the dates. */
+.weekly-key {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0 0 36px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.weekly-key i {
+  width: 22px;
+  border-top: 2px dashed #f59e0b;
+}
+
 /* Totals as chips in the panel's title row */
 
 .weekly-legend {
@@ -425,8 +421,8 @@
 }
 
 /* When books are saved: a busiest-time line, then a grid of days by
-   3-hour blocks with the count in each cell, the busiest cell outlined in
-   orange, and each day's total with a small bar. Scrolls sideways on a
+   3-hour blocks with the count in each cell (the darker the green, the
+   busier), and each day's total with a small bar. Scrolls sideways on a
    phone instead of crushing its labels. */
 
 .heat {
@@ -501,10 +497,6 @@
 .heat-cell.level-4,
 .heat-cell.level-5 {
   color: #ffffff;
-}
-
-.heat-cell.is-top {
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px #f59e0b;
 }
 
 .heat-cell.level-0,
@@ -645,7 +637,8 @@
   }
 }
 
-/* Most chosen answers: ranked rows */
+/* Most chosen answers: ranked rows (TopAnswersList, not on the Overview
+   right now; kept so it can come back). */
 
 .top-answers {
   display: flex;
