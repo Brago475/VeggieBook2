@@ -154,6 +154,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.EndedAt).HasColumnName("ended_at");
             e.Property(x => x.StartedBy).HasColumnName("started_by");
             e.Property(x => x.EndedBy).HasColumnName("ended_by");
+            e.Property(x => x.Name).HasColumnName("name"); // 009_study_name.sql
         });
 
         b.Entity<StudyNotice>(e =>

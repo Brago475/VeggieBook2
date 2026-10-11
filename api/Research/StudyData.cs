@@ -9,6 +9,7 @@ namespace VeggieBook.Api.Research;
 //
 // Summary builds one study's numbers:
 //
+//   name         the name an admin gave it, or null (shown as "Study N")
 //   people       accounts that existed by the study's end (or now)
 //   tracked      of those, how many had tracking on at that moment
 //   offIds       the research IDs of those with it off, and who turned it
@@ -65,6 +66,10 @@ public sealed class StudyData
 
     public string IdOf(Guid userId) => Ids.GetValueOrDefault(userId) ?? "";
 
+    // What the admin site calls a study: its name, or "Study 3" without one.
+    public static string TitleOf(Study study) =>
+        string.IsNullOrWhiteSpace(study.Name) ? $"Study {study.Number}" : study.Name;
+
     public object Preview(DateTime now)
     {
         var off = OffAt(now, People);
@@ -95,6 +100,7 @@ public sealed class StudyData
         {
             id = study.Id,
             number = study.Number,
+            name = study.Name,
             startedAt = study.StartedAt,
             endedAt = study.EndedAt,
             running = study.EndedAt is null,

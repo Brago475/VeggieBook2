@@ -17,6 +17,7 @@ namespace VeggieBook.Api.Research.AllData;
 public sealed class StudyWindow
 {
     public required int Number { get; init; }
+    public string? Name { get; init; }
     public required DateTime StartedAt { get; init; }
     public DateTime? EndedAt { get; init; }
     public required TrackingHistory History { get; init; }
@@ -34,6 +35,7 @@ public sealed class StudyWindow
         return new StudyWindow
         {
             Number = study.Number,
+            Name = study.Name,
             StartedAt = study.StartedAt,
             EndedAt = study.EndedAt,
             History = await TrackingHistory.LoadAsync(db)
@@ -46,12 +48,14 @@ public sealed class StudyWindow
         && (EndedAt is null || savedAt <= EndedAt)
         && History.At(userId, savedAt).On;
 
-    // For the files' About tab and README: "Study 3, 2026-10-11 to now".
+    // For the files' About tab and README:
+    // "Fall pilot (Study 3), 2026-10-11 to now (Eastern), ...".
     public string Describe()
     {
         var start = Local(StartedAt).ToString("yyyy-MM-dd");
         var end = EndedAt is null ? "now (still running)" : Local(EndedAt.Value).ToString("yyyy-MM-dd");
-        return $"Study {Number}, {start} to {end} ({AllDataSource.Local.Name}), "
+        var title = string.IsNullOrWhiteSpace(Name) ? $"Study {Number}" : $"{Name} (Study {Number})";
+        return $"{title}, {start} to {end} ({AllDataSource.Local.Name}), "
              + "only books saved while the person's tracking was on";
     }
 

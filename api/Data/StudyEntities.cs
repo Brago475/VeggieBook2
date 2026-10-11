@@ -1,8 +1,8 @@
 namespace VeggieBook.Api.Data;
 
 // Entities for studies and research tracking, mapped in AccountsContext onto
-// tables from db/migrations/008_studies.sql. See Research/StudyTracking.cs
-// for the rules.
+// tables from db/migrations/008_studies.sql (and 009_study_name.sql for the
+// study's name). See Research/StudyTracking.cs for the rules.
 //
 // Timestamps are UTC (DateTime.UtcNow), like every other entity.
 
@@ -21,10 +21,12 @@ public class TrackingChange
 
 // One study: switched on at StartedAt, switched off at EndedAt (null while
 // it runs). Number is what the admin site shows: Study 1, Study 2, and so on.
+// Name is optional ("Fall pilot"); without one the site shows "Study N".
 public class Study
 {
     public int Id { get; set; }
     public int Number { get; set; }
+    public string? Name { get; set; }
     public DateTime StartedAt { get; set; }
     public DateTime? EndedAt { get; set; }
     public Guid? StartedBy { get; set; }
