@@ -9,7 +9,7 @@ import { PictureRings } from '../components/overview/PictureRings'
 import { RecentActivity } from '../components/overview/RecentActivity'
 import { StudyCard } from '../components/overview/StudyCard'
 import { TopAnswersList } from '../components/overview/TopAnswersList'
-import { WeeklyBooks } from '../components/overview/WeeklyBooks'
+import { WeeklyBooks, WeeklyLegend } from '../components/overview/WeeklyBooks'
 import { WhenSaved } from '../components/overview/WhenSaved'
 import { useOverview } from '../hooks/useOverview'
 import '../styles/overview.css'
@@ -19,13 +19,14 @@ import '../styles/overview.css'
 // No email or name appears here; people are shown by research ID only.
 //
 // Top to bottom:
-//   live line (full day, date, and time), four animated cards
-//   books per week | active study
+//   live line (full day, date, and time)
+//   four animated number cards and the active study card, in one row
+//   books per week | recent activity
 //   books by vegetable | Secrets Books by category (pictures in rings,
 //     with the ones not picked yet as small chips underneath)
 //   participants by age (columns) | when books are saved
 //   book details (three rings) | kept vs taken out
-//   most chosen answers | recent activity
+//   most chosen answers, full width
 //
 // Numbers that need tracking (time per question, where people stop) are
 // added once tracking is built, rather than showing empty or made-up
@@ -36,6 +37,8 @@ type Props = {
 }
 
 const sum = (values: number[]) => values.reduce((a, b) => a + b, 0)
+const lastOf = (values: number[]) => values[values.length - 1] ?? 0
+const plural = (n: number, one: string, many: string) => `${n.toLocaleString()} ${n === 1 ? one : many}`
 
 export function Overview({ onOpen }: Props) {
   const { data, error, updatedAt } = useOverview()
@@ -52,13 +55,15 @@ export function Overview({ onOpen }: Props) {
 
   const books = data.veggieBooks + data.secretsBooks
   const booksWeekly = data.weekly.map((w) => w.veggie + w.secrets)
-  const booksThisWeek = booksWeekly[booksWeekly.length - 1] ?? 0
+  const booksThisWeek = lastOf(booksWeekly)
+  const joinedLastWeek = data.joinedWeekly[data.joinedWeekly.length - 2] ?? 0
+  const answersThisWeek = lastOf(data.answersWeekly)
 
   // Participants over time: how many had joined by the end of each week.
   const before = data.participants - sum(data.joinedWeekly)
   const participantsWeekly = data.joinedWeekly.map((_, i) => before + sum(data.joinedWeekly.slice(0, i + 1)))
 
-  const perBook = data.veggieBooks > 0 ? (data.answersRecorded / data.veggieBooks).toFixed(1) : '0'
+  const perBook = data.veggieBooks > 0 ? Math.round((data.answersRecorded / data.veggieBooks) * 10) / 10 : 0
 
   return (
     <div className="overview">
@@ -73,13 +78,15 @@ export function Overview({ onOpen }: Props) {
         </p>
       )}
 
-      <div className="card-grid cols-4">
+      <div className="overview-cards">
         <StatCard
           index={0}
           icon="users"
           label="Participants"
           value={data.participants}
-          note={`+${data.newThisWeek} in the last 7 days`}
+          note={data.newThisWeek > 0 ? `${plural(data.newThisWeek, 'person', 'people')} joined in the last 7 days` : 'No one new in the last 7 days'}
+          chip={`+${data.newThisWeek} this week`}
+          chipUp={data.newThisWeek > 0}
           spark={participantsWeekly}
         />
         <StatCard
@@ -88,6 +95,7 @@ export function Overview({ onOpen }: Props) {
           label="New this week"
           value={data.newThisWeek}
           note="Joined in the last 7 days"
+          chip={`${joinedLastWeek} last week`}
           spark={data.joinedWeekly}
         />
         <StatCard
@@ -95,7 +103,9 @@ export function Overview({ onOpen }: Props) {
           icon="book"
           label="Books saved"
           value={books}
-          note={`${booksThisWeek} so far this week`}
+          note={`${plural(data.veggieBooks, 'VeggieBook', 'VeggieBooks')} and ${plural(data.secretsBooks, 'Secrets Book', 'Secrets Books')}`}
+          chip={`${booksThisWeek} this week`}
+          chipUp={booksThisWeek > 0}
           spark={booksWeekly}
         />
         <StatCard
@@ -104,24 +114,24 @@ export function Overview({ onOpen }: Props) {
           label="Answers recorded"
           value={data.answersRecorded}
           note={`About ${perBook} per VeggieBook`}
+          chip={`${answersThisWeek} this week`}
+          chipUp={answersThisWeek > 0}
           spark={data.answersWeekly}
         />
+        <StudyCard index={4} onOpen={() => onOpen('studies')} />
       </div>
 
       <div className="overview-row">
         <Panel
           title="Books saved per week"
-          aside={
-            <span className="muted small">
-              {data.veggieBooks.toLocaleString()} VeggieBooks, {data.secretsBooks.toLocaleString()} Secrets Books
-              in all
-            </span>
-          }
+          aside={<WeeklyLegend veggie={data.veggieBooks} secrets={data.secretsBooks} />}
         >
           <WeeklyBooks weeks={data.weekly} />
         </Panel>
 
-        <StudyCard onOpen={() => onOpen('studies')} />
+        <Panel title="Recent activity">
+          <RecentActivity items={data.recent} />
+        </Panel>
       </div>
 
       <div className="overview-row is-even">
@@ -152,7 +162,7 @@ export function Overview({ onOpen }: Props) {
               unit="books"
               parts={[
                 { label: 'VeggieBooks', value: data.veggieBooks, color: 'var(--bar-fill)' },
-                { label: 'Secrets Books', value: data.secretsBooks, color: 'var(--bar-light)' },
+                { label: 'Secrets Books', value: data.secretsBooks, color: '#a78bfa' },
               ]}
             />
             <DonutChart
@@ -179,7 +189,7 @@ export function Overview({ onOpen }: Props) {
         </Panel>
       </div>
 
-      <div className="overview-row is-even">
+      <div className="overview-row is-full">
         <Panel
           title="Most chosen answers"
           aside={
@@ -189,10 +199,6 @@ export function Overview({ onOpen }: Props) {
           }
         >
           <TopAnswersList answers={data.topAnswers} />
-        </Panel>
-
-        <Panel title="Recent activity">
-          <RecentActivity items={data.recent} />
         </Panel>
       </div>
     </div>

@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RecentItem } from '../../types/admin'
+import { NavIcon, type IconName } from '../icons/NavIcons'
 import '../../styles/recent.css'
 
 // The latest activity, newest first, by research ID only, in Eastern time.
-// The dot's color says what happened:
+// Each line: a round icon for what happened, the title, the research ID
+// with the detail under it, and the date and time on the right.
 //
-//   green   a book saved
-//   blue    a new account
-//   orange  a book deleted
-//   red     an account deleted
+//   green book        a VeggieBook saved
+//   violet open book  a Secrets Book saved
+//   blue person       a new account
+//   orange x          a book deleted
+//   red x             an account deleted
 //
 // Lines that appear on a later refresh slide in at the top with a quick
 // green highlight. Nothing flashes on the first load.
@@ -25,11 +28,21 @@ const timeFormat = new Intl.DateTimeFormat('en-US', {
   minute: '2-digit',
 })
 
-const dotClass: Record<RecentItem['type'], string> = {
-  book: 'is-saved',
-  joined: 'is-joined',
-  book_deleted: 'is-book-deleted',
-  account_deleted: 'is-account-deleted',
+type Look = { tone: string; icon: IconName }
+
+function lookOf(item: RecentItem): Look {
+  switch (item.type) {
+    case 'book':
+      return /secret/i.test(`${item.title} ${item.detail}`)
+        ? { tone: 'is-secrets', icon: 'content' }
+        : { tone: 'is-saved', icon: 'book' }
+    case 'joined':
+      return { tone: 'is-joined', icon: 'users' }
+    case 'book_deleted':
+      return { tone: 'is-book-deleted', icon: 'close' }
+    case 'account_deleted':
+      return { tone: 'is-account-deleted', icon: 'close' }
+  }
 }
 
 const keyOf = (item: RecentItem) => `${item.type}|${item.researchId}|${item.at}`
@@ -54,17 +67,22 @@ export function RecentActivity({ items }: Props) {
     <ul className="recent">
       {items.map((item) => {
         const key = keyOf(item)
+        const look = lookOf(item)
         return (
           <li key={key} className={fresh.has(key) ? 'recent-item is-new' : 'recent-item'}>
-            <span className={`recent-dot ${dotClass[item.type]}`} aria-hidden="true" />
+            <span className={`recent-icon ${look.tone}`} aria-hidden="true">
+              <NavIcon name={look.icon} size={16} />
+            </span>
             <div className="recent-text">
-              <span>
-                <span className="id-chip">{item.researchId}</span> {item.title}
-              </span>
-              <span className="muted small">
-                {timeFormat.format(new Date(item.at))}, {item.detail}
+              <span className="recent-title">{item.title}</span>
+              <span className="recent-detail">
+                <span className="id-chip">{item.researchId}</span>
+                {item.detail && <span className="recent-detail-text">{item.detail}</span>}
               </span>
             </div>
+            <time className="recent-time" dateTime={item.at}>
+              {timeFormat.format(new Date(item.at))}
+            </time>
           </li>
         )
       })}

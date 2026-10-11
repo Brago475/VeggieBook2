@@ -1,27 +1,31 @@
-// The active study at a glance. Studies are built in a later step, so for
-// now this says no study is running and links to the Studies section.
+import { NavIcon } from '../icons/NavIcons'
+
+// The active study at a glance, as a card in the top row next to the
+// number cards (same size and look). Studies are built in a later step, so
+// for now it says no study is running and links to the Studies section.
 
 type Props = {
   onOpen: () => void
+  index?: number
 }
 
-export function StudyCard({ onOpen }: Props) {
+export function StudyCard({ onOpen, index = 0 }: Props) {
   return (
-    <section className="card panel study-card">
-      <header className="panel-head">
-        <h2 className="panel-title">Active study</h2>
-        <span className="status is-off">Not running</span>
-      </header>
-      <div className="panel-body study-body">
-        <p className="study-empty">No study running</p>
-        <p className="muted small">
-          When a study runs, this shows how many people are in it, how many saw the notice, and how
-          much has been recorded.
-        </p>
+    <div className="card stat-card study-card" style={{ animationDelay: `${index * 80}ms` }}>
+      <div className="stat-head">
+        <span className="number-icon is-green">
+          <NavIcon name="study" size={18} />
+        </span>
+        <span className="stat-label">Active study</span>
+        <span className="stat-chip">Not running</span>
+      </div>
+      <div className="study-body">
+        <span className="study-title">No study running</span>
+        <span className="stat-note">Start one in Studies to track who joins and what they record.</span>
         <button type="button" className="button-secondary" onClick={onOpen}>
           Go to Studies
         </button>
       </div>
-    </section>
+    </div>
   )
 }

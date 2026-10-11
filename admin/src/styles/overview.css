@@ -1,8 +1,9 @@
 /* The Overview page. See pages/Overview.tsx and components/overview/.
-   Mostly neutral, with soft green in the charts, light orange for items
-   taken out later. Shared chart pieces are in charts.css, recent activity
-   in recent.css, the picture rings in overview-rings.css, and the age
-   columns in overview-age.css.
+   Mostly neutral, with green for VeggieBooks and counts, violet for Secrets
+   Books, blue for this week, and orange for the average line, the busiest
+   time, and items taken out later. Shared chart pieces are in charts.css,
+   recent activity in recent.css, the picture rings in overview-rings.css,
+   and the age columns in overview-age.css.
 
    Fits any screen: rows of panels sit side by side when there is room and
    stack when there isn't; the weekly bars and labels shrink with their
@@ -89,9 +90,19 @@
   }
 }
 
-/* Rows of panels: wide then narrow, narrow then wide, or two halves.
-   Below 1100px every row stacks into one column. Two halves stack sooner
-   only if each half would get narrower than 360px. */
+/* Top row: the four number cards and the active study card. As many per
+   row as fit at 220px or wider, so five across on a wide screen, then
+   fewer, then one per row on a phone. */
+
+.overview-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: clamp(12px, 1.2vw, 16px);
+}
+
+/* Rows of panels: wide then narrow, narrow then wide, two halves, or one
+   full row. Below 1100px every row stacks into one column. Two halves
+   stack sooner only if each half would get narrower than 360px. */
 
 .overview-row {
   display: grid;
@@ -108,6 +119,10 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
 }
 
+.overview-row.is-full {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .overview-row .card.panel {
   margin-top: 0;
   min-width: 0;
@@ -121,32 +136,111 @@
   }
 }
 
-/* Books per week */
+/* Books per week: a scale on the left, grid lines, a dashed average line,
+   stacked bars (green VeggieBooks, violet Secrets Books), the busiest week
+   on a soft green background, this week on a soft blue one, and a card
+   with the dates and split when a week is hovered. */
+
+.weekly {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.weekly-plot {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: var(--sp-2);
+}
+
+.weekly-axis {
+  position: relative;
+}
+
+.weekly-axis span {
+  position: absolute;
+  right: 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.weekly-area {
+  position: relative;
+}
+
+.weekly-grid {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-top: 1px dashed #ececef;
+}
+
+.weekly-grid.is-base {
+  border-top: 1px solid #d4d4d8;
+}
+
+.weekly-average {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  border-top: 2px dashed #f59e0b;
+  pointer-events: none;
+}
+
+.weekly-average-label {
+  position: absolute;
+  right: 0;
+  z-index: 1;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #b45309;
+  background: var(--surface);
+  pointer-events: none;
+}
 
 .weekly-bars {
+  position: absolute;
+  inset: 0;
   display: flex;
-  align-items: flex-end;
-  gap: clamp(4px, 1vw, 12px);
-  border-bottom: 1px solid var(--line);
+  gap: clamp(4px, 1.2vw, 16px);
 }
 
 .weekly-col {
   display: flex;
   flex: 1;
-  min-width: 0;
   flex-direction: column;
   align-items: center;
-  gap: var(--sp-1);
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  border-radius: 10px 10px 0 0;
+  outline: none;
+  cursor: default;
+}
+
+.weekly-col.is-peak {
+  background: rgba(21, 128, 61, 0.05);
+}
+
+.weekly-col.is-current {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.weekly-col:focus-visible {
+  box-shadow: inset 0 0 0 2px #15803d;
 }
 
 .weekly-total {
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 13px;
+  color: var(--faint);
   font-variant-numeric: tabular-nums;
 }
 
-.weekly-total.is-current {
-  font-weight: 700;
+.weekly-total.has-books {
+  font-weight: 800;
   color: var(--ink);
 }
 
@@ -154,21 +248,22 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 44px;
+  max-width: 48px;
   transform-origin: bottom;
   animation: weekly-grow 0.7s ease-out both;
 }
 
 .weekly-veggie {
-  background: var(--bar-fill);
+  background: #3f9a5b;
+}
+
+.weekly-veggie.is-top,
+.weekly-secrets {
+  border-radius: 6px 6px 0 0;
 }
 
 .weekly-secrets {
-  background: var(--bar-light);
-}
-
-.weekly-stack > div:first-child {
-  border-radius: 4px 4px 0 0;
+  background: #a78bfa;
 }
 
 @keyframes weekly-grow {
@@ -180,10 +275,48 @@
   }
 }
 
+/* Hover card: centered over the week, kept inside the chart at the ends. */
+.weekly-tip {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #ffffff;
+  white-space: nowrap;
+  pointer-events: none;
+  background: #18181b;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  transform: translateX(-50%);
+}
+
+.weekly-tip.is-start {
+  transform: translateX(-20%);
+}
+
+.weekly-tip.is-end {
+  transform: translateX(-85%);
+}
+
+.weekly-tip strong {
+  font-size: 13px;
+}
+
+.weekly-tip span {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
 .weekly-labels {
   display: flex;
-  gap: clamp(4px, 1vw, 12px);
-  padding-top: var(--sp-2);
+  gap: clamp(4px, 1.2vw, 16px);
+  padding-left: 36px;
 }
 
 .weekly-labels span {
@@ -191,31 +324,59 @@
   min-width: 0;
   overflow: hidden;
   font-size: clamp(10px, 0.9vw, 12px);
-  color: var(--muted);
+  color: #52525b;
   text-align: center;
   white-space: nowrap;
-  text-overflow: clip;
+  text-overflow: ellipsis;
 }
 
 .weekly-labels span.is-current {
-  font-weight: 600;
-  color: var(--ink);
+  font-weight: 700;
+  color: #1d4ed8;
 }
+
+/* Totals as chips in the panel's title row */
 
 .weekly-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--sp-4);
-  padding-top: var(--sp-3);
-  font-size: 13px;
-  color: var(--muted);
+  gap: var(--sp-2);
 }
 
-.weekly-legend span {
-  display: flex;
+.weekly-chip {
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
+  padding: 4px 10px;
+  font-size: 13px;
+  border-radius: 999px;
 }
+
+.weekly-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.weekly-chip.is-veggie {
+  color: #14532d;
+  background: #f0faf3;
+}
+
+.weekly-chip.is-veggie i {
+  background: #3f9a5b;
+}
+
+.weekly-chip.is-secrets {
+  color: #4c1d95;
+  background: #f5f3ff;
+}
+
+.weekly-chip.is-secrets i {
+  background: #a78bfa;
+}
+
+/* Swatches used by Kept vs taken out */
 
 .swatch {
   display: inline-block;
@@ -230,16 +391,16 @@
 }
 
 .swatch.is-secrets {
-  background: var(--bar-light);
+  background: #a78bfa;
 }
 
 .swatch.is-removed {
   background: #f5c9a6;
 }
 
-/* Active study */
+/* Active study, as a card in the top row (see charts.css for the card). */
 
-.card.panel.study-card {
+.card.stat-card.study-card {
   display: flex;
   flex-direction: column;
 }
@@ -249,33 +410,57 @@
   flex: 1;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--sp-3);
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
 }
 
-.study-empty {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+.study-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
 }
 
 .study-body .button-secondary {
   margin-top: auto;
 }
 
-/* When books are saved */
+/* When books are saved: a busiest-time line, then a grid of days by
+   3-hour blocks with the count in each cell, the busiest cell outlined in
+   orange, and each day's total with a small bar. Scrolls sideways on a
+   phone instead of crushing its labels. */
 
 .heat {
   display: flex;
   flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.heat-busiest {
+  display: flex;
+  align-items: center;
   gap: var(--sp-3);
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #14532d;
+  background: #f0faf3;
+  border-radius: 12px;
+}
+
+.heat-busiest svg {
+  flex-shrink: 0;
+}
+
+.heat-scroll {
   overflow-x: auto;
 }
 
 .heat-grid {
   display: grid;
-  grid-template-columns: 36px repeat(8, minmax(44px, 1fr));
-  gap: 4px;
-  min-width: 420px;
+  grid-template-columns: 92px repeat(8, minmax(44px, 1fr)) 70px;
+  align-items: center;
+  gap: 6px;
+  min-width: 620px;
 }
 
 .heat-row {
@@ -284,61 +469,104 @@
 
 .heat-col {
   font-size: 11px;
-  color: var(--muted);
+  font-weight: 600;
+  color: #52525b;
   text-align: center;
   white-space: nowrap;
 }
 
+.heat-col.is-total {
+  text-align: right;
+  text-transform: uppercase;
+}
+
 .heat-day {
-  font-size: 12px;
-  color: var(--ink);
-  align-self: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #27272a;
 }
 
 .heat-cell {
-  display: block;
-  height: 26px;
-  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #14532d;
+  border-radius: 8px;
   animation: heat-in 0.4s ease-out both;
 }
 
-.heat-cell.level-0 {
+.heat-cell.level-4,
+.heat-cell.level-5 {
+  color: #ffffff;
+}
+
+.heat-cell.is-top {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px #f59e0b;
+}
+
+.heat-cell.level-0,
+.heat-key.level-0 {
   background: #f1f4f1;
 }
 
-.heat-cell.level-1 {
+.heat-cell.level-1,
+.heat-key.level-1 {
   background: #dcefe2;
 }
 
-.heat-cell.level-2 {
+.heat-cell.level-2,
+.heat-key.level-2 {
   background: #b9dec5;
 }
 
-.heat-cell.level-3 {
+.heat-cell.level-3,
+.heat-key.level-3 {
   background: #7cc095;
 }
 
-.heat-cell.level-4 {
+.heat-cell.level-4,
+.heat-key.level-4 {
   background: #3f9a5b;
 }
 
-.heat-cell.level-5 {
+.heat-cell.level-5,
+.heat-key.level-5 {
   background: #1f7a43;
+}
+
+.heat-total {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.heat-total i {
+  display: inline-block;
+  height: 8px;
+  background: #3f9a5b;
+  border-radius: 999px;
 }
 
 .heat-legend {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding-left: 40px;
+  gap: 6px;
   font-size: 12px;
-  color: var(--muted);
+  color: #52525b;
 }
 
-.heat-legend .heat-cell {
-  width: 14px;
-  height: 14px;
-  animation: none;
+.heat-key {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
 }
 
 @keyframes heat-in {

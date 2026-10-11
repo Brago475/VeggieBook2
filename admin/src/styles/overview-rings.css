@@ -1,10 +1,15 @@
 /* Books by vegetable and Secrets Books by category, as pictures in rings.
    See components/overview/PictureRings.tsx.
 
-   Each picked item: its picture inside a ring that fills by its share of
-   all books of that kind, then the name, the number of books, and the
-   share. Green for VeggieBooks, violet for Secrets Books. Items not picked
-   yet sit underneath as small picture chips.
+   Each picked item: its photo, cropped into a circle, inside a ring that
+   fills by its share of all books of that kind, then the name, the number
+   of books, and the share. Green for VeggieBooks, violet for Secrets Books.
+   Items not picked yet sit underneath as small chips with round photos.
+
+   The photos in the database are real photos with their own backgrounds,
+   so they are shown as full circles (object-fit: cover) rather than as
+   cut-outs: the background is cropped away evenly and every ring looks the
+   same, whatever the photo.
 
    Fits any screen: as many rings per row as there is room for, and the
    chips wrap onto new lines. */
@@ -44,13 +49,14 @@
   animation: ring-in 0.4s ease-out both;
 }
 
+/* The ring: a colored arc for the share, a thin white gap, then the photo. */
 .ring {
   display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 96px;
-  height: 96px;
+  width: 100px;
+  height: 100px;
   background: conic-gradient(var(--ring) 0 var(--share), #ececef var(--share) 100%);
   border-radius: 999px;
 }
@@ -59,17 +65,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 84px;
-  height: 84px;
-  overflow: hidden;
+  width: 88px;
+  height: 88px;
   background: var(--surface);
   border-radius: 999px;
 }
 
 .ring-pic {
-  width: 64px;
-  height: 60px;
-  object-fit: contain;
+  display: block;
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 999px;
 }
 
 .ring-name {
@@ -134,10 +141,11 @@
 }
 
 .ring-chip-pic {
+  display: block;
+  flex: none;
   width: 30px;
   height: 30px;
-  object-fit: contain;
-  background: var(--surface);
+  object-fit: cover;
   border-radius: 999px;
 }
 
@@ -151,13 +159,10 @@
   font-weight: 800;
   color: var(--ring-ink);
   background: var(--ring-tint);
-  border-radius: 999px;
 }
 
 .ring-pic.is-letter {
-  width: 64px;
-  height: 64px;
-  font-size: 26px;
+  font-size: 28px;
 }
 
 .ring-chip-pic.is-letter {

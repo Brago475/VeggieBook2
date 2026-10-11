@@ -1,6 +1,10 @@
 /* Shared chart pieces: animated stat cards, trend lines, rings, and bar
    lists. See components/common/StatCard, Sparkline, DonutChart, BarList.
 
+   Stat cards: green icon, label, and a "this week" chip on top (green when
+   something went up), then a big bold number, a note, and the trend line
+   for the last 8 weeks with a baseline.
+
    Motion is short and soft. Everything here stops moving for people who
    have reduce motion turned on (bottom of the file).
 
@@ -46,6 +50,41 @@
   animation: stat-sheen-b 1.2s ease-out both;
 }
 
+/* Top line: green icon, label, and the "this week" chip on the right. */
+.stat-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-4) 0;
+}
+
+.stat-label {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  color: #3f3f46;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-chip {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #52525b;
+  white-space: nowrap;
+  background: var(--subtle);
+  border-radius: 999px;
+}
+
+.stat-chip.is-up {
+  color: #14532d;
+  background: #dcf2e3;
+}
+
 .stat-body {
   display: flex;
   flex-wrap: wrap;
@@ -63,16 +102,33 @@
 }
 
 .stat-value {
-  font-size: clamp(26px, 2.4vw, 34px);
-  font-weight: 500;
-  line-height: 1.1;
+  font-size: clamp(28px, 2.6vw, 38px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 
 .stat-note {
   font-size: 13px;
-  color: var(--muted);
+  color: #52525b;
+}
+
+/* The trend line with its "Last 8 weeks" caption. */
+.stat-trend {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.stat-trend-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--faint);
 }
 
 @keyframes stat-in {
@@ -138,6 +194,11 @@
 .sparkline {
   flex-shrink: 0;
   overflow: visible;
+}
+
+.spark-base {
+  stroke: var(--line);
+  stroke-width: 1;
 }
 
 .spark-area {
