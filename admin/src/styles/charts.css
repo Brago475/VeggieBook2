@@ -2,7 +2,11 @@
    lists. See components/common/StatCard, Sparkline, DonutChart, BarList.
 
    Motion is short and soft. Everything here stops moving for people who
-   have reduce motion turned on (bottom of the file). */
+   have reduce motion turned on (bottom of the file).
+
+   Fits any screen: numbers scale with the window, the trend line moves
+   under the number when a card is too narrow for both, and rings fit as
+   many per row as there is room for. */
 
 /* Stat card: slides in, a green shine sweeps across, and it flashes green
    when its number changes. */
@@ -44,6 +48,7 @@
 
 .stat-body {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--sp-3);
@@ -58,7 +63,7 @@
 }
 
 .stat-value {
-  font-size: 34px;
+  font-size: clamp(26px, 2.4vw, 34px);
   font-weight: 500;
   line-height: 1.1;
   color: var(--ink);
@@ -166,14 +171,8 @@
 
 .donut-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: var(--sp-5);
-}
-
-@media (max-width: 1200px) {
-  .donut-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 .donut {
@@ -190,6 +189,7 @@
 
 .donut-body {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-4);
 }

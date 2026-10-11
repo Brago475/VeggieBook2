@@ -7,7 +7,11 @@
 
    Panels and number cards are written as .card.panel and .card.number-card
    so they always beat the plain .card padding in base.css, whatever order
-   the style files load in. */
+   the style files load in.
+
+   Fits any screen: card grids fit as many cards per row as there is room
+   for (never a fixed count), and sizes and spacing scale with the window,
+   so nothing is laid out for one monitor size. */
 
 /* Panel: a white box with a plain heading. The heading's line runs the
    full width of the box. */
@@ -23,7 +27,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-4);
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-4) clamp(14px, 1.6vw, 24px);
   border-bottom: 1px solid var(--line);
 }
 
@@ -34,7 +38,7 @@
 }
 
 .panel-body {
-  padding: var(--sp-5);
+  padding: clamp(14px, 1.6vw, 24px);
 }
 
 /* Section: a plain heading over a grid of cards, with no box around it. */
@@ -47,40 +51,28 @@
   margin-top: 0;
 }
 
-/* Card grids: 4, 3, or 2 per row, fewer on narrow screens. */
+/* Card grids: as many cards per row as fit. cols-4, cols-3, and cols-2
+   set the smallest a card may get, so a wide screen shows 4, 3, or 2 per
+   row and smaller screens show fewer, down to one on a phone. */
 
 .card-grid {
   display: grid;
-  gap: var(--sp-4);
+  gap: clamp(12px, 1.2vw, 16px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .card-grid.cols-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
 
 .card-grid.cols-3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
 }
 
 .card-grid.cols-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (max-width: 1000px) {
-  .card-grid.cols-4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .card-grid.cols-4,
-  .card-grid.cols-3,
-  .card-grid.cols-2 {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
 }
 
 /* Number card: a header strip with a tinted icon and the label, a line
@@ -141,7 +133,7 @@
 
 .number-value {
   padding: var(--sp-4);
-  font-size: 34px;
+  font-size: clamp(24px, 2.4vw, 34px);
   font-weight: 500;
   line-height: 1.1;
   color: var(--ink);
@@ -289,9 +281,16 @@
   color: var(--muted);
 }
 
-@media (max-width: 560px) {
-  .panel-head,
-  .panel-body {
-    padding: var(--sp-4);
+/* Small screens: tabs scroll sideways instead of squeezing, and table
+   cells get a little less padding. */
+
+@media (max-width: 600px) {
+  .tabs {
+    gap: var(--sp-4);
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px var(--sp-3);
   }
 }

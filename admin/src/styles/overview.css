@@ -1,7 +1,12 @@
 /* The Overview page. See pages/Overview.tsx and components/overview/.
    Mostly neutral, with soft green in the charts, light orange for items
-   taken out later, and colored dots in recent activity (green for a saved
-   book, blue for a new person). Shared chart pieces are in charts.css. */
+   taken out later. Shared chart pieces are in charts.css, recent activity
+   in recent.css.
+
+   Fits any screen: rows of panels sit side by side when there is room and
+   stack when there isn't; the weekly bars and labels shrink with their
+   panel; the "when books are saved" grid scrolls sideways on a phone
+   instead of crushing its labels. */
 
 .overview {
   display: flex;
@@ -60,13 +65,15 @@
   }
 }
 
-/* Rows of panels: wide then narrow, narrow then wide, or two halves. */
+/* Rows of panels: wide then narrow, narrow then wide, or two halves.
+   Below 1100px every row stacks into one column. Two halves stack sooner
+   only if each half would get narrower than 360px. */
 
 .overview-row {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: var(--sp-4);
-  margin-top: var(--sp-5);
+  gap: clamp(12px, 1.2vw, 16px);
+  margin-top: clamp(16px, 1.6vw, 24px);
 }
 
 .overview-row.is-reverse {
@@ -74,18 +81,19 @@
 }
 
 .overview-row.is-even {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
 }
 
 .overview-row .card.panel {
   margin-top: 0;
+  min-width: 0;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
   .overview-row,
   .overview-row.is-reverse,
   .overview-row.is-even {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -94,13 +102,14 @@
 .weekly-bars {
   display: flex;
   align-items: flex-end;
-  gap: var(--sp-3);
+  gap: clamp(4px, 1vw, 12px);
   border-bottom: 1px solid var(--line);
 }
 
 .weekly-col {
   display: flex;
   flex: 1;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
   gap: var(--sp-1);
@@ -149,16 +158,19 @@
 
 .weekly-labels {
   display: flex;
-  gap: var(--sp-3);
+  gap: clamp(4px, 1vw, 12px);
   padding-top: var(--sp-2);
 }
 
 .weekly-labels span {
   flex: 1;
-  font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(10px, 0.9vw, 12px);
   color: var(--muted);
   text-align: center;
   white-space: nowrap;
+  text-overflow: clip;
 }
 
 .weekly-labels span.is-current {
@@ -168,6 +180,7 @@
 
 .weekly-legend {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--sp-4);
   padding-top: var(--sp-3);
   font-size: 13px;
@@ -231,12 +244,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
+  overflow-x: auto;
 }
 
 .heat-grid {
   display: grid;
-  grid-template-columns: 36px repeat(8, minmax(0, 1fr));
+  grid-template-columns: 36px repeat(8, minmax(44px, 1fr));
   gap: 4px;
+  min-width: 420px;
 }
 
 .heat-row {
@@ -247,6 +262,7 @@
   font-size: 11px;
   color: var(--muted);
   text-align: center;
+  white-space: nowrap;
 }
 
 .heat-day {
@@ -416,61 +432,6 @@
 .top-answer-pct {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-}
-
-/* Recent activity */
-
-.recent {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.recent-item {
-  display: flex;
-  gap: var(--sp-3);
-  padding: var(--sp-3) 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.recent-item:first-child {
-  padding-top: 0;
-}
-
-.recent-item:last-child {
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.recent-dot {
-  flex-shrink: 0;
-  width: 8px;
-  height: 8px;
-  margin-top: 6px;
-  background: var(--tone-blue);
-  border-radius: 999px;
-}
-
-.recent-dot.is-book {
-  background: var(--tone-green);
-}
-
-.recent-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  font-size: 14px;
-}
-
-.id-chip {
-  padding: 1px 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  background: var(--subtle);
-  border-radius: var(--r-sm);
 }
 
 /* Reduce motion */
