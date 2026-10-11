@@ -17,15 +17,18 @@ namespace VeggieBook.Api.Research.AllData;
 //                        without merging.
 //
 // Both files share participant_id and book_no, which link them.
+//
+// With a study, both files hold only that study's books (AllDataStudy.cs).
 
 public static class AllDataSheets
 {
     public static async Task<Sheet> BooksAsync(
         AccountsContext db,
         VeggieBookContext content,
-        SheetFilter filter)
+        SheetFilter filter,
+        StudyWindow? study = null)
     {
-        var data = await AllDataSource.LoadAsync(db, content, filter);
+        var data = await AllDataSource.LoadAsync(db, content, filter, study);
         var questions = await AllDataSource.LoadQuestionsAsync(content);
         var known = questions.SelectMany(q => q.Choices).Select(x => x.Attribute).ToHashSet();
 
@@ -65,9 +68,10 @@ public static class AllDataSheets
         AccountsContext db,
         VeggieBookContext content,
         SheetFilter filter,
-        bool withAnswers)
+        bool withAnswers,
+        StudyWindow? study = null)
     {
-        var data = await AllDataSource.LoadAsync(db, content, filter);
+        var data = await AllDataSource.LoadAsync(db, content, filter, study);
         List<AllDataQuestion> questions = withAnswers ? await AllDataSource.LoadQuestionsAsync(content) : [];
 
         var columns = new List<SheetColumn>();

@@ -14,6 +14,9 @@ namespace VeggieBook.Api.Research.AllData;
 //
 // Same rules as ResearchSheets.cs: guests and admins are left out, rows are
 // keyed by the anonymous research ID, and no email or name is read.
+//
+// With a study (AllDataStudy.cs), only books saved while that study ran,
+// by people whose tracking was on at that moment, are kept.
 // Dates and times are Eastern (Kean is in New Jersey), or UTC if the server
 // can't find that time zone.
 
@@ -80,10 +83,11 @@ internal static class AllDataSource
     public static async Task<AdData> LoadAsync(
         AccountsContext db,
         VeggieBookContext content,
-        SheetFilter filter)
+        SheetFilter filter,
+        StudyWindow? study = null)
     {
         var people = await LoadPeopleAsync(db);
-        var books = await LoadBooksAsync(db, people, filter);
+        var books = await LoadBooksAsync(db, people, filter, study);
         var names = await LoadContentAsync(content);
         return new AdData(people, books, names);
     }
@@ -149,7 +153,8 @@ internal static class AllDataSource
     private static async Task<List<AdBook>> LoadBooksAsync(
         AccountsContext db,
         Dictionary<Guid, AdPerson> people,
-        SheetFilter filter)
+        SheetFilter filter,
+        StudyWindow? study)
     {
         var userIds = people.Keys.ToList();
 
@@ -173,24 +178,31 @@ internal static class AllDataSource
             })
             .ToListAsync();
 
-        return raw
+        var numbered = raw
             .GroupBy(b => b.UserId)
             .SelectMany(g => g
                 .OrderBy(b => b.CreatedAt)
-                .Select((b, i) => new AdBook(
-                    people[b.UserId],
-                    i + 1,
-                    ToLocal(b.CreatedAt),
-                    b.Kind,
-                    b.Language,
-                    b.VegetableCode,
-                    b.SecretCategoryId,
-                    b.CoverPath,
-                    b.HasUpload,
-                    b.Attributes.ToHashSet(),
-                    b.Selections
-                        .Select(s => new AdItem(s.ContentType, s.ContentId, s.Kept, s.ExtraCopies))
-                        .ToList())))
+                .Select((b, i) => (
+                    b.UserId,
+                    SavedAt: b.CreatedAt,
+                    Book: new AdBook(
+                        people[b.UserId],
+                        i + 1,
+                        ToLocal(b.CreatedAt),
+                        b.Kind,
+                        b.Language,
+                        b.VegetableCode,
+                        b.SecretCategoryId,
+                        b.CoverPath,
+                        b.HasUpload,
+                        b.Attributes.ToHashSet(),
+                        b.Selections
+                            .Select(s => new AdItem(s.ContentType, s.ContentId, s.Kept, s.ExtraCopies))
+                            .ToList()))));
+
+        return numbered
+            .Where(x => study is null || study.Includes(x.UserId, x.SavedAt))
+            .Select(x => x.Book)
             .Where(b => filter.AgeRange is null || b.Person.AgeRange == filter.AgeRange)
             .Where(b => filter.Vegetable is null || b.VegetableCode == filter.Vegetable)
             .Where(b => filter.From is null || DateOnly.FromDateTime(b.Local) >= filter.From)
