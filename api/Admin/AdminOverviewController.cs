@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 using VeggieBook.Api.Research;
+using VeggieBook.Api.Research.AllData;
 
 namespace VeggieBook.Api.Admin;
 
@@ -23,8 +24,9 @@ namespace VeggieBook.Api.Admin;
 //   weekly         books saved per week, last 8 weeks (Monday to Sunday,
 //                  Eastern time); joinedWeekly and answersWeekly the same
 //                  way, for the trend lines on the cards
-//   byVegetable    VeggieBooks per vegetable, every active vegetable
-//   byCategory     Secrets Books per category
+//   byVegetable    VeggieBooks per vegetable, every active vegetable, with
+//                  its picture (image path, as on the public site)
+//   byCategory     Secrets Books per category, with its picture
 //   ageRanges      participants per age range
 //   languages,     book counts for the three rings
 //   covers
@@ -32,7 +34,8 @@ namespace VeggieBook.Api.Admin;
 //   heat           books saved by day of week (Monday first) and 3-hour
 //                  block of the day (midnight first), Eastern time
 //   topAnswers     the 5 answers the most people picked, from the Most
-//                  chosen tally (Research/ChoiceTally.cs), so they match
+//                  chosen tally (Research/ChoiceTally.cs), so they match,
+//                  with the question's number and its full wording
 //   recent         latest saves, joins, and deletions, by research ID only
 //                  (OverviewRecent.cs)
 //
@@ -145,28 +148,33 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             .AsNoTracking()
             .Where(v => v.Active)
             .OrderBy(v => v.SortOrder)
-            .Select(v => new { v.Code, v.NameEn })
+            .Select(v => new { v.Code, v.NameEn, v.ImagePath })
             .ToListAsync();
 
         var byVegetable = activeVegetables
             .Select(v => new
             {
                 name = v.NameEn,
-                count = allBooks.Count(b => b.Kind == "veggie" && b.VegetableCode == v.Code)
+                count = allBooks.Count(b => b.Kind == "veggie" && b.VegetableCode == v.Code),
+                image = string.IsNullOrEmpty(v.ImagePath) ? null : v.ImagePath
             })
             .OrderByDescending(v => v.count)
             .ThenBy(v => v.name)
             .ToList();
 
-        var categoryNames = await content.SecretCategories
+        var categories = await content.SecretCategories
             .AsNoTracking()
-            .ToDictionaryAsync(c => c.Id, c => c.NameEn);
+            .Select(c => new { c.Id, c.NameEn, c.ImagePath })
+            .ToListAsync();
 
-        var byCategory = categoryNames
+        var categoryNames = categories.ToDictionary(c => c.Id, c => c.NameEn);
+
+        var byCategory = categories
             .Select(c => new
             {
-                name = c.Value,
-                count = allBooks.Count(b => b.Kind == "secrets" && b.SecretCategoryId == c.Key)
+                name = c.NameEn,
+                count = allBooks.Count(b => b.Kind == "secrets" && b.SecretCategoryId == c.Id),
+                image = string.IsNullOrEmpty(c.ImagePath) ? null : c.ImagePath
             })
             .OrderByDescending(c => c.count)
             .ThenBy(c => c.name)
@@ -230,6 +238,12 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
 
         var tally = await ChoiceTally.BuildAsync(db, content, new SheetFilter(null, null, null, null));
 
+        // The full wording of each question, by its number ("Q1"), so the
+        // page can show the question under each answer.
+        var questionText = (await AllDataSource.LoadQuestionsAsync(content))
+            .GroupBy(q => $"Q{q.No}")
+            .ToDictionary(g => g.Key, g => g.First().Label);
+
         var topAnswers = tally.Rows
             .Where(r => Convert.ToInt32(r["people"]) > 0)
             .OrderByDescending(r => Convert.ToInt32(r["people"]))
@@ -239,6 +253,7 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             {
                 answer = r["answer"] as string ?? "",
                 question = r["question_no"] as string ?? "",
+                questionText = questionText.GetValueOrDefault(r["question_no"] as string ?? "") ?? "",
                 people = Convert.ToInt32(r["people"]),
                 percent = Convert.ToDouble(r["people_pct"])
             })

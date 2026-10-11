@@ -1,10 +1,11 @@
-import { BarList } from '../components/common/BarList'
 import { DonutChart } from '../components/common/DonutChart'
 import { Panel } from '../components/common/Panel'
 import { StatCard } from '../components/common/StatCard'
 import type { AdminTab } from '../components/layout/navigation'
+import { AgeColumns } from '../components/overview/AgeColumns'
 import { KeptRemoved } from '../components/overview/KeptRemoved'
 import { LiveStatus } from '../components/overview/LiveStatus'
+import { PictureRings } from '../components/overview/PictureRings'
 import { RecentActivity } from '../components/overview/RecentActivity'
 import { StudyCard } from '../components/overview/StudyCard'
 import { TopAnswersList } from '../components/overview/TopAnswersList'
@@ -18,10 +19,11 @@ import '../styles/overview.css'
 // No email or name appears here; people are shown by research ID only.
 //
 // Top to bottom:
-//   live line, four animated cards with trend lines
+//   live line (full day, date, and time), four animated cards
 //   books per week | active study
-//   books by vegetable | Secrets Books by category
-//   participants by age | when books are saved
+//   books by vegetable | Secrets Books by category (pictures in rings,
+//     with the ones not picked yet as small chips underneath)
+//   participants by age (columns) | when books are saved
 //   book details (three rings) | kept vs taken out
 //   most chosen answers | recent activity
 //
@@ -124,26 +126,17 @@ export function Overview({ onOpen }: Props) {
 
       <div className="overview-row is-even">
         <Panel title="Books by vegetable">
-          <BarList
-            rows={data.byVegetable.map((v) => ({ label: v.name, value: v.count }))}
-            empty="No VeggieBooks yet."
-          />
+          <PictureRings rows={data.byVegetable} unit="VeggieBooks" tone="green" empty="No VeggieBooks yet." />
         </Panel>
 
         <Panel title="Secrets Books by category">
-          <BarList
-            rows={data.byCategory.map((c) => ({ label: c.name, value: c.count }))}
-            empty="No Secrets Books yet."
-          />
+          <PictureRings rows={data.byCategory} unit="Secrets Books" tone="violet" empty="No Secrets Books yet." />
         </Panel>
       </div>
 
       <div className="overview-row is-reverse">
         <Panel title="Participants by age">
-          <BarList
-            rows={data.ageRanges.map((a) => ({ label: a.name, value: a.count }))}
-            empty="No participants yet."
-          />
+          <AgeColumns ages={data.ageRanges} empty="No participants yet." />
         </Panel>
 
         <Panel title="When books are saved" aside={<span className="muted small">Eastern time</span>}>
@@ -191,7 +184,7 @@ export function Overview({ onOpen }: Props) {
           title="Most chosen answers"
           aside={
             <button type="button" className="link-button" onClick={() => onOpen('questions')}>
-              See all
+              See all questions
             </button>
           }
         >

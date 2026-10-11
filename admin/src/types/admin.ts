@@ -29,9 +29,18 @@ export type NameCount = {
   count: number
 }
 
+// A vegetable or Secrets category with its picture. image is the path
+// without the /images prefix (see utils/images.ts), or null if it has none.
+export type PictureCount = {
+  name: string
+  count: number
+  image: string | null
+}
+
 export type TopAnswer = {
   answer: string
   question: string // Q1, Q2...
+  questionText: string // the question's full wording
   people: number
   percent: number // of people with at least one VeggieBook
 }
@@ -57,9 +66,9 @@ export type Overview = {
   weekly: WeekCount[] // last 8 weeks, oldest first
   joinedWeekly: number[] // same 8 weeks
   answersWeekly: number[] // same 8 weeks
-  byVegetable: NameCount[]
-  byCategory: NameCount[]
-  ageRanges: NameCount[]
+  byVegetable: PictureCount[] // most books first
+  byCategory: PictureCount[] // most books first
+  ageRanges: NameCount[] // youngest first, "Not given" last
   languages: { english: number; spanish: number }
   covers: { builtin: number; personal: number }
   items: {

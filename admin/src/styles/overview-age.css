@@ -1,0 +1,92 @@
+/* Participants by age, as columns. See components/overview/AgeColumns.tsx.
+
+   One column per age range, the count on top and the age range under it.
+   Columns are green; empty groups keep a thin gray line.
+
+   Fits any screen: columns share the width evenly and the gaps shrink with
+   the window; long labels are cut with "..." rather than pushing the chart
+   wider than its panel. */
+
+.age-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.age-cols {
+  display: flex;
+  gap: clamp(6px, 2vw, 20px);
+  height: 220px;
+  margin: 0;
+  padding: 0 4px;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.age-col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+.age-count {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.age-bar {
+  display: block;
+  width: 100%;
+  max-width: 56px;
+  background: #3f9a5b;
+  border-radius: 8px 8px 0 0;
+  transform-origin: bottom;
+  animation: age-grow 0.6s ease-out both;
+}
+
+.age-col.is-zero .age-count {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.age-col.is-zero .age-bar {
+  background: #e4e4e7;
+}
+
+.age-labels {
+  display: flex;
+  gap: clamp(6px, 2vw, 20px);
+  padding: 0 4px;
+}
+
+.age-labels span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  color: #52525b;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes age-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .age-bar {
+    animation: none;
+  }
+}
