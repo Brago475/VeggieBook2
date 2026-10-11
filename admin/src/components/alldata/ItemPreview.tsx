@@ -4,12 +4,13 @@ import { bookTitle, shortDate, shortTime } from '../../utils/allDataFormat'
 import { imageUrl } from '../../utils/images'
 
 // Small pictures for recipes and secrets, and the card that opens when you
-// hover (or tab to) one: the full picture, the name, kept or taken out,
-// and when the book was saved.
+// hover (or tab to, or tap on a phone) one: the full picture, the name,
+// kept or taken out, and when the book was saved.
 //
 // The card is placed next to the item on screen (fixed position), so it is
-// never cut off by a scrolling panel or table. It closes when the mouse
-// leaves, focus moves on, or the page scrolls.
+// never cut off by a scrolling panel or table, and it always fits inside
+// the window, whatever the screen size. It closes when the mouse leaves,
+// focus moves on, or the page scrolls.
 
 export type Preview = {
   row: SheetRow
@@ -27,7 +28,11 @@ export function useItemPreview() {
     if (!preview) return
     const hide = () => setPreview(null)
     window.addEventListener('scroll', hide, true)
-    return () => window.removeEventListener('scroll', hide, true)
+    window.addEventListener('resize', hide)
+    return () => {
+      window.removeEventListener('scroll', hide, true)
+      window.removeEventListener('resize', hide)
+    }
   }, [preview])
 
   function handlers(row: SheetRow) {
@@ -70,13 +75,22 @@ export function ItemPreviewCard({ preview }: { preview: Preview | null }) {
   const secret = row.item_type === 'Secret'
   const copies = Number(row.extra_copies ?? 0)
 
-  // Left of the item when there is room, otherwise right of it.
-  let left = rect.left - CARD_WIDTH - GAP
+  // Fits any screen: never wider than the window, placed left of the item
+  // when there is room, otherwise right of it, otherwise under it, and
+  // always kept inside the window.
+  const width = Math.min(CARD_WIDTH, window.innerWidth - GAP * 2)
+  const maxLeft = window.innerWidth - width - GAP
+  let left = rect.left - width - GAP
+  let top = rect.top - 40
   if (left < GAP) left = rect.right + GAP
-  const top = Math.max(GAP, Math.min(rect.top - 40, window.innerHeight - CARD_HEIGHT - GAP))
+  if (left > maxLeft) {
+    left = Math.max(GAP, Math.min(rect.left, maxLeft))
+    top = rect.bottom + GAP
+  }
+  top = Math.max(GAP, Math.min(top, window.innerHeight - CARD_HEIGHT - GAP))
 
   return (
-    <div className="ad-preview" role="tooltip" style={{ left, top, width: CARD_WIDTH }}>
+    <div className="ad-preview" role="tooltip" style={{ left, top, width }}>
       {path ? (
         <img className="ad-preview-img" src={imageUrl(path)} alt="" />
       ) : (

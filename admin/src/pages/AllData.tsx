@@ -24,6 +24,7 @@ import '../styles/alldata-colors.css'
 import '../styles/alldata-preview.css'
 import '../styles/alldata-topbar.css'
 import '../styles/alldata-look.css'
+import '../styles/alldata-responsive.css'
 
 // The All Data page: everything collected, in two files.
 //
@@ -31,8 +32,8 @@ import '../styles/alldata-look.css'
 //                        answer, and counts of recipes and secrets
 //   Recipes and secrets  one row per recipe or secret, grouped by book
 //
-// The top bar holds the Excel, PDF, and CSV buttons (each downloads both
-// files together) and Refresh, with the search and filters under them.
+// The top bar holds the Excel, SPSS, PDF, and CSV buttons (each downloads
+// both files together) and Refresh, with the search and filters under them.
 // Rows are keyed by the anonymous research ID; no email or name appears.
 
 const fileTabs: { id: AllDataFile; label: string; icon: 'book' | 'pot' }[] = [

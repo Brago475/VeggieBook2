@@ -8,7 +8,13 @@
    small menu; its ADMIN label is red for the main admin and green for
    everyone else.
 
-   Top bar: a breadcrumb over the page title, with a line under it. */
+   Top bar: a breadcrumb over the page title, with a line under it.
+
+   Fits any screen: the main area always uses the full width next to the
+   sidebar, and its spacing grows and shrinks with the window (clamp), so
+   nothing is sized for one monitor. On medium screens the sidebar gets a
+   little narrower; on small screens (900px or less) it slides in over the
+   page from a menu button. */
 
 .shell {
   display: flex;
@@ -270,7 +276,7 @@
   display: none;
 }
 
-/* Main area */
+/* Main area: the full width next to the sidebar, on every screen. */
 
 .shell-body {
   flex: 1;
@@ -285,7 +291,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-6);
+  padding: var(--sp-3) clamp(16px, 2.5vw, 40px);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
@@ -327,14 +333,16 @@
 
 .topbar-title {
   margin: 0;
-  font-size: 22px;
+  font-size: clamp(18px, 1.6vw, 24px);
   font-weight: 700;
   color: var(--ink);
 }
 
 .shell-main {
-  max-width: 1440px;
-  padding: var(--sp-5) var(--sp-6) var(--sp-6);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: clamp(16px, 2vw, 32px) clamp(16px, 2.5vw, 40px) clamp(24px, 3vw, 48px);
 }
 
 /* Collapsed sidebar: icons only. Wide screens only. */
@@ -386,7 +394,15 @@
   }
 }
 
-/* Narrow screens: the sidebar slides in over the page. */
+/* Medium screens: a slightly narrower sidebar leaves more room for pages. */
+
+@media (min-width: 901px) and (max-width: 1280px) {
+  .shell:not(.is-collapsed) .sidebar {
+    width: 216px;
+  }
+}
+
+/* Small screens: the sidebar slides in over the page. */
 
 @media (max-width: 900px) {
   .sidebar {
@@ -419,18 +435,6 @@
 
   .menu-button {
     display: flex;
-  }
-
-  .topbar {
-    padding: var(--sp-3) var(--sp-4);
-  }
-
-  .topbar-title {
-    font-size: 18px;
-  }
-
-  .shell-main {
-    padding: var(--sp-5) var(--sp-4);
   }
 }
 

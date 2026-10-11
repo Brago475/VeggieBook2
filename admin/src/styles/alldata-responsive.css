@@ -1,0 +1,193 @@
+/* All Data on any screen. Loaded last, so these win.
+
+   Nothing here assumes a screen size: widths come from the space there is
+   (grids that fill the row, sizes that scale with the window), and a few
+   breakpoints only change the layout when there truly isn't room:
+
+     wide (above 1280px)      table and side panel next to each other
+     medium (1280px or less)  side panel moves under the table
+     small (900px or less)    filters stack, labels shorten
+     phone (600px or less)    one column, smaller padding, buttons wrap */
+
+/* ---- Cards: as many per row as fit, never squeezed ---- */
+
+.ad-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.ad-card-value {
+  font-size: clamp(22px, 2vw, 30px);
+}
+
+.ad-card-text {
+  min-width: 0;
+}
+
+.ad-card-value,
+.ad-card-label {
+  overflow-wrap: anywhere;
+}
+
+/* ---- Table and side panel ---- */
+
+.ad-split > .ad-table-card {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.ad-panel {
+  flex: 0 0 clamp(320px, 26vw, 440px);
+  width: clamp(320px, 26vw, 440px);
+}
+
+/* ---- Top bar ---- */
+
+.topbar-below .ad-search {
+  flex: 1 1 260px;
+  min-width: 200px;
+}
+
+.topbar-actions {
+  min-width: 0;
+}
+
+/* ---- Medium: the side panel moves under the table ---- */
+
+@media (max-width: 1280px) {
+  .ad-split {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ad-panel {
+    position: static;
+    flex: none;
+    width: 100%;
+    max-height: none;
+  }
+}
+
+/* ---- Small: filters stack, labels shorten ---- */
+
+@media (max-width: 900px) {
+  .ad-downloads-label {
+    display: none;
+  }
+
+  .topbar-actions {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  .topbar-below .ad-search {
+    flex-basis: 100%;
+  }
+
+  .topbar-below .ad-select,
+  .topbar-below .ad-toolbar .filter {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 0;
+  }
+
+  .topbar-below .ad-toolbar .filter input,
+  .topbar-below .ad-toolbar .filter select,
+  .topbar-below .ad-select select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .ad-clear {
+    flex: 1 1 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
+
+  .ad-tabs {
+    gap: 20px;
+    overflow-x: auto;
+  }
+
+  .ad-tab {
+    white-space: nowrap;
+  }
+
+  .ad-tab-note {
+    display: none;
+  }
+}
+
+/* ---- Phone: one column, less padding ---- */
+
+@media (max-width: 600px) {
+  .ad-page {
+    gap: 14px;
+  }
+
+  .ad-dl {
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 0 12px;
+  }
+
+  .ad-downloads {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+  }
+
+  .topbar-below .ad-select,
+  .topbar-below .ad-toolbar .filter {
+    flex-basis: 100%;
+  }
+
+  .ad-card {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .ad-card-icon {
+    flex-basis: 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .ad-card-head-row {
+    padding: 12px;
+  }
+
+  .ad-card-head-left {
+    width: 100%;
+  }
+
+  .ad-card-head-left .segmented {
+    flex-wrap: wrap;
+  }
+
+  .ad-table-card .ad-scroll {
+    margin: 0 12px;
+  }
+
+  .ad-pager {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+  }
+
+  .ad-pager-buttons {
+    justify-content: space-between;
+  }
+
+  .ad-panel-head,
+  .ad-panel-section {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .ad-panel-tabs {
+    padding: 8px 14px 0;
+  }
+
+  .ad-items-bar-buttons {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
