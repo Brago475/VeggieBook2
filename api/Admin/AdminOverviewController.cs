@@ -19,6 +19,11 @@ namespace VeggieBook.Api.Admin;
 // are tests, so both are left out of every number here except the two that
 // are about the site itself (locked password resets and guests right now).
 //
+// Tracking: a book counts only if it was saved while the person's tracking
+// was on, and a person counts only while their tracking is on now
+// (Research/ResearchScope.cs). People who opted out are not tracked, so
+// they don't show up in any number, chart, or the recent list.
+//
 // What it returns:
 //   counts         participants, new in the last 7 days, books, answers
 //   weekly         books saved per week, last 8 weeks (Monday to Sunday,
@@ -72,21 +77,29 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
         // Load what the charts need. The study has hundreds of people at
         // most, so this is small enough to work on in memory.
 
-        var joins = await people
-            .Select(u => new { u.CreatedAt, u.AgeRange })
-            .ToListAsync();
+        var scope = await ResearchScope.LoadAsync(db);
 
-        var allBooks = await books
-            .Select(b => new
-            {
-                b.Kind,
-                b.Language,
-                b.VegetableCode,
-                b.SecretCategoryId,
-                Personal = b.CoverUpload != null,
-                b.CreatedAt
-            })
-            .ToListAsync();
+        var joins = (await people
+                .Select(u => new { u.Id, u.CreatedAt, u.AgeRange })
+                .ToListAsync())
+            .Where(u => scope.CountsPerson(u.Id))
+            .ToList();
+
+        var allBooks = (await books
+                .Select(b => new
+                {
+                    b.UserId,
+                    b.Kind,
+                    b.Language,
+                    b.VegetableCode,
+                    b.SecretCategoryId,
+                    Personal = b.CoverUpload != null,
+                    b.CreatedAt,
+                    Items = b.Selections.Select(s => new { s.ContentType, s.Kept }).ToList()
+                })
+                .ToListAsync())
+            .Where(b => scope.CountsBook(b.UserId, b.CreatedAt))
+            .ToList();
 
         var recoveryLocked = await realAccounts.CountAsync(u => u.RecoveryLockedAt != null);
         var activeGuests = await db.Users.AsNoTracking()
@@ -206,14 +219,8 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
 
         // Kept and taken out later, per kind of item
 
-        var itemGroups = await books
-            .SelectMany(b => b.Selections)
-            .GroupBy(s => new { s.ContentType, s.Kept })
-            .Select(g => new { g.Key.ContentType, g.Key.Kept, Count = g.Count() })
-            .ToListAsync();
-
         int Items(string type, bool kept) =>
-            itemGroups.Where(g => g.ContentType == type && g.Kept == kept).Sum(g => g.Count);
+            allBooks.Sum(b => b.Items.Count(s => s.ContentType == type && s.Kept == kept));
 
         var items = new
         {
@@ -262,7 +269,7 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
         // Recent activity: saves, joins, and deletions
 
         var recent = await OverviewRecent.BuildAsync(
-            db, people, books, vegetableNames, categoryNames, RecentCount);
+            db, people, books, scope, vegetableNames, categoryNames, RecentCount);
 
         Response.Headers.CacheControl = "no-store";
 

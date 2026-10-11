@@ -12,7 +12,10 @@ namespace VeggieBook.Api.Research;
 //   Items         one row per recipe or secret in a saved book
 //
 // Who is included: real accounts that are not admins. Guests are temporary
-// and admin books are tests, so both are left out.
+// and admin books are tests, so both are left out. Books saved while the
+// person's tracking was off are left out too, and the Participants sheet
+// lists only people with tracking on now or with tracked books
+// (ResearchScope.cs).
 //
 // What "taken out later" means: a recipe or secret removed from a saved
 // book (Kept = false). Recipes skipped during the review, before saving,
@@ -101,11 +104,13 @@ public static class ResearchSheets
     }
 
     // Every book of these people, numbered per person by date before any
-    // filter (so a person's 3rd book is always "3"), then filtered.
+    // filter (so a person's 3rd book is always "3"), then filtered: books
+    // saved while tracking was off first, then the page's filters.
     private static async Task<List<BookRow>> LoadBooksAsync(
         AccountsContext db,
         Dictionary<Guid, Person> people,
-        SheetFilter filter)
+        SheetFilter filter,
+        ResearchScope scope)
     {
         var userIds = people.Keys.ToList();
 
@@ -133,20 +138,25 @@ public static class ResearchSheets
             .GroupBy(b => b.UserId)
             .SelectMany(g => g
                 .OrderBy(b => b.CreatedAt)
-                .Select((b, i) => new BookRow(
-                    people[b.UserId],
-                    i + 1,
-                    ToLocal(b.CreatedAt),
-                    b.Kind,
-                    b.Language,
-                    b.VegetableCode,
-                    b.SecretCategoryId,
-                    b.CoverPath,
-                    b.HasUpload,
-                    b.Attributes,
-                    b.Selections
-                        .Select(s => new Item(s.ContentType, s.ContentId, s.Kept, s.ExtraCopies))
-                        .ToList())))
+                .Select((b, i) => (
+                    b.UserId,
+                    SavedAt: b.CreatedAt,
+                    Book: new BookRow(
+                        people[b.UserId],
+                        i + 1,
+                        ToLocal(b.CreatedAt),
+                        b.Kind,
+                        b.Language,
+                        b.VegetableCode,
+                        b.SecretCategoryId,
+                        b.CoverPath,
+                        b.HasUpload,
+                        b.Attributes,
+                        b.Selections
+                            .Select(s => new Item(s.ContentType, s.ContentId, s.Kept, s.ExtraCopies))
+                            .ToList()))))
+            .Where(x => scope.CountsBook(x.UserId, x.SavedAt))
+            .Select(x => x.Book)
             .Where(b => filter.AgeRange is null || b.Person.AgeRange == filter.AgeRange)
             .Where(b => filter.Vegetable is null || b.VegetableCode == filter.Vegetable)
             .Where(b => filter.From is null || DateOnly.FromDateTime(b.Local) >= filter.From)
@@ -263,7 +273,8 @@ public static class ResearchSheets
     public static async Task<Sheet> ParticipantsAsync(AccountsContext db, SheetFilter filter)
     {
         var people = await LoadPeopleAsync(db);
-        var books = (await LoadBooksAsync(db, people, new SheetFilter(null, null, null, null)))
+        var scope = await ResearchScope.LoadAsync(db);
+        var books = (await LoadBooksAsync(db, people, new SheetFilter(null, null, null, null), scope))
             .ToLookup(b => b.Person.UserId);
 
         var columns = new List<SheetColumn>
@@ -283,7 +294,10 @@ public static class ResearchSheets
             new("last_book_date", $"Latest book ({Local.Name})", "date")
         };
 
+        // Someone with tracking off now is listed only for the books they
+        // saved while it was on.
         var rows = people.Values
+            .Where(p => scope.CountsPerson(p.UserId) || books[p.UserId].Any())
             .Where(p => filter.AgeRange is null || p.AgeRange == filter.AgeRange)
             .OrderBy(p => p.ParticipantId)
             .Select(p =>
@@ -319,7 +333,7 @@ public static class ResearchSheets
         SheetFilter filter)
     {
         var people = await LoadPeopleAsync(db);
-        var books = await LoadBooksAsync(db, people, filter);
+        var books = await LoadBooksAsync(db, people, filter, await ResearchScope.LoadAsync(db));
         var c = await LoadContentAsync(content);
         var questions = await LoadQuestionsAsync(content);
         var known = questions.SelectMany(q => q.Choices).Select(x => x.Attribute).ToHashSet();
@@ -389,7 +403,7 @@ public static class ResearchSheets
         SheetFilter filter)
     {
         var people = await LoadPeopleAsync(db);
-        var books = await LoadBooksAsync(db, people, filter);
+        var books = await LoadBooksAsync(db, people, filter, await ResearchScope.LoadAsync(db));
         var c = await LoadContentAsync(content);
 
         var columns = BookColumns(c, people);

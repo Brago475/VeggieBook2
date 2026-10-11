@@ -14,40 +14,56 @@ namespace VeggieBook.Api.Admin;
 //
 // Deletions come from the activity log (db/migrations/007_activity_log.sql).
 // If that table doesn't exist yet, the list simply has no deletions.
+//
+// People who opted out are not tracked (Research/ResearchScope.cs): books
+// saved while their tracking was off are not listed, and while it is off
+// their joins and deleted books are not listed either. A deleted account
+// has no tracking left to check, so it is always listed.
 
 public static class OverviewRecent
 {
+    private const int Overfetch = 4;
+
     private record Line(string Type, string ResearchId, string Title, string Detail, DateTime At);
 
     public static async Task<List<object>> BuildAsync(
         AccountsContext db,
         IQueryable<AppUser> people,
         IQueryable<Book> books,
+        ResearchScope scope,
         Dictionary<string, string> vegetableNames,
         Dictionary<int, string> categoryNames,
         int count)
     {
         var ids = await ParticipantIds.EnsureAsync(db);
+        var userOf = ids.ToDictionary(kv => kv.Value, kv => kv.Key);
 
-        var saved = await books
-            .OrderByDescending(b => b.CreatedAt)
-            .Take(count)
-            .Select(b => new
-            {
-                b.UserId,
-                b.Kind,
-                b.VegetableCode,
-                b.SecretCategoryId,
-                b.CreatedAt,
-                Kept = b.Selections.Count(s => s.Kept)
-            })
-            .ToListAsync();
+        // More than needed is read, since some lines are left out.
+        var read = count * Overfetch;
 
-        var joined = await people
-            .OrderByDescending(u => u.CreatedAt)
-            .Take(count)
-            .Select(u => new { u.Id, u.CreatedAt, u.AgeRange })
-            .ToListAsync();
+        var saved = (await books
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(read)
+                .Select(b => new
+                {
+                    b.UserId,
+                    b.Kind,
+                    b.VegetableCode,
+                    b.SecretCategoryId,
+                    b.CreatedAt,
+                    Kept = b.Selections.Count(s => s.Kept)
+                })
+                .ToListAsync())
+            .Where(b => scope.CountsBook(b.UserId, b.CreatedAt))
+            .ToList();
+
+        var joined = (await people
+                .OrderByDescending(u => u.CreatedAt)
+                .Take(read)
+                .Select(u => new { u.Id, u.CreatedAt, u.AgeRange })
+                .ToListAsync())
+            .Where(u => scope.CountsPerson(u.Id))
+            .ToList();
 
         List<ActivityEntry> logged;
         try
@@ -55,7 +71,7 @@ public static class OverviewRecent
             logged = await db.ActivityLog
                 .AsNoTracking()
                 .OrderByDescending(a => a.At)
-                .Take(count)
+                .Take(read)
                 .ToListAsync();
         }
         catch (Exception)
@@ -63,6 +79,14 @@ public static class OverviewRecent
             // The activity_log table hasn't been created yet.
             logged = [];
         }
+
+        // A deleted book counts only while its owner's tracking is on. A
+        // deleted account no longer has an owner to check.
+        bool Shows(ActivityEntry a) =>
+            a.Kind == "account_deleted"
+            || string.IsNullOrEmpty(a.ParticipantId)
+            || !userOf.TryGetValue(a.ParticipantId, out var owner)
+            || scope.CountsPerson(owner);
 
         string Name(string kind, string? vegetableCode, int? categoryId) => kind == "secrets"
             ? (categoryId is int id ? categoryNames.GetValueOrDefault(id, "") : "")
@@ -81,7 +105,7 @@ public static class OverviewRecent
                 "Joined",
                 string.IsNullOrEmpty(u.AgeRange) ? "No age range given" : $"Age {u.AgeRange}",
                 u.CreatedAt)))
-            .Concat(logged.Select(a => a.Kind == "account_deleted"
+            .Concat(logged.Where(Shows).Select(a => a.Kind == "account_deleted"
                 ? new Line(
                     "account_deleted",
                     a.ParticipantId,

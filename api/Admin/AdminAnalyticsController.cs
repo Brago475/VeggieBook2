@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Admin;
 
@@ -12,11 +13,15 @@ namespace VeggieBook.Api.Admin;
 //
 // Admins only (Roles.AdminPolicy). Built only from data the app already
 // keeps to work: accounts and their saved books. Nothing new is recorded.
-// Study tracking (time per question and so on) is separate and stays off
-// until the IRB is approved.
 //
-// Real accounts only. Guests are left out, since they are deleted within a
-// day and would make the numbers move for no reason.
+// Who counts: real accounts that are not admins, the same people as the
+// Overview and the research sheets. Guests are left out, since they are
+// deleted within a day and would make the numbers move for no reason, and
+// admin books are tests.
+//
+// Tracking: a book counts only if it was saved while the person's tracking
+// was on, and an account counts only while its tracking is on now
+// (Research/ResearchScope.cs). People who opted out are not tracked.
 //
 // No account appears here: every number is a count or an average across
 // accounts. No email, name, or uploaded photo is read.
@@ -40,31 +45,36 @@ public class AdminAnalyticsController(AccountsContext db, VeggieBookContext cont
     {
         // ---- Data from the accounts database ----
 
-        var users = await db.Users
-            .AsNoTracking()
-            .Where(u => u.GuestExpiresAt == null)
-            .Select(u => new { u.Id, u.CreatedAt, u.AgeRange })
-            .ToListAsync();
+        var people = await StudyTracking.PeopleAsync(db);
+        var scope = await ResearchScope.LoadAsync(db);
 
-        var books = await db.Books
-            .AsNoTracking()
-            .Where(b => db.Users.Any(u => u.Id == b.UserId && u.GuestExpiresAt == null))
-            .Select(b => new
-            {
-                b.UserId,
-                b.Kind,
-                b.Language,
-                b.VegetableCode,
-                b.SecretCategoryId,
-                b.CoverPath,
-                HasUpload = b.CoverUpload != null,
-                b.CreatedAt,
-                Attributes = b.Attributes.Select(a => a.Attribute).ToList(),
-                Selections = b.Selections
-                    .Select(s => new { s.ContentType, s.ContentId, s.Kept, s.ExtraCopies })
-                    .ToList()
-            })
-            .ToListAsync();
+        var users = (await people
+                .Select(u => new { u.Id, u.CreatedAt, u.AgeRange })
+                .ToListAsync())
+            .Where(u => scope.CountsPerson(u.Id))
+            .ToList();
+
+        var books = (await db.Books
+                .AsNoTracking()
+                .Where(b => people.Any(u => u.Id == b.UserId))
+                .Select(b => new
+                {
+                    b.UserId,
+                    b.Kind,
+                    b.Language,
+                    b.VegetableCode,
+                    b.SecretCategoryId,
+                    b.CoverPath,
+                    HasUpload = b.CoverUpload != null,
+                    b.CreatedAt,
+                    Attributes = b.Attributes.Select(a => a.Attribute).ToList(),
+                    Selections = b.Selections
+                        .Select(s => new { s.ContentType, s.ContentId, s.Kept, s.ExtraCopies })
+                        .ToList()
+                })
+                .ToListAsync())
+            .Where(b => scope.CountsBook(b.UserId, b.CreatedAt))
+            .ToList();
 
         var veggieBooks = books.Where(b => b.Kind == "veggie").ToList();
         var secretsBooks = books.Where(b => b.Kind == "secrets").ToList();
