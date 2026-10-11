@@ -13,12 +13,14 @@ import { AllDataIcon, type AllDataIconName } from './AllDataIcons'
 //   CSV    a zip of books.csv and recipes-and-secrets.csv
 //
 // With "Book answers on each row" on, the recipe rows include the book's
-// answers in every format. Plain links: the browser saves what the API
-// sends, using the page's session.
+// answers in every format. With a study picked, every format holds only
+// that study's books, and the file names say which study. Plain links: the
+// browser saves what the API sends, using the page's session.
 
 type Props = {
   filters: ResearchFilters
   itemAnswers: boolean
+  study?: number | null
 }
 
 const formats: { format: string; label: string; title: string; icon: AllDataIconName }[] = [
@@ -28,8 +30,10 @@ const formats: { format: string; label: string; title: string; icon: AllDataIcon
   { format: 'csv', label: 'CSV', title: 'Both files as CSV, in one zip', icon: 'file' },
 ]
 
-export function DownloadMenu({ filters, itemAnswers }: Props) {
-  const extra: Record<string, string> = itemAnswers ? { answers: 'true' } : {}
+export function DownloadMenu({ filters, itemAnswers, study = null }: Props) {
+  const extra: Record<string, string> = {}
+  if (itemAnswers) extra.answers = 'true'
+  if (study !== null) extra.study = String(study)
 
   return (
     <div className="ad-downloads" role="group" aria-label="Download all data">

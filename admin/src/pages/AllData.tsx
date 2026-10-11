@@ -9,6 +9,7 @@ import { ColumnToggles } from '../components/alldata/ColumnToggles'
 import { DownloadMenu } from '../components/alldata/DownloadMenu'
 import { ItemsTable } from '../components/alldata/ItemsTable'
 import { Segmented } from '../components/alldata/Segmented'
+import { StudyPicker } from '../components/alldata/StudyPicker'
 import { TopbarActions, TopbarBelow } from '../components/layout/TopbarSlot'
 import { useAllData } from '../hooks/useAllData'
 import type { AllDataFile, AnswersView, BookTypeFilter, ColumnGroup, ItemStatusFilter } from '../types/allData'
@@ -35,6 +36,11 @@ import '../styles/alldata-responsive.css'
 // The top bar holds the Excel, SPSS, PDF, and CSV buttons (each downloads
 // both files together) and Refresh, with the search and filters under them.
 // Rows are keyed by the anonymous research ID; no email or name appears.
+//
+// The Study bar above the tabs folds open to pick a study (or All time).
+// With a study picked, the tables, cards, and downloads hold only the books
+// saved during it. The Studies page's "Open in All Data" opens this page
+// with its study already picked (initialStudy).
 
 const fileTabs: { id: AllDataFile; label: string; icon: 'book' | 'pot' }[] = [
   { id: 'books', label: 'Books', icon: 'book' },
@@ -50,7 +56,11 @@ function matchesSearch(row: SheetRow, text: string, withTitle: boolean) {
   return withTitle && String(row.item_title ?? '').toLowerCase().includes(needle)
 }
 
-export function AllData() {
+type Props = {
+  initialStudy?: number | null
+}
+
+export function AllData({ initialStudy = null }: Props) {
   const [file, setFile] = useState<AllDataFile>('books')
   const [filters, setFilters] = useState<ResearchFilters>(noFilters)
   const [options, setOptions] = useState<ResearchOptions | null>(null)
@@ -64,8 +74,9 @@ export function AllData() {
   const [columnsOpen, setColumnsOpen] = useState(false)
   const [status, setStatus] = useState<ItemStatusFilter>('all')
   const [itemAnswers, setItemAnswers] = useState(false)
+  const [study, setStudy] = useState<number | null>(initialStudy)
 
-  const { books, items, questions, error, loading } = useAllData(filters, version)
+  const { books, items, questions, error, loading } = useAllData(filters, version, study)
 
   useEffect(() => {
     let cancelled = false
@@ -125,6 +136,7 @@ export function AllData() {
     setFilters(noFilters)
     setSearch('')
     setBookType('')
+    setStudy(null)
   }
 
   const veggieCount = bookRows.filter((r) => r.book_type === 'VeggieBook').length
@@ -158,7 +170,7 @@ export function AllData() {
   return (
     <div className="ad-page">
       <TopbarActions>
-        <DownloadMenu filters={filters} itemAnswers={itemAnswers} />
+        <DownloadMenu filters={filters} itemAnswers={itemAnswers} study={study} />
         <button type="button" className="ad-dl ad-refresh" onClick={() => setVersion((v) => v + 1)}>
           <AllDataIcon name="refresh" size={17} className={refreshing ? 'ad-refresh-icon is-spinning' : 'ad-refresh-icon'} />
           {refreshing ? 'Updating...' : 'Refresh'}
@@ -176,9 +188,11 @@ export function AllData() {
           options={options}
           onFilters={setFilters}
           onClear={clearAll}
-          canClear={hasFilters(filters) || search !== '' || bookType !== ''}
+          canClear={hasFilters(filters) || search !== '' || bookType !== '' || study !== null}
         />
       </TopbarBelow>
+
+      <StudyPicker study={study} onStudy={setStudy} books={bookRows.length} />
 
       <div className="ad-tabs" role="tablist" aria-label="File">
         {fileTabs.map((t) => (

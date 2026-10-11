@@ -25,6 +25,9 @@ import { Studies } from './pages/Studies'
 // its new page in a later step. The old Research page (pages/Research.tsx)
 // is no longer opened from the menu; All Data replaces it.
 //
+// "Open in All Data" on the Studies page opens All Data with that study
+// picked (dataStudy). Opening All Data from the sidebar starts on All time.
+//
 // Analytics is loaded only when it is opened. It carries the chart library,
 // which is most of the site's size, so the other screens don't wait for it.
 
@@ -58,6 +61,7 @@ const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
 export function App() {
   const { session, signIn, signOut } = useSession()
   const [tab, setTab] = useState<AdminTab>('overview')
+  const [dataStudy, setDataStudy] = useState<number | null>(null)
 
   if (session.status === 'loading') {
     return <p className="admin-loading">Loading...</p>
@@ -69,17 +73,29 @@ export function App() {
 
   const soon = upcoming[tab]
 
+  // Any normal way of changing page (sidebar, Overview links) forgets the
+  // study handed over by the Studies page.
+  function openTab(next: AdminTab) {
+    setDataStudy(null)
+    setTab(next)
+  }
+
+  function openStudyData(study: number) {
+    setDataStudy(study)
+    setTab('data')
+  }
+
   return (
     <AdminShell
       email={session.email}
       isRoot={session.isRoot}
       tab={tab}
-      onTab={setTab}
+      onTab={openTab}
       onSignOut={signOut}
     >
-      {tab === 'overview' && <Overview onOpen={setTab} />}
-      {tab === 'studies' && <Studies onOpen={setTab} />}
-      {tab === 'data' && <AllData />}
+      {tab === 'overview' && <Overview onOpen={openTab} />}
+      {tab === 'studies' && <Studies onOpen={openTab} onOpenStudyData={openStudyData} />}
+      {tab === 'data' && <AllData key={dataStudy ?? 'all'} initialStudy={dataStudy} />}
       {tab === 'questions' && (
         <Suspense fallback={<p className="muted">Loading...</p>}>
           <Analytics />

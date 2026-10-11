@@ -6,6 +6,9 @@ import { allDataPath } from '../utils/allDataQuery'
 
 // Loads both All Data files and the questions, with the page's filters.
 //
+// study (a study number, or null for all time) keeps only the books saved
+// during that study, by people whose tracking was on at the time.
+//
 // The Recipes and secrets file is loaded with the book's answers on every
 // row; the page hides those columns unless they are turned on.
 //
@@ -21,9 +24,10 @@ type Loaded = {
   error: string | null
 }
 
-export function useAllData(filters: ResearchFilters, version: number) {
-  const booksPath = allDataPath('books', filters)
-  const itemsPath = allDataPath('items', filters, { answers: 'true' })
+export function useAllData(filters: ResearchFilters, version: number, study: number | null = null) {
+  const studyExtra: Record<string, string> = study === null ? {} : { study: String(study) }
+  const booksPath = allDataPath('books', filters, studyExtra)
+  const itemsPath = allDataPath('items', filters, { answers: 'true', ...studyExtra })
   const key = `${booksPath}|${itemsPath}#${version}`
   const [loaded, setLoaded] = useState<Loaded | null>(null)
 
