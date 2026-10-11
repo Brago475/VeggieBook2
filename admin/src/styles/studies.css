@@ -1,0 +1,622 @@
+/* The Studies page. See pages/Studies.tsx and components/studies/.
+
+   Same four colors as the rest of the admin site: green for tracked and
+   running, orange for tracking off and switching off, blue for dates and
+   the notice, gray for ended studies and people an admin turned off.
+
+   Fits any screen: the list sits left of the study when there is room and
+   above it when there isn't; the four numbers fit as many per row as there
+   is room for; the dialog fits a phone. */
+
+.st-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.st-layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.st-muted {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---- Pills and buttons ---- */
+
+.st-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #52525b;
+  background: #f4f4f5;
+  border-radius: 999px;
+}
+
+.st-pill.is-running {
+  color: #14532d;
+  background: #dcf2e3;
+}
+
+.st-pill i {
+  width: 7px;
+  height: 7px;
+  background: #15803d;
+  border-radius: 999px;
+}
+
+.st-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 40px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.st-button:hover:not(:disabled) {
+  border-color: #16a34a;
+  background: #e3f6e9;
+}
+
+.st-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.st-button.is-green {
+  color: #ffffff;
+  background: #15803d;
+  border-color: #15803d;
+}
+
+.st-button.is-green:hover:not(:disabled) {
+  background: #166534;
+}
+
+.st-button.is-orange {
+  color: #ffffff;
+  background: #c2410c;
+  border-color: #c2410c;
+}
+
+.st-button.is-orange:hover:not(:disabled) {
+  background: #9a3412;
+  border-color: #9a3412;
+}
+
+/* ---- The on/off switch (top bar) ---- */
+
+.st-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 16px 0 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.st-switch:hover {
+  border-color: #16a34a;
+}
+
+.st-switch:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 2px;
+}
+
+.st-switch-track {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  background: #d4d4d8;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.st-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.st-switch.is-on {
+  color: #14532d;
+  background: #f0faf3;
+  border-color: #a7dcb8;
+}
+
+.st-switch.is-on .st-switch-track {
+  background: #15803d;
+}
+
+.st-switch.is-on .st-switch-thumb {
+  transform: translateX(20px);
+}
+
+/* ---- List of studies ---- */
+
+.st-list {
+  flex: 0 0 280px;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.st-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.st-list-head {
+  padding: 14px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+
+.st-list-empty {
+  margin: 0;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.st-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 16px;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f0f0f2;
+  cursor: pointer;
+}
+
+.st-list li:last-child .st-list-item {
+  border-bottom: none;
+}
+
+.st-list-item:hover {
+  background: #fafafa;
+}
+
+.st-list-item.is-selected {
+  background: #f0faf3;
+  box-shadow: inset 4px 0 0 #15803d;
+}
+
+.st-list-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  font-size: 15px;
+}
+
+.st-list-dates {
+  font-size: 12px;
+  color: #52525b;
+}
+
+/* ---- One study ---- */
+
+.st-detail {
+  display: flex;
+  flex: 1 1 560px;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.st-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.st-badge {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  color: #52525b;
+  background: #f4f4f5;
+  border-radius: 14px;
+}
+
+.st-badge.is-running {
+  color: #ffffff;
+  background: #15803d;
+}
+
+.st-detail-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.st-detail-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+}
+
+.st-detail-when {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #52525b;
+}
+
+.st-detail-when svg {
+  color: #1d4ed8;
+}
+
+.st-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 12px;
+}
+
+.st-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: #fafafa;
+  border: 1px solid #f0f0f2;
+  border-radius: 14px;
+}
+
+.st-stat-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3f3f46;
+}
+
+.st-stat-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+
+.st-stat-icon.is-green {
+  color: #14532d;
+  background: #dcf2e3;
+}
+
+.st-stat-icon.is-orange {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.st-stat-icon.is-blue {
+  color: #1d4ed8;
+  background: #e0ecff;
+}
+
+.st-stat-value {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.st-stat-note {
+  font-size: 12px;
+  color: #52525b;
+}
+
+/* People with tracking off */
+
+.st-off {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: #fffaf5;
+  border: 1px solid #fde2c8;
+  border-radius: 14px;
+}
+
+.st-off-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  color: #9a3412;
+}
+
+.st-ids {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.st-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  color: #9a3412;
+  background: #ffedd5;
+  border-radius: 8px;
+}
+
+.st-id.is-admin {
+  color: #52525b;
+  background: #f4f4f5;
+}
+
+.st-id-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.st-id-by {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.st-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.st-empty {
+  align-items: flex-start;
+}
+
+.st-empty p {
+  margin: 0;
+  font-size: 14px;
+  color: #52525b;
+}
+
+/* ---- Confirm dialog ---- */
+
+.st-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(16px, 8vh, 80px) 16px 16px;
+  overflow-y: auto;
+  background: rgba(24, 24, 27, 0.45);
+}
+
+.st-dialog {
+  width: 100%;
+  max-width: 600px;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+  outline: none;
+}
+
+.st-dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  background: #f0f9f3;
+  border-bottom: 1px solid #d9efe0;
+}
+
+.st-dialog-head.is-stop {
+  background: #fff7ed;
+  border-bottom-color: #fde2c8;
+}
+
+.st-dialog-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: #ffffff;
+  background: #15803d;
+  border-radius: 12px;
+}
+
+.st-dialog-head.is-stop .st-dialog-icon {
+  background: #c2410c;
+}
+
+.st-dialog-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.st-dialog-title strong {
+  font-size: 20px;
+}
+
+.st-dialog-title span {
+  font-size: 13px;
+  color: #3f3f46;
+}
+
+.st-dialog-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-left: auto;
+  padding: 0;
+  color: var(--ink);
+  background: var(--surface);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.st-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px;
+}
+
+.st-dialog-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #3f3f46;
+}
+
+.st-dialog-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+}
+
+.st-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 14px;
+}
+
+.st-tile.is-green {
+  background: #f0faf3;
+}
+
+.st-tile.is-orange {
+  background: #fff7ed;
+}
+
+.st-tile-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.st-tile.is-green .st-tile-label {
+  color: #14532d;
+}
+
+.st-tile.is-orange .st-tile-label {
+  color: #9a3412;
+}
+
+.st-tile-value {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.st-tile-note {
+  font-size: 12px;
+  color: #3f3f46;
+}
+
+.st-dialog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.st-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.st-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Phones: the list goes above the study and fills the width. */
+@media (max-width: 900px) {
+  .st-list {
+    flex-basis: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st-switch-track,
+  .st-switch-thumb {
+    transition: none;
+  }
+}

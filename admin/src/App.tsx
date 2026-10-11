@@ -7,6 +7,7 @@ import { Accounts } from './pages/Accounts'
 import { AllData } from './pages/AllData'
 import { Overview } from './pages/Overview'
 import { SignIn } from './pages/SignIn'
+import { Studies } from './pages/Studies'
 
 // The admin site for VeggieBook2, served at admin.veggiebook2.com.
 //
@@ -34,11 +35,7 @@ const Analytics = lazy(() =>
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
   participants: {
     title: 'Participants',
-    text: 'Everyone by research ID: age range, books, last active, and whether tracking is on. This is where you choose people for a study.',
-  },
-  studies: {
-    title: 'Studies',
-    text: 'Start or stop a study, choose its accounts, send the in-app notice, and see who has seen it.',
+    text: 'Everyone by research ID: whether tracking is on, who turned it off, and whether they saw the study notice. This is where you turn someone out of a study.',
   },
   books: {
     title: 'Books',
@@ -81,6 +78,7 @@ export function App() {
       onSignOut={signOut}
     >
       {tab === 'overview' && <Overview onOpen={setTab} />}
+      {tab === 'studies' && <Studies onOpen={setTab} />}
       {tab === 'data' && <AllData />}
       {tab === 'questions' && (
         <Suspense fallback={<p className="muted">Loading...</p>}>
