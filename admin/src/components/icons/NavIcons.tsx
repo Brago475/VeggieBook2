@@ -25,6 +25,8 @@ export type IconName =
   | 'collapse'
   | 'expand'
   | 'updown'
+  | 'back'
+  | 'chevron'
 
 const paths: Record<IconName, React.ReactNode> = {
   home: (
@@ -156,6 +158,13 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="m8 15 4 4 4-4" />
     </>
   ),
+  back: (
+    <>
+      <path d="M19 12H5" />
+      <path d="m11 6-6 6 6 6" />
+    </>
+  ),
+  chevron: <path d="m6 9 6 6 6-6" />,
 }
 
 type Props = {

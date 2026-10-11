@@ -1,27 +1,40 @@
 /* The frame around every admin screen: sidebar, top bar, and main area.
    See components/layout/AdminShell.tsx.
 
-   Sidebar: light gray, one flat list in bold black. Hovering an item tints
-   it green; the chosen page sits on a slightly darker gray with a green
-   bar on its left edge. Sections not built yet are lighter gray.
-   The signed-in account sits at the bottom in a bordered box that opens a
-   small menu; its ADMIN label is red for the main admin and green for
-   everyone else.
+   Open sidebar: the logo with a round back-arrow button, then the sections
+   in three groups (Research, Data & Resources, System), each with a small
+   title and a line between groups. The chosen page sits on a light green
+   row with a green bar on its left and its icon in a small white tile.
+   Sections not built yet are light gray. The account sits at the bottom in
+   a white box: round green avatar, email, ADMIN (red for the main admin,
+   green for everyone else), and a chevron that opens Sign out.
+
+   Closed sidebar (wide screens): a white card floating on the gray page,
+   icons only. The chosen page is a solid green square with a white icon,
+   three dots split the groups, and hovering an icon shows a card with its
+   group and name (.nav-tip). The open button and the avatar sit at the
+   bottom; the avatar's ring is red for the main admin, green otherwise.
 
    Top bar: a breadcrumb over the page title, with a line under it.
 
    Fits any screen: the main area always uses the full width next to the
-   sidebar, and its spacing grows and shrinks with the window (clamp), so
-   nothing is sized for one monitor. On medium screens the sidebar gets a
-   little narrower; on small screens (900px or less) it slides in over the
-   page from a menu button. */
+   sidebar, and its spacing grows and shrinks with the window (clamp). On
+   medium screens the open sidebar gets a little narrower; on small screens
+   (900px or less) it slides in over the page from a menu button. */
 
 .shell {
+  --nav-green: #15803d;
+  --nav-green-ink: #14532d;
+  --nav-green-tint: #dcf2e3;
+  --nav-soon: #a1a1aa;
+  --nav-hover: rgba(24, 24, 27, 0.06);
+
   display: flex;
   min-height: 100vh;
+  background: var(--page);
 }
 
-/* Sidebar */
+/* ---- Sidebar (open) ---- */
 
 .sidebar {
   position: sticky;
@@ -29,7 +42,8 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  width: 248px;
+  box-sizing: border-box;
+  width: 264px;
   height: 100vh;
   padding: var(--sp-5) var(--sp-3) var(--sp-3);
   overflow-y: auto;
@@ -45,29 +59,32 @@
 }
 
 .sidebar-logo {
-  width: 120px;
+  width: 148px;
+  max-width: 100%;
   height: auto;
 }
 
 .sidebar-mark {
   display: none;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
-/* Collapse and close: plain icon buttons with a soft round hover. */
+/* Collapse, open, and close: round gray buttons. */
 
 .sidebar-toggle,
 .sidebar-close {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   margin-left: auto;
   padding: 0;
-  color: var(--muted);
-  background: none;
+  color: var(--ink);
+  background: var(--nav-hover);
   border: none;
   border-radius: 999px;
   cursor: pointer;
@@ -76,8 +93,14 @@
 
 .sidebar-toggle:hover,
 .sidebar-close:hover {
-  color: var(--vb);
-  background: var(--vb-tint);
+  color: var(--nav-green-ink);
+  background: var(--nav-green-tint);
+}
+
+.sidebar-toggle:focus-visible,
+.sidebar-close:focus-visible {
+  outline: 2px solid var(--nav-green);
+  outline-offset: 2px;
 }
 
 .sidebar-close {
@@ -88,69 +111,108 @@
   display: flex;
   flex: 1;
   flex-direction: column;
+}
+
+/* Groups: a small title, and a line between groups. */
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
 }
 
+.nav-group + .nav-group {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+
+.nav-group-label {
+  padding: 0 var(--sp-3) 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* The dots only show on the closed sidebar. */
+.nav-group-dots {
+  display: none;
+}
+
+/* One section */
+
 .nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--sp-3);
   width: 100%;
-  min-height: 42px;
-  padding: 0 var(--sp-3);
+  min-height: 44px;
+  padding: 0 var(--sp-2);
   font: inherit;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ink);
   text-align: left;
   background: none;
   border: none;
-  border-radius: var(--r-md);
+  border-radius: 10px;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.nav-item svg {
+.nav-icon {
+  display: flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   color: var(--ink);
-  transition: color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nav-item:hover {
-  color: var(--vb);
-  background: var(--vb-tint);
+  color: var(--nav-green-ink);
+  background: var(--nav-hover);
 }
 
-.nav-item:hover svg {
-  color: var(--vb);
+.nav-item:hover .nav-icon {
+  color: var(--nav-green-ink);
 }
 
+/* The chosen page: light green row, green bar, icon in a white tile. */
 .nav-item.is-active {
-  color: var(--ink);
-  background: var(--active);
-  box-shadow: inset 3px 0 0 var(--vb);
+  font-weight: 700;
+  color: var(--nav-green-ink);
+  background: var(--nav-green-tint);
+  box-shadow: inset 4px 0 0 var(--nav-green);
 }
 
-.nav-item.is-active svg {
-  color: var(--ink);
+.nav-item.is-active .nav-icon {
+  color: var(--nav-green-ink);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 /* A section that isn't built yet: still clickable, but lighter. */
-.nav-item.is-soon {
-  font-weight: 500;
-  color: var(--faint);
+.nav-item.is-soon,
+.nav-item.is-soon .nav-icon {
+  color: var(--nav-soon);
 }
 
-.nav-item.is-soon svg {
-  color: #c9c9ce;
-}
-
-.nav-item.is-soon:hover {
-  color: var(--vb);
-}
-
-.nav-item.is-soon:hover svg {
-  color: var(--vb);
+.nav-item.is-soon:hover,
+.nav-item.is-soon:hover .nav-icon {
+  color: var(--nav-green-ink);
 }
 
 .nav-item:focus {
@@ -158,17 +220,23 @@
 }
 
 .nav-item:focus-visible {
-  outline: 2px solid var(--vb);
+  outline: 2px solid var(--nav-green);
   outline-offset: 1px;
 }
 
-/* Signed-in account at the bottom, with its menu */
+/* ---- Bottom: open button (closed sidebar only) and the account ---- */
 
-.sidebar-user {
-  position: relative;
+.sidebar-foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
   margin-top: var(--sp-4);
   padding-top: var(--sp-3);
   border-top: 1px solid var(--line);
+}
+
+.sidebar-user {
+  position: relative;
 }
 
 .user-chip {
@@ -176,22 +244,28 @@
   align-items: center;
   gap: var(--sp-3);
   width: 100%;
-  padding: var(--sp-2);
+  padding: 10px 12px;
   font: inherit;
   color: var(--ink);
   text-align: left;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border-radius: 14px;
   cursor: pointer;
+  transition: border-color 0.15s ease;
 }
 
 .user-chip:hover {
   border-color: var(--line-strong);
 }
 
-.user-chip svg {
-  flex-shrink: 0;
+.user-chip:focus-visible {
+  outline: 2px solid var(--nav-green);
+  outline-offset: 2px;
+}
+
+.user-chip-arrow {
+  display: flex;
   color: var(--muted);
 }
 
@@ -200,13 +274,14 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  font-size: 13px;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--ink);
-  background: var(--active);
-  border-radius: var(--r-md);
+  color: var(--nav-green-ink);
+  background: var(--nav-green-tint);
+  border-radius: 999px;
 }
 
 .sidebar-user-text {
@@ -219,7 +294,7 @@
 
 .sidebar-email {
   overflow: hidden;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -229,8 +304,8 @@
 .sidebar-role {
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  color: var(--vb);
+  letter-spacing: 0.1em;
+  color: var(--nav-green);
 }
 
 .sidebar-role.is-root {
@@ -240,14 +315,14 @@
 .user-menu {
   position: absolute;
   right: 0;
-  bottom: calc(100% + 4px);
+  bottom: calc(100% + 6px);
   left: 0;
   z-index: 60;
   padding: var(--sp-1);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  box-shadow: 0 8px 24px rgba(24, 24, 27, 0.08);
+  box-shadow: 0 8px 24px rgba(24, 24, 27, 0.1);
 }
 
 .user-menu-item {
@@ -268,15 +343,76 @@
 }
 
 .user-menu-item:hover {
-  color: var(--vb);
-  background: var(--vb-tint);
+  color: var(--nav-green-ink);
+  background: var(--nav-green-tint);
+}
+
+/* ---- Hover card for the closed sidebar ---- */
+
+.nav-tip {
+  position: fixed;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 260px;
+  padding: 8px 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(24, 24, 27, 0.12);
+  transform: translateY(-50%);
+  animation: nav-tip-in 0.12s ease-out;
+}
+
+.nav-tip-caption {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.nav-tip-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+
+.nav-tip-soon {
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--nav-hover);
+  border-radius: 999px;
+}
+
+@keyframes nav-tip-in {
+  from {
+    opacity: 0;
+    transform: translate(-4px, -50%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
 }
 
 .sidebar-backdrop {
   display: none;
 }
 
-/* Main area: the full width next to the sidebar, on every screen. */
+/* ---- Main area: the full width next to the sidebar, on every screen ---- */
 
 .shell-body {
   flex: 1;
@@ -311,8 +447,8 @@
 }
 
 .menu-button:hover {
-  color: var(--vb);
-  background: var(--vb-tint);
+  color: var(--nav-green-ink);
+  background: var(--nav-green-tint);
 }
 
 .topbar-text {
@@ -345,28 +481,36 @@
   padding: clamp(16px, 2vw, 32px) clamp(16px, 2.5vw, 40px) clamp(24px, 3vw, 48px);
 }
 
-/* Collapsed sidebar: icons only. Wide screens only. */
+/* ---- Closed sidebar: a floating card of icons. Wide screens only. ---- */
 
 @media (min-width: 901px) {
   .shell.is-collapsed .sidebar {
+    top: 12px;
+    align-items: center;
     width: 72px;
-    padding-left: var(--sp-2);
-    padding-right: var(--sp-2);
+    height: calc(100vh - 24px);
+    margin: 12px 0 12px 12px;
+    padding: 16px 0 14px;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    background: var(--surface);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 1px 2px rgba(24, 24, 27, 0.06), 0 8px 24px rgba(24, 24, 27, 0.06);
+  }
+
+  .shell.is-collapsed .sidebar::-webkit-scrollbar {
+    display: none;
   }
 
   .shell.is-collapsed .sidebar-brand {
-    flex-direction: column;
-    gap: var(--sp-3);
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .shell.is-collapsed .sidebar-toggle {
-    margin-left: 0;
+    justify-content: center;
+    padding: 0 0 var(--sp-5);
   }
 
   .shell.is-collapsed .sidebar-logo,
   .shell.is-collapsed .nav-text,
+  .shell.is-collapsed .nav-group-label,
   .shell.is-collapsed .sidebar-user-text,
   .shell.is-collapsed .user-chip-arrow {
     display: none;
@@ -376,45 +520,142 @@
     display: block;
   }
 
+  .shell.is-collapsed .sidebar-nav {
+    align-items: center;
+  }
+
+  .shell.is-collapsed .nav-group {
+    align-items: center;
+    gap: 6px;
+  }
+
+  .shell.is-collapsed .nav-group + .nav-group {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .shell.is-collapsed .nav-group + .nav-group .nav-group-dots {
+    display: flex;
+    gap: 4px;
+    margin: 10px 0;
+  }
+
+  .shell.is-collapsed .nav-group-dots span {
+    width: 4px;
+    height: 4px;
+    background: #d4d4d8;
+    border-radius: 999px;
+  }
+
   .shell.is-collapsed .nav-item {
     justify-content: center;
+    width: 46px;
+    min-height: 46px;
     padding: 0;
+    border-radius: 14px;
+  }
+
+  .shell.is-collapsed .nav-icon {
+    width: auto;
+    height: auto;
+    background: none;
+  }
+
+  .shell.is-collapsed .nav-item.is-active {
+    background: var(--nav-green);
+    box-shadow: 0 4px 10px rgba(21, 128, 61, 0.3);
+  }
+
+  .shell.is-collapsed .nav-item.is-active .nav-icon {
+    color: #ffffff;
+    background: none;
+  }
+
+  .shell.is-collapsed .sidebar-foot {
+    align-items: center;
+    width: 100%;
+    margin-top: var(--sp-4);
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .shell.is-collapsed .sidebar-toggle {
+    margin-left: 0;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+
+  .shell.is-collapsed .sidebar-toggle:hover {
+    color: var(--nav-green-ink);
+    background: var(--nav-green-tint);
+    border-color: var(--nav-green-tint);
   }
 
   .shell.is-collapsed .user-chip {
     justify-content: center;
-    padding: var(--sp-1);
-    border: none;
+    width: auto;
+    padding: 0;
     background: none;
+    border: none;
+    border-radius: 999px;
   }
 
+  .shell.is-collapsed .avatar {
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--nav-green);
+  }
+
+  .shell.is-collapsed .avatar.is-root {
+    border-color: var(--root);
+  }
+
+  /* The card scrolls on short screens, which would cut off a menu sticking
+     out of it, so the menu is placed on the screen beside the card instead
+     (12px gap + 72px card + 12px gap). */
   .shell.is-collapsed .user-menu {
+    position: fixed;
     right: auto;
+    bottom: 16px;
+    left: 96px;
     width: 180px;
+  }
+
+  /* A little room between the floating card and the page. */
+  .shell.is-collapsed .shell-body {
+    padding-left: 12px;
   }
 }
 
-/* Medium screens: a slightly narrower sidebar leaves more room for pages. */
+/* Medium screens: a slightly narrower open sidebar leaves more room. */
 
 @media (min-width: 901px) and (max-width: 1280px) {
   .shell:not(.is-collapsed) .sidebar {
-    width: 216px;
+    width: 232px;
+  }
+
+  .shell:not(.is-collapsed) .sidebar-logo {
+    width: 128px;
   }
 }
 
-/* Small screens: the sidebar slides in over the page. */
+/* Small screens: the open sidebar slides in over the page. */
 
 @media (max-width: 900px) {
   .sidebar {
     position: fixed;
     left: 0;
     z-index: 50;
+    width: min(288px, 86vw);
     transform: translateX(-100%);
     transition: transform 0.2s ease;
   }
 
   .sidebar.is-open {
     transform: translateX(0);
+    box-shadow: 12px 0 32px rgba(24, 24, 27, 0.14);
   }
 
   .sidebar-toggle {
@@ -441,10 +682,15 @@
 @media (prefers-reduced-motion: reduce) {
   .sidebar,
   .nav-item,
-  .nav-item svg,
+  .nav-icon,
   .sidebar-toggle,
-  .sidebar-close {
+  .sidebar-close,
+  .user-chip {
     transition: none;
+  }
+
+  .nav-tip {
+    animation: none;
   }
 }
 
