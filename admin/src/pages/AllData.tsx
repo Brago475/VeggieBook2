@@ -40,7 +40,9 @@ import '../styles/alldata-responsive.css'
 // Above the tabs, "Show: All data | One study" picks what the page shows.
 // With a study picked, the tables, cards, and downloads hold only the books
 // saved during it. The Studies page's "Open in All Data" opens this page
-// with its study already picked (initialStudy).
+// with its study already picked (initialStudy), and the Participants page's
+// "See their data in All Data" opens it searched to one research ID
+// (initialSearch).
 
 const fileTabs: { id: AllDataFile; label: string; icon: 'book' | 'pot' }[] = [
   { id: 'books', label: 'Books', icon: 'book' },
@@ -58,14 +60,15 @@ function matchesSearch(row: SheetRow, text: string, withTitle: boolean) {
 
 type Props = {
   initialStudy?: number | null
+  initialSearch?: string
 }
 
-export function AllData({ initialStudy = null }: Props) {
+export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
   const [file, setFile] = useState<AllDataFile>('books')
   const [filters, setFilters] = useState<ResearchFilters>(noFilters)
   const [options, setOptions] = useState<ResearchOptions | null>(null)
   const [version, setVersion] = useState(0)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(initialSearch)
   const [bookType, setBookType] = useState<BookTypeFilter>('')
   const [selected, setSelected] = useState<string | null>(null)
   const [panelClosed, setPanelClosed] = useState(false)

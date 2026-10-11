@@ -33,6 +33,11 @@ public sealed class TrackingHistory
                 g => g.OrderBy(c => c.At).ThenBy(c => c.Id).ToList()));
     }
 
+    // Every change for one person, oldest first (empty if they never
+    // changed it, which means on since they joined).
+    public IReadOnlyList<TrackingChange> ChangesOf(Guid userId) =>
+        byUser.TryGetValue(userId, out var changes) ? changes : [];
+
     // The person's tracking at that moment: their latest change at or
     // before it, or on (the default) if there is none.
     public TrackingState At(Guid userId, DateTime when)

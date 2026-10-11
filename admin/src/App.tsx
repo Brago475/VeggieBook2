@@ -6,6 +6,7 @@ import { useSession } from './hooks/useSession'
 import { Accounts } from './pages/Accounts'
 import { AllData } from './pages/AllData'
 import { Overview } from './pages/Overview'
+import { Participants } from './pages/Participants'
 import { SignIn } from './pages/SignIn'
 import { Studies } from './pages/Studies'
 
@@ -26,7 +27,9 @@ import { Studies } from './pages/Studies'
 // is no longer opened from the menu; All Data replaces it.
 //
 // "Open in All Data" on the Studies page opens All Data with that study
-// picked (dataStudy). Opening All Data from the sidebar starts on All time.
+// picked (dataStudy), and "See their data in All Data" on the Participants
+// page opens it searched to one research ID (dataSearch). Opening All Data
+// from the sidebar starts on All data with no search.
 //
 // Analytics is loaded only when it is opened. It carries the chart library,
 // which is most of the site's size, so the other screens don't wait for it.
@@ -36,10 +39,6 @@ const Analytics = lazy(() =>
 )
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
-  participants: {
-    title: 'Participants',
-    text: 'Everyone by research ID: whether tracking is on, who turned it off, and whether they saw the study notice. This is where you turn someone out of a study.',
-  },
   books: {
     title: 'Books',
     text: 'Every saved book and what happened to it: saved, edited later, left early, or deleted.',
@@ -62,6 +61,7 @@ export function App() {
   const { session, signIn, signOut } = useSession()
   const [tab, setTab] = useState<AdminTab>('overview')
   const [dataStudy, setDataStudy] = useState<number | null>(null)
+  const [dataSearch, setDataSearch] = useState('')
 
   if (session.status === 'loading') {
     return <p className="admin-loading">Loading...</p>
@@ -74,14 +74,22 @@ export function App() {
   const soon = upcoming[tab]
 
   // Any normal way of changing page (sidebar, Overview links) forgets the
-  // study handed over by the Studies page.
+  // study or research ID handed over by another page.
   function openTab(next: AdminTab) {
     setDataStudy(null)
+    setDataSearch('')
     setTab(next)
   }
 
   function openStudyData(study: number) {
     setDataStudy(study)
+    setDataSearch('')
+    setTab('data')
+  }
+
+  function openPersonData(researchId: string) {
+    setDataStudy(null)
+    setDataSearch(researchId)
     setTab('data')
   }
 
@@ -94,8 +102,11 @@ export function App() {
       onSignOut={signOut}
     >
       {tab === 'overview' && <Overview onOpen={openTab} />}
+      {tab === 'participants' && <Participants onOpen={openTab} onOpenPersonData={openPersonData} />}
       {tab === 'studies' && <Studies onOpen={openTab} onOpenStudyData={openStudyData} />}
-      {tab === 'data' && <AllData key={dataStudy ?? 'all'} initialStudy={dataStudy} />}
+      {tab === 'data' && (
+        <AllData key={`${dataStudy ?? 'all'}|${dataSearch}`} initialStudy={dataStudy} initialSearch={dataSearch} />
+      )}
       {tab === 'questions' && (
         <Suspense fallback={<p className="muted">Loading...</p>}>
           <Analytics />

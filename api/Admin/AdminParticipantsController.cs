@@ -13,14 +13,18 @@ namespace VeggieBook.Api.Admin;
 //
 //   GET  /api/admin/participants
 //        the running study (or null), counts, and one row per person:
-//        research ID, age range, date joined, tracking status, the notice
-//        (for the running study), and a short count of their books
+//        research ID, age range, date joined, tracking status, every
+//        tracking change (oldest first), the notice (for the running
+//        study), and a short count of their books
 //   POST /api/admin/participants/{researchId}/tracking-off
 //        an admin turns this person's tracking off, even if they have it
 //        on. They are not sent the notice afterward.
 //   POST /api/admin/participants/{researchId}/tracking-on
 //        undoes an admin's turn-off. Refused if the person turned it off
 //        themselves: only they can turn it back on, in Settings.
+//
+// Book counts include only books saved while the person's tracking was on,
+// the same rule as every other admin page (Research/ResearchScope.cs).
 //
 // Admins only (Roles.AdminPolicy). People are found and shown by research
 // ID only; no email or name is read or sent. Admins and guests never appear.
@@ -31,6 +35,7 @@ namespace VeggieBook.Api.Admin;
 public class AdminParticipantsController(AccountsContext db, UserManager<AppUser> users) : ControllerBase
 {
     public record TrackingDto(bool On, string? ChangedBy, DateTime? ChangedAt);
+    public record ChangeDto(bool On, string By, DateTime At);
     public record NoticeDto(DateTime ShownAt, string? Answer, DateTime? AnsweredAt);
 
     [HttpGet]
@@ -50,7 +55,7 @@ public class AdminParticipantsController(AccountsContext db, UserManager<AppUser
             .Select(p =>
             {
                 var state = data.History.At(p.Id, now);
-                var own = booksBy[p.Id].ToList();
+                var own = booksBy[p.Id].Where(b => data.History.At(p.Id, b.CreatedAt).On).ToList();
                 notices.TryGetValue(p.Id, out var notice);
 
                 return new
@@ -60,6 +65,9 @@ public class AdminParticipantsController(AccountsContext db, UserManager<AppUser
                     joinedAt = p.CreatedAt,
                     status = StatusOf(state),
                     tracking = new TrackingDto(state.On, state.ChangedBy, state.ChangedAt),
+                    changes = data.History.ChangesOf(p.Id)
+                        .Select(c => new ChangeDto(c.TrackingOn, c.ChangedBy, c.At))
+                        .ToList(),
                     notice = notice is null
                         ? null
                         : new NoticeDto(notice.ShownAt, notice.Answer, notice.AnsweredAt),
@@ -91,7 +99,7 @@ public class AdminParticipantsController(AccountsContext db, UserManager<AppUser
     public async Task<IActionResult> TrackingOff(string researchId)
     {
         var userId = await FindAsync(researchId);
-        if (userId is null) return NotFound();
+        if (userId is null) return NotFound(new { error = "No participant has that research ID." });
 
         var state = await StudyTracking.SetAsync(db, userId.Value, false, "admin", AdminId());
         return Ok(new { status = StatusOf(state) });
@@ -101,7 +109,7 @@ public class AdminParticipantsController(AccountsContext db, UserManager<AppUser
     public async Task<IActionResult> TrackingOn(string researchId)
     {
         var userId = await FindAsync(researchId);
-        if (userId is null) return NotFound();
+        if (userId is null) return NotFound(new { error = "No participant has that research ID." });
 
         var current = await StudyTracking.ForUserAsync(db, userId.Value);
         if (current.On) return Ok(new { status = StatusOf(current) });

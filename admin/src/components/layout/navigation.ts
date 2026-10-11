@@ -44,7 +44,7 @@ export const navGroups: NavGroup[] = [
     label: 'Research',
     items: [
       { id: 'overview', label: 'Overview', icon: 'home', ready: true },
-      { id: 'participants', label: 'Participants', icon: 'users', ready: false },
+      { id: 'participants', label: 'Participants', icon: 'users', ready: true },
       { id: 'studies', label: 'Studies', icon: 'study', ready: true },
     ],
   },
