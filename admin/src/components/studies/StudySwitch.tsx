@@ -16,13 +16,17 @@ import { fullDate, plural } from './studyFormat'
 //                   study is switched on again (which starts Study N+1).
 //
 // The dialog closes on Cancel, the X, Escape, or a click outside it.
+//
+// Other parts of the page can open the same dialog (the "Start Study 1"
+// button when there are no studies yet) by raising openRequest.
 
 type Props = {
   data: StudiesResponse
   onSwitch: (on: boolean) => Promise<string | null>
+  openRequest?: number
 }
 
-export function StudySwitch({ data, onSwitch }: Props) {
+export function StudySwitch({ data, onSwitch, openRequest = 0 }: Props) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,6 +34,13 @@ export function StudySwitch({ data, onSwitch }: Props) {
 
   const running = data.studies.find((s) => s.running) ?? null
   const turningOn = running === null
+
+  useEffect(() => {
+    if (openRequest > 0) {
+      setError(null)
+      setOpen(true)
+    }
+  }, [openRequest])
 
   useEffect(() => {
     if (!open) return

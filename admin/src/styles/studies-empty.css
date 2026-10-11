@@ -1,0 +1,27 @@
+/* The Studies page before any study exists: "Ready for Study 1".
+   See components/studies/StudyEmpty.tsx. Uses the tiles and ID chips from
+   studies.css; only the extra pieces are here. */
+
+.st-ready-text {
+  font-size: 14px;
+  color: #52525b;
+}
+
+.st-ready-action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.st-ready-button {
+  height: 48px;
+  padding: 0 22px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.st-ready-note {
+  font-size: 13px;
+  color: var(--muted);
+}
