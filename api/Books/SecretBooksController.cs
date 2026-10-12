@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Controllers;
 using VeggieBook.Api.Data;
@@ -34,6 +35,7 @@ namespace VeggieBook.Api.Books;
 // 404. Nothing the client sends is trusted.
 //
 // Only kept secrets are stored, the same as kept recipes in a VeggieBook.
+// Saving writes a line to the activity log (Activity/ActivityLog.cs).
 
 public record BookSecret(int Id, int ExtraCopies);
 
@@ -47,8 +49,10 @@ public record CreateSecretsBookRequest(
 [ApiController]
 [Route("api/books")]
 [Authorize]
-public class SecretBooksController(AccountsContext db, VeggieBookContext content)
-    : ControllerBase
+public class SecretBooksController(
+    AccountsContext db,
+    VeggieBookContext content,
+    ILogger<SecretBooksController> logger) : ControllerBase
 {
     // The same limits as BooksController, so both kinds of book count
     // toward one total per account and take the same size of photo.
@@ -154,6 +158,13 @@ public class SecretBooksController(AccountsContext db, VeggieBookContext content
 
         db.Books.Add(book);
         await db.SaveChangesAsync();
+
+        // Permanent record of the save. At matches the book's CreatedAt so the
+        // admin Activity page can pair it with the book row.
+        var saved = await ActivityLog.ForBookAsync(
+            db, logger, uid, "secrets", null, category.Id, secrets.Length, ActivityLog.BookSaved);
+        if (saved is not null) saved.At = book.CreatedAt;
+        await ActivityLog.SaveAsync(db, logger, saved);
 
         return Created($"/api/books/{book.Id}", new { id = book.Id });
     }
