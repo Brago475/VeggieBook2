@@ -1,0 +1,132 @@
+/* Shared entrance animation for page cards, matching the Overview stat cards
+   (components/common/StatCard.tsx, charts.css): slide up with a staggered
+   delay, and a green sheen on summary cards. Loaded globally from App.tsx.
+
+   fill-mode is "backwards" so the animation does not hold transform after it
+   ends, which keeps hover transforms working. */
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes card-sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ---- Slide in ---- */
+
+.ad-card,
+.bk-stat,
+.bk-card,
+.bk-tile,
+.pt-banner,
+.pt-card,
+.tl-now,
+.tl-card,
+.tl-data {
+  animation: card-in 0.5s ease-out backwards;
+}
+
+/* ---- Sheen on summary cards ---- */
+
+.ad-card,
+.bk-stat,
+.pt-banner {
+  position: relative;
+  overflow: hidden;
+}
+
+.ad-card::after,
+.bk-stat::after,
+.pt-banner::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgba(22, 163, 74, 0.12) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: card-sheen 1.3s ease-out 0.35s both;
+}
+
+/* ---- Stagger: 80ms per summary card ---- */
+
+.ad-cards > :nth-child(2),
+.bk-stats > :nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.ad-cards > :nth-child(3),
+.bk-stats > :nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.ad-cards > :nth-child(4),
+.bk-stats > :nth-child(4) {
+  animation-delay: 240ms;
+}
+
+.bk-card,
+.tl-card {
+  animation-delay: 160ms;
+}
+
+.tl-data {
+  animation-delay: 240ms;
+}
+
+/* ---- Stagger: 40ms per grid item, capped at 12 ---- */
+
+.pt-cards > :nth-child(2),
+.bk-grid > :nth-child(2) { animation-delay: 40ms; }
+.pt-cards > :nth-child(3),
+.bk-grid > :nth-child(3) { animation-delay: 80ms; }
+.pt-cards > :nth-child(4),
+.bk-grid > :nth-child(4) { animation-delay: 120ms; }
+.pt-cards > :nth-child(5),
+.bk-grid > :nth-child(5) { animation-delay: 160ms; }
+.pt-cards > :nth-child(6),
+.bk-grid > :nth-child(6) { animation-delay: 200ms; }
+.pt-cards > :nth-child(7),
+.bk-grid > :nth-child(7) { animation-delay: 240ms; }
+.pt-cards > :nth-child(8),
+.bk-grid > :nth-child(8) { animation-delay: 280ms; }
+.pt-cards > :nth-child(9),
+.bk-grid > :nth-child(9) { animation-delay: 320ms; }
+.pt-cards > :nth-child(10),
+.bk-grid > :nth-child(10) { animation-delay: 360ms; }
+.pt-cards > :nth-child(11),
+.bk-grid > :nth-child(11) { animation-delay: 400ms; }
+.pt-cards > :nth-child(n + 12),
+.bk-grid > :nth-child(n + 12) { animation-delay: 440ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ad-card,
+  .bk-stat,
+  .bk-card,
+  .bk-tile,
+  .pt-banner,
+  .pt-card,
+  .tl-now,
+  .tl-card,
+  .tl-data,
+  .ad-card::after,
+  .bk-stat::after,
+  .pt-banner::after {
+    animation: none;
+  }
+
+  .ad-card::after,
+  .bk-stat::after,
+  .pt-banner::after {
+    display: none;
+  }
+}

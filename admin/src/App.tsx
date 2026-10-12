@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { useState } from 'react'
 import { ComingSoon } from './components/common/ComingSoon'
 import { AdminShell } from './components/layout/AdminShell'
 import type { AdminTab } from './components/layout/navigation'
@@ -8,37 +8,15 @@ import { AllData } from './pages/AllData'
 import { Books } from './pages/Books'
 import { Overview } from './pages/Overview'
 import { Participants } from './pages/Participants'
+import { QuestionAnalytics } from './pages/QuestionAnalytics'
 import { SignIn } from './pages/SignIn'
 import { Studies } from './pages/Studies'
+import './styles/motion.css'
 
-// The admin site for VeggieBook2, served at admin.veggiebook2.com.
-//
-// Two locks keep it private: Cloudflare Access lets only listed emails load
-// the site, and the API refuses every /api/admin/ request from an account
-// without the Admin role. The sign-in screen here is the second lock's
-// front door; it is not the security on its own.
-//
-// Screens are switched with a tab in state rather than a router. Sections
-// that are not built yet describe what is coming (see
-// components/layout/navigation.ts for which ones are ready).
-//
-// While the redesign is in progress, two sections show an older screen:
-// Question Analytics shows Analytics, and Settings shows Accounts. Each gets
-// its new page in a later step. The old Research page (pages/Research.tsx)
-// is no longer opened from the menu; All Data replaces it.
-//
-// "Open in All Data" on the Studies page opens All Data with that study
-// picked (dataStudy), and "See their data in All Data" on the Participants
-// page and "Open in All Data" on an opened book (Books page) open it
-// searched to one research ID (dataSearch). Opening All Data
-// from the sidebar starts on All data with no search.
-//
-// Analytics is loaded only when it is opened. It carries the chart library,
-// which is most of the site's size, so the other screens don't wait for it.
-
-const Analytics = lazy(() =>
-  import('./pages/Analytics').then((m) => ({ default: m.Analytics })),
-)
+// Admin site root (admin.veggiebook2.com). Access requires Cloudflare Access
+// and the API's Admin role. Pages switch by tab state; unbuilt sections show
+// ComingSoon. dataStudy and dataSearch preselect a study or research ID when
+// another page opens All Data.
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
   activity: {
@@ -71,8 +49,7 @@ export function App() {
 
   const soon = upcoming[tab]
 
-  // Any normal way of changing page (sidebar, Overview links) forgets the
-  // study or research ID handed over by another page.
+  // Regular navigation clears any preselected study or search.
   function openTab(next: AdminTab) {
     setDataStudy(null)
     setDataSearch('')
@@ -106,11 +83,7 @@ export function App() {
         <AllData key={`${dataStudy ?? 'all'}|${dataSearch}`} initialStudy={dataStudy} initialSearch={dataSearch} />
       )}
       {tab === 'books' && <Books onOpenPersonData={openPersonData} />}
-      {tab === 'questions' && (
-        <Suspense fallback={<p className="muted">Loading...</p>}>
-          <Analytics />
-        </Suspense>
-      )}
+      {tab === 'questions' && <QuestionAnalytics />}
       {tab === 'settings' && <Accounts currentEmail={session.email} />}
       {soon && <ComingSoon title={soon.title} text={soon.text} />}
     </AdminShell>

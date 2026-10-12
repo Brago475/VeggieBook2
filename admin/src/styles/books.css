@@ -1,16 +1,11 @@
-/* The Books page: the cards, the filters, the grid of covers, and the
-   window a book opens in. See pages/Books.tsx and components/books/.
-   The book itself, inside the window, is styled in books-vb.css. Buttons
-   come from studies.css.
-
-   Fits any screen: the grid fits as many covers per row as there is room
-   for, and the window puts About this book under the book on narrow
-   screens. */
+/* Admin Books page: stats, filters, cover grid, and book window. */
 
 .bk-page {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
+  /* Fill the viewport below the top bar so the counter sits at the bottom. */
+  min-height: calc(100vh - 170px);
 }
 
 /* ---- Cards ---- */
@@ -19,35 +14,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-}
-
-.bk-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 16px 18px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-}
-
-.bk-stat-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.bk-stat-value {
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1.15;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
-.bk-stat-note {
-  font-size: 12px;
-  color: var(--muted);
 }
 
 /* ---- Filters ---- */
@@ -297,6 +263,8 @@
 }
 
 .bk-more {
+  margin-top: auto;
+  padding-top: 8px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -465,7 +433,7 @@
   color: #71717a;
 }
 
-/* Narrow screens: one column, the book first, then About this book. */
+/* Narrow screens: stack the book above the details panel. */
 @media (max-width: 860px) {
   .bw-backdrop {
     padding: 0;

@@ -1,0 +1,655 @@
+/* Admin Question Analytics page. Shared filter and select styles come from
+   books.css; buttons from studies.css. */
+
+.qa-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.qa-tabs {
+  display: flex;
+  gap: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.qa-tabs button {
+  padding: 10px 2px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: #52525b;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+}
+
+.qa-tabs button.is-on {
+  color: #15803d;
+  border-bottom-color: #15803d;
+}
+
+.qa-tabs button:focus-visible,
+.qa-list-item:focus-visible,
+.qa-seg button:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.qa-body {
+  animation: card-in 0.4s ease-out backwards;
+}
+
+.qa-empty {
+  padding: 24px 0;
+  text-align: center;
+}
+
+.qa-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.qa-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 16px;
+}
+
+.qa-panel {
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.qa-panel h2,
+.qa-section-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.qa-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.qa-panel-head span {
+  font-size: 12.5px;
+  color: #71717a;
+}
+
+.qa-sub,
+.qa-hint {
+  margin: 4px 0 10px;
+  font-size: 12.5px;
+  color: #71717a;
+}
+
+.qa-hint {
+  margin: 10px 0 0;
+}
+
+/* ---- Questions tab ---- */
+
+.qa-split {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.qa-list {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.qa-list h2 {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 15px;
+  border-bottom: 1px solid var(--line);
+}
+
+.qa-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  font: inherit;
+  text-align: left;
+  background: var(--surface);
+  border: none;
+  border-bottom: 1px solid #f0f0f2;
+  cursor: pointer;
+}
+
+.qa-list-item:last-child {
+  border-bottom: none;
+}
+
+.qa-list-item:hover {
+  background: #fafafa;
+}
+
+.qa-list-item.is-on {
+  background: #f0faf3;
+  box-shadow: inset 4px 0 0 #15803d;
+}
+
+.qa-q {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #3f3f46;
+  background: #f4f4f5;
+  border-radius: 8px;
+}
+
+.qa-list-item.is-on .qa-q {
+  color: #ffffff;
+  background: #15803d;
+}
+
+.qa-list-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.qa-list-text strong {
+  font-size: 14px;
+}
+
+.qa-list-text span {
+  font-size: 12px;
+  color: #71717a;
+}
+
+.qa-detail-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.qa-detail-head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.qa-eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #15803d;
+  text-transform: uppercase;
+}
+
+.qa-detail-head h2 {
+  margin: 2px 0 0;
+  font-size: 20px;
+}
+
+.qa-detail-head p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #52525b;
+}
+
+.qa-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 14px 0;
+  font-size: 13px;
+  color: #3f3f46;
+}
+
+.qa-bars {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qa-bars li {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) 84px;
+  gap: 10px;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 13.5px;
+}
+
+.qa-bars.is-large li {
+  grid-template-columns: 160px minmax(0, 1fr) 96px;
+}
+
+.qa-bar-name {
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.qa-bar-track {
+  height: 10px;
+  overflow: hidden;
+  background: #f4f4f5;
+  border-radius: 999px;
+}
+
+.qa-bars.is-large .qa-bar-track {
+  height: 14px;
+}
+
+.qa-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease-out;
+}
+
+.qa-bar-fill.is-0 {
+  background: #15803d;
+}
+
+.qa-bar-fill.is-1,
+.qa-bar-fill.is-2 {
+  background: #4ade80;
+}
+
+.qa-bar-fill.is-3 {
+  background: #bbf7d0;
+}
+
+.qa-bar-value {
+  text-align: right;
+  color: #3f3f46;
+  font-variant-numeric: tabular-nums;
+}
+
+.qa-bar-value span {
+  color: #71717a;
+}
+
+.qa-compare-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 14px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f2;
+}
+
+.qa-compare-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.qa-seg {
+  display: inline-flex;
+  padding: 3px;
+  background: #f4f4f5;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.qa-seg button {
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #52525b;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.qa-seg button.is-on {
+  font-weight: 700;
+  color: var(--ink);
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Heat grid ---- */
+
+.qa-heat-wrap {
+  overflow-x: auto;
+}
+
+.qa-heat {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 6px;
+}
+
+.qa-heat th {
+  font-size: 12px;
+  font-weight: 700;
+  color: #52525b;
+  white-space: nowrap;
+}
+
+.qa-heat thead th {
+  text-align: center;
+}
+
+.qa-heat th span {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #a1a1aa;
+}
+
+.qa-heat tbody th {
+  padding-right: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+}
+
+.qa-cell {
+  display: grid;
+  place-items: center;
+  min-width: 56px;
+  height: 34px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+.qa-cell.is-empty {
+  color: #a1a1aa;
+  background: #fafafa;
+}
+
+/* ---- Picks tab ---- */
+
+.qa-picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.qa-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qa-pick-img {
+  display: block;
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  background: #f4f4f5;
+  border-radius: 10px;
+}
+
+.qa-picks.is-categories .qa-pick-img {
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid #f0f0f2;
+}
+
+.qa-pick-img.is-placeholder,
+.qa-picks.is-categories .qa-pick-img.is-placeholder {
+  display: grid;
+  place-items: center;
+  background: #8cc63e;
+  border: none;
+}
+
+.qa-pick-img.is-placeholder svg {
+  width: 44px;
+  height: 44px;
+}
+
+.qa-pick > strong {
+  font-size: 13.5px;
+}
+
+.qa-pick-value {
+  font-size: 13px;
+  color: #71717a;
+}
+
+.qa-pick-value strong {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.qa-meter {
+  height: 5px;
+  overflow: hidden;
+  background: #f0f0f2;
+  border-radius: 999px;
+}
+
+.qa-meter span {
+  display: block;
+  height: 100%;
+  background: #15803d;
+  border-radius: 999px;
+}
+
+.qa-top {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qa-top li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f2;
+}
+
+.qa-top li:last-child {
+  border-bottom: none;
+}
+
+.qa-top-img {
+  display: block;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  background: #f4f4f5;
+  border-radius: 8px;
+}
+
+.qa-top-img.is-placeholder {
+  display: grid;
+  place-items: center;
+  background: #8cc63e;
+}
+
+.qa-top-img.is-placeholder svg {
+  width: 26px;
+  height: 26px;
+}
+
+.qa-top-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.qa-top-text strong {
+  overflow: hidden;
+  font-size: 13.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.qa-code {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.qa-split-bar {
+  display: flex;
+  height: 6px;
+  margin-top: 4px;
+  overflow: hidden;
+  background: #f0f0f2;
+  border-radius: 999px;
+}
+
+.qa-split-bar .is-kept {
+  background: #15803d;
+}
+
+.qa-split-bar .is-out {
+  background: #fdba74;
+}
+
+.qa-top-count {
+  display: flex;
+  flex-direction: column;
+  font-size: 12.5px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.qa-top-count strong {
+  color: #15803d;
+}
+
+.qa-top-count span {
+  color: #c2410c;
+}
+
+/* ---- Compare tab ---- */
+
+.qa-compare-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.qa-push {
+  margin-left: auto;
+}
+
+/* ---- Statistics tab ---- */
+
+.qa-findings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.qa-finding {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.qa-finding > span:first-child {
+  font-size: 13px;
+  font-weight: 600;
+  color: #52525b;
+}
+
+.qa-finding strong {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.qa-finding-note {
+  font-size: 12px;
+  color: #71717a;
+}
+
+.qa-table-wrap {
+  overflow-x: auto;
+}
+
+.qa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.qa-table th,
+.qa-table td {
+  padding: 10px 8px;
+  border-top: 1px solid #f0f0f2;
+}
+
+.qa-table thead th {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #52525b;
+  text-align: right;
+  text-transform: uppercase;
+  border-top: none;
+}
+
+.qa-table thead th:first-child,
+.qa-table tbody th {
+  text-align: left;
+}
+
+.qa-table tbody th {
+  font-weight: 600;
+}
+
+.qa-table td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1000px) {
+  .qa-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .qa-bars li,
+  .qa-bars.is-large li {
+    grid-template-columns: 100px minmax(0, 1fr) 76px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qa-body {
+    animation: none;
+  }
+
+  .qa-bar-fill {
+    transition: none;
+  }
+}

@@ -1,7 +1,4 @@
-// Line icons for the admin sidebar and number cards. Drawn here as inline
-// SVG, the same way the public site keeps its icons, so no icon library is
-// needed. They take the text color, so they follow the active and hover
-// colors.
+// Inline SVG line icons for the sidebar and stat cards. Stroke uses currentColor.
 
 export type IconName =
   | 'home'
@@ -27,6 +24,8 @@ export type IconName =
   | 'updown'
   | 'back'
   | 'chevron'
+  | 'lock'
+  | 'trash'
 
 const paths: Record<IconName, React.ReactNode> = {
   home: (
@@ -165,6 +164,20 @@ const paths: Record<IconName, React.ReactNode> = {
     </>
   ),
   chevron: <path d="m6 9 6 6 6-6" />,
+  lock: (
+    <>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V7.5a4 4 0 0 1 8 0V11" />
+    </>
+  ),
+  trash: (
+    <>
+      <path d="M4 7h16" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M6 7l1 13h10l1-13" />
+      <path d="M9 7V4h6v3" />
+    </>
+  ),
 }
 
 type Props = {
