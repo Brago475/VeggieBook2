@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AllDataIcon } from '../components/alldata/AllDataIcons'
+import { PageSkeleton } from '../components/common/PageSkeleton'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import type { AdminTab } from '../components/layout/navigation'
 import { ParticipantsBanner } from '../components/participants/ParticipantsBanner'
@@ -10,18 +11,8 @@ import { useParticipants } from '../hooks/useParticipants'
 import '../styles/studies.css'
 import '../styles/participants.css'
 
-// The Participants page: everyone by research ID, with their tracking.
-//
-//   Banner   the running study, how many people are tracked, the counts
-//   Tabs     All, Tracking on, Turned off by them, Turned off by an admin
-//   Search   by research ID
-//   Cards    one per person, newest first
-//   Panel    the picked person: status, every change, the study notice,
-//            and the actions (turn off, undo an admin's turn-off, or open
-//            their books in All Data)
-//
-// Admins and guests never appear. No name or email exists on this page.
-// Book counts include only books saved while tracking was on.
+// Admin Participants page: research IDs with tracking status, filters, and
+// the per-person panel. Admin and guest accounts never appear.
 
 type Props = {
   onOpen: (tab: AdminTab) => void
@@ -49,7 +40,7 @@ export function Participants({ onOpen, onOpenPersonData }: Props) {
         {error}
       </p>
     ) : (
-      <p className="muted">Loading...</p>
+      <PageSkeleton cards={0} label="Loading participants" />
     )
   }
 

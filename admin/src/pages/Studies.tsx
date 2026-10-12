@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
+import { PageSkeleton } from '../components/common/PageSkeleton'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { DeleteStudyDialog } from '../components/studies/DeleteStudyDialog'
 import { RunningStudy } from '../components/studies/RunningStudy'
@@ -15,32 +16,14 @@ import '../styles/studies.css'
 import '../styles/studies-timeline.css'
 import '../styles/studies-edit.css'
 
-// The Studies page: one switch to run a study, and every study so far on a
-// timeline.
-//
-//   Top bar    the on/off switch (components/studies/StudySwitch.tsx)
-//   Top card   the study running now (with Rename), or when the last one
-//              ended
-//   Timeline   every study placed by its dates, and a row for each, with
-//              rename and delete
-//   Data       the books of the picked study (the running one, or the
-//              newest, until one is clicked), with downloads
-//
-// Before any study exists: who Study 1 would include and a big button to
-// start it (it opens the switch's confirm step).
-//
-// Renaming changes only the name; the number stays. Deleting asks first
-// (components/studies/DeleteStudyDialog.tsx) and only works on ended
-// studies. After either, a short message shows in the corner.
-//
-// A study runs from the moment it is switched on until it is switched off,
-// and is numbered on its own (Study 1, Study 2). Only one runs at a time.
-// Who is tracked and who sees the notice: api/Research/StudyTracking.cs.
+// Studies page: on/off switch in the top bar, the running study, a yearly
+// timeline with rename and delete, and the selected study's books.
+// Only one study runs at a time; only ended studies can be deleted.
+// Tracking scope: api/Research/StudyTracking.cs.
 
 type Props = {
   onOpen: (tab: AdminTab) => void
-  // Opens All Data with this study picked. Without it, All Data opens with
-  // no study picked.
+  /** Opens All Data filtered to the given study. */
   onOpenStudyData?: (study: number) => void
 }
 
@@ -59,7 +42,7 @@ export function Studies({ onOpen, onOpenStudyData }: Props) {
         {error}
       </p>
     ) : (
-      <p className="muted">Loading...</p>
+      <PageSkeleton cards={0} label="Loading studies" />
     )
   }
 

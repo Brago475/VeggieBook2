@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ComingSoon } from './components/common/ComingSoon'
 import { AdminShell } from './components/layout/AdminShell'
-import type { AdminTab } from './components/layout/navigation'
+import { navItems, type AdminTab } from './components/layout/navigation'
 import { useSession } from './hooks/useSession'
 import { Accounts } from './pages/Accounts'
 import { Activity } from './pages/Activity'
@@ -15,9 +15,10 @@ import { Studies } from './pages/Studies'
 import './styles/motion.css'
 
 // Admin site root (admin.veggiebook2.com). Access requires Cloudflare Access
-// and the API's Admin role. Pages switch by tab state; unbuilt sections show
-// ComingSoon. dataStudy and dataSearch preselect a study or research ID when
-// another page opens All Data.
+// and the API's Admin role. The open page is kept in the URL hash (#books),
+// so a refresh reopens it and Back/Forward move between pages. Unbuilt
+// sections show ComingSoon. dataStudy and dataSearch preselect a study or
+// research ID when another page opens All Data.
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
   content: {
@@ -30,11 +31,23 @@ const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
   },
 }
 
+function tabFromHash(): AdminTab {
+  const id = window.location.hash.slice(1)
+  return navItems.some((i) => i.id === id) ? (id as AdminTab) : 'overview'
+}
+
 export function App() {
   const { session, signIn, signOut } = useSession()
-  const [tab, setTab] = useState<AdminTab>('overview')
+  const [tab, setTab] = useState<AdminTab>(tabFromHash)
   const [dataStudy, setDataStudy] = useState<number | null>(null)
   const [dataSearch, setDataSearch] = useState('')
+
+  // Back and Forward, or a hash typed into the address bar.
+  useEffect(() => {
+    const onPop = () => setTab(tabFromHash())
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
 
   if (session.status === 'loading') {
     return <p className="admin-loading">Loading...</p>
@@ -46,23 +59,28 @@ export function App() {
 
   const soon = upcoming[tab]
 
+  function go(next: AdminTab) {
+    if (window.location.hash !== `#${next}`) window.history.pushState(null, '', `#${next}`)
+    setTab(next)
+  }
+
   // Regular navigation clears any preselected study or search.
   function openTab(next: AdminTab) {
     setDataStudy(null)
     setDataSearch('')
-    setTab(next)
+    go(next)
   }
 
   function openStudyData(study: number) {
     setDataStudy(study)
     setDataSearch('')
-    setTab('data')
+    go('data')
   }
 
   function openPersonData(researchId: string) {
     setDataStudy(null)
     setDataSearch(researchId)
-    setTab('data')
+    go('data')
   }
 
   return (

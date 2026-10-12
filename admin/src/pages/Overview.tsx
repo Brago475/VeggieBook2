@@ -1,4 +1,5 @@
 import { DonutChart } from '../components/common/DonutChart'
+import { PageSkeleton } from '../components/common/PageSkeleton'
 import { Panel } from '../components/common/Panel'
 import { StatCard } from '../components/common/StatCard'
 import type { AdminTab } from '../components/layout/navigation'
@@ -13,25 +14,8 @@ import { WhenSaved } from '../components/overview/WhenSaved'
 import { useOverview } from '../hooks/useOverview'
 import '../styles/overview.css'
 
-// The first screen after sign-in. Everything comes from one call,
-// GET /api/admin/overview, loaded again every minute (hooks/useOverview).
-// No email or name appears here; people are shown by research ID only.
-//
-// Top to bottom:
-//   live line (full day, date, and time)
-//   four animated number cards and the active study card, in one row
-//   books per week | recent activity
-//   books by vegetable | Secrets Books by category (pictures in rings,
-//     with the ones not picked yet as small chips underneath)
-//   participants by age (columns) | when books are saved
-//   book details (three rings) | kept vs taken out
-//
-// Answers in detail are on the Question Analytics page, so they aren't
-// repeated here.
-//
-// Numbers that need tracking (time per question, where people stop) are
-// added once tracking is built, rather than showing empty or made-up
-// values. The page title is in the top bar (AdminShell).
+// Admin landing page. Data comes from GET /api/admin/overview and refreshes
+// every minute (hooks/useOverview). Participants appear by research ID only.
 
 type Props = {
   onOpen: (tab: AdminTab) => void
@@ -50,7 +34,7 @@ export function Overview({ onOpen }: Props) {
         {error}
       </p>
     ) : (
-      <p className="muted">Loading...</p>
+      <PageSkeleton cards={5} label="Loading overview" />
     )
   }
 
@@ -60,7 +44,7 @@ export function Overview({ onOpen }: Props) {
   const joinedLastWeek = data.joinedWeekly[data.joinedWeekly.length - 2] ?? 0
   const answersThisWeek = lastOf(data.answersWeekly)
 
-  // Participants over time: how many had joined by the end of each week.
+  // Running participant total at the end of each week.
   const before = data.participants - sum(data.joinedWeekly)
   const participantsWeekly = data.joinedWeekly.map((_, i) => before + sum(data.joinedWeekly.slice(0, i + 1)))
 

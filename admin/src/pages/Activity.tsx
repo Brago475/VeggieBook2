@@ -3,6 +3,7 @@ import { ActivityFeed } from '../components/activity/ActivityFeed'
 import { csvRows, groups, inGroup, localDate, type ActivityGroup } from '../components/activity/activityFormat'
 import { AllDataIcon } from '../components/alldata/AllDataIcons'
 import { StudyView } from '../components/alldata/StudyView'
+import { PageSkeleton } from '../components/common/PageSkeleton'
 import { StatCard } from '../components/common/StatCard'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { downloadCsv } from '../components/questions/questionMath'
@@ -92,6 +93,8 @@ export function Activity() {
         </p>
       )}
 
+      {!data && !error && <PageSkeleton label="Loading activity" />}
+
       {data && (
         <div className="bk-stats">
           <StatCard index={0} icon="activity" label="Activity this week" value={week.all} chip={chipDiff(week.all, week.allBefore)} chipUp={week.all >= week.allBefore} note="All events, last 7 days" />
@@ -108,69 +111,69 @@ export function Activity() {
         </div>
       )}
 
-      <div className="bk-card">
-        <StudyView study={study} onStudy={changeStudy} books={shown.length} />
-        <div className="bk-tabs" role="tablist" aria-label="Activity type">
-          {groups.map((g) => {
-            const count = base.filter((e) => inGroup(e, g.id)).length
-            return (
+      {data && (
+        <div className="bk-card">
+          <StudyView study={study} onStudy={changeStudy} books={shown.length} />
+          <div className="bk-tabs" role="tablist" aria-label="Activity type">
+            {groups.map((g) => {
+              const count = base.filter((e) => inGroup(e, g.id)).length
+              return (
+                <button
+                  key={g.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={group === g.id}
+                  className={group === g.id ? 'bk-tab is-on' : 'bk-tab'}
+                  onClick={() => {
+                    setGroup(g.id)
+                    setLimit(PAGE)
+                  }}
+                >
+                  {g.label} <span>{count.toLocaleString()}</span>
+                </button>
+              )
+            })}
+          </div>
+          <div className="bk-filter-row">
+            <label className="bk-search">
+              <AllDataIcon name="search" size={16} />
+              <input
+                type="search"
+                placeholder="Search by research ID..."
+                aria-label="Search by research ID"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setLimit(PAGE)
+                }}
+              />
+            </label>
+            <label className="bk-select">
+              <span>From</span>
+              <input type="date" className="av-date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} />
+            </label>
+            <label className="bk-select">
+              <span>To</span>
+              <input type="date" className="av-date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} />
+            </label>
+            {filtered && (
               <button
-                key={g.id}
                 type="button"
-                role="tab"
-                aria-selected={group === g.id}
-                className={group === g.id ? 'bk-tab is-on' : 'bk-tab'}
+                className="st-button"
                 onClick={() => {
-                  setGroup(g.id)
+                  setGroup('all')
+                  setSearch('')
+                  setFrom('')
+                  setTo('')
                   setLimit(PAGE)
                 }}
               >
-                {g.label} <span>{count.toLocaleString()}</span>
+                Clear filters
               </button>
-            )
-          })}
+            )}
+          </div>
         </div>
-        <div className="bk-filter-row">
-          <label className="bk-search">
-            <AllDataIcon name="search" size={16} />
-            <input
-              type="search"
-              placeholder="Search by research ID..."
-              aria-label="Search by research ID"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value)
-                setLimit(PAGE)
-              }}
-            />
-          </label>
-          <label className="bk-select">
-            <span>From</span>
-            <input type="date" className="av-date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} />
-          </label>
-          <label className="bk-select">
-            <span>To</span>
-            <input type="date" className="av-date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} />
-          </label>
-          {filtered && (
-            <button
-              type="button"
-              className="st-button"
-              onClick={() => {
-                setGroup('all')
-                setSearch('')
-                setFrom('')
-                setTo('')
-                setLimit(PAGE)
-              }}
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
-      </div>
-
-      {!data && !error && <p className="muted">Loading...</p>}
+      )}
 
       {data && (
         <section className="av-card" aria-labelledby="av-title">

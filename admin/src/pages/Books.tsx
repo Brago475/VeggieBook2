@@ -5,6 +5,7 @@ import { BookTile } from '../components/books/BookTile'
 import { BookWindow } from '../components/books/BookWindow'
 import { BooksFilters, noBookFilters, type BookFilters } from '../components/books/BooksFilters'
 import { plural } from '../components/books/bookFormat'
+import { PageSkeleton } from '../components/common/PageSkeleton'
 import { StatCard } from '../components/common/StatCard'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { useAdminBooks } from '../hooks/useAdminBooks'
@@ -109,6 +110,8 @@ export function Books({ onOpenPersonData }: Props) {
         </p>
       )}
 
+      {!data && !error && <PageSkeleton label="Loading books" />}
+
       {data && (
         <div className="bk-stats">
           <StatCard
@@ -149,12 +152,12 @@ export function Books({ onOpenPersonData }: Props) {
         </div>
       )}
 
-      <div className="bk-card">
-        <StudyView study={study} onStudy={changeStudy} books={data?.counts.all ?? 0} />
-        {data && <BooksFilters data={data} value={filters} onChange={changeFilters} />}
-      </div>
-
-      {!data && !error && <p className="muted">Loading...</p>}
+      {data && (
+        <div className="bk-card">
+          <StudyView study={study} onStudy={changeStudy} books={data.counts.all} />
+          <BooksFilters data={data} value={filters} onChange={changeFilters} />
+        </div>
+      )}
 
       {data && shown.length === 0 && (
         <p className="st-muted bk-empty">

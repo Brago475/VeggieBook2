@@ -10,6 +10,7 @@ import { DownloadMenu } from '../components/alldata/DownloadMenu'
 import { ItemsTable } from '../components/alldata/ItemsTable'
 import { Segmented } from '../components/alldata/Segmented'
 import { StudyView } from '../components/alldata/StudyView'
+import { PageSkeleton } from '../components/common/PageSkeleton'
 import { TopbarActions, TopbarBelow } from '../components/layout/TopbarSlot'
 import { useAllData } from '../hooks/useAllData'
 import type { AllDataFile, AnswersView, BookTypeFilter, ColumnGroup, ItemStatusFilter } from '../types/allData'
@@ -27,22 +28,10 @@ import '../styles/alldata-topbar.css'
 import '../styles/alldata-look.css'
 import '../styles/alldata-responsive.css'
 
-// The All Data page: everything collected, in two files.
-//
-//   Books                one row per book: person, date and time, every
-//                        answer, and counts of recipes and secrets
-//   Recipes and secrets  one row per recipe or secret, grouped by book
-//
-// The top bar holds the Excel, SPSS, PDF, and CSV buttons (each downloads
-// both files together) and Refresh, with the search and filters under them.
-// Rows are keyed by the anonymous research ID; no email or name appears.
-//
-// Above the tabs, "Show: All data | One study" picks what the page shows.
-// With a study picked, the tables, cards, and downloads hold only the books
-// saved during it. The Studies page's "Open in All Data" opens this page
-// with its study already picked (initialStudy), and the Participants page's
-// "See their data in All Data" opens it searched to one research ID
-// (initialSearch).
+// All Data page: Books (one row per book) and Recipes and secrets (one row
+// per item). Rows are keyed by research ID only. Downloads and Refresh sit
+// in the top bar. initialStudy and initialSearch preset the view when
+// opened from Studies or Participants.
 
 const fileTabs: { id: AllDataFile; label: string; icon: 'book' | 'pot' }[] = [
   { id: 'books', label: 'Books', icon: 'book' },
@@ -88,7 +77,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
         if (!cancelled) setOptions(o)
       })
       .catch(() => {
-        // The filters still work without the lists; they just start empty.
+        // Filters still work; their option lists stay empty.
       })
     return () => {
       cancelled = true
@@ -123,8 +112,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
   }, [items])
 
   const columns = useMemo(() => bookColumns(questions, answersView, groups), [questions, answersView, groups])
-  // The side panel is always open on a book: the one clicked, or the first
-  // row until one is clicked. The close button hides it until the next click.
+  // Side panel shows the clicked book, or the first row by default.
   const selectedBook = panelClosed
     ? null
     : (selected ? bookRows.find((r) => bookKey(r) === selected) : undefined) ?? bookRows[0] ?? null
@@ -223,7 +211,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
           {error}
         </p>
       )}
-      {!books && !error && <p className="muted">Loading...</p>}
+      {!books && !error && <PageSkeleton cards={0} label="Loading data" />}
 
       {books && items && file === 'books' && (
         <>

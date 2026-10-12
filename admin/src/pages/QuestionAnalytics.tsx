@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AllDataIcon } from '../components/alldata/AllDataIcons'
+import { PageSkeleton } from '../components/common/PageSkeleton'
 import { StatCard } from '../components/common/StatCard'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { CompareTab } from '../components/questions/CompareTab'
@@ -87,6 +88,8 @@ export function QuestionAnalytics() {
         </p>
       )}
 
+      {!data && !error && <PageSkeleton label="Loading answers" />}
+
       {data && (
         <div className="bk-stats">
           <StatCard
@@ -127,27 +130,29 @@ export function QuestionAnalytics() {
         </div>
       )}
 
-      <QaFiltersBar
-        data={data}
-        study={study}
-        onStudy={(s) => {
-          setStudy(s)
-          setFilters(noQaFilters)
-        }}
-        books={books.length}
-        value={filters}
-        onChange={setFilters}
-      />
+      {data && (
+        <>
+          <QaFiltersBar
+            data={data}
+            study={study}
+            onStudy={(s) => {
+              setStudy(s)
+              setFilters(noQaFilters)
+            }}
+            books={books.length}
+            value={filters}
+            onChange={setFilters}
+          />
 
-      <div className="qa-tabs" role="tablist" aria-label="Question Analytics views">
-        {tabs.map((t) => (
-          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'is-on' : undefined} onClick={() => setTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {!data && !error && <p className="muted">Loading...</p>}
+          <div className="qa-tabs" role="tablist" aria-label="Question Analytics views">
+            {tabs.map((t) => (
+              <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'is-on' : undefined} onClick={() => setTab(t.id)}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {data && books.length === 0 && (
         <p className="st-muted qa-empty">
