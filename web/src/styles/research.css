@@ -1,0 +1,221 @@
+/* Research tracking in the app: the Help with research card on Profile
+   and settings (components/account/ResearchCard.tsx) and the study notice
+   at the top of the home screen (components/library/StudyNoticeCard.tsx).
+
+   Same deep green as the other account actions; the brand green only as a
+   border and tint, since white text on it fails contrast. */
+
+/* --- Help with research card ----------------------------------------- */
+
+.research-chip {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.research-chip i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.research-chip.is-on {
+  color: var(--green-deep);
+  background: var(--green-tint);
+}
+
+.research-chip.is-on i {
+  background: var(--green-deep);
+}
+
+.research-chip.is-off,
+.research-chip.is-locked {
+  color: var(--text-muted);
+  background: var(--surface-alt);
+}
+
+.research-chip.is-off i,
+.research-chip.is-locked i {
+  background: var(--text-muted);
+}
+
+.research-id {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+}
+
+.research-id-label {
+  font-size: var(--font-small);
+  color: var(--text-muted);
+}
+
+.research-id-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* --- study notice on the home screen --------------------------------- */
+
+.study-notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0 var(--pad-x) var(--sp-4);
+  padding: 18px;
+  background: var(--green-tint);
+  border: 1px solid var(--green);
+  border-radius: 18px;
+}
+
+.study-notice-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.study-notice-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--green-deep);
+  background: var(--surface);
+  border-radius: 50%;
+}
+
+.study-notice-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.study-notice-title {
+  margin: 0;
+  font-size: var(--font-section);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.study-notice-text {
+  margin: 0;
+  font-size: var(--font-label);
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.study-notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.study-notice-join,
+.study-notice-later {
+  flex: 1 1 140px;
+  padding: 12px;
+  font: inherit;
+  font-size: var(--font-label);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.study-notice-join {
+  font-weight: 700;
+  color: #fff;
+  background: var(--green-deep);
+  border: 0;
+}
+
+.study-notice-join:hover {
+  background: var(--green-deep-press);
+}
+
+.study-notice-later {
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+}
+
+.study-notice-later:hover {
+  background: var(--surface-alt);
+}
+
+.study-notice-join:focus-visible,
+.study-notice-later:focus-visible,
+.study-notice-close:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.study-notice-join:disabled,
+.study-notice-later:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* After joining: one line with a check and a close button. */
+.study-notice.is-thanks {
+  flex-direction: row;
+  align-items: center;
+}
+
+.study-notice-check {
+  flex: 0 0 auto;
+  font-weight: 800;
+  color: var(--green-deep);
+}
+
+.study-notice-thanks {
+  flex: 1;
+  margin: 0;
+  font-size: var(--font-label);
+  line-height: 1.4;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.study-notice-close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--text-muted);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.study-notice-close:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.study-notice-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .study-notice-join,
+  .study-notice-later {
+    transition: none;
+  }
+}

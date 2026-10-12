@@ -11,6 +11,7 @@ import {
   PlusIcon,
 } from '../components/icons/LibraryIcons'
 import { MainMenu, type MainMenuItem } from '../components/library/MainMenu'
+import { StudyNoticeCard } from '../components/library/StudyNoticeCard'
 import type { BookSummary, SecretCategory, Vegetable } from '../types'
 
 // Home screen: a heading that says who is using the site, the two create
@@ -37,6 +38,10 @@ import type { BookSummary, SecretCategory, Vegetable } from '../types'
 //
 // While the books load, two gray card shapes hold their place, so the list
 // does not pop in under a line of text.
+//
+// For a signed-in account, the study notice can show as a card under the
+// heading while a study runs (StudyNoticeCard.tsx decides with the API).
+// Guests never see it.
 
 type Props = {
   // The account's email, or null for a guest. Visitors who are neither see
@@ -224,6 +229,8 @@ export function HomeLibrary({
         </div>
         <MainMenu items={menuItems} accountItems={accountItems} />
       </div>
+
+      {!isGuest && <StudyNoticeCard />}
 
       {/* Both create buttons are the same green: the two kinds of book are
           equal choices, as in the original app. */}
