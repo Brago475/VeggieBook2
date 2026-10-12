@@ -11,13 +11,15 @@ type Props = {
   /** Accepted for existing call sites; the loader has no card row. */
   cards?: number
   label?: string
+  /** Fills the whole window, for use outside the admin layout. */
+  fullScreen?: boolean
 }
 
-export function PageSkeleton({ label = 'Loading' }: Props) {
+export function PageSkeleton({ label = 'Loading', fullScreen = false }: Props) {
   const icons = VEGGIES.map((v) => <img key={v} src={`/icons/veg/${v}.svg`} alt="" />)
 
   return (
-    <div className="vl-page" role="status" aria-live="polite" aria-label={label}>
+    <div className={fullScreen ? 'vl-page is-full' : 'vl-page'} role="status" aria-live="polite" aria-label={label}>
       <img className="vl-logo" src="/brand/logo-positive-en.png" alt="" />
       <p className="vl-label" aria-hidden="true">
         Loading...

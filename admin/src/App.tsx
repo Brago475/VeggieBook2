@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ComingSoon } from './components/common/ComingSoon'
+import { PageSkeleton } from './components/common/PageSkeleton'
 import { AdminShell } from './components/layout/AdminShell'
 import { navItems, type AdminTab } from './components/layout/navigation'
 import { useSession } from './hooks/useSession'
@@ -50,7 +51,7 @@ export function App() {
   }, [])
 
   if (session.status === 'loading') {
-    return <p className="admin-loading">Loading...</p>
+    return <PageSkeleton fullScreen label="Loading VeggieBook admin" />
   }
 
   if (session.status === 'signedOut') {

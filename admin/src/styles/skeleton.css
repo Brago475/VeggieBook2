@@ -12,11 +12,22 @@
   animation: vl-appear 0.3s ease-out 0.15s backwards;
 }
 
+.vl-page.is-full {
+  min-height: 100vh;
+  background: #ffffff;
+  animation: none;
+}
+
 .vl-logo {
   width: 200px;
   max-width: 60vw;
   height: auto;
   margin-bottom: 32px;
+}
+
+.vl-page.is-full .vl-logo {
+  width: 240px;
+  margin-bottom: 40px;
 }
 
 .vl-label {
