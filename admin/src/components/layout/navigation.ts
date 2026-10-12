@@ -53,7 +53,7 @@ export const navGroups: NavGroup[] = [
     label: 'Data & Resources',
     items: [
       { id: 'data', label: 'All Data', icon: 'table', ready: true },
-      { id: 'books', label: 'Books', icon: 'book', ready: false },
+      { id: 'books', label: 'Books', icon: 'book', ready: true },
       { id: 'questions', label: 'Question Analytics', icon: 'chart', ready: true },
     ],
   },

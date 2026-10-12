@@ -1,0 +1,95 @@
+/* The year on the Studies timeline: arrows, the year, and "This year".
+   Also the edges of a study that crosses New Year.
+   See components/studies/StudyTimeline.tsx and TimelineBar.tsx. */
+
+.ty-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  margin-left: 8px;
+}
+
+.ty-arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: #27272a;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ty-arrow:hover:not(:disabled) {
+  background: #f4f4f5;
+}
+
+.ty-arrow:disabled {
+  color: #c4c4c9;
+  cursor: default;
+}
+
+.ty-arrow:focus-visible,
+.ty-today:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.ty-year {
+  min-width: 44px;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.ty-today {
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #15803d;
+  background: #f0faf3;
+  border: 1px solid #bfe3cb;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.ty-empty {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: #71717a;
+}
+
+/* A study that began in an earlier year, or goes on into a later one: the
+   cut side is square and fades out, so it reads as continuing. */
+.tl-span.is-cut-start {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14px);
+  mask-image: linear-gradient(to right, transparent 0, #000 14px);
+  padding-left: 16px;
+}
+
+.tl-span.is-cut-end {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 14px);
+  mask-image: linear-gradient(to left, transparent 0, #000 14px);
+}
+
+.tl-span.is-cut-start.is-cut-end {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
+
+@media (max-width: 600px) {
+  .ty-nav {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+  }
+}

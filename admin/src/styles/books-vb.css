@@ -1,0 +1,651 @@
+/* A book inside the Books window, made to look the way the VeggieBook app
+   shows it: the green header, the heading, the cover card, the count
+   pill, white recipe cards with green titles, and an opened recipe or
+   secret with its green outlined boxes.
+
+   The values copy the app's own (web/src/styles/tokens.css, reading.css,
+   recipe-sections.css, secrets.css), set here under .vb so nothing leaks
+   into the rest of the admin site. */
+
+.vb {
+  --vb-green: #8cc63e;
+  --vb-deep: #2f5d2f;
+  --vb-tint: #f4f9ec;
+  --vb-text: #14140f;
+  --vb-muted: #4a4a42;
+  --vb-surface: #ffffff;
+  --vb-alt: #f6f6f2;
+  --vb-line: #e6e6df;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  color: var(--vb-text);
+  background: var(--vb-alt);
+}
+
+/* ---- Header ---- */
+
+.vb-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
+  background: var(--vb-green);
+}
+
+.vb-back {
+  position: absolute;
+  left: 10px;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  color: var(--vb-text);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.vb-back:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.vb-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.vb-logo-word {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.vb-logo-veggie {
+  color: #ffffff;
+}
+
+.vb-logo-book {
+  color: var(--vb-text);
+}
+
+.vb-logo-tag {
+  align-self: flex-end;
+  margin-top: 2px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--vb-text);
+}
+
+.vb-message {
+  margin: 0;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--vb-muted);
+}
+
+/* ---- The book's list ---- */
+
+.vb-book {
+  padding-bottom: 24px;
+}
+
+.vb-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px 16px;
+}
+
+.vb-heading-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  background: var(--vb-green);
+  border-radius: 50%;
+}
+
+.vb-heading-mark svg {
+  width: 30px;
+  height: 30px;
+}
+
+.vb-heading-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vb-eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--vb-muted);
+  text-transform: uppercase;
+}
+
+.vb-title {
+  margin-top: 2px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.vb-cover-wrap {
+  padding: 0 16px;
+}
+
+/* The app's book card: the vegetable's photo fills it, the chosen cover
+   sits as an inset on the right, and the name runs along the bottom. */
+.vb-card {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 2 / 1;
+  max-height: 260px;
+  width: 100%;
+  background: #3f7d34;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(20, 20, 15, 0.12);
+}
+
+.vb-card-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vb-card-bg.is-placeholder {
+  display: grid;
+  place-items: center;
+  background: var(--vb-green);
+}
+
+.vb-card-bg.is-placeholder svg {
+  width: 72px;
+  height: 72px;
+  opacity: 0.6;
+}
+
+.vb-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 60%);
+  pointer-events: none;
+}
+
+.vb-card-cover {
+  position: absolute;
+  top: 12%;
+  right: 5%;
+  z-index: 1;
+  width: 30%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.vb-card-cover.is-placeholder {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  background: var(--vb-green);
+}
+
+.vb-card-cover.is-placeholder svg {
+  width: 50%;
+  height: 50%;
+}
+
+.vb-card-cover.is-personal {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #52525b;
+  text-align: center;
+  background: repeating-linear-gradient(45deg, #e4e4e7 0 6px, #f4f4f5 6px 12px);
+}
+
+.vb-card-text {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #ffffff;
+}
+
+.vb-card-name {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.vb-card-label {
+  padding-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-top: 2px solid rgba(255, 255, 255, 0.8);
+  align-self: flex-start;
+}
+
+.vb-count {
+  margin: 0;
+  padding: 12px 16px 0;
+  text-align: center;
+}
+
+.vb-count-pill {
+  display: inline-block;
+  padding: 6px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--vb-deep);
+  background: var(--vb-tint);
+  border-radius: 999px;
+}
+
+.vb-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  list-style: none;
+}
+
+.vb-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 8px 16px 8px 8px;
+  font: inherit;
+  text-align: left;
+  background: var(--vb-surface);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(20, 20, 15, 0.08);
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.vb-row:hover {
+  border-color: var(--vb-green);
+  box-shadow: 0 8px 20px rgba(20, 20, 15, 0.12);
+  transform: translateY(-2px);
+}
+
+.vb-row:focus-visible {
+  outline: 2px solid #6fa32c;
+  outline-offset: 2px;
+}
+
+.vb-thumb {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  background: var(--vb-alt);
+  border-radius: 10px;
+}
+
+/* Secret pictures have words drawn into them, so they are shown whole. */
+.vb-thumb.is-secret:not(.is-placeholder) {
+  box-sizing: border-box;
+  padding: 2px;
+  object-fit: contain;
+  background: var(--vb-surface);
+  border: 1px solid var(--vb-line);
+}
+
+.vb-thumb.is-placeholder {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 14px;
+  background: var(--vb-green);
+}
+
+.vb-thumb.is-placeholder svg {
+  width: 100%;
+  height: 100%;
+}
+
+.vb-row-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--vb-deep);
+}
+
+.vb-row-chevron {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--vb-muted);
+  opacity: 0.6;
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.vb-row:hover .vb-row-chevron {
+  color: #6fa32c;
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+/* Taken out later: still listed for the research team, faded and
+   crossed out so it never reads as part of the book. */
+.vb-out-head {
+  margin: 8px 16px 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #9a3412;
+  text-transform: uppercase;
+}
+
+.vb-row.is-out {
+  opacity: 0.6;
+}
+
+.vb-row.is-out:hover {
+  opacity: 1;
+}
+
+.vb-row.is-out .vb-row-title {
+  text-decoration: line-through;
+}
+
+.vb-out-tag {
+  flex: none;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #9a3412;
+  background: #ffedd5;
+  border-radius: 999px;
+}
+
+/* ---- One recipe or secret ---- */
+
+.vb-detail {
+  padding: 16px 16px 0;
+  background: var(--vb-surface);
+}
+
+.vb-counter {
+  display: block;
+  width: fit-content;
+  margin: 0 0 12px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5a8a2a;
+  background: var(--vb-tint);
+  border-radius: 999px;
+}
+
+.vb-counter.is-out {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.vb-detail-title {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--vb-deep);
+}
+
+.vb-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  background: var(--vb-alt);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(20, 20, 15, 0.08);
+}
+
+.vb-photo.is-placeholder,
+.vb-photos-img.is-placeholder,
+.vb-secret-image.is-placeholder {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 2;
+  background: var(--vb-green);
+}
+
+.vb-photo.is-placeholder svg,
+.vb-photos-img.is-placeholder svg,
+.vb-secret-image.is-placeholder svg {
+  width: 30%;
+  height: 30%;
+}
+
+.vb-section {
+  margin-top: 24px;
+}
+
+.vb-section.is-first {
+  margin-top: 0;
+}
+
+.vb-section-tab {
+  display: inline-block;
+  margin: 0 0 0 12px;
+  padding: 4px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: var(--vb-text);
+  background: var(--vb-green);
+  border-radius: 6px 6px 0 0;
+}
+
+.vb-section-body {
+  padding: 4px 12px;
+  background: var(--vb-surface);
+  border: 2px solid var(--vb-green);
+  border-radius: 10px;
+}
+
+.vb-section-body.is-padded {
+  padding: 12px;
+}
+
+.vb-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vb-list li {
+  padding: 12px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--vb-line);
+}
+
+.vb-list li:last-child {
+  border-bottom: 0;
+}
+
+.vb-steps {
+  padding-left: 24px;
+  list-style: decimal;
+}
+
+.vb-steps li {
+  padding-left: 4px;
+}
+
+.vb-steps li::marker {
+  font-weight: 700;
+  color: var(--vb-deep);
+}
+
+.vb-summary {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  gap: 4px 8px;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.vb-summary-key {
+  padding: 4px 8px;
+  font-size: 13px;
+  color: var(--vb-muted);
+  background: var(--vb-tint);
+  border-radius: 6px;
+}
+
+.vb-summary-val {
+  padding: 4px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vb-photos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.vb-photos figure {
+  margin: 0;
+}
+
+.vb-photos-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--vb-alt);
+  border-radius: 6px;
+}
+
+.vb-photos figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vb-deep);
+}
+
+.vb-secret-tag {
+  display: block;
+  width: fit-content;
+  margin: 0 0 12px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  border-radius: 999px;
+}
+
+.vb-secret-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 0 12px;
+  border-radius: 6px;
+}
+
+.vb-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.vb-links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vb-links li {
+  padding: 8px 0;
+  font-size: 15px;
+  border-bottom: 1px solid var(--vb-line);
+}
+
+.vb-links li:last-child {
+  border-bottom: 0;
+}
+
+.vb-links a {
+  font-weight: 600;
+  color: var(--vb-deep);
+  overflow-wrap: anywhere;
+}
+
+/* The app's bottom button, kept within reach after a long recipe. */
+.vb-navbar {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 16px;
+  background: var(--vb-surface);
+  border-top: 1px solid var(--vb-line);
+}
+
+.vb-navbar button {
+  width: 100%;
+  height: 48px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--vb-text);
+  background: var(--vb-green);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.vb-navbar button:hover {
+  filter: brightness(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vb-row,
+  .vb-row:hover,
+  .vb-row:hover .vb-row-chevron {
+    transform: none;
+    transition: none;
+  }
+}

@@ -5,6 +5,7 @@ import type { AdminTab } from './components/layout/navigation'
 import { useSession } from './hooks/useSession'
 import { Accounts } from './pages/Accounts'
 import { AllData } from './pages/AllData'
+import { Books } from './pages/Books'
 import { Overview } from './pages/Overview'
 import { Participants } from './pages/Participants'
 import { SignIn } from './pages/SignIn'
@@ -28,7 +29,8 @@ import { Studies } from './pages/Studies'
 //
 // "Open in All Data" on the Studies page opens All Data with that study
 // picked (dataStudy), and "See their data in All Data" on the Participants
-// page opens it searched to one research ID (dataSearch). Opening All Data
+// page and "Open in All Data" on an opened book (Books page) open it
+// searched to one research ID (dataSearch). Opening All Data
 // from the sidebar starts on All data with no search.
 //
 // Analytics is loaded only when it is opened. It carries the chart library,
@@ -39,10 +41,6 @@ const Analytics = lazy(() =>
 )
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
-  books: {
-    title: 'Books',
-    text: 'Every saved book and what happened to it: saved, edited later, left early, or deleted.',
-  },
   activity: {
     title: 'Activity',
     text: 'When people use the app, how they move through a book, where they leave, and which devices they use.',
@@ -107,6 +105,7 @@ export function App() {
       {tab === 'data' && (
         <AllData key={`${dataStudy ?? 'all'}|${dataSearch}`} initialStudy={dataStudy} initialSearch={dataSearch} />
       )}
+      {tab === 'books' && <Books onOpenPersonData={openPersonData} />}
       {tab === 'questions' && (
         <Suspense fallback={<p className="muted">Loading...</p>}>
           <Analytics />
