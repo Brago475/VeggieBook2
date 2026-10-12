@@ -11,7 +11,7 @@ export const groups: { id: ActivityGroup; label: string; types: ActivityType[] }
   { id: 'book_deleted', label: 'Books deleted', types: ['book_deleted'] },
   { id: 'account_deleted', label: 'Accounts deleted', types: ['account_deleted'] },
   { id: 'tracking', label: 'Tracking', types: ['tracking_on', 'tracking_off'] },
-  { id: 'studies', label: 'Studies', types: ['study_started', 'study_ended'] },
+  { id: 'studies', label: 'Studies', types: ['study_started', 'study_ended', 'study_renamed', 'study_deleted'] },
   { id: 'notice', label: 'Study notice', types: ['notice_joined', 'notice_declined'] },
 ]
 

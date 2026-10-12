@@ -9,6 +9,8 @@ export type ActivityType =
   | 'tracking_off'
   | 'study_started'
   | 'study_ended'
+  | 'study_renamed'
+  | 'study_deleted'
   | 'notice_joined'
   | 'notice_declined'
 

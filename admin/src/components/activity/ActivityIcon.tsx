@@ -11,6 +11,8 @@ const tone: Record<ActivityType, string> = {
   tracking_off: 'is-tracking',
   study_started: 'is-study',
   study_ended: 'is-study',
+  study_renamed: 'is-study',
+  study_deleted: 'is-deleted',
   notice_joined: 'is-notice',
   notice_declined: 'is-notice',
 }
@@ -24,6 +26,8 @@ const paths: Record<ActivityType, React.ReactNode> = {
   tracking_off: <path d="M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01M4 4l16 16" />,
   study_started: <path d="M9 3h6M10 3v6l-5 9.5A1.7 1.7 0 0 0 6.5 21h11a1.7 1.7 0 0 0 1.5-2.5L14 9V3" />,
   study_ended: <path d="M9 3h6M10 3v6l-5 9.5A1.7 1.7 0 0 0 6.5 21h11a1.7 1.7 0 0 0 1.5-2.5L14 9V3M7.5 15h9" />,
+  study_renamed: <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />,
+  study_deleted: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
   notice_joined: <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0" />,
   notice_declined: <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0" />,
 }

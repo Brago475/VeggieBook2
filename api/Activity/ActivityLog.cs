@@ -5,19 +5,22 @@ using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Activity;
 
-// Writes the activity log (db/migrations/007_activity_log.sql): books saved,
-// books deleted, and accounts deleted, by research ID. Entries are permanent
-// and back the admin Activity page.
+// Writes the activity log (db/migrations/007_activity_log.sql,
+// 010_activity_detail.sql): books saved and deleted, accounts deleted, and
+// studies renamed or deleted. Entries are permanent and back the admin
+// Activity page.
 //
-// Two steps: ForBookAsync / ForAccountAsync prepare the entry while the
-// account still exists (null for guests and admins), then SaveAsync stores
-// it. Logging never blocks the main action; failures go to the server log.
+// Participant lines are prepared while the account still exists (null for
+// guests and admins), then stored with SaveAsync. Logging never blocks the
+// main action; failures go to the server log.
 
 public static class ActivityLog
 {
     public const string BookSaved = "book_saved";
     public const string BookDeleted = "book_deleted";
     public const string AccountDeleted = "account_deleted";
+    public const string StudyRenamed = "study_renamed";
+    public const string StudyDeleted = "study_deleted";
 
     public static async Task<ActivityEntry?> ForBookAsync(
         AccountsContext db,
@@ -66,6 +69,15 @@ public static class ActivityLog
             return null;
         }
     }
+
+    /// <summary>An admin study action. No participant; the study number goes in ItemCount.</summary>
+    public static ActivityEntry ForStudy(string kind, int studyNumber, string detail) => new()
+    {
+        Kind = kind,
+        ParticipantId = "",
+        ItemCount = studyNumber,
+        Detail = detail
+    };
 
     /// <summary>Stores the entry. At defaults to now; a save entry sets it to the book's CreatedAt.</summary>
     public static async Task SaveAsync(AccountsContext db, ILogger logger, ActivityEntry? entry)

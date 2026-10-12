@@ -15,8 +15,9 @@ namespace VeggieBook.Api.Admin;
 ///   GET /api/admin/activity?study={number}
 ///
 /// Event types: book_saved, joined, book_deleted, account_deleted,
-/// tracking_on, tracking_off, study_started, study_ended, notice_joined,
-/// notice_declined. Nothing is pruned; every source table is permanent.
+/// tracking_on, tracking_off, study_started, study_ended, study_renamed,
+/// study_deleted, notice_joined, notice_declined. Nothing is pruned; every
+/// source table is permanent.
 ///
 /// Each participant event is shown only if tracking was on at the moment it
 /// happened (ResearchScope.CountsBook): later tracking changes never hide or
@@ -91,7 +92,7 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             string.IsNullOrEmpty(u.AgeRange) ? "No age range given" : $"Age {u.AgeRange}",
             u.CreatedAt)));
 
-        // Activity log: deletions, and saves of books deleted since.
+        // Activity log: deletions, admin study actions, and saves of books deleted since.
         var logged = await db.ActivityLog.AsNoTracking().ToListAsync();
 
         bool OwnerTracked(ActivityEntry a, DateTime at) =>
@@ -102,7 +103,15 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             var kind = a.BookKind ?? "veggie";
             var name = Name(kind, a.VegetableCode, a.SecretCategoryId);
 
-            if (a.Kind == ActivityLog.AccountDeleted)
+            if (a.Kind == ActivityLog.StudyRenamed)
+            {
+                events.Add(new Event("study_renamed", null, $"Renamed Study {a.ItemCount}", a.Detail ?? "", a.At));
+            }
+            else if (a.Kind == ActivityLog.StudyDeleted)
+            {
+                events.Add(new Event("study_deleted", null, $"Deleted Study {a.ItemCount}", a.Detail ?? "", a.At));
+            }
+            else if (a.Kind == ActivityLog.AccountDeleted)
             {
                 events.Add(new Event("account_deleted", a.ParticipantId, "Deleted their account",
                     "Account and all books removed", a.At));

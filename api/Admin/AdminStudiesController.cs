@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 using VeggieBook.Api.Research;
+using VeggieBook.Api.Research.AllData;
 
 namespace VeggieBook.Api.Admin;
 
@@ -35,6 +37,10 @@ namespace VeggieBook.Api.Admin;
 // deleted; switch it off first. The confirm text must match the study's
 // name (or "Study N" if it has none), the same check the page asks for.
 //
+// Renames and deletions are written to the activity log (Activity/ActivityLog.cs)
+// so they stay visible on the Activity page after the study row changes or
+// is removed.
+//
 // See Research/StudyTracking.cs for who is tracked and who sees the notice.
 
 public record StudyNameRequest(string? Name);
@@ -43,7 +49,10 @@ public record StudyDeleteRequest(string? Confirm);
 [ApiController]
 [Route("api/admin/studies")]
 [Authorize(Policy = Roles.AdminPolicy)]
-public class AdminStudiesController(AccountsContext db, UserManager<AppUser> users) : ControllerBase
+public class AdminStudiesController(
+    AccountsContext db,
+    UserManager<AppUser> users,
+    ILogger<AdminStudiesController> logger) : ControllerBase
 {
     private const int MaxName = 60;
 
@@ -125,8 +134,14 @@ public class AdminStudiesController(AccountsContext db, UserManager<AppUser> use
         if (name is not null && name.Length > MaxName)
             return BadRequest(new { error = $"Keep the name to {MaxName} characters or fewer." });
 
+        var before = StudyData.TitleOf(study);
         study.Name = name;
         await db.SaveChangesAsync();
+
+        var after = StudyData.TitleOf(study);
+        if (before != after)
+            await ActivityLog.SaveAsync(db, logger, ActivityLog.ForStudy(
+                ActivityLog.StudyRenamed, study.Number, $"From \"{before}\" to \"{after}\""));
 
         var data = await StudyData.LoadAsync(db);
         return Ok(data.Summary(study, DateTime.UtcNow));
@@ -146,12 +161,21 @@ public class AdminStudiesController(AccountsContext db, UserManager<AppUser> use
         if (!string.Equals(request.Confirm?.Trim(), title, StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { error = $"Type {title} to confirm." });
 
+        var ran = $"{Eastern(study.StartedAt)} to {Eastern(study.EndedAt!.Value)}";
+
         // Its notices go with it (ON DELETE CASCADE in 008_studies.sql).
         db.Studies.Remove(study);
         await db.SaveChangesAsync();
 
+        await ActivityLog.SaveAsync(db, logger, ActivityLog.ForStudy(
+            ActivityLog.StudyDeleted, study.Number, $"\"{title}\", ran {ran}"));
+
         return Ok(new { deleted = id, title });
     }
+
+    private static string Eastern(DateTime utc) =>
+        TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), AllDataSource.Local.Zone)
+            .ToString("MMM d, yyyy h:mm tt", System.Globalization.CultureInfo.InvariantCulture);
 
     private Guid? AdminId() =>
         Guid.TryParse(users.GetUserId(User), out var id) ? id : null;
