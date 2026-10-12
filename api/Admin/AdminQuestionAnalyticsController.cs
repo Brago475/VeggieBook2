@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.Research;
 using VeggieBook.Api.Research.AllData;
 
 namespace VeggieBook.Api.Admin;
