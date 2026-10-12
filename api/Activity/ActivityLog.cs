@@ -5,23 +5,17 @@ using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Activity;
 
-// Writes the activity log (db/migrations/007_activity_log.sql): a book
-// deleted by its owner, and an account deleted by its owner. These leave no
-// other trace, so without the log the admin site could never show them.
+// Writes the activity log (db/migrations/007_activity_log.sql): books saved,
+// books deleted, and accounts deleted, by research ID. Entries are permanent
+// and back the admin Activity page.
 //
-// Two steps, so the line is ready before anything is removed:
-//
-//   1. ForBookAsync / ForAccountAsync, BEFORE deleting: checks the account
-//      is a participant and looks up its research ID while the account
-//      still exists. Returns null for guests and admins, who are never
-//      logged.
-//   2. SaveAsync, AFTER the delete succeeded: stores the line.
-//
-// Logging never blocks a delete. Any failure (including the table not
-// existing yet) is written to the server log and the delete goes ahead.
+// Two steps: ForBookAsync / ForAccountAsync prepare the entry while the
+// account still exists (null for guests and admins), then SaveAsync stores
+// it. Logging never blocks the main action; failures go to the server log.
 
 public static class ActivityLog
 {
+    public const string BookSaved = "book_saved";
     public const string BookDeleted = "book_deleted";
     public const string AccountDeleted = "account_deleted";
 
@@ -32,14 +26,15 @@ public static class ActivityLog
         string bookKind,
         string? vegetableCode,
         int? secretCategoryId,
-        int itemCount)
+        int itemCount,
+        string kind = BookDeleted)
     {
         try
         {
             if (!await IsParticipantAsync(db, userId)) return null;
             return new ActivityEntry
             {
-                Kind = BookDeleted,
+                Kind = kind,
                 ParticipantId = await ParticipantIds.ForUserAsync(db, userId),
                 BookKind = bookKind,
                 VegetableCode = vegetableCode,
@@ -49,7 +44,7 @@ public static class ActivityLog
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Activity log: could not prepare a book deletion line.");
+            logger.LogWarning(ex, "Activity log: could not prepare a {Kind} line.", kind);
             return null;
         }
     }
@@ -72,11 +67,12 @@ public static class ActivityLog
         }
     }
 
+    /// <summary>Stores the entry. At defaults to now; a save entry sets it to the book's CreatedAt.</summary>
     public static async Task SaveAsync(AccountsContext db, ILogger logger, ActivityEntry? entry)
     {
         if (entry is null) return;
 
-        entry.At = DateTime.UtcNow;
+        if (entry.At == default) entry.At = DateTime.UtcNow;
         db.ActivityLog.Add(entry);
         try
         {
@@ -89,8 +85,7 @@ public static class ActivityLog
         }
     }
 
-    // Participants are real accounts that are not admins, the same people
-    // the research sheets and Overview count.
+    // Participants are real accounts that are not admins.
     private static Task<bool> IsParticipantAsync(AccountsContext db, Guid userId) =>
         db.Users.AnyAsync(u =>
             u.Id == userId

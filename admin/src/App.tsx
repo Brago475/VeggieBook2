@@ -4,6 +4,7 @@ import { AdminShell } from './components/layout/AdminShell'
 import type { AdminTab } from './components/layout/navigation'
 import { useSession } from './hooks/useSession'
 import { Accounts } from './pages/Accounts'
+import { Activity } from './pages/Activity'
 import { AllData } from './pages/AllData'
 import { Books } from './pages/Books'
 import { Overview } from './pages/Overview'
@@ -19,10 +20,6 @@ import './styles/motion.css'
 // another page opens All Data.
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {
-  activity: {
-    title: 'Activity',
-    text: 'When people use the app, how they move through a book, where they leave, and which devices they use.',
-  },
   content: {
     title: 'Content',
     text: 'The recipes and secrets, read-only, opening the same way they do in the app.',
@@ -84,6 +81,7 @@ export function App() {
       )}
       {tab === 'books' && <Books onOpenPersonData={openPersonData} />}
       {tab === 'questions' && <QuestionAnalytics />}
+      {tab === 'activity' && <Activity />}
       {tab === 'settings' && <Accounts currentEmail={session.email} />}
       {soon && <ComingSoon title={soon.title} text={soon.text} />}
     </AdminShell>

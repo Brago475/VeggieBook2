@@ -31,8 +31,8 @@ namespace VeggieBook.Api.Books;
 // saved by SecretBooksController (POST /api/books/secrets), since it is
 // built differently; everything after saving is the same.
 //
-// Deleting a book writes a line to the activity log (Activity/ActivityLog.cs)
-// so the admin site can show it; the log never blocks the delete.
+// Saving and deleting a book each write a line to the activity log
+// (Activity/ActivityLog.cs) for the admin site; the log never blocks either.
 
 public record BookRecipe(int Id, int ExtraCopies);
 
@@ -289,6 +289,13 @@ public class BooksController(
 
         db.Books.Add(book);
         await db.SaveChangesAsync();
+
+        // Permanent record of the save. At matches the book's CreatedAt so the
+        // admin Activity page can pair it with the book row.
+        var saved = await ActivityLog.ForBookAsync(
+            db, logger, uid, "veggie", vegetable.Code, null, recipes.Length, ActivityLog.BookSaved);
+        if (saved is not null) saved.At = book.CreatedAt;
+        await ActivityLog.SaveAsync(db, logger, saved);
 
         return Created($"/api/books/{book.Id}", new { id = book.Id });
     }
