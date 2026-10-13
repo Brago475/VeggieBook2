@@ -3,6 +3,7 @@ import { ArrowIcon, LeafIcon } from '../components/icons/AuthIcons'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { SafeImage } from '../components/common/SafeImage'
 import { BowlIcon, OpenBookIcon, SproutIcon } from '../components/icons/StepIcons'
+import { useGuestsAllowed } from '../hooks/useGuestsAllowed'
 import { AUTH_PHOTO } from '../utils/authPhoto'
 import { coverSrc } from '../utils/coverSrc'
 
@@ -14,10 +15,12 @@ import { coverSrc } from '../utils/coverSrc'
 // after they started. A guest can create an account later and keep their
 // books.
 //
-// Below the three ways in, a card with three short steps says what the site
-// does, for a visitor who has never seen it before. On a tall window the
-// guest option and the card move down a little (see .auth-lower in
-// auth.css).
+// Guest visits can be turned off from the admin site. Then the guest option
+// is hidden here (useGuestsAllowed), and the API refuses guest visits too.
+//
+// Below the ways in, a card with three short steps says what the site does.
+// On a tall window the guest option and the card move down a little (see
+// .auth-lower in auth.css).
 //
 // The masthead is hidden on this screen (see App.tsx), so the photograph
 // takes the top of the screen and the logo sits under it, between two faint
@@ -38,6 +41,7 @@ const STEPS = [
 export function Welcome({ onCreateAccount, onSignIn, onGuest }: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const guestsAllowed = useGuestsAllowed()
 
   async function startGuest() {
     if (busy) return
@@ -87,29 +91,33 @@ export function Welcome({ onCreateAccount, onSignIn, onGuest }: Props) {
         </div>
 
         <div className="auth-lower">
-          <div className="auth-or">or</div>
+          {guestsAllowed && (
+            <>
+              <div className="auth-or">or</div>
 
-          <div className="auth-fields">
-            <button
-              type="button"
-              className="auth-guest"
-              onClick={startGuest}
-              disabled={busy}
-            >
-              <LeafIcon />
-              {busy ? 'Please wait...' : 'Continue as guest'}
-            </button>
-            {error ? (
-              <p className="form-error" role="alert">
-                {error}
-              </p>
-            ) : (
-              <p className="auth-note">
-                As a guest, your books are kept until you sign out, for up to 24
-                hours.
-              </p>
-            )}
-          </div>
+              <div className="auth-fields">
+                <button
+                  type="button"
+                  className="auth-guest"
+                  onClick={startGuest}
+                  disabled={busy}
+                >
+                  <LeafIcon />
+                  {busy ? 'Please wait...' : 'Continue as guest'}
+                </button>
+                {error ? (
+                  <p className="form-error" role="alert">
+                    {error}
+                  </p>
+                ) : (
+                  <p className="auth-note">
+                    As a guest, your books are kept until you sign out, for up to 24
+                    hours.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
 
           <section className="auth-steps" aria-labelledby="how-it-works">
             <h2 id="how-it-works" className="auth-steps-title">
