@@ -15,19 +15,13 @@ namespace VeggieBook.Api.Admin;
 //                                         reopen password reset after the
 //                                         owner failed their security question
 //
-// Admins only (Roles.AdminPolicy). Guests never appear here.
-// Giving and removing the Admin role: AdminRolesController.
-// An account's books: AdminBooksController.
+// Admins only. Guests never appear here. Admin accounts are visible to the
+// root admin only; for every other admin they do not exist (search leaves
+// them out, and opening one gives 404).
 //
-// What the admin can see, by design: email (only as the account's label, so
-// a locked-out user can be found), username, role, age range, dates, and
-// lock status. What is never read from the database here: first and last
-// name, password hash, recovery PIN, security question, and security answer.
-// Leaving them out of every query means no change to the response shape can
-// expose them by accident.
-//
-// The email is never copied into study data or reports. Those use account
-// and tracking IDs only.
+// Email is shown only as the account's label. First and last name, password
+// hash, recovery PIN, security question and answer are never read here.
+// Research IDs are never returned here.
 
 [ApiController]
 [Route("api/admin/accounts")]
@@ -47,19 +41,23 @@ public class AdminAccountsController(
         if (term.Length > MaxSearchLength)
             return BadRequest(new { error = "Search is too long." });
 
+        var adminRoleId = await AdminRoleId();
+        var root = await AdminRules.IsRootAsync(User, users, config);
+
         var query = db.Users.AsNoTracking().Where(u => u.GuestExpiresAt == null);
+
+        if (!root)
+            query = query.Where(u => !db.UserRoles.Any(r => r.UserId == u.Id && r.RoleId == adminRoleId));
 
         if (term.Length > 0)
         {
-            // Partial, case-insensitive match. % and _ in the search are
-            // escaped so they are matched as plain characters.
+            // Partial, case-insensitive match. % and _ are matched as plain
+            // characters.
             var pattern = "%" + EscapeLike(term) + "%";
             query = query.Where(u =>
                 EF.Functions.ILike(u.Email!, pattern, "\\") ||
                 EF.Functions.ILike(u.DisplayName!, pattern, "\\"));
         }
-
-        var adminRoleId = await AdminRoleId();
 
         var rows = await query
             .OrderByDescending(u => u.CreatedAt)
@@ -72,12 +70,12 @@ public class AdminAccountsController(
                 IsAdmin = db.UserRoles.Any(r => r.UserId == u.Id && r.RoleId == adminRoleId),
                 u.CreatedAt,
                 BookCount = db.Books.Count(b => b.UserId == u.Id),
-                RecoveryLocked = u.RecoveryLockedAt != null
+                RecoveryLocked = u.RecoveryLockedAt != null,
+                u.LockoutEnd
             })
             .ToListAsync();
 
-        // The root admin is matched against Admin__RootEmail after the query,
-        // since that setting lives in the environment, not the database.
+        var now = DateTimeOffset.UtcNow;
         var results = rows.Select(r => new
         {
             id = r.Id,
@@ -87,7 +85,8 @@ public class AdminAccountsController(
             isRootAdmin = AdminRules.IsRoot(config, r.Email),
             createdAt = r.CreatedAt,
             bookCount = r.BookCount,
-            recoveryLocked = r.RecoveryLocked
+            recoveryLocked = r.RecoveryLocked,
+            signInLocked = r.LockoutEnd > now
         });
 
         return Ok(new { results, limit = MaxResults });
@@ -96,6 +95,8 @@ public class AdminAccountsController(
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id)
     {
+        if (!await CanSee(id)) return NotFound();
+
         var now = DateTimeOffset.UtcNow;
 
         var account = await db.Users
@@ -136,24 +137,17 @@ public class AdminAccountsController(
             termsVersion = account.TermsVersion,
             termsAcceptedAt = account.TermsAcceptedAt,
             bookCount = account.BookCount,
-            // Password reset locked after 3 wrong security answers. Only an
-            // admin can clear it (below).
             recoveryLockedAt = account.RecoveryLockedAt,
-            // Sign-in locked for 15 minutes after 5 wrong passwords. Clears on
-            // its own, so the admin site only shows it.
             signInLockedUntil = account.LockoutEnd > now ? account.LockoutEnd : null
         });
     }
 
-    // Reopens password reset. Clears every wrong PIN and answer try, so the
-    // owner starts again with the PIN. Sign-in was never blocked by this
-    // lock, so nothing else changes.
-    //
-    // TODO: record who unlocked which account and when, once the admin
-    // activity log exists.
+    // Reopens password reset and clears every wrong PIN and answer try.
     [HttpPost("{id:guid}/unlock-recovery")]
     public async Task<IActionResult> UnlockRecovery(Guid id)
     {
+        if (!await CanSee(id)) return NotFound();
+
         var user = await users.FindByIdAsync(id.ToString());
         if (user is null || user.GuestExpiresAt is not null) return NotFound();
 
@@ -166,6 +160,14 @@ public class AdminAccountsController(
             return StatusCode(500, new { error = "The account could not be unlocked. Please try again." });
 
         return NoContent();
+    }
+
+    // The root admin sees every account; other admins never see admins.
+    private async Task<bool> CanSee(Guid id)
+    {
+        if (await AdminRules.IsRootAsync(User, users, config)) return true;
+        var adminRoleId = await AdminRoleId();
+        return !await db.UserRoles.AnyAsync(r => r.UserId == id && r.RoleId == adminRoleId);
     }
 
     private async Task<Guid> AdminRoleId() =>

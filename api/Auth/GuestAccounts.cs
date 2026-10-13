@@ -13,6 +13,9 @@ namespace VeggieBook.Api.Auth;
 //   when they sign up or sign in and choose to start fresh,
 //   or by GuestCleanupWorker, 24 hours after the guest started.
 //
+// Each new guest adds one to today's count (SiteSettings). No guest ID is
+// kept in that count.
+//
 // Deleting an app_user row cascades in the database to its roles, books,
 // answers, selections, and uploaded covers, so one delete removes it all.
 public class GuestAccounts(AccountsContext db, UserManager<AppUser> users)
@@ -46,6 +49,8 @@ public class GuestAccounts(AccountsContext db, UserManager<AppUser> users)
             throw new InvalidOperationException(
                 "Could not give the guest account the Guest role. Has migration 003 run?");
 
+        await SiteSettings.CountGuestAsync(db);
+
         return user;
     }
 
@@ -58,8 +63,8 @@ public class GuestAccounts(AccountsContext db, UserManager<AppUser> users)
     }
 
     // Moves every book from a guest into a real account, then deletes the
-    // guest. Does nothing if that id is not a guest (already expired, or not
-    // a guest at all), so a real account's books can never be moved.
+    // guest. Does nothing if that id is not a guest, so a real account's
+    // books can never be moved.
     public async Task MoveBooksAsync(Guid guestId, Guid toUserId)
     {
         await using var tx = await db.Database.BeginTransactionAsync();

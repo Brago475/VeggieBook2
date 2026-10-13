@@ -1,15 +1,17 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
+using VeggieBook.Api.Data;
+
 namespace VeggieBook.Api.Admin;
 
 // Rules about admin accounts that more than one admin endpoint needs.
 //
-// The root admin is the first admin account, set up by hand on the server.
-// It can never lose its Admin role through the admin site, so the site can
-// always be reached with at least one account. Changing or removing it is
-// done on the server.
+// There is one root (main) admin, set by Admin__RootEmail in the server's
+// .env, not in the code. Program.cs calls RequireRootEmail at startup, so the
+// API refuses to start without it.
 //
-// Its email is set by Admin__RootEmail in the server's .env, not in the
-// code, so the public repository does not name the account. Program.cs calls
-// RequireRootEmail at startup, so the API refuses to start without it.
+// Only the root admin can see other admins, add or remove admins, and open
+// identity records. Regular admins never see admin accounts at all.
 
 public static class AdminRules
 {
@@ -24,4 +26,14 @@ public static class AdminRules
     public static bool IsRoot(IConfiguration config, string? email) =>
         email is not null
         && string.Equals(email, config[Setting], StringComparison.OrdinalIgnoreCase);
+
+    // True when the signed-in user is the root admin.
+    public static async Task<bool> IsRootAsync(
+        ClaimsPrincipal principal,
+        UserManager<AppUser> users,
+        IConfiguration config)
+    {
+        var user = await users.GetUserAsync(principal);
+        return user is not null && IsRoot(config, user.Email);
+    }
 }

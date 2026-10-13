@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Auth;
@@ -10,25 +11,21 @@ namespace VeggieBook.Api.Admin;
 //
 //   GET /api/admin/accounts/{id}/books
 //
-// Admins only (Roles.AdminPolicy). Guests never appear here.
+// Admins only. Guests never appear here, and admin accounts appear to the
+// root admin only.
 //
-// Shows what each book holds: its vegetable or Secrets category, the answers
-// to the questions, the kept recipes or secrets, and the ones the user took
-// out later (kept = false, see BooksController.RemoveRecipe).
-//
-// Uploaded cover photos are never shown to the admin. The photo bytes are
-// not read from the database here at all; the response only says
-// "personal" so the admin knows a photo exists. Built-in covers are shared
-// public images, so their path is sent and the admin page can show them.
-//
-// Titles are in English, since the admin page is in English. The book's own
-// language is included so the admin can see which one the user chose.
+// Uploaded cover photos are never read here; the response only says
+// "personal". Built-in covers are public images, so their path is sent.
+// Titles are in English; the book's own language is included.
 
 [ApiController]
 [Route("api/admin/accounts/{id:guid}/books")]
 [Authorize(Policy = Roles.AdminPolicy)]
-public class AdminBooksController(AccountsContext db, VeggieBookContext content)
-    : ControllerBase
+public class AdminBooksController(
+    AccountsContext db,
+    VeggieBookContext content,
+    UserManager<AppUser> users,
+    IConfiguration config) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(Guid id)
@@ -37,6 +34,12 @@ public class AdminBooksController(AccountsContext db, VeggieBookContext content)
             .AsNoTracking()
             .AnyAsync(u => u.Id == id && u.GuestExpiresAt == null);
         if (!exists) return NotFound();
+
+        if (!await AdminRules.IsRootAsync(User, users, config))
+        {
+            var adminRoleId = await db.Roles.Where(r => r.Name == Roles.Admin).Select(r => r.Id).FirstAsync();
+            if (await db.UserRoles.AnyAsync(r => r.UserId == id && r.RoleId == adminRoleId)) return NotFound();
+        }
 
         var books = await db.Books
             .AsNoTracking()
@@ -59,9 +62,7 @@ public class AdminBooksController(AccountsContext db, VeggieBookContext content)
             })
             .ToListAsync();
 
-        // Names and titles come from the content database, a separate
-        // context. One query per kind of content for all books together,
-        // not one per book or per item.
+        // One query per kind of content for all books together.
         var vegetableCodes = books
             .Where(b => b.VegetableCode != null)
             .Select(b => b.VegetableCode!)
@@ -107,8 +108,7 @@ public class AdminBooksController(AccountsContext db, VeggieBookContext content)
             .Select(s => new { s.Id, s.DisplayNumber, s.HeadlineEn })
             .ToDictionaryAsync(s => s.Id);
 
-        // A recipe or secret since removed from the content database still
-        // shows, by id, so the record of what the user chose stays complete.
+        // Content since removed still shows, by id, so the record stays complete.
         object Item(string type, int contentId, int extraCopies)
         {
             if (type == "recipe" && recipes.TryGetValue(contentId, out var r))
