@@ -1,49 +1,41 @@
-import type { AllDataIconName } from '../alldata/AllDataIcons'
+// Fixed lists for the Export page.
 
-// What the Export page offers. Every format is built by
-// GET /api/admin/all-data/export (api/Admin/AdminAllDataController.cs).
-
-export type BundleFormat = {
-  format: string
-  label: string
-  text: string
-  icon: AllDataIconName
-}
-
-export const bundleFormats: BundleFormat[] = [
-  {
-    format: 'xlsx',
-    label: 'Excel',
-    text: 'Both files in one workbook, with column names in words. Also imports into SPSS.',
-    icon: 'sheet',
-  },
-  {
-    format: 'spss',
-    label: 'SPSS',
-    text: 'A zip ready for SPSS, with every question and answer labeled.',
-    icon: 'layers',
-  },
-  {
-    format: 'pdf',
-    label: 'PDF',
-    text: 'Both files in one PDF, for reading or printing.',
-    icon: 'file',
-  },
-  {
-    format: 'csv',
-    label: 'CSV',
-    text: 'A zip with books.csv and recipes-and-secrets.csv, for R, Python, or any tool.',
-    icon: 'file',
-  },
-]
-
-export const singleFormats: { format: string; label: string }[] = [
+export const allFormats: { format: string; label: string }[] = [
   { format: 'xlsx', label: 'Excel' },
-  { format: 'csv', label: 'CSV' },
   { format: 'spss', label: 'SPSS' },
+  { format: 'csv', label: 'CSV' },
+  { format: 'pdf', label: 'PDF' },
 ]
 
-export const sheets: { id: 'books' | 'items'; label: string; text: string }[] = [
-  { id: 'books', label: 'Books', text: 'One row per book' },
-  { id: 'items', label: 'Recipes and secrets', text: 'One row per recipe or secret' },
+export const studyFormats = [...allFormats, { format: 'zip', label: 'ZIP' }]
+
+export const zipContents = [
+  'Excel workbook',
+  'Books CSV',
+  'Recipes and secrets CSV',
+  'SPSS files',
+  'README',
+]
+
+export const bundleFiles: { id: string; label: string }[] = [
+  { id: 'books', label: 'Books' },
+  { id: 'items', label: 'Recipes and secrets' },
+  { id: 'participants', label: 'Participants' },
+  { id: 'codebook', label: 'Question codebook' },
+  { id: 'content', label: 'Content library' },
+]
+
+export const bundleFormats: { id: string; label: string }[] = [
+  { id: 'xlsx', label: 'Excel' },
+  { id: 'csv', label: 'CSV' },
+  { id: 'spss', label: 'SPSS' },
+  { id: 'pdf', label: 'PDF' },
+]
+
+export const formatGuide: { name: string; text: string }[] = [
+  { name: 'Excel', text: 'Easiest to read. Column names in words. Also opens in SPSS.' },
+  { name: 'SPSS', text: 'Ready to analyze, with every question and answer labeled.' },
+  { name: 'CSV', text: 'Plain data for R, Python, or any tool.' },
+  { name: 'PDF', text: 'For reading or printing, not for analysis.' },
+  { name: 'ZIP', text: 'Everything together, with a README.' },
 ]
