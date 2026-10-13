@@ -9,11 +9,11 @@ namespace VeggieBook.Api.Admin;
 
 // Finding an account and helping its owner.
 //
-//   GET  /api/admin/accounts?q=           search by email or username
+//   GET  /api/admin/accounts?q=&filter=reset|signin&take=25
+//                                         search by email or username
 //   GET  /api/admin/accounts/{id}         one account
 //   POST /api/admin/accounts/{id}/unlock-recovery
-//                                         reopen password reset after the
-//                                         owner failed their security question
+//                                         reopen password reset
 //
 // Admins only. Guests never appear here. Admin accounts are visible to the
 // root admin only; for every other admin they do not exist (search leaves
@@ -31,16 +31,22 @@ public class AdminAccountsController(
     UserManager<AppUser> users,
     IConfiguration config) : ControllerBase
 {
-    private const int MaxResults = 25;
+    private const int DefaultTake = 25;
+    private const int MaxTake = 200;
     private const int MaxSearchLength = 256;
 
     [HttpGet]
-    public async Task<IActionResult> Search([FromQuery] string? q)
+    public async Task<IActionResult> Search(
+        [FromQuery] string? q,
+        [FromQuery] string? filter,
+        [FromQuery] int take = DefaultTake)
     {
         var term = (q ?? "").Trim();
         if (term.Length > MaxSearchLength)
             return BadRequest(new { error = "Search is too long." });
 
+        take = Math.Clamp(take, 1, MaxTake);
+        var now = DateTimeOffset.UtcNow;
         var adminRoleId = await AdminRoleId();
         var root = await AdminRules.IsRootAsync(User, users, config);
 
@@ -48,6 +54,9 @@ public class AdminAccountsController(
 
         if (!root)
             query = query.Where(u => !db.UserRoles.Any(r => r.UserId == u.Id && r.RoleId == adminRoleId));
+
+        if (filter == "reset") query = query.Where(u => u.RecoveryLockedAt != null);
+        else if (filter == "signin") query = query.Where(u => u.LockoutEnd != null && u.LockoutEnd > now);
 
         if (term.Length > 0)
         {
@@ -59,9 +68,11 @@ public class AdminAccountsController(
                 EF.Functions.ILike(u.DisplayName!, pattern, "\\"));
         }
 
+        var total = await query.CountAsync();
+
         var rows = await query
             .OrderByDescending(u => u.CreatedAt)
-            .Take(MaxResults)
+            .Take(take)
             .Select(u => new
             {
                 u.Id,
@@ -75,7 +86,6 @@ public class AdminAccountsController(
             })
             .ToListAsync();
 
-        var now = DateTimeOffset.UtcNow;
         var results = rows.Select(r => new
         {
             id = r.Id,
@@ -89,7 +99,7 @@ public class AdminAccountsController(
             signInLocked = r.LockoutEnd > now
         });
 
-        return Ok(new { results, limit = MaxResults });
+        return Ok(new { results, limit = take, total });
     }
 
     [HttpGet("{id:guid}")]

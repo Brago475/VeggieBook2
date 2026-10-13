@@ -5,7 +5,6 @@ import { LoadingScreen } from './components/layout/LoadingScreen'
 import { navItems, type AdminTab } from './components/layout/navigation'
 import { useSession } from './hooks/useSession'
 import { useSplash } from './hooks/useSplash'
-import { Accounts } from './pages/Accounts'
 import { Activity } from './pages/Activity'
 import { AllData } from './pages/AllData'
 import { Books } from './pages/Books'
@@ -14,6 +13,7 @@ import { Export } from './pages/Export'
 import { Overview } from './pages/Overview'
 import { Participants } from './pages/Participants'
 import { QuestionAnalytics } from './pages/QuestionAnalytics'
+import { Settings } from './pages/Settings'
 import { SignIn } from './pages/SignIn'
 import { Studies } from './pages/Studies'
 import './styles/motion.css'
@@ -97,7 +97,7 @@ export function App() {
           {tab === 'activity' && <Activity />}
           {tab === 'content' && <Content />}
           {tab === 'export' && <Export />}
-          {tab === 'settings' && <Accounts currentEmail={session.email} />}
+          {tab === 'settings' && <Settings email={session.email} isRoot={session.isRoot} onSignOut={signOut} />}
           {soon && <ComingSoon title={soon.title} text={soon.text} />}
         </AdminShell>
       )}

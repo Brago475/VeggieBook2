@@ -9,10 +9,10 @@ using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Admin;
 
-// The admin site's Site settings.
+// The admin site's Settings.
 //
 // Any admin:
-//   GET  /api/admin/settings                  guests, research, system, you
+//   GET  /api/admin/settings                  accounts, guests, research, system, you
 //   PUT  /api/admin/settings/guests           turn guest visits on or off
 //   GET  /api/admin/settings/guests.csv       guest visits per day
 //   POST /api/admin/settings/signout-everywhere
@@ -25,6 +25,7 @@ namespace VeggieBook.Api.Admin;
 //                                             one research ID, on request
 //
 // Removing an admin: DELETE /api/admin/accounts/{id}/admin (root only).
+// Account counts leave admins out for every admin but the root admin.
 // Guest counts are numbers per day only; no guest is tracked.
 
 public record GuestsRequest(bool Allowed);
@@ -47,7 +48,16 @@ public class AdminSettingsController(
         var me = await users.GetUserAsync(User);
         if (me is null) return Unauthorized();
 
+        var root = AdminRules.IsRoot(config, me.Email);
         var now = DateTime.UtcNow;
+        var nowOffset = DateTimeOffset.UtcNow;
+        var weekAgo = now.AddDays(-7);
+        var adminRoleId = await AdminRoleId();
+
+        var people = db.Users.AsNoTracking().Where(u => u.GuestExpiresAt == null);
+        if (!root)
+            people = people.Where(u => !db.UserRoles.Any(r => r.UserId == u.Id && r.RoleId == adminRoleId));
+
         var today = SiteSettings.Today();
         var from = today.AddDays(-(GuestDays - 1));
         var days = await SiteSettings.GuestDaysAsync(db, from);
@@ -56,7 +66,7 @@ public class AdminSettingsController(
             .Select(d => new { day = d.ToString("yyyy-MM-dd"), visits = days.GetValueOrDefault(d) })
             .ToList();
 
-        var accounts = await db.Users.CountAsync(u => u.GuestExpiresAt == null);
+        var allAccounts = await db.Users.CountAsync(u => u.GuestExpiresAt == null);
         var accepted = await db.Users.CountAsync(u => u.GuestExpiresAt == null && u.TermsVersion == SignUpRules.TermsVersion);
         var running = await db.Studies.AsNoTracking().Where(s => s.EndedAt == null)
             .OrderByDescending(s => s.Number)
@@ -67,7 +77,14 @@ public class AdminSettingsController(
 
         return Ok(new
         {
-            me = new { email = me.Email, isRoot = AdminRules.IsRoot(config, me.Email) },
+            me = new { email = me.Email, isRoot = root },
+            accounts = new
+            {
+                total = await people.CountAsync(),
+                newThisWeek = await people.CountAsync(u => u.CreatedAt >= weekAgo),
+                resetLocked = await people.CountAsync(u => u.RecoveryLockedAt != null),
+                signInLocked = await people.CountAsync(u => u.LockoutEnd != null && u.LockoutEnd > nowOffset)
+            },
             guests = new
             {
                 allowed = await SiteSettings.GuestsAllowedAsync(db),
@@ -81,7 +98,7 @@ public class AdminSettingsController(
             {
                 termsVersion = SignUpRules.TermsVersion,
                 termsAccepted = accepted,
-                accounts
+                accounts = allAccounts
             },
             system = new
             {
