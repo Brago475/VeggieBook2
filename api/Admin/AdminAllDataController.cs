@@ -12,31 +12,14 @@ namespace VeggieBook.Api.Admin;
 // page.
 //
 //   GET /api/admin/all-data/books        file 1: one row per book
-//   GET /api/admin/all-data/items        file 2: one row per recipe or
-//                                        secret (answers=true repeats the
-//                                        book's 0/1 answers on every row)
+//   GET /api/admin/all-data/items        file 2: one row per recipe or secret
 //   GET /api/admin/all-data/questions    every question and answer choice
 //   GET /api/admin/all-data/export?format=xlsx|pdf|csv|spss|zip
-//                                        both files together, with column
-//                                        names in words:
-//                                          xlsx  one workbook with both
-//                                          pdf   one PDF with both
-//                                          csv   a zip of two CSV files
-//                                          spss  a zip ready for SPSS, with
-//                                                every label set
-//                                          zip   everything (Excel, CSV,
-//                                                SPSS, README)
-//                                        answers=true adds the book's
-//                                        answers to the recipe rows
+//                                        both files together
 //   GET /api/admin/all-data/export/{books|items}?format=xlsx|csv|spss
-//                                        one file by itself (short names)
+//                                        one file by itself
 //
-// Filters (all optional): from and to (yyyy-MM-dd, Eastern), age, vegetable
-// (a vegetable code such as BROCCOLI), and study (a study number such as 3:
-// only books saved while that study ran, by people whose tracking was on
-// at that moment; see Research/AllData/AllDataStudy.cs). A study that
-// doesn't exist gives 404.
-//
+// Filters: see ExportQuery.cs. A study that doesn't exist gives 404.
 // Admins only. Every row is keyed by the anonymous research ID.
 
 [ApiController]
@@ -47,32 +30,21 @@ public class AdminAllDataController(AccountsContext db, VeggieBookContext conten
     private const string XlsxType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
     [HttpGet("books")]
-    public async Task<IActionResult> Books(
-        [FromQuery] DateOnly? from,
-        [FromQuery] DateOnly? to,
-        [FromQuery] string? age,
-        [FromQuery] string? vegetable,
-        [FromQuery] int? study)
+    public async Task<IActionResult> Books([FromQuery] ExportQuery q)
     {
-        var window = await StudyWindow.FindAsync(db, study);
-        if (study is not null && window is null) return NoStudy(study.Value);
+        var window = await StudyWindow.FindAsync(db, q.Study);
+        if (q.Study is not null && window is null) return NoStudy(q.Study.Value);
 
-        return Ok(await AllDataSheets.BooksAsync(db, content, Filter(from, to, age, vegetable), window));
+        return Ok(await AllDataSheets.BooksAsync(db, content, q.Filter(), window));
     }
 
     [HttpGet("items")]
-    public async Task<IActionResult> Items(
-        [FromQuery] DateOnly? from,
-        [FromQuery] DateOnly? to,
-        [FromQuery] string? age,
-        [FromQuery] string? vegetable,
-        [FromQuery] int? study,
-        [FromQuery] bool answers = false)
+    public async Task<IActionResult> Items([FromQuery] ExportQuery q)
     {
-        var window = await StudyWindow.FindAsync(db, study);
-        if (study is not null && window is null) return NoStudy(study.Value);
+        var window = await StudyWindow.FindAsync(db, q.Study);
+        if (q.Study is not null && window is null) return NoStudy(q.Study.Value);
 
-        return Ok(await AllDataSheets.ItemsAsync(db, content, Filter(from, to, age, vegetable), answers, window));
+        return Ok(await AllDataSheets.ItemsAsync(db, content, q.Filter(), q.Answers, window));
     }
 
     [HttpGet("questions")]
@@ -81,25 +53,18 @@ public class AdminAllDataController(AccountsContext db, VeggieBookContext conten
 
     // Both files together.
     [HttpGet("export")]
-    public async Task<IActionResult> ExportAll(
-        [FromQuery] string? format,
-        [FromQuery] DateOnly? from,
-        [FromQuery] DateOnly? to,
-        [FromQuery] string? age,
-        [FromQuery] string? vegetable,
-        [FromQuery] int? study,
-        [FromQuery] bool answers = false)
+    public async Task<IActionResult> ExportAll([FromQuery] string? format, [FromQuery] ExportQuery q)
     {
-        var window = await StudyWindow.FindAsync(db, study);
-        if (study is not null && window is null) return NoStudy(study.Value);
+        var window = await StudyWindow.FindAsync(db, q.Study);
+        if (q.Study is not null && window is null) return NoStudy(q.Study.Value);
 
-        var filter = Filter(from, to, age, vegetable);
+        var filter = q.Filter();
         var books = await AllDataSheets.BooksAsync(db, content, filter, window);
-        var items = await AllDataSheets.ItemsAsync(db, content, filter, answers, window);
+        var items = await AllDataSheets.ItemsAsync(db, content, filter, q.Answers, window);
         var questions = await AllDataSource.LoadQuestionsAsync(content);
-        var filters = Describe(filter, window);
+        var filters = q.Describe(window);
         var stamp = books.GeneratedAt.ToString("yyyy-MM-dd");
-        var baseName = $"veggiebook2-all-data{StudyPart(window)}-{stamp}";
+        var baseName = $"veggiebook2-all-data{q.NamePart(window)}-{stamp}";
 
         Response.Headers.CacheControl = "no-store";
 
@@ -121,32 +86,24 @@ public class AdminAllDataController(AccountsContext db, VeggieBookContext conten
 
     // One file by itself.
     [HttpGet("export/{sheet}")]
-    public async Task<IActionResult> ExportOne(
-        string sheet,
-        [FromQuery] string? format,
-        [FromQuery] DateOnly? from,
-        [FromQuery] DateOnly? to,
-        [FromQuery] string? age,
-        [FromQuery] string? vegetable,
-        [FromQuery] int? study,
-        [FromQuery] bool answers = false)
+    public async Task<IActionResult> ExportOne(string sheet, [FromQuery] string? format, [FromQuery] ExportQuery q)
     {
-        var window = await StudyWindow.FindAsync(db, study);
-        if (study is not null && window is null) return NoStudy(study.Value);
+        var window = await StudyWindow.FindAsync(db, q.Study);
+        if (q.Study is not null && window is null) return NoStudy(q.Study.Value);
 
-        var filter = Filter(from, to, age, vegetable);
+        var filter = q.Filter();
 
         Sheet? data = sheet switch
         {
             "books" => await AllDataSheets.BooksAsync(db, content, filter, window),
-            "items" => await AllDataSheets.ItemsAsync(db, content, filter, answers, window),
+            "items" => await AllDataSheets.ItemsAsync(db, content, filter, q.Answers, window),
             _ => null
         };
         if (data is null) return NotFound(new { error = "Unknown file." });
 
-        var filters = Describe(filter, window);
+        var filters = q.Describe(window);
         var fileName = sheet == "books" ? "books" : "recipes-and-secrets";
-        var baseName = $"veggiebook2-{fileName}{StudyPart(window)}-{data.GeneratedAt:yyyy-MM-dd}";
+        var baseName = $"veggiebook2-{fileName}{q.NamePart(window)}-{data.GeneratedAt:yyyy-MM-dd}";
 
         Response.Headers.CacheControl = "no-store";
 
@@ -155,32 +112,11 @@ public class AdminAllDataController(AccountsContext db, VeggieBookContext conten
             "csv" => File(CsvExport.Build(data), "text/csv; charset=utf-8", $"{baseName}.csv"),
             "xlsx" => File(ExcelExport.Build(data, filters), XlsxType, $"{baseName}.xlsx"),
             "spss" => File(SpssExport.Build(data, filters, baseName), "application/zip", $"{baseName}-spss.zip"),
-            _ => BadRequest(new { error = "Format must be xlsx, csv, or spss." })
+            "pdf" => File(PdfExport.Build(data, filters), "application/pdf", $"{baseName}.pdf"),
+            _ => BadRequest(new { error = "Format must be xlsx, csv, spss, or pdf." })
         };
     }
 
     private NotFoundObjectResult NoStudy(int number) =>
         NotFound(new { error = $"There is no Study {number}." });
-
-    private static SheetFilter Filter(DateOnly? from, DateOnly? to, string? age, string? vegetable) =>
-        new(from, to, Clean(age), Clean(vegetable));
-
-    private static string Describe(SheetFilter f, StudyWindow? study)
-    {
-        var parts = new List<string>();
-        if (study is not null) parts.Add(study.Describe());
-        if (f.From is not null) parts.Add($"from {f.From:yyyy-MM-dd}");
-        if (f.To is not null) parts.Add($"to {f.To:yyyy-MM-dd}");
-        if (f.AgeRange is not null) parts.Add($"age {f.AgeRange}");
-        if (f.Vegetable is not null) parts.Add($"vegetable {f.Vegetable}");
-        return parts.Count == 0 ? "none" : string.Join(", ", parts);
-    }
-
-    // "-study-3" in file names, so downloads from different studies don't
-    // overwrite each other.
-    private static string StudyPart(StudyWindow? study) =>
-        study is null ? "" : $"-study-{study.Number}";
-
-    private static string? Clean(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

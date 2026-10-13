@@ -24,10 +24,19 @@ public record Sheet(
     IReadOnlyList<SheetColumn> Columns,
     IReadOnlyList<Dictionary<string, object?>> Rows);
 
-// Filters from the page. Dates are local (Eastern) calendar days. Null
-// means "no filter" for each one.
+// Filters for research sheets. Dates are local (Eastern) calendar days.
+// Null means no filter. Participant, BookNo, Category, Recipes and Secrets
+// are applied by All Data and Export (AllDataSource).
 public record SheetFilter(
     DateOnly? From,
     DateOnly? To,
     string? AgeRange,
-    string? Vegetable);
+    string? Vegetable,
+    string? Participant = null,
+    int? BookNo = null,
+    int? Category = null,
+    IReadOnlyList<int>? Recipes = null,
+    IReadOnlyList<int>? Secrets = null)
+{
+    public bool HasItems => (Recipes?.Count ?? 0) > 0 || (Secrets?.Count ?? 0) > 0;
+}

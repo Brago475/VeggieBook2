@@ -15,17 +15,14 @@ namespace VeggieBook.Api.Research.AllData;
 // Same rules as ResearchSheets.cs: guests and admins are left out, rows are
 // keyed by the anonymous research ID, and no email or name is read.
 //
-// Only books saved while the person's tracking was on are kept, always:
-// someone who turned tracking off (or was turned off by an admin) is not
-// tracked from that moment until it is back on, so the books they save in
-// that time never appear here or in any download. Books saved before they
-// turned it off stay. See Research/TrackingHistory.cs.
+// Only books saved while the person's tracking was on are kept, always.
+// Books saved while tracking was off never appear here or in any download.
+// See Research/TrackingHistory.cs.
 //
 // With a study (AllDataStudy.cs), only books saved while that study ran are
 // kept as well.
 //
-// Dates and times are Eastern (Kean is in New Jersey), or UTC if the server
-// can't find that time zone.
+// Dates and times are Eastern, or UTC if the server can't find that zone.
 
 // One answer choice. Key is the SPSS-safe column name (q1_1, q1_2...).
 public record AllDataChoice(
@@ -157,9 +154,9 @@ internal static class AllDataSource
     }
 
     // Every book of these people, numbered per person by date before any
-    // filter (so a person's 3rd book is always "3"), then filtered: first
-    // books saved while tracking was off are dropped, then the study and
-    // the page's filters.
+    // filter (so a person's 3rd book is always "3"), then filtered: books
+    // saved while tracking was off are dropped, then the study, then the
+    // page's filters.
     private static async Task<List<AdBook>> LoadBooksAsync(
         AccountsContext db,
         Dictionary<Guid, AdPerson> people,
@@ -211,6 +208,9 @@ internal static class AllDataSource
                             .Select(s => new AdItem(s.ContentType, s.ContentId, s.Kept, s.ExtraCopies))
                             .ToList()))));
 
+        var recipes = (filter.Recipes ?? []).ToHashSet();
+        var secrets = (filter.Secrets ?? []).ToHashSet();
+
         return numbered
             .Where(x => history.At(x.UserId, x.SavedAt).On)
             .Where(x => study is null || study.Includes(x.UserId, x.SavedAt))
@@ -219,6 +219,12 @@ internal static class AllDataSource
             .Where(b => filter.Vegetable is null || b.VegetableCode == filter.Vegetable)
             .Where(b => filter.From is null || DateOnly.FromDateTime(b.Local) >= filter.From)
             .Where(b => filter.To is null || DateOnly.FromDateTime(b.Local) <= filter.To)
+            .Where(b => filter.Participant is null || b.Person.ParticipantId == filter.Participant)
+            .Where(b => filter.BookNo is null || b.BookNo == filter.BookNo)
+            .Where(b => filter.Category is null || b.SecretCategoryId == filter.Category)
+            .Where(b => !filter.HasItems || b.Items.Any(i =>
+                (i.Type == "recipe" && recipes.Contains(i.Id)) ||
+                (i.Type == "secret" && secrets.Contains(i.Id))))
             .OrderBy(b => b.Person.ParticipantId)
             .ThenBy(b => b.Local)
             .ToList();
