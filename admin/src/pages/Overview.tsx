@@ -1,5 +1,4 @@
 import { DonutChart } from '../components/common/DonutChart'
-import { PageSkeleton } from '../components/common/PageSkeleton'
 import { Panel } from '../components/common/Panel'
 import { StatCard } from '../components/common/StatCard'
 import type { AdminTab } from '../components/layout/navigation'
@@ -11,6 +10,8 @@ import { RecentActivity } from '../components/overview/RecentActivity'
 import { StudyCard } from '../components/overview/StudyCard'
 import { WeeklyBooks, WeeklyLegend } from '../components/overview/WeeklyBooks'
 import { WhenSaved } from '../components/overview/WhenSaved'
+import { OverviewSkeleton } from '../components/skeletons/OverviewSkeleton'
+import { useHeld } from '../hooks/useHeld'
 import { useOverview } from '../hooks/useOverview'
 import '../styles/overview.css'
 
@@ -27,16 +28,18 @@ const plural = (n: number, one: string, many: string) => `${n.toLocaleString()} 
 
 export function Overview({ onOpen }: Props) {
   const { data, error, updatedAt } = useOverview()
+  // Outline stays up briefly even on a fast load.
+  const loading = useHeld(!data && !error)
 
-  if (!data) {
-    return error ? (
+  if (!data && error) {
+    return (
       <p className="error" role="alert">
         {error}
       </p>
-    ) : (
-      <PageSkeleton cards={5} label="Loading overview" />
     )
   }
+
+  if (loading || !data) return <OverviewSkeleton />
 
   const books = data.veggieBooks + data.secretsBooks
   const booksWeekly = data.weekly.map((w) => w.veggie + w.secrets)

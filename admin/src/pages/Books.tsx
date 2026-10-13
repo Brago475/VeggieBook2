@@ -5,10 +5,11 @@ import { BookTile } from '../components/books/BookTile'
 import { BookWindow } from '../components/books/BookWindow'
 import { BooksFilters, noBookFilters, type BookFilters } from '../components/books/BooksFilters'
 import { plural } from '../components/books/bookFormat'
-import { PageSkeleton } from '../components/common/PageSkeleton'
 import { StatCard } from '../components/common/StatCard'
 import { TopbarActions } from '../components/layout/TopbarSlot'
+import { BooksSkeleton } from '../components/skeletons/BooksSkeleton'
 import { useAdminBooks } from '../hooks/useAdminBooks'
+import { useHeld } from '../hooks/useHeld'
 import { allDataDownload } from '../utils/allDataQuery'
 import { noFilters } from '../utils/researchQuery'
 import '../styles/studies.css'
@@ -34,6 +35,9 @@ export function Books({ onOpenPersonData }: Props) {
   const [filters, setFilters] = useState<BookFilters>(noBookFilters)
   const [limit, setLimit] = useState(PAGE)
   const [openKey, setOpenKey] = useState<string | null>(null)
+  // Outline stays up briefly even on a fast load.
+  const firstLoad = useHeld(!data && !error)
+  const ready = !!data && !firstLoad
 
   // The API returns newest first.
   const shown = useMemo(() => {
@@ -110,9 +114,9 @@ export function Books({ onOpenPersonData }: Props) {
         </p>
       )}
 
-      {!data && !error && <PageSkeleton label="Loading books" />}
+      {!error && !ready && <BooksSkeleton />}
 
-      {data && (
+      {ready && data && (
         <div className="bk-stats">
           <StatCard
             index={0}
@@ -152,14 +156,14 @@ export function Books({ onOpenPersonData }: Props) {
         </div>
       )}
 
-      {data && (
+      {ready && data && (
         <div className="bk-card">
           <StudyView study={study} onStudy={changeStudy} books={data.counts.all} />
           <BooksFilters data={data} value={filters} onChange={changeFilters} />
         </div>
       )}
 
-      {data && shown.length === 0 && (
+      {ready && data && shown.length === 0 && (
         <p className="st-muted bk-empty">
           {data.books.length === 0
             ? study === null
@@ -169,7 +173,7 @@ export function Books({ onOpenPersonData }: Props) {
         </p>
       )}
 
-      {shown.length > 0 && (
+      {ready && shown.length > 0 && (
         <>
           <div className="bk-grid">
             {shown.slice(0, limit).map((b) => (

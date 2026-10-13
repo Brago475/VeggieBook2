@@ -1,0 +1,239 @@
+/* Outline skeletons: gray shapes with a light sweep, shown while a page
+   loads its data. Layout comes from each page's real classes; this file
+   only sizes the shapes. See components/skeletons/. */
+
+.sk {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background: #ececef;
+  border-radius: 6px;
+}
+
+.sk::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: sk-sweep 1.3s ease-in-out infinite;
+}
+
+@keyframes sk-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Vertical spacing between outline sections. */
+.sk-stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 1.6vw, 24px);
+}
+
+/* Number card row for pages without their own grid class. */
+.sk-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: clamp(12px, 1.2vw, 16px);
+}
+
+/* Live line above the Overview cards. */
+.sk-live {
+  width: min(340px, 80%);
+  height: 28px;
+  margin: 0 0 var(--sp-4);
+  border-radius: 999px;
+}
+
+/* Number card. */
+.card.sk-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 150px;
+}
+
+.sk-stat-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.sk-icon {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-md);
+}
+
+.sk-label {
+  width: 55%;
+  height: 14px;
+}
+
+.sk-value {
+  width: 90px;
+  height: 32px;
+  margin-top: var(--sp-2);
+}
+
+.sk-note {
+  width: 80%;
+  height: 12px;
+}
+
+/* Panel heading and body. */
+.sk-title {
+  width: min(200px, 60%);
+  height: 16px;
+}
+
+.sk-title.has-space {
+  margin-bottom: var(--sp-4);
+}
+
+.sk-chart,
+.sk-fill {
+  width: 100%;
+  border-radius: var(--r-md);
+}
+
+/* A plain card holding one block. */
+.card.sk-block {
+  padding: clamp(14px, 1.6vw, 24px);
+}
+
+/* Filter row: tabs on the left, search on the right. */
+.sk-bar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.sk-tabs {
+  width: min(420px, 100%);
+  height: 38px;
+  border-radius: 999px;
+}
+
+.sk-search {
+  width: min(280px, 100%);
+  height: 40px;
+  border-radius: 999px;
+}
+
+.sk-button {
+  width: 140px;
+  height: 38px;
+  border-radius: 999px;
+}
+
+/* A row of pill tabs. */
+.sk-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.sk-pill {
+  width: 110px;
+  height: 34px;
+  border-radius: 999px;
+}
+
+/* List rows: a round mark and two lines. */
+.sk-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.sk-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.sk-dot {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+}
+
+.sk-lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sk-line {
+  width: 100%;
+  height: 12px;
+}
+
+.sk-line.is-mid {
+  width: 70%;
+}
+
+.sk-line.is-short {
+  width: 45%;
+}
+
+/* Participant card. */
+.card.sk-person {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 84px;
+}
+
+/* Book tile: a cover and two lines. */
+.card.sk-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 12px;
+}
+
+.sk-cover {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-md);
+}
+
+/* Table: a header row and data rows. Column count comes from --sk-cols. */
+.sk-table-row {
+  display: grid;
+  grid-template-columns: repeat(var(--sk-cols, 6), minmax(0, 1fr));
+  gap: var(--sp-4);
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.sk-table-row:last-child {
+  border-bottom: none;
+}
+
+.sk-table-row.is-head .sk-line {
+  width: 60%;
+  height: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk::after {
+    display: none;
+    animation: none;
+  }
+}

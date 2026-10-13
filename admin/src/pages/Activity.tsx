@@ -3,11 +3,12 @@ import { ActivityFeed } from '../components/activity/ActivityFeed'
 import { csvRows, groups, inGroup, localDate, type ActivityGroup } from '../components/activity/activityFormat'
 import { AllDataIcon } from '../components/alldata/AllDataIcons'
 import { StudyView } from '../components/alldata/StudyView'
-import { PageSkeleton } from '../components/common/PageSkeleton'
 import { StatCard } from '../components/common/StatCard'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { downloadCsv } from '../components/questions/questionMath'
+import { ActivitySkeleton } from '../components/skeletons/ActivitySkeleton'
 import { useActivity } from '../hooks/useActivity'
+import { useHeld } from '../hooks/useHeld'
 import type { ActivityEvent } from '../types/activity'
 import '../styles/studies.css'
 import '../styles/books.css'
@@ -32,6 +33,9 @@ export function Activity() {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [limit, setLimit] = useState(PAGE)
+  // Outline stays up briefly even on a fast load.
+  const firstLoad = useHeld(!data && !error)
+  const ready = data !== null && data !== undefined && !firstLoad
 
   const all = useMemo(() => data?.events ?? [], [data])
 
@@ -93,9 +97,9 @@ export function Activity() {
         </p>
       )}
 
-      {!data && !error && <PageSkeleton label="Loading activity" />}
+      {!error && !ready && <ActivitySkeleton />}
 
-      {data && (
+      {ready && (
         <div className="bk-stats">
           <StatCard index={0} icon="activity" label="Activity this week" value={week.all} chip={chipDiff(week.all, week.allBefore)} chipUp={week.all >= week.allBefore} note="All events, last 7 days" />
           <StatCard index={1} icon="book" label="Books saved" value={week.saved} chip={chipDiff(week.saved, week.savedBefore)} chipUp={week.saved >= week.savedBefore} note="Last 7 days, tracking on" />
@@ -111,7 +115,7 @@ export function Activity() {
         </div>
       )}
 
-      {data && (
+      {ready && (
         <div className="bk-card">
           <StudyView study={study} onStudy={changeStudy} books={shown.length} />
           <div className="bk-tabs" role="tablist" aria-label="Activity type">
@@ -175,7 +179,7 @@ export function Activity() {
         </div>
       )}
 
-      {data && (
+      {ready && (
         <section className="av-card" aria-labelledby="av-title">
           <div className="av-head">
             <h2 id="av-title">All activity</h2>

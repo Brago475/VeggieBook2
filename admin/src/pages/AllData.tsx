@@ -10,9 +10,11 @@ import { DownloadMenu } from '../components/alldata/DownloadMenu'
 import { ItemsTable } from '../components/alldata/ItemsTable'
 import { Segmented } from '../components/alldata/Segmented'
 import { StudyView } from '../components/alldata/StudyView'
-import { PageSkeleton } from '../components/common/PageSkeleton'
 import { TopbarActions, TopbarBelow } from '../components/layout/TopbarSlot'
+import { AllDataSkeleton } from '../components/skeletons/AllDataSkeleton'
+import { CardRowSkeleton } from '../components/skeletons/CardRowSkeleton'
 import { useAllData } from '../hooks/useAllData'
+import { useHeld } from '../hooks/useHeld'
 import type { AllDataFile, AnswersView, BookTypeFilter, ColumnGroup, ItemStatusFilter } from '../types/allData'
 import type { ResearchFilters, ResearchOptions, SheetRow } from '../types/research'
 import { api } from '../utils/api'
@@ -69,6 +71,9 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
   const [study, setStudy] = useState<number | null>(initialStudy)
 
   const { books, items, questions, error, loading } = useAllData(filters, version, study)
+  // Outline stays up briefly even on a fast load.
+  const firstLoad = useHeld(!books && !error)
+  const ready = !!books && !firstLoad
 
   useEffect(() => {
     let cancelled = false
@@ -204,16 +209,16 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
         ))}
       </div>
 
-      <AllDataCards cards={cards} />
+      {ready || error ? <AllDataCards cards={cards} /> : <CardRowSkeleton />}
 
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
-      {!books && !error && <PageSkeleton cards={0} label="Loading data" />}
+      {!error && !ready && <AllDataSkeleton />}
 
-      {books && items && file === 'books' && (
+      {ready && books && items && file === 'books' && (
         <>
           {columnsOpen && <ColumnToggles shown={groups} onChange={setGroups} />}
 
@@ -261,7 +266,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
         </>
       )}
 
-      {books && items && file === 'items' && (
+      {ready && books && items && file === 'items' && (
         <ItemsTable
           key={`${items.generatedAt}-${bookType}-${search}-${status}`}
           rows={itemRows}

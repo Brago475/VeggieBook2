@@ -33,3 +33,49 @@ export type SecretDetail = {
   attachment: string | null
   links: { url: string; label: string | null }[]
 }
+
+// GET /api/admin/content/library (api/Admin/AdminContentController.cs)
+export type LibraryVegetable = {
+  code: string
+  shortCode: string
+  name: string
+  image: string | null
+  active: boolean
+}
+
+export type LibraryRecipe = {
+  id: number
+  code: string | null
+  vegetable: string
+  title: string
+  active: boolean
+  photo: string | null
+  kept: number
+  takenOut: number
+}
+
+export type LibraryCategory = {
+  id: number
+  name: string
+  image: string | null
+}
+
+export type LibrarySecret = {
+  id: number
+  number: number
+  active: boolean
+  category: number | null
+  headline: string
+  image: string | null
+  kept: number
+  takenOut: number
+}
+
+export type ContentLibrary = {
+  vegetables: LibraryVegetable[]
+  recipes: LibraryRecipe[]
+  categories: LibraryCategory[]
+  secrets: LibrarySecret[]
+}
+
+export type ContentKind = 'recipe' | 'secret'

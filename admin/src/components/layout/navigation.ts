@@ -52,8 +52,8 @@ export const navGroups: NavGroup[] = [
     label: 'System',
     items: [
       { id: 'activity', label: 'Activity', icon: 'activity', ready: true },
-      { id: 'content', label: 'Content', icon: 'content', ready: false },
-      { id: 'export', label: 'Export', icon: 'export', ready: false },
+      { id: 'content', label: 'Content', icon: 'content', ready: true },
+      { id: 'export', label: 'Export', icon: 'export', ready: true },
       { id: 'settings', label: 'Settings', icon: 'settings', ready: true },
     ],
   },

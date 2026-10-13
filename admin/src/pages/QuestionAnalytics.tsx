@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { AllDataIcon } from '../components/alldata/AllDataIcons'
-import { PageSkeleton } from '../components/common/PageSkeleton'
 import { StatCard } from '../components/common/StatCard'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { CompareTab } from '../components/questions/CompareTab'
@@ -9,6 +8,8 @@ import { QaFiltersBar } from '../components/questions/QaFiltersBar'
 import { QuestionsTab } from '../components/questions/QuestionsTab'
 import { StatisticsTab } from '../components/questions/StatisticsTab'
 import { applyFilters, noQaFilters, shares, veggieOf, type QaFilters } from '../components/questions/questionMath'
+import { QuestionsSkeleton } from '../components/skeletons/QuestionsSkeleton'
+import { useHeld } from '../hooks/useHeld'
 import { useQuestionData } from '../hooks/useQuestionData'
 import { questionName, shortAnswer } from '../utils/answerNames'
 import { allDataDownload } from '../utils/allDataQuery'
@@ -43,6 +44,9 @@ export function QuestionAnalytics() {
   const { data, error, loading, reload } = useQuestionData(study)
   const [filters, setFilters] = useState<QaFilters>(noQaFilters)
   const [tab, setTab] = useState<Tab>('questions')
+  // Outline stays up briefly even on a fast load.
+  const firstLoad = useHeld(!data && !error)
+  const ready = !!data && !firstLoad
 
   const books = useMemo(() => applyFilters(data?.books ?? [], filters), [data, filters])
   const veggie = useMemo(() => veggieOf(books), [books])
@@ -88,9 +92,9 @@ export function QuestionAnalytics() {
         </p>
       )}
 
-      {!data && !error && <PageSkeleton label="Loading answers" />}
+      {!error && !ready && <QuestionsSkeleton />}
 
-      {data && (
+      {ready && data && (
         <div className="bk-stats">
           <StatCard
             index={0}
@@ -130,7 +134,7 @@ export function QuestionAnalytics() {
         </div>
       )}
 
-      {data && (
+      {ready && data && (
         <>
           <QaFiltersBar
             data={data}
@@ -154,13 +158,13 @@ export function QuestionAnalytics() {
         </>
       )}
 
-      {data && books.length === 0 && (
+      {ready && data && books.length === 0 && (
         <p className="st-muted qa-empty">
           {data.books.length === 0 ? 'No books saved with tracking on yet.' : 'No books match these filters.'}
         </p>
       )}
 
-      {data && books.length > 0 && (
+      {ready && data && books.length > 0 && (
         <div key={tab} className="qa-body">
           {tab === 'questions' && <QuestionsTab data={data} veggie={veggie} />}
           {tab === 'picks' && <PicksTab data={data} books={books} />}

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
-import { PageSkeleton } from '../components/common/PageSkeleton'
 import { TopbarActions } from '../components/layout/TopbarSlot'
+import { StudiesSkeleton } from '../components/skeletons/StudiesSkeleton'
 import { DeleteStudyDialog } from '../components/studies/DeleteStudyDialog'
 import { RunningStudy } from '../components/studies/RunningStudy'
 import { StudyBooks } from '../components/studies/StudyBooks'
@@ -10,6 +10,7 @@ import { StudyTimeline } from '../components/studies/StudyTimeline'
 import { StudyToast } from '../components/studies/StudyToast'
 import { studyTitle } from '../components/studies/studyFormat'
 import type { AdminTab } from '../components/layout/navigation'
+import { useHeld } from '../hooks/useHeld'
 import { useStudies } from '../hooks/useStudies'
 import type { StudySummary } from '../types/studies'
 import '../styles/studies.css'
@@ -35,16 +36,18 @@ export function Studies({ onOpen, onOpenStudyData }: Props) {
   const [toast, setToast] = useState<string | null>(null)
   const dataRef = useRef<HTMLDivElement>(null)
   const closeToast = useCallback(() => setToast(null), [])
+  // Outline stays up briefly even on a fast load.
+  const firstLoad = useHeld(!data && !error)
 
-  if (!data) {
-    return error ? (
+  if (!data && error) {
+    return (
       <p className="error" role="alert">
         {error}
       </p>
-    ) : (
-      <PageSkeleton cards={0} label="Loading studies" />
     )
   }
+
+  if (firstLoad || !data) return <StudiesSkeleton />
 
   const running = data.studies.find((s) => s.running) ?? null
   const selected = data.studies.find((s) => s.id === picked) ?? running ?? data.studies[0] ?? null

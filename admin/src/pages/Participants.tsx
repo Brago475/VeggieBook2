@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { AllDataIcon } from '../components/alldata/AllDataIcons'
-import { PageSkeleton } from '../components/common/PageSkeleton'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import type { AdminTab } from '../components/layout/navigation'
 import { ParticipantsBanner } from '../components/participants/ParticipantsBanner'
 import { PersonCard } from '../components/participants/PersonCard'
 import { PersonPanel } from '../components/participants/PersonPanel'
 import { StatusTabs, type StatusFilter } from '../components/participants/StatusTabs'
+import { ParticipantsSkeleton } from '../components/skeletons/ParticipantsSkeleton'
+import { useHeld } from '../hooks/useHeld'
 import { useParticipants } from '../hooks/useParticipants'
 import '../styles/studies.css'
 import '../styles/participants.css'
@@ -26,6 +27,8 @@ export function Participants({ onOpen, onOpenPersonData }: Props) {
   const [search, setSearch] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
   const [panelClosed, setPanelClosed] = useState(false)
+  // Outline stays up briefly even on a fast load.
+  const firstLoad = useHeld(!data && !error)
 
   const shown = useMemo(() => {
     const needle = search.trim().toUpperCase()
@@ -34,15 +37,15 @@ export function Participants({ onOpen, onOpenPersonData }: Props) {
     )
   }, [data, filter, search])
 
-  if (!data) {
-    return error ? (
+  if (!data && error) {
+    return (
       <p className="error" role="alert">
         {error}
       </p>
-    ) : (
-      <PageSkeleton cards={0} label="Loading participants" />
     )
   }
+
+  if (firstLoad || !data) return <ParticipantsSkeleton />
 
   // The panel shows the person clicked, or the first card until one is.
   const person = panelClosed

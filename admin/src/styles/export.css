@@ -1,0 +1,201 @@
+/* Export page. See pages/Export.tsx and components/export/. */
+
+.ex-page {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 1.6vw, 24px);
+  max-width: 1100px;
+}
+
+/* Everything at once */
+
+.ex-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: clamp(18px, 2vw, 28px);
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.ex-hero-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.ex-hero-text {
+  margin: 6px 0 0;
+  max-width: 640px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #52525b;
+}
+
+.ex-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.ex-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #52525b;
+}
+
+.ex-field select {
+  min-width: 240px;
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: 10px;
+}
+
+.ex-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ex-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #15803d;
+}
+
+.ex-main {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  align-self: flex-start;
+  min-height: 48px;
+  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  text-decoration: none;
+  background: #15803d;
+  border-radius: 999px;
+}
+
+.ex-main:hover {
+  color: #ffffff;
+  background: #14532d;
+}
+
+.ex-main:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 3px;
+}
+
+.ex-scope {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* One format */
+
+.ex-section-title {
+  margin: 8px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 16px;
+}
+
+.ex-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.ex-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ex-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #15803d;
+  background: #f0faf3;
+  border-radius: 8px;
+}
+
+.ex-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.ex-card-text {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #52525b;
+}
+
+.ex-card-link {
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* One file by itself */
+
+.ex-file-name {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.ex-file-note {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ex-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ex-links .st-button {
+  text-decoration: none;
+}
+
+.ex-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
