@@ -7,9 +7,11 @@ namespace VeggieBook.Api.Admin;
 
 // Allows an action only for the root admin. Every other admin gets 403,
 // even when calling the route directly. Use together with the Admin policy.
+// System.Attribute is named in full because VeggieBook.Api.Data has its own
+// Attribute class.
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public sealed class RootAdminOnlyAttribute : Attribute, IAsyncActionFilter
+public sealed class RootAdminOnlyAttribute : System.Attribute, IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
