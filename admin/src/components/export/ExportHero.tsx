@@ -3,6 +3,7 @@ import type { StudySummary } from '../../types/studies'
 import { exportUrl, shortDay } from '../../utils/exportQuery'
 import { AllDataIcon } from '../alldata/AllDataIcons'
 import { studyTitle } from '../studies/studyFormat'
+import { CountStat } from './CountStat'
 import { allFormats, zipContents } from './exportFormats'
 
 // Everything in one zip, for all data or one study. The scope and answers
@@ -22,7 +23,6 @@ export function ExportHero({ studies, study, onStudy, answers, onAnswers, summar
   const picked = study === null ? null : studies.find((s) => s.number === study) ?? null
   const scopeName = picked ? studyTitle(picked) : 'All data'
   const params = { study, answers }
-  const value = (n: number | undefined) => (n === undefined ? '...' : n.toLocaleString())
   const dates =
     summary === null ? '...' : summary.from && summary.to ? `${shortDay(summary.from)} to ${shortDay(summary.to)}` : 'None yet'
 
@@ -72,18 +72,9 @@ export function ExportHero({ studies, study, onStudy, answers, onAnswers, summar
 
       <div className="ex-hero-foot">
         <dl className="ex-stats">
-          <div>
-            <dt>Books</dt>
-            <dd>{value(summary?.books)}</dd>
-          </div>
-          <div>
-            <dt>Participants</dt>
-            <dd>{value(summary?.participants)}</dd>
-          </div>
-          <div>
-            <dt>Recipes and secrets</dt>
-            <dd>{value(summary?.items)}</dd>
-          </div>
+          <CountStat label="Books" value={summary?.books ?? null} />
+          <CountStat label="Participants" value={summary?.participants ?? null} />
+          <CountStat label="Recipes and secrets" value={summary?.items ?? null} />
           <div>
             <dt>Dates covered</dt>
             <dd>{dates}</dd>

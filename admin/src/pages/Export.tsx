@@ -8,12 +8,13 @@ import { StudyDownloads } from '../components/export/StudyDownloads'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { studyTitle } from '../components/studies/studyFormat'
 import { useContentLibrary } from '../hooks/useContentLibrary'
-import { useExportSummary } from '../hooks/useExportSummary'
+import { useExportSummary, type ExportSummary } from '../hooks/useExportSummary'
 import { useParticipants } from '../hooks/useParticipants'
 import { useRecentDownloads } from '../hooks/useRecentDownloads'
 import { useStudies } from '../hooks/useStudies'
 import '../styles/studies.css'
 import '../styles/export.css'
+import '../styles/export-motion.css'
 
 // Admin Export page: every research download in one place. The scope (all
 // data or one study) and the answers option chosen in the hero apply to
@@ -28,6 +29,11 @@ export function Export() {
   const [study, setStudy] = useState<number | null>(null)
   const [answers, setAnswers] = useState(false)
   const { summary } = useExportSummary({ study })
+
+  // Keeps the last counts on screen while new ones load, so the hero
+  // numbers count from old to new instead of dropping to zero.
+  const [shownSummary, setShownSummary] = useState<ExportSummary | null>(null)
+  if (summary && summary !== shownSummary) setShownSummary(summary)
 
   const studies = studyData?.studies ?? []
   const picked = study === null ? null : studies.find((s) => s.number === study) ?? null
@@ -47,7 +53,7 @@ export function Export() {
             onStudy={setStudy}
             answers={answers}
             onAnswers={setAnswers}
-            summary={summary}
+            summary={shownSummary}
             onDownload={recent.remember}
           />
           <StudyDownloads studies={studies} answers={answers} onDownload={recent.remember} />
