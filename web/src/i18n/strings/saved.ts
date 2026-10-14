@@ -1,5 +1,5 @@
-// The screens shown right after a book is saved. When recipes or secrets
-// were picked for extra copies, those come first, then the whole book.
+// The screen shown right after a book is saved. When recipes or secrets
+// were picked for extra copies, it offers those; otherwise the whole book.
 // Spanish uses tú.
 
 type Noun = 'recipe' | 'secret'
@@ -20,11 +20,9 @@ const en = {
     `PRINT ${n} ${noun === 'secret' ? 'SECRETS' : 'RECIPES'}`,
   downloadMany: (n: number, noun: Noun): string =>
     `DOWNLOAD ${n} ${noun === 'secret' ? 'SECRETS' : 'RECIPES'}`,
-  next: 'NEXT',
-  nextHint: 'Next: print or download your whole book',
+  done: 'Done, go to my books',
+  bookLater: 'You can print or download the whole book anytime from the ⋮ on your book.',
 
-  wholeTitle: 'Your whole book',
-  wholeSub: 'Want a copy of the full book too?',
   printBook: 'PRINT BOOK',
   downloadBook: 'DOWNLOAD BOOK',
   skip: 'Skip, go to my books',
@@ -49,11 +47,9 @@ const es: typeof en = {
     `IMPRIMIR ${n} ${noun === 'secret' ? 'SECRETOS' : 'RECETAS'}`,
   downloadMany: (n: number, noun: Noun) =>
     `DESCARGAR ${n} ${noun === 'secret' ? 'SECRETOS' : 'RECETAS'}`,
-  next: 'SIGUIENTE',
-  nextHint: 'Después: imprime o descarga tu libro completo',
+  done: 'Listo, ir a mis libros',
+  bookLater: 'Puedes imprimir o descargar el libro completo cuando quieras desde el ⋮ de tu libro.',
 
-  wholeTitle: 'Tu libro completo',
-  wholeSub: '¿También quieres una copia del libro completo?',
   printBook: 'IMPRIMIR LIBRO',
   downloadBook: 'DESCARGAR LIBRO',
   skip: 'Omitir, ir a mis libros',

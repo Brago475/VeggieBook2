@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { SafeImage } from '../components/common/SafeImage'
 import { BookCard } from '../components/library/BookCard'
 import { useBookDetail } from '../hooks/useBookDetail'
@@ -8,16 +7,15 @@ import { useStrings } from '../i18n/useStrings'
 import { downloadPdf, printPdf } from '../utils/bookPdf'
 import { coverSrc } from '../utils/coverSrc'
 
-// Shown right after a book is saved, in place of home, in up to two steps:
+// Shown right after a book is saved, in place of home.
 //
-//   extras  only when recipes or secrets were picked for extra copies:
-//           one picked prints or downloads on its own; several print or
-//           download together in one file. NEXT goes to the book step.
-//   book    print or download the whole book, or Skip to the library.
+// With recipes or secrets picked for extra copies, it offers those: one
+// prints or downloads on its own, several print or download together in
+// one file. A line points to the ⋮ on the book for the whole book.
 //
-// With nothing picked, or if the book cannot be loaded, it opens on the
-// book step. Printing or downloading keeps the screen up, so a person can
-// do more than one.
+// With nothing picked, or if the book cannot be loaded, it offers the
+// whole book instead. Printing or downloading keeps the screen up, so a
+// person can do both before leaving.
 
 type Props = {
   bookId: string
@@ -85,7 +83,6 @@ export function BookSaved({
   // Only the hook for this kind of book loads anything.
   const veggie = useBookDetail(isSecrets ? null : bookId)
   const secretBook = useSecretBook(isSecrets ? bookId : null)
-  const [step, setStep] = useState<'extras' | 'book'>('extras')
 
   const loading = isSecrets ? secretBook.loading : veggie.loading
   const failed = isSecrets ? secretBook.error !== null : veggie.error !== null
@@ -104,10 +101,8 @@ export function BookSaved({
       .map((r) => ({ id: r.id, title: r.title, image: r.photo }))
   }
 
-  const hadExtras = extras.length > 0
-
   // While the book loads, the heading holds the screen.
-  if (step === 'extras' && loading) {
+  if (loading) {
     return (
       <div className="book-saved" role="status" aria-busy="true">
         <CheckBadge />
@@ -117,7 +112,7 @@ export function BookSaved({
     )
   }
 
-  if (step === 'extras' && !failed && hadExtras) {
+  if (!failed && extras.length > 0) {
     const one = extras.length === 1 ? extras[0] : null
     const target = one
       ? isSecrets
@@ -174,25 +169,22 @@ export function BookSaved({
           </button>
         </div>
 
-        <div className="book-saved-next">
-          <button type="button" className="book-saved-next-btn" onClick={() => setStep('book')}>
-            {t.next}
+        <div className="book-saved-done">
+          <button type="button" className="book-saved-done-btn" onClick={onDone}>
+            {t.done}
           </button>
-          <span className="book-saved-hint">{t.nextHint}</span>
+          <p className="book-saved-hint">{t.bookLater}</p>
         </div>
       </div>
     )
   }
 
-  // The whole book. After the extras step it reads as the next step;
-  // otherwise it is the saved screen itself.
-  const afterExtras = step === 'book' && hadExtras
-
+  // Nothing picked for extra copies: the whole book.
   return (
     <div className="book-saved">
-      {!afterExtras && <CheckBadge />}
-      <h1 className="book-saved-title">{afterExtras ? t.wholeTitle : t.title}</h1>
-      <p className="book-saved-sub">{afterExtras ? t.wholeSub : t.sub}</p>
+      <CheckBadge />
+      <h1 className="book-saved-title">{t.title}</h1>
+      <p className="book-saved-sub">{t.sub}</p>
 
       <div className="book-saved-card">
         <BookCard
