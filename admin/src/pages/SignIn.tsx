@@ -2,11 +2,14 @@ import { useState, type FormEvent } from 'react'
 import '../styles/signin.css'
 
 // Sign in to the admin site with a VeggieBook2 account that has the Admin
-// role. Same email and password as the public site.
+// role. Same email and password as the public site, so a forgotten password
+// is reset there.
 
 type Props = {
   onSignIn: (email: string, password: string) => Promise<void>
 }
+
+const RESET_URL = 'https://veggiebook2.com/forgot-password'
 
 export function SignIn({ onSignIn }: Props) {
   const [email, setEmail] = useState('')
@@ -30,43 +33,58 @@ export function SignIn({ onSignIn }: Props) {
 
   return (
     <div className="signin">
-      <form className="card signin-card" onSubmit={submit}>
-        <h1 className="signin-title">
-          VeggieBook <span className="shell-badge">Admin</span>
-        </h1>
-        <p className="muted">Sign in with an admin account.</p>
+      <form className="signin-card" onSubmit={submit}>
+        <div className="signin-brand">
+          <span className="signin-name">VeggieBook</span>
+          <span className="signin-badge">Admin</span>
+        </div>
 
-        <label className="field">
-          <span className="field-label">Email</span>
-          <input
-            type="email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
+        <div className="signin-head">
+          <h1 className="signin-title">Sign in</h1>
+          <p className="signin-sub">For the VeggieBook2 research team.</p>
+        </div>
 
-        <label className="field">
-          <span className="field-label">Password</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
+        <div className="signin-fields">
+          <label className="signin-field">
+            <span>Email address</span>
+            <input
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+
+          <label className="signin-field">
+            <span>Password</span>
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+        </div>
 
         {error && (
-          <p className="error" role="alert">
+          <p className="signin-error" role="alert">
             {error}
           </p>
         )}
 
-        <button type="submit" className="button-primary" disabled={busy}>
+        <button type="submit" className="signin-submit" disabled={busy}>
           {busy ? 'Signing in...' : 'Sign in'}
         </button>
+
+        <p className="signin-note">
+          Admin accounts only. Forgot your password? Reset it on{' '}
+          <a href={RESET_URL} target="_blank" rel="noopener noreferrer">
+            veggiebook2.com
+          </a>
+          .
+        </p>
       </form>
     </div>
   )

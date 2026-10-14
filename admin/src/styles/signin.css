@@ -1,4 +1,5 @@
-/* The admin sign-in screen. See pages/SignIn.tsx. */
+/* The admin sign-in screen (pages/SignIn.tsx): a white card on light gray,
+   in the same plain look as the admin pages. */
 
 .signin {
   display: flex;
@@ -6,18 +7,143 @@
   align-items: center;
   justify-content: center;
   padding: var(--sp-4);
+  background: var(--subtle);
+  box-sizing: border-box;
 }
 
 .signin-card {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-4);
+  gap: 22px;
   width: 100%;
-  max-width: 380px;
+  max-width: 420px;
+  padding: 40px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+.signin-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.signin-name {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.signin-badge {
+  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--root);
+  border: 1.5px solid var(--root);
+  border-radius: 4px;
+}
+
+.signin-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .signin-title {
   margin: 0;
   font-size: 22px;
-  color: var(--green-deep);
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.signin-sub {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.signin-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.signin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.signin-field input {
+  height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.signin-field input:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+  border-color: var(--ink);
+}
+
+.signin-error {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--warn);
+  background: var(--warn-tint);
+  border-radius: 8px;
+}
+
+.signin-submit {
+  height: 48px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.signin-submit:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.signin-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.signin-submit:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.signin-note {
+  margin: 0;
+  padding-top: 16px;
+  font-size: 13px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+.signin-note a {
+  color: var(--ink);
+  font-weight: 700;
 }

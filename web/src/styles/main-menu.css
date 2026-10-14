@@ -1,10 +1,7 @@
-/* The ☰ Menu button on the home screen (MainMenu.tsx).
-
-   The button is the same white pill the Account button was, so the
-   heading looks the same as before. The list it opens is the ⋮ menu's
-   list (menu.css); this file widens it a little for longer labels, draws
-   a thin line between rows, a stronger line between the two groups, and
-   shows Sign out and End guest visit in red. */
+/* The ☰ Menu button on the home screen and the list it opens
+   (MainMenu.tsx), styled like the admin sidebar: a soft gray panel, small
+   spaced-out section labels, and rows that turn green with a bar on the
+   left. The list builds on the ⋮ menu's list (menu.css) for its position. */
 
 .main-menu {
   flex: 0 0 auto;
@@ -45,26 +42,65 @@
   color: var(--text-muted);
 }
 
+/* The panel. */
 .main-menu .menu-list {
-  min-width: 230px;
+  min-width: 270px;
+  padding: 12px 10px 10px;
+  background: #f6f7f5;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(20, 20, 15, 0.16);
+}
+
+/* VEGGIEBOOK, LANGUAGE, ACCOUNT. */
+.main-menu-heading {
+  list-style: none;
+  padding: 4px 10px 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.main-menu-divider {
+  height: 0;
+  margin: 8px 4px;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+/* Rows. */
+.main-menu .menu-item {
+  min-height: 46px;
+  padding: 0 10px;
+  border-radius: 10px;
+  font-size: var(--font-label);
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease;
 }
 
 .main-menu .menu-item svg {
   color: var(--text-muted);
 }
 
-/* A thin line between rows, except above the first row and right below
-   the group line. */
-.main-menu .menu-list > li:not(:first-child):not(.main-menu-divider):not(.main-menu-divider + li) {
-  border-top: 1px solid var(--line);
+/* Hover and keyboard focus: the admin sidebar's active look. */
+.main-menu .menu-item:hover,
+.main-menu .menu-item:focus-visible {
+  background: #e3f0d6;
+  color: var(--green-deep);
+  box-shadow: inset 4px 0 0 var(--green-dark);
+  outline: none;
 }
 
-/* The line between features (above) and the account (below). */
-.main-menu-divider {
-  height: 0;
-  margin: 6px 0;
-  list-style: none;
-  border-top: 2px solid var(--line-strong);
+.main-menu .menu-item:hover svg,
+.main-menu .menu-item:focus-visible svg {
+  color: var(--green-deep);
 }
 
 /* Sign out and End guest visit. */
@@ -73,6 +109,8 @@
   color: var(--danger);
 }
 
-.main-menu .menu-item.is-danger:hover {
+.main-menu .menu-item.is-danger:hover,
+.main-menu .menu-item.is-danger:focus-visible {
   background: var(--danger-tint);
+  box-shadow: inset 4px 0 0 var(--danger);
 }

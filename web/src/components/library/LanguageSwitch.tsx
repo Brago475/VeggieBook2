@@ -1,14 +1,15 @@
 import type { Lang } from '../../i18n/language'
 import { useLang } from '../../i18n/languageContext'
-import { COMMON } from '../../i18n/strings/common'
 import { useStrings } from '../../i18n/useStrings'
+import { COMMON } from '../../i18n/strings/common'
 import { GlobeIcon } from '../icons/LanguageIcons'
 import '../../styles/language-switch.css'
 
 // English and Spanish. Each option is written in its own language so it can
 // be found in either one. Choosing one switches the site at once.
 //
-//   menu    a row in the home menu, above Sign out, with a "Language" label
+//   menu    the full-width switch in the home menu, under its LANGUAGE
+//           label (MainMenu.tsx)
 //   inline  a small centered switch, under Sign in on Welcome
 
 const OPTIONS: { lang: Lang; label: string }[] = [
@@ -25,18 +26,11 @@ export function LanguageSwitch({ variant = 'menu' }: Props) {
 
   return (
     <div
-      className={inMenu ? 'lang-switch' : 'lang-switch is-inline'}
+      className={inMenu ? 'lang-switch is-menu' : 'lang-switch is-inline'}
       role="group"
-      aria-label="Language / Idioma"
+      aria-label={inMenu ? t.language : 'Language / Idioma'}
     >
-      {inMenu ? (
-        <span className="lang-switch-label">
-          <GlobeIcon />
-          {t.language}
-        </span>
-      ) : (
-        <GlobeIcon className="lang-switch-globe" />
-      )}
+      {!inMenu && <GlobeIcon className="lang-switch-globe" />}
 
       <span className="lang-switch-options">
         {OPTIONS.map((option) => {

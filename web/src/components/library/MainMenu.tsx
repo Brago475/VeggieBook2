@@ -1,30 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import { COMMON } from '../../i18n/strings/common'
+import { HOME } from '../../i18n/strings/home'
 import { useStrings } from '../../i18n/useStrings'
 import { MenuIcon } from '../icons/LibraryIcons'
 import { LanguageSwitch } from './LanguageSwitch'
 
-// The ☰ Menu button on the home screen, and the list it opens.
+// The ☰ Menu button on the home screen, and the list it opens, styled like
+// the admin sidebar: small spaced-out section labels over plain rows.
 //
-// Two groups, with a line between them:
-//   items         features and information, such as About VeggieBook.
-//                 New features are added here.
-//   accountItems  the account: Account settings and Sign out, or for a
-//                 guest, Create account, Sign in, and End guest visit.
-//                 Kept at the bottom, the way most apps do it, so signing
-//                 out is always in the same easy place.
-//
-// The language switch sits in the account group, just above the red items
-// (Sign out, End guest visit).
+// Three sections:
+//   VEGGIEBOOK  items: features and information, such as About VeggieBook.
+//               New features are added here.
+//   LANGUAGE    the English and Spanish switch.
+//   ACCOUNT     accountItems: Profile and settings and Sign out, or for a
+//               guest, Create account, Sign in, and End guest visit. The red
+//               items come last, so signing out is always in the same place.
 //
 // Labeled "Menu", not three lines alone: the original VeggieBook's research
 // found pantry clients did best with plainly labeled controls.
 //
-// The list uses the ⋮ menu's styles (menu.css), so both menus look and
-// behave the same. Like the ⋮ menu, it closes when an item is picked, on a
-// click anywhere outside, and on Escape, which also puts focus back on the
-// button so keyboard users keep their place. Changing the language keeps
-// it open.
+// Closes when an item is picked, on a click anywhere outside, and on
+// Escape, which also puts focus back on the button so keyboard users keep
+// their place. Changing the language keeps it open.
 
 export type MainMenuItem = {
   label: string
@@ -40,6 +37,7 @@ type Props = {
 
 export function MainMenu({ items, accountItems }: Props) {
   const t = useStrings(COMMON)
+  const home = useStrings(HOME)
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -91,6 +89,16 @@ export function MainMenu({ items, accountItems }: Props) {
     )
   }
 
+  function heading(label: string) {
+    return (
+      <li role="presentation" className="main-menu-heading">
+        {label}
+      </li>
+    )
+  }
+
+  const divider = <li role="separator" className="main-menu-divider" />
+
   const accountPlain = accountItems.filter((item) => !item.danger)
   const accountDanger = accountItems.filter((item) => item.danger)
 
@@ -110,12 +118,22 @@ export function MainMenu({ items, accountItems }: Props) {
 
       {open && (
         <ul className="menu-list" role="menu" ref={listRef}>
-          {items.map(row)}
-          {items.length > 0 && <li role="separator" className="main-menu-divider" />}
-          {accountPlain.map(row)}
+          {items.length > 0 && (
+            <>
+              {heading(home.menuVeggieBook)}
+              {items.map(row)}
+              {divider}
+            </>
+          )}
+
+          {heading(t.language)}
           <li role="none">
             <LanguageSwitch />
           </li>
+          {divider}
+
+          {heading(home.menuAccount)}
+          {accountPlain.map(row)}
           {accountDanger.map(row)}
         </ul>
       )}

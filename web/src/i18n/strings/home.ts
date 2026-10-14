@@ -7,6 +7,8 @@ const en = {
   guestSub: 'Guest: your books are kept until you sign out, for up to 24 hours',
   signedInAs: (name: string) => `Signed in as ${name}`,
 
+  menuVeggieBook: 'VeggieBook',
+  menuAccount: 'Account',
   about: 'About VeggieBook',
   createAccount: 'Create account',
   signIn: 'Sign in',
@@ -57,6 +59,8 @@ const es: typeof en = {
   guestSub: 'Invitado: tus libros se guardan hasta por 24 horas',
   signedInAs: (name: string) => `Sesión iniciada como ${name}`,
 
+  menuVeggieBook: 'VeggieBook',
+  menuAccount: 'Cuenta',
   about: 'Acerca de VeggieBook',
   createAccount: 'Crear cuenta',
   signIn: 'Iniciar sesión',

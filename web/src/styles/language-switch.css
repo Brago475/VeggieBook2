@@ -1,34 +1,44 @@
-/* The language switch (LanguageSwitch.tsx): a row in the home menu, or a
-   small centered switch under Sign in on Welcome. */
+/* The language switch (LanguageSwitch.tsx): the full-width switch in the
+   home menu, or a small centered switch under Sign in on Welcome. */
 
 .lang-switch {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px 14px;
-  padding: 10px 14px;
 }
 
+/* In the home menu: two equal halves in a gray box. */
+.lang-switch.is-menu {
+  padding: 2px 6px 4px;
+}
+
+.lang-switch.is-menu .lang-switch-options {
+  display: flex;
+  width: 100%;
+  padding: 3px;
+  background: #e9ebe7;
+  border-radius: 10px;
+}
+
+.lang-switch.is-menu .lang-switch-btn {
+  flex: 1;
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.lang-switch.is-menu .lang-switch-btn.is-on {
+  font-weight: 800;
+  color: var(--green-deep);
+}
+
+/* Under Sign in on Welcome. */
 .lang-switch.is-inline {
   justify-content: center;
   gap: 10px;
   padding: 2px 0 0;
-}
-
-.lang-switch-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  color: inherit;
-}
-
-.lang-switch-label svg {
-  flex: none;
-  width: 20px;
-  height: 20px;
 }
 
 .lang-switch-globe {
