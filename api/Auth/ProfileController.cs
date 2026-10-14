@@ -23,7 +23,8 @@ namespace VeggieBook.Api.Auth;
 [EnableRateLimiting(AuthSetup.RateLimitPolicy)]
 public class ProfileController(UserManager<AppUser> users) : ControllerBase
 {
-    private const string UsernameTaken = "That username is taken. Please pick another one.";
+    private static readonly ApiError UsernameTaken =
+        new(ErrorCodes.UsernameTaken, "That username is taken. Please pick another one.");
 
     // The unique index from db/migrations/005_profile.sql.
     private const string DisplayNameIndex = "app_user_display_name_idx";
@@ -45,12 +46,14 @@ public class ProfileController(UserManager<AppUser> users) : ControllerBase
         var displayName = req.DisplayName?.Trim() ?? "";
         var error = SignUpRules.CheckName(req.FirstName, "first name")
             ?? SignUpRules.CheckName(req.LastName, "last name")
-            ?? (displayName.Length == 0 ? "Please enter a username." : null)
+            ?? (displayName.Length == 0
+                ? new ApiError(ErrorCodes.UsernameRequired, "Please enter a username.")
+                : null)
             ?? SignUpRules.CheckDisplayName(displayName);
-        if (error is not null) return BadRequest(new { error });
+        if (error is not null) return BadRequest(error.Body());
 
         if (await TakenBySomeoneElse(displayName, user.Id))
-            return Conflict(new { error = UsernameTaken });
+            return Conflict(UsernameTaken.Body());
 
         user.FirstName = req.FirstName!.Trim();
         user.LastName = req.LastName!.Trim();
@@ -60,14 +63,14 @@ public class ProfileController(UserManager<AppUser> users) : ControllerBase
         {
             var result = await users.UpdateAsync(user);
             if (!result.Succeeded)
-                return BadRequest(new { error = AuthHelpers.FirstError(result) });
+                return BadRequest(AuthHelpers.IdentityError(result).Body());
         }
         catch (DbUpdateException ex) when (
             ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } pg
             && pg.ConstraintName == DisplayNameIndex)
         {
             // Someone took the same username at the same moment.
-            return Conflict(new { error = UsernameTaken });
+            return Conflict(UsernameTaken.Body());
         }
 
         return Ok(ToResponse(user));

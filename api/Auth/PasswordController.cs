@@ -12,9 +12,9 @@ namespace VeggieBook.Api.Auth;
 //                                    gives a short ticket
 //   POST /api/auth/password          ticket + new password
 //
-// Two steps so the new password is only asked for once the person has
-// proved it's them. The PIN shares its 3 tries a day with Forgot password
-// (see AccountRecovery), so this is not a way around that limit.
+// Two steps so the new password is only asked for once the account owner
+// has proved it's them. The PIN shares its 3 tries a day with Forgot
+// password (see AccountRecovery), so this is not a way around that limit.
 //
 // The ticket is Identity's password reset token. It is tied to the
 // account's security stamp, so it works once, and expires after 15 minutes
@@ -24,6 +24,7 @@ namespace VeggieBook.Api.Auth;
 // other device on its next request. This device gets a fresh cookie.
 //
 // Forgot password, while signed out, lives in RecoveryController.
+// Messages carry a code the site translates (ErrorCodes, ApiError).
 
 [ApiController]
 [Route("api/auth")]
@@ -34,7 +35,10 @@ public class PasswordController(
     SignInManager<AppUser> signIn,
     AccountRecovery recovery) : ControllerBase
 {
-    private const string TicketExpired = "This took too long. Please start again.";
+    private static readonly ApiError TicketExpired =
+        new(ErrorCodes.TicketExpired, "This took too long. Please start again.");
+    private static readonly ApiError CurrentPasswordIncorrect =
+        new(ErrorCodes.CurrentPasswordIncorrect, "Current password is incorrect.");
 
     [HttpPost("password/verify")]
     public async Task<IActionResult> Verify([FromBody] PasswordVerifyRequest req)
@@ -46,8 +50,7 @@ public class PasswordController(
         if (!string.IsNullOrEmpty(req.Pin))
         {
             if (AccountRecovery.IsLocked(user))
-                return StatusCode(StatusCodes.Status423Locked,
-                    new { status = "locked", error = AccountRecovery.LockedMessage });
+                return StatusCode(StatusCodes.Status423Locked, AccountRecovery.Locked.Body());
 
             var now = DateTime.UtcNow;
             if (AccountRecovery.PinTriesUsedUp(user, now)) return PinClosed();
@@ -59,20 +62,22 @@ public class PasswordController(
             await users.UpdateAsync(user);
             return AccountRecovery.PinTriesUsedUp(user, now)
                 ? PinClosed()
-                : BadRequest(new { error = "That PIN is not right. Please try again." });
+                : BadRequest(new ApiError(ErrorCodes.PinWrong,
+                    "That PIN is not right. Please try again.").Body());
         }
 
         // The current password. Wrong ones count toward the sign-in lockout.
         var current = req.CurrentPassword ?? "";
         if (current.Length == 0 || current.Length > AuthSetup.MaxPasswordLength)
-            return BadRequest(new { error = "Current password is incorrect." });
+            return BadRequest(CurrentPasswordIncorrect.Body());
 
         var check = await signIn.CheckPasswordSignInAsync(user, current, lockoutOnFailure: true);
         if (check.IsLockedOut)
             return StatusCode(StatusCodes.Status429TooManyRequests,
-                new { error = "Too many wrong passwords. Please try again in 15 minutes." });
+                new ApiError(ErrorCodes.TooManyWrongPasswords,
+                    "Too many wrong passwords. Please try again in 15 minutes.").Body());
         if (!check.Succeeded)
-            return BadRequest(new { error = "Current password is incorrect." });
+            return BadRequest(CurrentPasswordIncorrect.Body());
 
         return Ok(await Ticket(user));
     }
@@ -84,7 +89,7 @@ public class PasswordController(
         if (user is null) return Unauthorized();
 
         var token = AuthHelpers.DecodeToken(req.Ticket);
-        if (token is null) return BadRequest(new { error = TicketExpired });
+        if (token is null) return BadRequest(TicketExpired.Body());
 
         // The ticket first, so nothing below can be tried without one.
         var ticketOk = await users.VerifyUserTokenAsync(
@@ -92,23 +97,21 @@ public class PasswordController(
             users.Options.Tokens.PasswordResetTokenProvider,
             UserManager<AppUser>.ResetPasswordTokenPurpose,
             token);
-        if (!ticketOk) return BadRequest(new { error = TicketExpired });
+        if (!ticketOk) return BadRequest(TicketExpired.Body());
 
         var passwordError = AuthHelpers.CheckPasswordLength(req.NewPassword);
-        if (passwordError is not null) return BadRequest(new { error = passwordError });
+        if (passwordError is not null) return BadRequest(passwordError.Body());
 
         if (await users.CheckPasswordAsync(user, req.NewPassword!))
-            return BadRequest(new { error = "Your new password can't be the same as your old one." });
+            return BadRequest(new ApiError(ErrorCodes.PasswordSame,
+                "Your new password can't be the same as your old one.").Body());
 
         var result = await users.ResetPasswordAsync(user, token, req.NewPassword!);
         if (!result.Succeeded)
         {
-            return BadRequest(new
-            {
-                error = result.Errors.Any(e => e.Code == "InvalidToken")
-                    ? TicketExpired
-                    : AuthHelpers.FirstError(result)
-            });
+            return BadRequest((result.Errors.Any(e => e.Code == "InvalidToken")
+                ? TicketExpired
+                : AuthHelpers.IdentityError(result)).Body());
         }
 
         // The stamp changed, so give this device a fresh cookie. Only the
@@ -122,9 +125,7 @@ public class PasswordController(
 
     private ObjectResult PinClosed() =>
         StatusCode(StatusCodes.Status429TooManyRequests,
-            new
-            {
-                status = "pinClosed",
-                error = "Too many wrong PINs today. Please use your current password, or try again tomorrow."
-            });
+            new ApiError(ErrorCodes.PinClosedChange,
+                "Too many wrong PINs today. Please use your current password, or try again tomorrow.")
+            { Status = "pinClosed" }.Body());
 }

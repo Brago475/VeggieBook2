@@ -33,7 +33,8 @@ public class GuestController(
             return Ok(await AuthHelpers.MeFor(users, current));
 
         if (!await SiteSettings.GuestsAllowedAsync(db))
-            return StatusCode(403, new { error = "Guest visits are turned off right now. Please create an account or sign in." });
+            return StatusCode(403, new ApiError(ErrorCodes.GuestsOff,
+                "Guest visits are turned off right now. Please create an account or sign in.").Body());
 
         var guest = await guests.CreateAsync();
         await signIn.SignInAsync(guest, isPersistent: false);

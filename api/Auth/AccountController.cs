@@ -43,13 +43,13 @@ public class AccountController(
         var password = req.Password ?? "";
         if (password.Length == 0 || password.Length > AuthSetup.MaxPasswordLength
             || !await users.CheckPasswordAsync(user, password))
-            return BadRequest(new { error = "Password is incorrect." });
+            return BadRequest(new ApiError(ErrorCodes.PasswordIncorrect, "Password is incorrect.").Body());
 
         var entry = await ActivityLog.ForAccountAsync(db, logger, user.Id);
 
         var result = await users.DeleteAsync(user);
         if (!result.Succeeded)
-            return BadRequest(new { error = AuthHelpers.FirstError(result) });
+            return BadRequest(AuthHelpers.IdentityError(result).Body());
 
         await ActivityLog.SaveAsync(db, logger, entry);
 

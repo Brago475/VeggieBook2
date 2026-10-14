@@ -32,18 +32,23 @@ public static class AuthHelpers
     //
     // The name is from when only the length was checked. It stays so the
     // code that already calls it keeps working.
-    public static string? CheckPasswordLength(string? password)
+    public static ApiError? CheckPasswordLength(string? password)
     {
         if (string.IsNullOrEmpty(password) || password.Length < AuthSetup.MinPasswordLength)
-            return PasswordRule;
+            return RuleError();
         if (password.Length > AuthSetup.MaxPasswordLength)
-            return $"Password must be at most {AuthSetup.MaxPasswordLength} characters.";
+            return new(ErrorCodes.PasswordTooLong,
+                $"Password must be at most {AuthSetup.MaxPasswordLength} characters.")
+            { Values = new { max = AuthSetup.MaxPasswordLength } };
         if (!password.Any(char.IsUpper)
             || !password.Any(char.IsLower)
             || password.All(char.IsLetterOrDigit))
-            return PasswordRule;
+            return RuleError();
         return null;
     }
+
+    private static ApiError RuleError() =>
+        new(ErrorCodes.PasswordRule, PasswordRule) { Values = new { min = AuthSetup.MinPasswordLength } };
 
     // Identity's tokens contain characters that break in a URL or JSON, so
     // they travel Base64Url encoded.
@@ -66,6 +71,10 @@ public static class AuthHelpers
     public static string FirstError(IdentityResult result) =>
         result.Errors.FirstOrDefault()?.Description
         ?? "Something went wrong. Please try again.";
+
+    // The first Identity error, as a message the main site can show.
+    public static ApiError IdentityError(IdentityResult result) =>
+        new(ErrorCodes.IdentityError, FirstError(result));
 
     // A guest's placeholder address is never shown, so guests get a null
     // email and the site tells them apart by the Guest role.

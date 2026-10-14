@@ -25,34 +25,41 @@ public class AccountRecovery(IPasswordHasher<AppUser> hasher)
     public const string LockedMessage =
         "Password reset is locked for this account. Please contact the VeggieBook admin.";
 
+    // The locked answer, with the status the site reacts to.
+    public static ApiError Locked => new(ErrorCodes.RecoveryLocked, LockedMessage) { Status = "locked" };
+
     public static bool IsLocked(AppUser user) => user.RecoveryLockedAt is not null;
 
     // Checks a new PIN when it is being set.
-    public static string? CheckNewPin(string? pin)
+    public static ApiError? CheckNewPin(string? pin)
     {
         if (pin is null || pin.Length != 6 || !pin.All(char.IsAsciiDigit))
-            return "Your PIN must be exactly 6 digits.";
+            return new(ErrorCodes.PinDigits, "Your PIN must be exactly 6 digits.");
         if (pin.Distinct().Count() == 1
             || "0123456789".Contains(pin)
             || "9876543210".Contains(pin))
-            return "That PIN is too easy to guess. Please pick another one.";
+            return new(ErrorCodes.PinEasy, "That PIN is too easy to guess. Please pick another one.");
         return null;
     }
 
     // Checks a new question and answer when they are being set.
-    public static string? CheckNewAnswer(int? questionId, string? answer)
+    public static ApiError? CheckNewAnswer(int? questionId, string? answer)
     {
         if (!RecoveryQuestions.Exists(questionId))
-            return "Please choose a security question.";
+            return new(ErrorCodes.QuestionRequired, "Please choose a security question.");
         if (answer is not null && answer.Length > MaxAnswerLength * 2)
-            return $"Your answer must be at most {MaxAnswerLength} characters.";
+            return AnswerTooLong();
         var normalized = Normalize(answer);
         if (normalized.Length == 0)
-            return "Please answer your security question.";
+            return new(ErrorCodes.AnswerEmpty, "Please answer your security question.");
         if (normalized.Length > MaxAnswerLength)
-            return $"Your answer must be at most {MaxAnswerLength} characters.";
+            return AnswerTooLong();
         return null;
     }
+
+    private static ApiError AnswerTooLong() =>
+        new(ErrorCodes.AnswerTooLong, $"Your answer must be at most {MaxAnswerLength} characters.")
+        { Values = new { max = MaxAnswerLength } };
 
     // "  Sweet   Potato " and "sweet potato" count as the same answer.
     public static string Normalize(string? answer) =>

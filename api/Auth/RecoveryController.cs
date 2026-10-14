@@ -27,6 +27,8 @@ namespace VeggieBook.Api.Auth;
 // The reset ticket is Identity's password reset token. It is tied to the
 // account's security stamp, so it works once, and it expires after
 // 15 minutes (see AuthSetup).
+//
+// Messages carry a code the site translates (ErrorCodes, ApiError).
 
 [ApiController]
 [Route("api/auth/recovery")]
@@ -36,10 +38,16 @@ public class RecoveryController(
     SignInManager<AppUser> signIn,
     AccountRecovery recovery) : ControllerBase
 {
-    private const string BadEmail = "Please enter a valid email.";
-    private const string PinMismatch = "That email and PIN don't match.";
-    private const string AnswerMismatch = "That answer doesn't match.";
-    private const string InvalidTicket = "This reset has expired. Please start again.";
+    private static readonly ApiError BadEmail =
+        new(ErrorCodes.EmailInvalid, "Please enter a valid email.");
+    private static readonly ApiError PinMismatch =
+        new(ErrorCodes.PinMismatch, "That email and PIN don't match.");
+    private static readonly ApiError AnswerMismatch =
+        new(ErrorCodes.AnswerMismatch, "That answer doesn't match.");
+    private static readonly ApiError InvalidTicket =
+        new(ErrorCodes.ResetExpired, "This reset has expired. Please start again.");
+    private static readonly ApiError CurrentPasswordIncorrect =
+        new(ErrorCodes.CurrentPasswordIncorrect, "Current password is incorrect.");
 
     [HttpGet("questions")]
     public IActionResult Questions() => Ok(RecoveryQuestions.All);
@@ -48,7 +56,7 @@ public class RecoveryController(
     public async Task<IActionResult> Question([FromBody] EmailRequest req)
     {
         var (address, user) = await FindAccount(req.Email);
-        if (address is null) return BadRequest(new { error = BadEmail });
+        if (address is null) return BadRequest(BadEmail.Body());
         if (user is not null && AccountRecovery.IsLocked(user)) return Locked();
 
         var question = user?.SecurityQuestionId is int id && RecoveryQuestions.Exists(id)
@@ -61,11 +69,11 @@ public class RecoveryController(
     public async Task<IActionResult> Pin([FromBody] RecoveryPinRequest req)
     {
         var (address, user) = await FindAccount(req.Email);
-        if (address is null) return BadRequest(new { error = BadEmail });
+        if (address is null) return BadRequest(BadEmail.Body());
         if (user is null)
         {
             recovery.BurnTime();
-            return BadRequest(new { error = PinMismatch });
+            return BadRequest(PinMismatch.Body());
         }
         if (AccountRecovery.IsLocked(user)) return Locked();
 
@@ -79,18 +87,18 @@ public class RecoveryController(
         await users.UpdateAsync(user);
         return AccountRecovery.PinTriesUsedUp(user, now)
             ? PinClosed()
-            : BadRequest(new { error = PinMismatch });
+            : BadRequest(PinMismatch.Body());
     }
 
     [HttpPost("answer")]
     public async Task<IActionResult> Answer([FromBody] RecoveryAnswerRequest req)
     {
         var (address, user) = await FindAccount(req.Email);
-        if (address is null) return BadRequest(new { error = BadEmail });
+        if (address is null) return BadRequest(BadEmail.Body());
         if (user is null)
         {
             recovery.BurnTime();
-            return BadRequest(new { error = AnswerMismatch });
+            return BadRequest(AnswerMismatch.Body());
         }
         if (AccountRecovery.IsLocked(user)) return Locked();
 
@@ -101,7 +109,7 @@ public class RecoveryController(
         await users.UpdateAsync(user);
         return AccountRecovery.IsLocked(user)
             ? Locked()
-            : BadRequest(new { error = AnswerMismatch });
+            : BadRequest(AnswerMismatch.Body());
     }
 
     [HttpPost("reset")]
@@ -109,7 +117,7 @@ public class RecoveryController(
     {
         var (_, user) = await FindAccount(req.Email);
         var token = AuthHelpers.DecodeToken(req.Ticket);
-        if (user is null || token is null) return BadRequest(new { error = InvalidTicket });
+        if (user is null || token is null) return BadRequest(InvalidTicket.Body());
         if (AccountRecovery.IsLocked(user)) return Locked();
 
         // The ticket first, so nothing below can be tried without one.
@@ -118,27 +126,25 @@ public class RecoveryController(
             users.Options.Tokens.PasswordResetTokenProvider,
             UserManager<AppUser>.ResetPasswordTokenPurpose,
             token);
-        if (!ticketOk) return BadRequest(new { error = InvalidTicket });
+        if (!ticketOk) return BadRequest(InvalidTicket.Body());
 
         var error = AuthHelpers.CheckPasswordLength(req.NewPassword)
             ?? AccountRecovery.CheckNewPin(req.NewPin)
             ?? AccountRecovery.CheckNewAnswer(req.QuestionId, req.Answer);
-        if (error is not null) return BadRequest(new { error });
+        if (error is not null) return BadRequest(error.Body());
 
         if (await users.CheckPasswordAsync(user, req.NewPassword!))
-            return BadRequest(new { error = "Your new password can't be the same as your old one." });
+            return BadRequest(new ApiError(ErrorCodes.PasswordSame,
+                "Your new password can't be the same as your old one.").Body());
 
         // Saves the new password and a new security stamp, which uses up the
         // ticket and signs out every other device.
         var result = await users.ResetPasswordAsync(user, token, req.NewPassword!);
         if (!result.Succeeded)
         {
-            return BadRequest(new
-            {
-                error = result.Errors.Any(e => e.Code == "InvalidToken")
-                    ? InvalidTicket
-                    : AuthHelpers.FirstError(result)
-            });
+            return BadRequest((result.Errors.Any(e => e.Code == "InvalidToken")
+                ? InvalidTicket
+                : AuthHelpers.IdentityError(result)).Body());
         }
 
         recovery.SetRecovery(user, req.NewPin!, req.QuestionId!.Value, req.Answer!);
@@ -175,21 +181,22 @@ public class RecoveryController(
 
         var current = req.CurrentPassword ?? "";
         if (current.Length == 0 || current.Length > AuthSetup.MaxPasswordLength)
-            return BadRequest(new { error = "Current password is incorrect." });
+            return BadRequest(CurrentPasswordIncorrect.Body());
 
         var error = AccountRecovery.CheckNewPin(req.Pin)
             ?? AccountRecovery.CheckNewAnswer(req.QuestionId, req.Answer);
-        if (error is not null) return BadRequest(new { error });
+        if (error is not null) return BadRequest(error.Body());
 
         var check = await signIn.CheckPasswordSignInAsync(user, current, lockoutOnFailure: true);
         if (check.IsLockedOut)
-            return BadRequest(new { error = "Too many wrong passwords. Please try again in 15 minutes." });
+            return BadRequest(new ApiError(ErrorCodes.TooManyWrongPasswords,
+                "Too many wrong passwords. Please try again in 15 minutes.").Body());
         if (!check.Succeeded)
-            return BadRequest(new { error = "Current password is incorrect." });
+            return BadRequest(CurrentPasswordIncorrect.Body());
 
         recovery.SetRecovery(user, req.Pin!, req.QuestionId!.Value, req.Answer!);
         var result = await users.UpdateAsync(user);
-        if (!result.Succeeded) return BadRequest(new { error = AuthHelpers.FirstError(result) });
+        if (!result.Succeeded) return BadRequest(AuthHelpers.IdentityError(result).Body());
         return NoContent();
     }
 
@@ -206,10 +213,11 @@ public class RecoveryController(
         new { ticket = AuthHelpers.EncodeToken(await users.GeneratePasswordResetTokenAsync(user)) };
 
     private ObjectResult Locked() =>
-        StatusCode(StatusCodes.Status423Locked,
-            new { status = "locked", error = AccountRecovery.LockedMessage });
+        StatusCode(StatusCodes.Status423Locked, AccountRecovery.Locked.Body());
 
     private ObjectResult PinClosed() =>
         StatusCode(StatusCodes.Status429TooManyRequests,
-            new { status = "pinClosed", error = "Too many wrong PINs today. Please answer your security question instead." });
+            new ApiError(ErrorCodes.PinClosedForgot,
+                "Too many wrong PINs today. Please answer your security question instead.")
+            { Status = "pinClosed" }.Body());
 }

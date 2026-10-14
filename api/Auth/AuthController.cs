@@ -26,6 +26,8 @@ namespace VeggieBook.Api.Auth;
 // A guest who signs up or signs in chooses what happens to their books
 // (KeepGuestBooks). Keep: the books move into the account right away.
 // Start fresh: the guest and its books are deleted.
+//
+// Messages carry a code the site translates (ErrorCodes, ApiError).
 
 [ApiController]
 [Route("api/auth")]
@@ -36,11 +38,12 @@ public class AuthController(
     GuestAccounts guests,
     AccountRecovery recovery) : ControllerBase
 {
-    private const string WrongCredentials = "Email or password is incorrect.";
-    private const string EmailTaken =
-        "An account with this email already exists. Sign in, or use Forgot password if you need to.";
-    private const string UsernameTaken =
-        "That username is taken. Please pick another one, or leave it blank and we'll make one for you.";
+    private static readonly ApiError WrongCredentials =
+        new(ErrorCodes.WrongCredentials, "Email or password is incorrect.");
+    private static readonly ApiError EmailTaken = new(ErrorCodes.EmailTaken,
+        "An account with this email already exists. Sign in, or use Forgot password if you need to.");
+    private static readonly ApiError UsernameTaken = new(ErrorCodes.UsernameTakenSignUp,
+        "That username is taken. Please pick another one, or leave it blank and we'll make one for you.");
 
     // The unique index from db/migrations/005_profile.sql.
     private const string DisplayNameIndex = "app_user_display_name_idx";
@@ -55,7 +58,7 @@ public class AuthController(
     {
         var current = await users.GetUserAsync(User);
         if (current is not null && !GuestAccounts.IsGuest(current))
-            return BadRequest(new { error = "You are already signed in." });
+            return BadRequest(new ApiError(ErrorCodes.AlreadySignedIn, "You are already signed in.").Body());
 
         var guest = current;
         var address = req.Email?.Trim() ?? "";
@@ -64,24 +67,27 @@ public class AuthController(
         // anything is saved.
         var error = SignUpRules.CheckName(req.FirstName, "first name")
             ?? SignUpRules.CheckName(req.LastName, "last name")
-            ?? (AuthHelpers.IsValidEmail(address) ? null : "Enter a valid email address.")
+            ?? (AuthHelpers.IsValidEmail(address)
+                ? null
+                : new ApiError(ErrorCodes.EmailInvalid, "Enter a valid email address."))
             ?? AuthHelpers.CheckPasswordLength(req.Password)
             ?? SignUpRules.CheckAgeRange(req.AgeRange)
             ?? AccountRecovery.CheckNewPin(req.Pin)
             ?? AccountRecovery.CheckNewAnswer(req.QuestionId, req.Answer)
             ?? (req.AgreeToTerms == true
                 ? null
-                : "Please agree to the Terms of Use and Privacy Policy.");
-        if (error is not null) return BadRequest(new { error });
+                : new ApiError(ErrorCodes.TermsRequired,
+                    "Please agree to the Terms of Use and Privacy Policy."));
+        if (error is not null) return BadRequest(error.Body());
 
         // The username: theirs if they chose one, otherwise a made-up one.
         var displayName = req.DisplayName?.Trim() ?? "";
         if (displayName.Length > 0)
         {
             var nameError = SignUpRules.CheckDisplayName(displayName);
-            if (nameError is not null) return BadRequest(new { error = nameError });
+            if (nameError is not null) return BadRequest(nameError.Body());
             if (await DisplayNameTaken(displayName))
-                return Conflict(new { error = UsernameTaken });
+                return Conflict(UsernameTaken.Body());
         }
         else
         {
@@ -116,17 +122,14 @@ public class AuthController(
         {
             // Two sign-ups with the same email or username at the same
             // moment. The database's unique index caught the second one.
-            return Conflict(new
-            {
-                error = pg.ConstraintName == DisplayNameIndex ? UsernameTaken : EmailTaken
-            });
+            return Conflict((pg.ConstraintName == DisplayNameIndex ? UsernameTaken : EmailTaken).Body());
         }
 
         if (!created.Succeeded)
         {
             if (created.Errors.Any(e => e.Code is "DuplicateEmail" or "DuplicateUserName"))
-                return Conflict(new { error = EmailTaken });
-            return BadRequest(new { error = AuthHelpers.FirstError(created) });
+                return Conflict(EmailTaken.Body());
+            return BadRequest(AuthHelpers.IdentityError(created).Body());
         }
 
         var role = await users.AddToRoleAsync(user, Roles.User);
@@ -154,7 +157,7 @@ public class AuthController(
 
         if (address.Length == 0 || password.Length == 0
             || password.Length > AuthSetup.MaxPasswordLength)
-            return Unauthorized(new { error = WrongCredentials });
+            return Unauthorized(WrongCredentials.Body());
 
         // A guest signing in to a real account. Read before signing in,
         // because signing in replaces the session.
@@ -166,7 +169,7 @@ public class AuthController(
         {
             dummyHash ??= hasher.HashPassword(new AppUser(), "timing-equalizer");
             hasher.VerifyHashedPassword(new AppUser(), dummyHash, password);
-            return Unauthorized(new { error = WrongCredentials });
+            return Unauthorized(WrongCredentials.Body());
         }
 
         // A locked account is refused before the password is checked, so a
@@ -178,7 +181,7 @@ public class AuthController(
             user, password, isPersistent: true, lockoutOnFailure: true);
 
         if (result.IsLockedOut) return TooManyAttempts();
-        if (!result.Succeeded) return Unauthorized(new { error = WrongCredentials });
+        if (!result.Succeeded) return Unauthorized(WrongCredentials.Body());
 
         // Signed in. The password proved who they are, so a guest's books
         // can move right away.
@@ -236,5 +239,6 @@ public class AuthController(
 
     private ObjectResult TooManyAttempts() =>
         StatusCode(StatusCodes.Status429TooManyRequests,
-            new { error = "Too many failed attempts. Try again in 15 minutes." });
+            new ApiError(ErrorCodes.TooManyAttempts,
+                "Too many failed attempts. Try again in 15 minutes.").Body());
 }

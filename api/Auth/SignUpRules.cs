@@ -3,7 +3,8 @@ using System.Security.Cryptography;
 namespace VeggieBook.Api.Auth;
 
 // The rules for the Create Account form, apart from the password (see
-// AuthHelpers) and the PIN and question (see AccountRecovery).
+// AuthHelpers) and the PIN and question (see AccountRecovery). Each problem
+// comes back as an ApiError: a code the site translates, and the English.
 public static class SignUpRules
 {
     // The Terms of Use version a new account agrees to. Keep this equal to
@@ -18,31 +19,38 @@ public static class SignUpRules
     public static readonly string[] AgeRanges =
         ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"];
 
-    public static string? CheckName(string? value, string label)
+    public static ApiError? CheckName(string? value, string label)
     {
         var name = value?.Trim() ?? "";
         if (name.Length == 0)
-            return $"Please enter your {label}.";
+            return new(ErrorCodes.Name(label, "empty"), $"Please enter your {label}.");
         if (name.Length > MaxNameLength)
-            return $"Your {label} must be at most {MaxNameLength} characters.";
+            return new(ErrorCodes.Name(label, "too_long"),
+                $"Your {label} must be at most {MaxNameLength} characters.")
+            { Values = new { max = MaxNameLength } };
         if (!name.All(c => char.IsLetter(c) || c is ' ' or '-' or '\'' or '.'))
-            return $"Your {label} can only use letters, spaces, hyphens, and apostrophes.";
+            return new(ErrorCodes.Name(label, "chars"),
+                $"Your {label} can only use letters, spaces, hyphens, and apostrophes.");
         return null;
     }
 
-    public static string? CheckDisplayName(string name)
+    public static ApiError? CheckDisplayName(string name)
     {
         if (name.Length < MinDisplayNameLength || name.Length > MaxDisplayNameLength)
-            return $"Your username must be {MinDisplayNameLength} to {MaxDisplayNameLength} characters.";
+            return new(ErrorCodes.UsernameLength,
+                $"Your username must be {MinDisplayNameLength} to {MaxDisplayNameLength} characters.")
+            { Values = new { min = MinDisplayNameLength, max = MaxDisplayNameLength } };
         if (!name.All(c => char.IsAsciiLetterOrDigit(c) || c == '_'))
-            return "Your username can only use letters, numbers, and underscores.";
+            return new(ErrorCodes.UsernameChars,
+                "Your username can only use letters, numbers, and underscores.");
         return null;
     }
 
-    public static string? CheckAgeRange(string? range) =>
+    public static ApiError? CheckAgeRange(string? range) =>
         range is not null && AgeRanges.Contains(range)
             ? null
-            : "Please choose your age range. You must be 18 or older to create an account.";
+            : new(ErrorCodes.AgeRangeRequired,
+                "Please choose your age range. You must be 18 or older to create an account.");
 
     // A username for someone who left it blank, such as cook_48213.
     // The caller checks it is free before using it.
