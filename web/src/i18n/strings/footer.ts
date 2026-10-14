@@ -1,4 +1,4 @@
-// The footer card on the main screens.
+// The footer card on the main screens. Spanish uses tú.
 
 const en = {
   title: 'About VeggieBook',
@@ -20,7 +20,7 @@ const es: typeof en = {
   subAfter: ' investigación en nutrición y trabajo comunitario.',
   credit:
     'Creado originalmente por el Dr. Peter Clarke y la Dra. Susan H. Evans en la Escuela de Comunicación y Periodismo Annenberg de USC, con el apoyo del Departamento de Agricultura de los Estados Unidos. Continuado y reconstruido en Kean University.',
-  learnMore: 'Conozca el proyecto',
+  learnMore: 'Conoce el proyecto',
   legal: 'Información legal',
   terms: 'Términos de uso',
   privacy: 'Política de privacidad',

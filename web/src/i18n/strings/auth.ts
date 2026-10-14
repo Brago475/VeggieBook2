@@ -1,6 +1,6 @@
 // Sign in, Create account, and the pieces they share: the page frame, the
 // email and password boxes, the guest-books choice, the terms checkbox,
-// and the recovery PIN and question fields.
+// and the recovery PIN and question fields. Spanish uses tú.
 
 const en = {
   back: 'Back',
@@ -57,6 +57,8 @@ const en = {
   pin: '6-digit recovery PIN',
   pinHint: "You'll use this if you forget your password. Avoid easy ones like 123456.",
   confirmPin: 'Confirm PIN',
+  pinShow: 'Show',
+  pinHide: 'Hide',
   securityQuestion: 'Security question',
   chooseQuestion: 'Choose a question',
   loadingQuestions: 'Loading questions...',
@@ -68,48 +70,48 @@ const es: typeof en = {
   back: 'Atrás',
 
   welcomeBack: 'Bienvenido de nuevo',
-  signInSub: 'Inicie sesión para volver a los libros que guardó.',
+  signInSub: 'Inicia sesión para volver a los libros que guardaste.',
   password: 'Contraseña',
-  forgot: '¿Olvidó su contraseña?',
+  forgot: '¿Olvidaste tu contraseña?',
   signIn: 'Iniciar sesión',
-  newHere: '¿Es nuevo aquí?',
+  newHere: '¿Eres nuevo aquí?',
   createAnAccount: 'Crear una cuenta',
 
   createTitle: 'Crear una cuenta',
-  createSub: 'Sus libros se guardan en su cuenta, en cualquier dispositivo.',
-  aboutYou: 'Sobre usted',
+  createSub: 'Tus libros se guardan en tu cuenta, en cualquier dispositivo.',
+  aboutYou: 'Sobre ti',
   firstName: 'Nombre',
   lastName: 'Apellido',
   usernameOptional: 'Nombre de usuario (opcional)',
   usernameHint:
-    'De 3 a 20 letras, números o guiones bajos. Si lo deja en blanco, le crearemos uno.',
+    'De 3 a 20 letras, números o guiones bajos. Si lo dejas en blanco, te crearemos uno.',
   signInDetails: 'Datos para iniciar sesión',
   email: 'Correo electrónico',
-  confirmEmail: 'Confirme su correo electrónico',
-  confirmPassword: 'Confirme su contraseña',
+  confirmEmail: 'Confirma tu correo electrónico',
+  confirmPassword: 'Confirma tu contraseña',
   ageRange: 'Edad',
-  chooseAge: 'Elija su rango de edad',
+  chooseAge: 'Elige tu rango de edad',
   recoveryTitle: 'Recuperación de la cuenta',
   recoveryText:
-    'Si olvida su contraseña, usará su PIN, o su pregunta de seguridad si también olvida el PIN. No se los dé a nadie.',
+    'Si olvidas tu contraseña, usarás tu PIN, o tu pregunta de seguridad si también olvidas el PIN. No se los des a nadie.',
   createAccount: 'Crear cuenta',
-  haveAccount: '¿Ya tiene una cuenta?',
+  haveAccount: '¿Ya tienes una cuenta?',
 
-  enterEmail: 'Escriba su correo electrónico.',
+  enterEmail: 'Escribe tu correo electrónico.',
   emailsDiffer: 'Los dos correos electrónicos no coinciden.',
   passwordsDiffer: 'Las dos contraseñas no coinciden.',
-  chooseAgeError: 'Elija su rango de edad.',
+  chooseAgeError: 'Elige tu rango de edad.',
   agreeError:
-    'Confirme que tiene 18 años o más y que acepta los Términos de uso y la Política de privacidad.',
+    'Confirma que tienes 18 años o más y que aceptas los Términos de uso y la Política de privacidad.',
 
   showPassword: 'Mostrar contraseña',
   hidePassword: 'Ocultar contraseña',
 
-  guestBooks: 'Sus libros de invitado',
+  guestBooks: 'Tus libros de invitado',
   keepBooks: (n: number) => (n === 1 ? 'Conservar mi libro' : `Conservar mis ${n} libros`),
   keepBooksSub: 'Pasan a esta cuenta de inmediato.',
   startFresh: 'Empezar de nuevo',
-  startFreshSub: 'Sus libros de invitado se eliminan.',
+  startFreshSub: 'Tus libros de invitado se eliminan.',
 
   termsBefore: 'Tengo 18 años o más y acepto los ',
   terms: 'Términos de uso',
@@ -117,12 +119,14 @@ const es: typeof en = {
   privacy: 'Política de privacidad',
 
   pin: 'PIN de recuperación de 6 dígitos',
-  pinHint: 'Lo usará si olvida su contraseña. Evite uno fácil como 123456.',
-  confirmPin: 'Confirme el PIN',
+  pinHint: 'Lo usarás si olvidas tu contraseña. Evita uno fácil como 123456.',
+  confirmPin: 'Confirma el PIN',
+  pinShow: 'Mostrar',
+  pinHide: 'Ocultar',
   securityQuestion: 'Pregunta de seguridad',
-  chooseQuestion: 'Elija una pregunta',
+  chooseQuestion: 'Elige una pregunta',
   loadingQuestions: 'Cargando preguntas...',
-  answer: 'Su respuesta',
+  answer: 'Tu respuesta',
   answerHint: 'Las mayúsculas y los espacios de más no importan.',
 }
 

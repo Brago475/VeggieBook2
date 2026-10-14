@@ -8,6 +8,11 @@ import { PinField } from '../components/forms/PinField'
 import { RecoveryFields } from '../components/auth/RecoveryFields'
 import { TextPillField } from '../components/forms/TextPillField'
 import { useRecoveryQuestions } from '../hooks/useRecoveryQuestions'
+import { useLang } from '../i18n/languageContext'
+import { AUTH } from '../i18n/strings/auth'
+import { COMMON } from '../i18n/strings/common'
+import { FORGOT } from '../i18n/strings/forgot'
+import { useStrings } from '../i18n/useStrings'
 import { ApiError } from '../utils/api'
 import {
   checkRecoveryAnswer,
@@ -16,7 +21,7 @@ import {
   getQuestionFor,
   type RecoveryQuestion,
 } from '../utils/authApi'
-import { checkPassword, PASSWORD_HINT } from '../utils/passwordRule'
+import { checkPassword, passwordHint } from '../utils/passwordRule'
 import { checkRecovery, EMPTY_RECOVERY, MAX_ANSWER, toNewRecovery } from '../utils/recoveryRules'
 
 // Forgot password, without email. One page, several steps:
@@ -37,11 +42,11 @@ type Props = {
 
 type Step = 'email' | 'pin' | 'question' | 'reset' | 'done' | 'locked'
 
-function message(err: unknown) {
-  return err instanceof Error ? err.message : 'Something went wrong. Please try again.'
-}
-
 export function ForgotPassword({ onBack, onSignIn }: Props) {
+  const { lang } = useLang()
+  const t = useStrings(FORGOT)
+  const auth = useStrings(AUTH)
+  const common = useStrings(COMMON)
   const { questions } = useRecoveryQuestions()
 
   const [step, setStep] = useState<Step>('email')
@@ -58,6 +63,10 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   const address = email.trim()
+
+  function message(err: unknown) {
+    return err instanceof Error ? err.message : common.somethingWrong
+  }
 
   function go(next: Step) {
     setError(null)
@@ -107,7 +116,7 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
   function submitEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!address) {
-      setError('Enter your email address.')
+      setError(auth.enterEmail)
       return
     }
     setPin('')
@@ -117,7 +126,7 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
   function submitPin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pin.length !== 6) {
-      setError('Enter your 6-digit PIN.')
+      setError(t.enterPin)
       return
     }
     void run(async () => {
@@ -129,7 +138,7 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
   function submitAnswer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!answer.trim()) {
-      setError('Enter your answer.')
+      setError(t.enterAnswer)
       return
     }
     void run(async () => {
@@ -145,9 +154,9 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
       return
     }
     const problem =
-      checkPassword(password) ??
-      (password === passwordAgain ? null : 'The two passwords do not match.') ??
-      checkRecovery(recovery)
+      checkPassword(password, lang) ??
+      (password === passwordAgain ? null : auth.passwordsDiffer) ??
+      checkRecovery(recovery, lang)
     if (problem) {
       setError(problem)
       return
@@ -167,7 +176,7 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
   function submitButton(label: string): ReactNode {
     return (
       <button type="submit" className="auth-primary" disabled={busy}>
-        {busy ? 'Please wait...' : label}
+        {busy ? common.pleaseWait : label}
         {!busy && <ArrowIcon />}
       </button>
     )
@@ -177,14 +186,12 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
     return (
       <AuthShell>
         <div className="auth-head">
-          <h1 className="auth-greeting">Password changed</h1>
-          <p className="auth-sub">
-            You are signed out on your other devices. Sign in with your new password.
-          </p>
+          <h1 className="auth-greeting">{t.doneTitle}</h1>
+          <p className="auth-sub">{t.doneSub}</p>
         </div>
         <div className="auth-fields">
           <button type="button" className="auth-primary" onClick={onSignIn}>
-            Sign in
+            {auth.signIn}
             <ArrowIcon />
           </button>
         </div>
@@ -196,19 +203,15 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
     return (
       <AuthShell onBack={onBack}>
         <div className="auth-head">
-          <h1 className="auth-greeting">Password reset is locked</h1>
-          <p className="auth-sub">
-            There were too many wrong answers, so password reset is locked for this
-            account to keep it safe. If you still know your password, you can sign in
-            as usual. Otherwise, please contact the VeggieBook admin.
-          </p>
+          <h1 className="auth-greeting">{t.lockedTitle}</h1>
+          <p className="auth-sub">{t.lockedSub}</p>
         </div>
         <div className="auth-fields">
           <div className="auth-contact">
             <LegalContact />
           </div>
           <button type="button" className="auth-primary" onClick={onSignIn}>
-            Back to sign in
+            {t.backToSignIn}
             <ArrowIcon />
           </button>
         </div>
@@ -221,15 +224,16 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
       <AuthShell onBack={() => go('email')}>
         <form className="auth-form" onSubmit={submitPin} noValidate>
           <div className="auth-head">
-            <h1 className="auth-greeting">Enter your PIN</h1>
+            <h1 className="auth-greeting">{t.pinTitle}</h1>
             <p className="auth-sub">
-              Enter the 6-digit recovery PIN you chose for <strong>{address}</strong>.
+              {t.pinSubBefore}
+              <strong>{address}</strong>.
             </p>
           </div>
           <div className="auth-fields">
-            <PinField id="forgot-pin" label="Recovery PIN" value={pin} onChange={setPin} />
+            <PinField id="forgot-pin" label={t.recoveryPin} value={pin} onChange={setPin} />
             {errorLine}
-            {submitButton('Continue')}
+            {submitButton(t.continue)}
             <p className="auth-switch">
               <button
                 type="button"
@@ -237,7 +241,7 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
                 disabled={busy}
                 onClick={() => void run(() => openQuestion(null))}
               >
-                I don't remember my PIN
+                {t.noPin}
               </button>
             </p>
           </div>
@@ -251,22 +255,22 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
       <AuthShell onBack={() => go('pin')}>
         <form className="auth-form" onSubmit={submitAnswer} noValidate>
           <div className="auth-head">
-            <h1 className="auth-greeting">Answer your security question</h1>
+            <h1 className="auth-greeting">{t.questionTitle}</h1>
             {notice && <p className="auth-notice">{notice}</p>}
           </div>
           <div className="auth-fields">
             <p className="auth-question">{question?.text}</p>
             <TextPillField
               id="forgot-answer"
-              label="Your answer"
+              label={auth.answer}
               value={answer}
               onChange={setAnswer}
               autoComplete="off"
               maxLength={MAX_ANSWER}
-              hint="Capital letters and extra spaces don't matter."
+              hint={auth.answerHint}
             />
             {errorLine}
-            {submitButton('Continue')}
+            {submitButton(t.continue)}
           </div>
         </form>
       </AuthShell>
@@ -278,11 +282,8 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
       <AuthShell onBack={startOver}>
         <form className="auth-form" onSubmit={submitReset} noValidate>
           <div className="auth-head">
-            <h1 className="auth-greeting">Set up your account again</h1>
-            <p className="auth-sub">
-              Choose a new password, a new PIN, and a new security question. Your new
-              password can't be the same as your old one.
-            </p>
+            <h1 className="auth-greeting">{t.resetTitle}</h1>
+            <p className="auth-sub">{t.resetSub}</p>
           </div>
           <div className="auth-fields">
             {/* Lets password managers save the new password under this email. */}
@@ -290,21 +291,21 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
 
             <AuthPasswordField
               id="forgot-new-password"
-              label="New password"
+              label={t.newPassword}
               value={password}
               onChange={setPassword}
               autoComplete="new-password"
-              hint={PASSWORD_HINT}
+              hint={passwordHint(lang)}
             />
             <AuthPasswordField
               id="forgot-new-password-again"
-              label="Confirm new password"
+              label={t.confirmNewPassword}
               value={passwordAgain}
               onChange={setPasswordAgain}
               autoComplete="new-password"
             />
 
-            <h2 className="auth-section-title">Account recovery</h2>
+            <h2 className="auth-section-title">{auth.recoveryTitle}</h2>
             <RecoveryFields
               idPrefix="forgot"
               value={recovery}
@@ -313,12 +314,12 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
             />
 
             {errorLine}
-            {submitButton('Save and finish')}
+            {submitButton(t.saveFinish)}
             {error && (
               <p className="auth-switch">
-                Taking too long?{' '}
+                {t.takingLong}{' '}
                 <button type="button" className="link-btn" onClick={startOver}>
-                  Start again
+                  {t.startAgain}
                 </button>
               </p>
             )}
@@ -332,16 +333,13 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
     <AuthShell onBack={onBack}>
       <form className="auth-form" onSubmit={submitEmail} noValidate>
         <div className="auth-head">
-          <h1 className="auth-greeting">Forgot your password?</h1>
-          <p className="auth-sub">
-            Enter your email. Then you'll use your recovery PIN, or your security
-            question, to choose a new password.
-          </p>
+          <h1 className="auth-greeting">{t.emailTitle}</h1>
+          <p className="auth-sub">{t.emailSub}</p>
         </div>
         <div className="auth-fields">
           <EmailField id="forgot-email" value={email} onChange={setEmail} />
           {errorLine}
-          {submitButton('Continue')}
+          {submitButton(t.continue)}
         </div>
       </form>
     </AuthShell>

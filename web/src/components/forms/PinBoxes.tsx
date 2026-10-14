@@ -1,4 +1,6 @@
 import { useId, useRef, useState } from 'react'
+import { AUTH } from '../../i18n/strings/auth'
+import { useStrings } from '../../i18n/useStrings'
 import '../../styles/pin-boxes.css'
 
 // A 6-digit PIN shown as six small squares.
@@ -18,6 +20,7 @@ type Props = {
 }
 
 export function PinBoxes({ id, value, onChange, describedBy, autoFocus }: Props) {
+  const t = useStrings(AUTH)
   const generatedId = useId()
   const inputId = id ?? generatedId
   const inputRef = useRef<HTMLInputElement>(null)
@@ -67,7 +70,7 @@ export function PinBoxes({ id, value, onChange, describedBy, autoFocus }: Props)
         aria-pressed={shown}
         aria-controls={inputId}
       >
-        {shown ? 'Hide' : 'Show'}
+        {shown ? t.pinHide : t.pinShow}
       </button>
     </div>
   )

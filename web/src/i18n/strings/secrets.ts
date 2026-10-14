@@ -1,8 +1,9 @@
 // Making and reading a Secrets Book. NEXT, SAVE BOOK, and the cover buttons
 // come from flow.ts and covers.ts. KEEP and DROP are here because Spanish
 // uses the masculine form for a secret (LO QUIERO), as the original app
-// did. Spanish follows the original app (vb-android values-es/strings.xml
-// and secret_mobile_es.html) where it had the same words.
+// did. Spanish uses tú, with the original app's wording (vb-android
+// values-es/strings.xml and secret_mobile_es.html) where it had the same
+// words.
 
 const en = {
   chooseTitle: 'Choose the Secrets You Want',
@@ -49,26 +50,26 @@ const es: typeof en = {
 
   keep: 'LO QUIERO',
   drop: 'NO LO QUIERO',
-  gettingCategory: (category: string) => `Estamos buscando sus ${category}.`,
+  gettingCategory: (category: string) => `Estamos buscando tus ${category}.`,
   reviewEach: (keep: string, drop: string) =>
-    `A continuación, revise cada secreto y elija ${keep} o ${drop}.`,
-  loadError: 'No pudimos cargar estos secretos en este momento. Regrese e inténtelo de nuevo.',
+    `A continuación, revisa cada secreto y elige ${keep} o ${drop}.`,
+  loadError: 'No pudimos cargar estos secretos en este momento. Regresa e inténtalo de nuevo.',
   noSecrets: 'Todavía no hay secretos en esta clase.',
 
-  noneKept: 'No escogió ningún secreto',
+  noneKept: 'No escogiste ningún secreto',
   noneText: (category: string) =>
-    `No escogió ningún secreto de ${category}. Un Libro de Secretos necesita al menos un secreto.`,
+    `No escogiste ningún secreto de ${category}. Un Libro de Secretos necesita al menos un secreto.`,
   chooseAnother: 'ELEGIR OTRA',
   reviewAgain: 'REVISAR DE NUEVO',
 
   extraIntro:
-    'Usted puede imprimir una COPIA EXTRA de cualquier secreto para dárselo a familiares o amigos.',
-  extraTouch: 'Solo seleccione los secretos de los que quiera una COPIA EXTRA.',
+    'Puedes imprimir una COPIA EXTRA de cualquier secreto para dárselo a familiares o amigos.',
+  extraTouch: 'Solo selecciona los secretos de los que quieras una COPIA EXTRA.',
 
-  chooseCoverLabel: 'Escoja una portada',
+  chooseCoverLabel: 'Escoge una portada',
   noPictures:
-    'Sus secretos no tienen imágenes para usar como portada. Elija otra clase de secretos.',
-  chooseCover: () => 'Ahora escoja la portada para su Libro de Secretos.',
+    'Tus secretos no tienen imágenes para usar como portada. Elige otra clase de secretos.',
+  chooseCover: () => 'Ahora escoge la portada para tu Libro de Secretos.',
   browseBy: 'Ver portadas por clase de secreto',
   pictureLabel: (category: string, n: number) => `Imagen de secreto de ${category} ${n}`,
   secretFallback: 'Secreto',

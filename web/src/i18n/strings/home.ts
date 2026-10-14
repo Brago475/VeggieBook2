@@ -1,6 +1,6 @@
-// The home screen, its menu, book cards, and the study notice. Spanish
-// follows the original app (vb-android values-es/strings.xml) where it had
-// the same words.
+// The home screen, its menu, book cards, and the study notice. Spanish uses
+// tú, with the original app's wording (vb-android values-es/strings.xml)
+// where it had the same words.
 
 const en = {
   title: 'My VeggieBooks',
@@ -54,7 +54,7 @@ const en = {
 
 const es: typeof en = {
   title: 'Mis VeggieBooks',
-  guestSub: 'Invitado: sus libros se guardan hasta por 24 horas',
+  guestSub: 'Invitado: tus libros se guardan hasta por 24 horas',
   signedInAs: (name: string) => `Sesión iniciada como ${name}`,
 
   about: 'Acerca de VeggieBook',
@@ -66,9 +66,9 @@ const es: typeof en = {
 
   createVeggie: 'Crear un VeggieBook Nuevo',
   createSecrets: 'Crear un Libro de Secretos',
-  loadingBooks: 'Cargando sus libros...',
+  loadingBooks: 'Cargando tus libros...',
   empty:
-    'Todavía no ha hecho ningún libro. Empiece con Crear un VeggieBook Nuevo o Crear un Libro de Secretos.',
+    'Todavía no has hecho ningún libro. Empieza con Crear un VeggieBook Nuevo o Crear un Libro de Secretos.',
 
   veggieBook: 'VeggieBook',
   secretsBook: 'Libro de Secretos',
@@ -77,29 +77,29 @@ const es: typeof en = {
   veggieSubtitle: 'Recetas, consejos y más',
   secretsSubtitle: 'Secretos para comer mejor',
 
-  options: (book: string) => `Opciones para su ${book}`,
+  options: (book: string) => `Opciones para tu ${book}`,
   deleteBook: 'Eliminar libro',
   deleteTitle: (book: string | null) => `¿Eliminar ${book ?? 'este libro'}?`,
   deleteBody: 'Esta acción elimina este libro para siempre y no se puede deshacer.',
   couldNotDelete: 'No se pudo eliminar este libro.',
 
-  endTitle: '¿Terminar su visita de invitado?',
+  endTitle: '¿Terminar tu visita de invitado?',
   guestBooks: (n: number) =>
     n === 0
-      ? 'Todavía no tiene libros.'
+      ? 'Todavía no tienes libros.'
       : n === 1
-        ? 'Esto elimina su único libro.'
-        : `Esto elimina sus ${n} libros.`,
-  endKeep: 'Para conservarlos, elija Crear cuenta o Iniciar sesión.',
+        ? 'Esto elimina tu único libro.'
+        : `Esto elimina tus ${n} libros.`,
+  endKeep: 'Para conservarlos, elige Crear cuenta o Iniciar sesión.',
   endVisit: 'Terminar visita',
 
   noticeTitle: 'Hay un estudio de VeggieBook en curso',
   noticeText:
-    'Tiene desactivado el seguimiento para la investigación. ¿Le gustaría participar? Solo se usa un código de investigación anónimo, nunca su nombre ni su correo electrónico. Puede desactivarlo de nuevo cuando quiera en Perfil y configuración.',
+    'Tienes desactivado el seguimiento para la investigación. ¿Te gustaría participar? Solo se usa un código de investigación anónimo, nunca tu nombre ni tu correo electrónico. Puedes desactivarlo de nuevo cuando quieras en Perfil y configuración.',
   noticeJoin: 'Participar en el estudio',
   noticeNotNow: 'Ahora no',
   noticeThanks: 'Gracias por participar.',
-  noticeYourId: 'Su código de investigación es',
+  noticeYourId: 'Tu código de investigación es',
 }
 
 export const HOME = { en, es }

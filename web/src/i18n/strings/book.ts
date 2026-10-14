@@ -1,6 +1,6 @@
 // A saved book: the viewers for both kinds of book and the change-cover
 // screens. Book names, the ⋮ label, and the delete-book wording come from
-// home.ts so they read the same everywhere.
+// home.ts so they read the same everywhere. Spanish uses tú.
 
 const en = {
   your: 'Your',
@@ -33,7 +33,7 @@ const en = {
 }
 
 const es: typeof en = {
-  your: 'Su',
+  your: 'Tu',
   veggieLabel: 'VeggieBook',
   secretsLabel: 'Libro de Secretos',
   secretsFallback: 'Secretos',
@@ -56,11 +56,11 @@ const es: typeof en = {
   backToBookButton: 'VOLVER AL LIBRO',
 
   newCoverVeggie: (vegetable: string) =>
-    `Escoja una nueva portada para su VeggieBook de ${vegetable}.`,
-  newCoverSecrets: () => 'Escoja una nueva portada para su Libro de Secretos.',
+    `Escoge una nueva portada para tu VeggieBook de ${vegetable}.`,
+  newCoverSecrets: () => 'Escoge una nueva portada para tu Libro de Secretos.',
   cancel: 'CANCELAR',
   saveCover: 'GUARDAR PORTADA',
-  coverNotSaved: 'No se pudo guardar la portada. Inténtelo de nuevo.',
+  coverNotSaved: 'No se pudo guardar la portada. Inténtalo de nuevo.',
 }
 
 export const BOOK = { en, es }

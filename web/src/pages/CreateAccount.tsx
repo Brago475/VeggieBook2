@@ -14,7 +14,7 @@ import { useLang } from '../i18n/languageContext'
 import { AUTH } from '../i18n/strings/auth'
 import { COMMON } from '../i18n/strings/common'
 import { useStrings } from '../i18n/useStrings'
-import { checkPassword, PASSWORD_HINT } from '../utils/passwordRule'
+import { checkPassword, passwordHint } from '../utils/passwordRule'
 import { checkRecovery, EMPTY_RECOVERY, toNewRecovery } from '../utils/recoveryRules'
 import { ageRanges, checkName, checkUsername } from '../utils/signUpRules'
 
@@ -63,10 +63,10 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
       checkUsername(username, lang) ??
       (email.trim() ? null : t.enterEmail) ??
       (email.trim().toLowerCase() === emailAgain.trim().toLowerCase() ? null : t.emailsDiffer) ??
-      checkPassword(password) ??
+      checkPassword(password, lang) ??
       (password === passwordAgain ? null : t.passwordsDiffer) ??
       (ageRange ? null : t.chooseAgeError) ??
-      checkRecovery(recovery) ??
+      checkRecovery(recovery, lang) ??
       (agree ? null : t.agreeError)
     )
   }
@@ -164,7 +164,7 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
             value={password}
             onChange={setPassword}
             autoComplete="new-password"
-            hint={PASSWORD_HINT}
+            hint={passwordHint(lang)}
           />
           <AuthPasswordField
             id="reg-password-again"

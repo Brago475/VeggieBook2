@@ -1,4 +1,4 @@
-// Welcome, the first screen for a visitor.
+// Welcome, the first screen for a visitor. Spanish uses tú.
 
 const en = {
   sub: 'Make your own recipe book for the vegetable you already have.',
@@ -12,15 +12,15 @@ const en = {
 }
 
 const es: typeof en = {
-  sub: 'Haga su propio libro de recetas con la verdura que ya tiene.',
+  sub: 'Haz tu propio libro de recetas con la verdura que ya tienes.',
   createAccount: 'Crear cuenta',
   signIn: 'Iniciar sesión',
   or: 'o',
   guest: 'Continuar como invitado',
   guestNote:
-    'Como invitado, sus libros se guardan hasta que cierre la sesión, por un máximo de 24 horas.',
+    'Como invitado, tus libros se guardan hasta que cierres la sesión, por un máximo de 24 horas.',
   stepsTitle: 'Cómo funciona VeggieBook',
-  steps: ['Elija lo que tiene', 'Descubra recetas', 'Arme su libro'],
+  steps: ['Elige lo que tienes', 'Descubre recetas', 'Arma tu libro'],
 }
 
 export const WELCOME = { en, es }

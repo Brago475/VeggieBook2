@@ -1,5 +1,4 @@
-// Words shared across many screens.
-// Words shared across many screens.
+// Words shared across many screens. Spanish uses tú.
 
 const en = {
   back: 'Back',
@@ -24,8 +23,8 @@ const es: typeof en = {
   cancel: 'Cancelar',
   yes: 'Sí',
   close: 'Cerrar',
-  pleaseWait: 'Espere, por favor...',
-  somethingWrong: 'Algo salió mal. Inténtelo de nuevo.',
+  pleaseWait: 'Espera, por favor...',
+  somethingWrong: 'Algo salió mal. Inténtalo de nuevo.',
   language: 'Idioma',
   loading: 'Cargando...',
   loadingLabel: 'Cargando VeggieBook',

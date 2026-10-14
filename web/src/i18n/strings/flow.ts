@@ -1,7 +1,7 @@
 // Making a VeggieBook: picker, questions, transition, review, extra copies,
 // the cover screen, and the bottom buttons. The transition text names the
-// KEEP and DROP buttons, so it is built from the same words. Spanish
-// follows the original app (vb-android values-es/strings.xml and
+// KEEP and DROP buttons, so it is built from the same words. Spanish uses
+// tú, with the original app's wording (vb-android values-es/strings.xml and
 // recipes_loading_es.html) where it had the same words.
 
 const en = {
@@ -27,26 +27,26 @@ const en = {
 }
 
 const es: typeof en = {
-  selectBook: 'Seleccione una Verdura',
+  selectBook: 'Selecciona una Verdura',
   loading: 'Cargando...',
   next: 'SIGUIENTE',
   keep: 'LA QUIERO',
   drop: 'NO LA QUIERO',
-  noRecipes: 'No pudimos encontrar recetas en este momento. Regrese e inténtelo de nuevo.',
-  gettingRecipes: 'Estamos creando su VeggieBook.',
+  noRecipes: 'No pudimos encontrar recetas en este momento. Regresa e inténtalo de nuevo.',
+  gettingRecipes: 'Estamos creando tu VeggieBook.',
   reviewEach: (keep: string, drop: string) =>
-    `A continuación, revise cada receta y elija ${keep} o ${drop}.`,
-  pressNext: (next: string) => `Pulse ${next} abajo para continuar.`,
-  noMatches: 'Ninguna receta coincide con sus respuestas.',
+    `A continuación, revisa cada receta y elige ${keep} o ${drop}.`,
+  pressNext: (next: string) => `Pulsa ${next} abajo para continuar.`,
+  noMatches: 'Ninguna receta coincide con tus respuestas.',
 
   extraIntro:
-    'Usted puede imprimir una COPIA EXTRA de cualquier receta para dársela a familiares o amigos.',
-  extraTouch: 'Solo seleccione las recetas de las que quiera una COPIA EXTRA.',
+    'Puedes imprimir una COPIA EXTRA de cualquier receta para dársela a familiares o amigos.',
+  extraTouch: 'Solo selecciona las recetas de las que quieras una COPIA EXTRA.',
 
-  chooseCover: (vegetable: string) => `Ahora escoja la portada para su VeggieBook de ${vegetable}.`,
+  chooseCover: (vegetable: string) => `Ahora escoge la portada para tu VeggieBook de ${vegetable}.`,
   saveBook: 'GUARDAR LIBRO',
   saving: 'GUARDANDO...',
-  couldNotSave: 'No se pudo guardar su libro. Inténtelo de nuevo.',
+  couldNotSave: 'No se pudo guardar tu libro. Inténtalo de nuevo.',
 }
 
 export const FLOW = { en, es }

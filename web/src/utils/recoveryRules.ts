@@ -1,7 +1,10 @@
+import type { Lang } from '../i18n/language'
+import { RULES } from '../i18n/strings/rules'
 import type { NewRecovery } from './authApi'
 
 // The recovery PIN and security question, as typed into a form. The same
 // rules as the API (api/Auth/AccountRecovery.cs), checked here first.
+// Messages come in the language passed in, English by default.
 
 export type RecoveryValue = {
   pin: string
@@ -23,14 +26,15 @@ function isEasyPin(pin: string) {
   return new Set(pin).size === 1 || '0123456789'.includes(pin) || '9876543210'.includes(pin)
 }
 
-export function checkRecovery(value: RecoveryValue): string | null {
-  if (!/^\d{6}$/.test(value.pin)) return 'Your PIN must be exactly 6 digits.'
-  if (isEasyPin(value.pin)) return 'That PIN is too easy to guess. Please pick another one.'
-  if (value.pin !== value.pinAgain) return 'The two PINs do not match.'
-  if (!value.questionId) return 'Please choose a security question.'
+export function checkRecovery(value: RecoveryValue, lang: Lang = 'en'): string | null {
+  const t = RULES[lang]
+  if (!/^\d{6}$/.test(value.pin)) return t.pinDigits
+  if (isEasyPin(value.pin)) return t.pinEasy
+  if (value.pin !== value.pinAgain) return t.pinsDiffer
+  if (!value.questionId) return t.chooseQuestion
   const answer = value.answer.trim()
-  if (!answer) return 'Please answer your security question.'
-  if (answer.length > MAX_ANSWER) return `Your answer must be at most ${MAX_ANSWER} characters.`
+  if (!answer) return t.answerEmpty
+  if (answer.length > MAX_ANSWER) return t.answerTooLong(MAX_ANSWER)
   return null
 }
 
