@@ -4,11 +4,13 @@ using VeggieBook.Api.Data;
 
 namespace VeggieBook.Api.Books.Print;
 
-// A VeggieBook as a PDF: the cover, one page per kept recipe (printed again
-// for each extra copy), then the vegetable's tips that match the book's
-// answers. Recipes run in the same order as the book viewer.
-//
-// With one recipe asked for, the PDF is just that recipe's page.
+// A VeggieBook as a PDF, in one of three forms:
+//   the whole book     the cover, one page per kept recipe, then the
+//                      vegetable's tips that match the book's answers
+//   one recipe         just that recipe's page
+//   extra copies       just the recipes picked for extra copies, each
+//                      printed as many times as picked, with no cover
+// Recipes run in the same order as the book viewer.
 
 internal static class VeggieBookPdf
 {
@@ -32,15 +34,16 @@ internal static class VeggieBookPdf
 
     private sealed record TipPage(string Heading, List<TipPart> Parts);
 
-    // Null when the book has no such recipe.
+    // Null when the book has no such recipe, or no extra copies.
     public static async Task<BookPdfFile?> BuildAsync(
-        VeggieBookContext content, BookPrint book, bool es, string imagesRoot, int? only = null)
+        VeggieBookContext content, BookPrint book, bool es, string imagesRoot,
+        int? only = null, bool extras = false)
     {
         var words = BookWords.For(es);
 
         var ids = book.Items
+            .Where(i => (only is null || i.Id == only) && (!extras || i.ExtraCopies > 0))
             .Select(i => i.Id)
-            .Where(i => only is null || i == only)
             .ToArray();
         if (ids.Length == 0) return null;
 
@@ -94,6 +97,23 @@ internal static class VeggieBookPdf
             .FirstOrDefaultAsync(v => v.Code == book.VegetableCode);
         var name = veg is null ? "VeggieBook" : es ? veg.NameEs : veg.NameEn;
 
+        if (extras)
+        {
+            var copies = book.Items.ToDictionary(i => i.Id, i => i.ExtraCopies);
+            var (extra, pages) = BookPdf.Start($"VeggieBook: {name}", words);
+            var first = true;
+            foreach (var recipe in recipes)
+            {
+                for (var c = 0; c < copies.GetValueOrDefault(recipe.Id); c++)
+                {
+                    if (!first) pages.AddPageBreak();
+                    AddRecipe(pages, recipe, words, imagesRoot);
+                    first = false;
+                }
+            }
+            return new BookPdfFile(BookPdf.Render(extra, es), BookPdf.FileName("Extra-Copies", name));
+        }
+
         var attributes = book.Attributes;
         var tipRows = await content.Tips
             .AsNoTracking()
@@ -111,7 +131,6 @@ internal static class VeggieBookPdf
             .Select(t => new TipPage(t.Heading, t.Parts.Select(p => new TipPart(p.Text, p.ImagePath)).ToList()))
             .ToList();
 
-        var extras = book.Items.ToDictionary(i => i.Id, i => i.ExtraCopies);
         var cover = BookPdf.FromBytes(book.Upload)
             ?? BookPdf.FromFile(BookImages.Find(imagesRoot, book.CoverPath));
 
@@ -121,12 +140,8 @@ internal static class VeggieBookPdf
 
         foreach (var recipe in recipes)
         {
-            var copies = 1 + extras.GetValueOrDefault(recipe.Id);
-            for (var c = 0; c < copies; c++)
-            {
-                section.AddPageBreak();
-                AddRecipe(section, recipe, words, imagesRoot);
-            }
+            section.AddPageBreak();
+            AddRecipe(section, recipe, words, imagesRoot);
         }
 
         if (tips.Count > 0)

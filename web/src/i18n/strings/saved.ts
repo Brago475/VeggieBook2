@@ -1,19 +1,61 @@
-// The screen shown right after a book is saved: print it, download it, or
-// go on to the library. Spanish uses tú.
+// The screens shown right after a book is saved. When recipes or secrets
+// were picked for extra copies, those come first, then the whole book.
+// Spanish uses tú.
+
+type Noun = 'recipe' | 'secret'
 
 const en = {
   title: 'Your book is saved',
   sub: 'Want a copy you can hold?',
-  print: 'PRINT',
-  download: 'DOWNLOAD PDF',
+  loading: 'Loading...',
+
+  extraOne: (noun: Noun): string =>
+    `You picked an extra copy of this ${noun} to give to family or friends.`,
+  extraMany: (n: number, noun: Noun): string =>
+    `You picked ${n} ${noun}s for extra copies. Want them together in one file?`,
+  printOne: (noun: Noun): string => (noun === 'secret' ? 'PRINT SECRET' : 'PRINT RECIPE'),
+  downloadOne: (noun: Noun): string =>
+    noun === 'secret' ? 'DOWNLOAD SECRET' : 'DOWNLOAD RECIPE',
+  printMany: (n: number, noun: Noun): string =>
+    `PRINT ${n} ${noun === 'secret' ? 'SECRETS' : 'RECIPES'}`,
+  downloadMany: (n: number, noun: Noun): string =>
+    `DOWNLOAD ${n} ${noun === 'secret' ? 'SECRETS' : 'RECIPES'}`,
+  next: 'NEXT',
+  nextHint: 'Next: print or download your whole book',
+
+  wholeTitle: 'Your whole book',
+  wholeSub: 'Want a copy of the full book too?',
+  printBook: 'PRINT BOOK',
+  downloadBook: 'DOWNLOAD BOOK',
   skip: 'Skip, go to my books',
 }
 
 const es: typeof en = {
   title: 'Tu libro está guardado',
   sub: '¿Quieres una copia en papel?',
-  print: 'IMPRIMIR',
-  download: 'DESCARGAR PDF',
+  loading: 'Cargando...',
+
+  extraOne: (noun: Noun) =>
+    noun === 'secret'
+      ? 'Escogiste una copia extra de este secreto para dársela a familiares o amigos.'
+      : 'Escogiste una copia extra de esta receta para dársela a familiares o amigos.',
+  extraMany: (n: number, noun: Noun) =>
+    noun === 'secret'
+      ? `Escogiste ${n} secretos para copias extra. ¿Los quieres juntos en un solo archivo?`
+      : `Escogiste ${n} recetas para copias extra. ¿Las quieres juntas en un solo archivo?`,
+  printOne: (noun: Noun) => (noun === 'secret' ? 'IMPRIMIR SECRETO' : 'IMPRIMIR RECETA'),
+  downloadOne: (noun: Noun) => (noun === 'secret' ? 'DESCARGAR SECRETO' : 'DESCARGAR RECETA'),
+  printMany: (n: number, noun: Noun) =>
+    `IMPRIMIR ${n} ${noun === 'secret' ? 'SECRETOS' : 'RECETAS'}`,
+  downloadMany: (n: number, noun: Noun) =>
+    `DESCARGAR ${n} ${noun === 'secret' ? 'SECRETOS' : 'RECETAS'}`,
+  next: 'SIGUIENTE',
+  nextHint: 'Después: imprime o descarga tu libro completo',
+
+  wholeTitle: 'Tu libro completo',
+  wholeSub: '¿También quieres una copia del libro completo?',
+  printBook: 'IMPRIMIR LIBRO',
+  downloadBook: 'DESCARGAR LIBRO',
   skip: 'Omitir, ir a mis libros',
 }
 

@@ -11,6 +11,8 @@ namespace VeggieBook.Api.Books;
 // Saved books as PDFs, for printing or downloading.
 //
 //   GET /api/books/{id}/pdf                        the whole book
+//   GET /api/books/{id}/extras/pdf                 the pages picked for
+//                                                  extra copies, no cover
 //   GET /api/books/{id}/recipes/{recipeId}/pdf     one recipe's page
 //   GET /api/books/{id}/secrets/{secretId}/pdf     one secret's page
 //
@@ -19,6 +21,7 @@ namespace VeggieBook.Api.Books;
 //
 // Same rules as BooksController: a signed-in account only, and a book, or a
 // recipe or secret not kept in it, that belongs to no one here answers 404.
+// A book with no extra copies answers 404 on the extras route.
 // Never cached, since a book can hold a personal cover photo.
 
 [ApiController]
@@ -31,20 +34,25 @@ public class BookPdfController(
 {
     [HttpGet("{id:guid}/pdf")]
     public Task<IActionResult> Book(Guid id, [FromQuery] string? lang, [FromQuery] string? download) =>
-        Send(id, null, null, lang, IsYes(download));
+        Send(id, null, null, false, lang, IsYes(download));
+
+    [HttpGet("{id:guid}/extras/pdf")]
+    public Task<IActionResult> Extras(Guid id, [FromQuery] string? lang, [FromQuery] string? download) =>
+        Send(id, null, null, true, lang, IsYes(download));
 
     [HttpGet("{id:guid}/recipes/{recipeId:int}/pdf")]
     public Task<IActionResult> Recipe(Guid id, int recipeId, [FromQuery] string? lang, [FromQuery] string? download) =>
-        Send(id, "veggie", recipeId, lang, IsYes(download));
+        Send(id, "veggie", recipeId, false, lang, IsYes(download));
 
     [HttpGet("{id:guid}/secrets/{secretId:int}/pdf")]
     public Task<IActionResult> Secret(Guid id, int secretId, [FromQuery] string? lang, [FromQuery] string? download) =>
-        Send(id, "secrets", secretId, lang, IsYes(download));
+        Send(id, "secrets", secretId, false, lang, IsYes(download));
 
     private static bool IsYes(string? value) =>
         value is "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
 
-    private async Task<IActionResult> Send(Guid id, string? kind, int? only, string? lang, bool download)
+    private async Task<IActionResult> Send(
+        Guid id, string? kind, int? only, bool extras, string? lang, bool download)
     {
         var uid = AuthSetup.UserId(User);
         if (uid is null) return Unauthorized();
@@ -73,8 +81,8 @@ public class BookPdfController(
         var images = BookImages.Root(config);
 
         var file = book.Kind == "secrets"
-            ? await SecretsBookPdf.BuildAsync(content, book, es, images, only)
-            : await VeggieBookPdf.BuildAsync(content, book, es, images, only);
+            ? await SecretsBookPdf.BuildAsync(content, book, es, images, only, extras)
+            : await VeggieBookPdf.BuildAsync(content, book, es, images, only, extras);
         if (file is null) return NotFound();
 
         Response.Headers.CacheControl = "no-store";
