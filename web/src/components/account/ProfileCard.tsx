@@ -1,10 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useHeld } from '../../hooks/useHeld'
 import { getProfile, notifyProfileChanged, saveProfile, type Profile } from '../../utils/profileApi'
 import { checkName, checkUsername } from '../../utils/signUpRules'
 import { PersonIcon } from '../icons/LibraryIcons'
+import { AccountCardSkeleton, AccountTextSkeleton } from './AccountCardSkeleton'
 
 // Profile, at the top of account settings: first name, last name, and
 // username, which can be changed here. The email is shown but not changed.
+// Outlines show while the profile loads.
 //
 // The rules match Create Account, except the username can't be blank.
 
@@ -17,6 +20,9 @@ export function ProfileCard() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+
+  const held = useHeld(profile === null && loadError === null)
+  const ready = profile !== null && !held
 
   function fill(p: Profile) {
     setProfile(p)
@@ -75,16 +81,20 @@ export function ProfileCard() {
   }
 
   return (
-    <form className="account-card" onSubmit={submit} noValidate>
+    <form className="account-card" onSubmit={submit} noValidate aria-busy={held}>
       <div className="account-card-head">
         <span className="account-card-icon">
           <PersonIcon />
         </span>
         <div className="account-card-head-text">
           <h2 className="account-card-title">Profile</h2>
-          <p className="account-card-text">
-            {profile?.email ? `Signed in with ${profile.email}` : 'Your name and username.'}
-          </p>
+          {held ? (
+            <AccountTextSkeleton />
+          ) : (
+            <p className="account-card-text">
+              {profile?.email ? `Signed in with ${profile.email}` : 'Your name and username.'}
+            </p>
+          )}
         </div>
       </div>
 
@@ -94,7 +104,9 @@ export function ProfileCard() {
         </p>
       )}
 
-      {profile && (
+      {held && <AccountCardSkeleton fields={3} />}
+
+      {ready && (
         <>
           <div className="field">
             <label className="field-label" htmlFor="profile-first">

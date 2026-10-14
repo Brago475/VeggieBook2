@@ -3,10 +3,12 @@ import type { IdentityRow } from '../../types/settings'
 import { api } from '../../utils/api'
 import { formatDate } from '../../utils/format'
 import { NavIcon } from '../icons/NavIcons'
+import { IdentityHistory } from './IdentityHistory'
 import { SettingsCard, SettingsRow } from './SettingsCard'
 
 // Main admin only: email, username and date made, hidden until opened. A
-// research ID is fetched only when revealed, one person at a time.
+// research ID is fetched only when revealed, one person at a time. Opening
+// the records and each reveal are recorded in the history below.
 
 type Revealed = { id: string | null; note: string | null }
 
@@ -18,6 +20,7 @@ export function IdentitySection() {
   const [search, setSearch] = useState('')
   const [revealed, setRevealed] = useState<Record<string, Revealed>>({})
   const [revealing, setRevealing] = useState<string | null>(null)
+  const [recorded, setRecorded] = useState(0)
 
   async function show() {
     setLoading(true)
@@ -25,6 +28,7 @@ export function IdentitySection() {
     try {
       setRows(await api<IdentityRow[]>('/admin/settings/identity'))
       setOpen(true)
+      setRecorded((n) => n + 1)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -41,9 +45,11 @@ export function IdentitySection() {
 
   async function reveal(id: string) {
     setRevealing(id)
+    setError(null)
     try {
       const r = await api<{ researchId: string | null; note: string | null }>(`/admin/settings/identity/${id}/research-id`)
       setRevealed((prev) => ({ ...prev, [id]: { id: r.researchId, note: r.note } }))
+      if (r.researchId) setRecorded((n) => n + 1)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -62,7 +68,7 @@ export function IdentitySection() {
     <SettingsCard id="identity" title="Identity records" rootOnly>
       <SettingsRow
         label="Email, username, date made"
-        help="Hidden until opened. A research ID shows only when you reveal it, one person at a time."
+        help="Hidden until opened. A research ID shows only when you reveal it, one person at a time. Opening and revealing are both recorded."
       >
         <div className="se-identity">
           {error && (
@@ -142,6 +148,13 @@ export function IdentitySection() {
             </>
           )}
         </div>
+      </SettingsRow>
+
+      <SettingsRow
+        label="Identity record history"
+        help="Every time these records were opened or a research ID was revealed: who, when, and which account. Kept permanently and never part of research downloads."
+      >
+        <IdentityHistory refreshKey={recorded} />
       </SettingsRow>
     </SettingsCard>
   )

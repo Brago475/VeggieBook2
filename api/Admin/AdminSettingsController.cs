@@ -20,9 +20,13 @@ namespace VeggieBook.Api.Admin;
 // Root admin only:
 //   GET  /api/admin/settings/admins           every admin
 //   POST /api/admin/settings/admins           make an account an admin, by email
-//   GET  /api/admin/settings/identity         email, username, date made
+//   GET  /api/admin/settings/identity         email, username, date made (recorded)
 //   GET  /api/admin/settings/identity/{id}/research-id
-//                                             one research ID, on request
+//                                             one research ID, on request (recorded)
+//   GET  /api/admin/settings/identity/history the latest recorded opens and reveals
+//
+// Opening Identity records and revealing a research ID are written to the
+// identity history (IdentityAudit.cs). If that write fails, nothing is shown.
 //
 // Removing an admin: DELETE /api/admin/accounts/{id}/admin (root only).
 // Account counts leave admins out for every admin but the root admin.
@@ -38,9 +42,12 @@ public class AdminSettingsController(
     AccountsContext db,
     UserManager<AppUser> users,
     SignInManager<AppUser> signIn,
-    IConfiguration config) : ControllerBase
+    IConfiguration config,
+    ILogger<AdminSettingsController> logger) : ControllerBase
 {
     private const int GuestDays = 14;
+    private const int HistoryTake = 100;
+    private const string NotRecorded = "This could not be recorded in the identity history, so it was not shown. Has migration 012 run?";
 
     [HttpGet]
     public async Task<IActionResult> Get()
@@ -203,6 +210,12 @@ public class AdminSettingsController(
     [RootAdminOnly]
     public async Task<IActionResult> Identity()
     {
+        var me = await users.GetUserAsync(User);
+        if (me is null) return Unauthorized();
+
+        if (!await Record(IdentityAudit.Opened, me.Email, null))
+            return StatusCode(500, new { error = NotRecorded });
+
         var adminRoleId = await AdminRoleId();
 
         var rows = await db.Users
@@ -227,6 +240,9 @@ public class AdminSettingsController(
     [RootAdminOnly]
     public async Task<IActionResult> ResearchId(Guid id)
     {
+        var me = await users.GetUserAsync(User);
+        if (me is null) return Unauthorized();
+
         var exists = await db.Users.AnyAsync(u => u.Id == id && u.GuestExpiresAt == null);
         if (!exists) return NotFound();
 
@@ -235,9 +251,69 @@ public class AdminSettingsController(
             return Ok(new { researchId = (string?)null, note = "Admins are never tracked, so they have no research ID." });
 
         var ids = await ParticipantIds.EnsureAsync(db);
+        var researchId = ids.GetValueOrDefault(id);
+
+        // Only an actual reveal is recorded; nothing is shown if it can't be.
+        if (researchId is not null && !await Record(IdentityAudit.Revealed, me.Email, id))
+            return StatusCode(500, new { error = NotRecorded });
 
         Response.Headers.CacheControl = "no-store";
-        return Ok(new { researchId = ids.GetValueOrDefault(id), note = (string?)null });
+        return Ok(new { researchId, note = (string?)null });
+    }
+
+    [HttpGet("identity/history")]
+    [RootAdminOnly]
+    public async Task<IActionResult> IdentityHistory()
+    {
+        List<IdentityAuditRow> rows;
+        try
+        {
+            rows = await IdentityAudit.LatestAsync(db, HistoryTake);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Identity history: could not load.");
+            return StatusCode(500, new { error = "The history could not be loaded. Has migration 012 run?" });
+        }
+
+        var targets = rows
+            .Where(r => r.TargetUserId != null)
+            .Select(r => r.TargetUserId!.Value)
+            .Distinct()
+            .ToList();
+
+        var emails = await db.Users
+            .AsNoTracking()
+            .Where(u => targets.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, u => u.Email);
+
+        Response.Headers.CacheControl = "no-store";
+        return Ok(new
+        {
+            limit = HistoryTake,
+            entries = rows.Select(r => new
+            {
+                at = r.At,
+                action = r.Action,
+                adminEmail = r.AdminEmail,
+                targetEmail = r.TargetUserId is Guid t ? emails.GetValueOrDefault(t) : null,
+                targetDeleted = r.TargetUserId is Guid g && !emails.ContainsKey(g)
+            })
+        });
+    }
+
+    private async Task<bool> Record(string action, string? adminEmail, Guid? target)
+    {
+        try
+        {
+            await IdentityAudit.RecordAsync(db, action, adminEmail ?? "", target);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Identity history: could not record {Action}.", action);
+            return false;
+        }
     }
 
     private async Task<Guid> AdminRoleId() =>

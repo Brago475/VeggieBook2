@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useHeld } from '../../hooks/useHeld'
 import { useRecoveryQuestions } from '../../hooks/useRecoveryQuestions'
 import {
   getRecoverySettings,
@@ -15,12 +16,13 @@ import {
 import { KeyIcon } from '../icons/LibraryIcons'
 import { PasswordField } from '../forms/PasswordField'
 import { PinField } from '../forms/PinField'
+import { AccountCardSkeleton, AccountTextSkeleton } from './AccountCardSkeleton'
 import '../../styles/recovery-card.css'
 
 // Password recovery, on the account settings screen: shows whether a PIN
 // and security question are set, and which question, and lets the owner
 // change them. Asks for the current password first, in a box the browser
-// does not fill in on its own.
+// does not fill in on its own. Outlines show while the settings load.
 //
 // Saving also clears a locked password reset (see AccountRecovery.cs),
 // since knowing the password proves it is their account.
@@ -36,6 +38,8 @@ export function RecoveryCard() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+
+  const held = useHeld(settings === null && loadError === null)
 
   useEffect(() => {
     let cancelled = false
@@ -95,24 +99,26 @@ export function RecoveryCard() {
   const isSet = settings !== null && settings.hasPin && settings.question !== null
 
   const summary = settings === null
-    ? 'Loading...'
+    ? 'Your recovery PIN and security question.'
     : isSet
       ? 'Your recovery PIN and security question are set. You use them if you forget your password.'
       : 'Set a recovery PIN and security question so you can reset a forgotten password.'
 
   return (
-    <div className="account-card recovery-card">
+    <div className="account-card recovery-card" aria-busy={held}>
       <div className="account-card-head">
         <span className="account-card-icon">
           <KeyIcon />
         </span>
         <div className="account-card-head-text">
           <h2 className="account-card-title">Password recovery</h2>
-          <p className="account-card-text">{summary}</p>
+          {held ? <AccountTextSkeleton lines={2} /> : <p className="account-card-text">{summary}</p>}
         </div>
       </div>
 
-      {isSet && <p className="recovery-question">Your question: {settings.question}</p>}
+      {held && <AccountCardSkeleton />}
+
+      {isSet && !held && <p className="recovery-question">Your question: {settings.question}</p>}
 
       {loadError && (
         <p className="form-error" role="alert">
@@ -125,7 +131,7 @@ export function RecoveryCard() {
         </p>
       )}
 
-      {!open && settings !== null && (
+      {!open && settings !== null && !held && (
         <button
           type="button"
           className="account-primary"

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useHeld } from '../../hooks/useHeld'
 import { getTracking, setTracking, type Tracking } from '../../utils/trackingApi'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { FlaskIcon } from '../icons/ResearchIcons'
+import { AccountCardSkeleton, AccountTextSkeleton } from './AccountCardSkeleton'
 import '../../styles/research.css'
 
 // Help with research, on the account settings screen: whether research
-// tracking is on, and one button to change it.
+// tracking is on, and one button to change it. Outlines show while it loads.
 //
 //   On                    a green "Tracking on" chip, the anonymous research
 //                         ID, and "Turn off research tracking", which asks
@@ -25,6 +27,8 @@ export function ResearchCard() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
+
+  const held = useHeld(tracking === null && loadError === null)
 
   useEffect(() => {
     let cancelled = false
@@ -60,7 +64,7 @@ export function ResearchCard() {
 
   const text =
     tracking === null
-      ? 'Loading...'
+      ? 'Research tracking for your account.'
       : tracking.on
         ? 'Your saved books help the VeggieBook research team at Kean University. They only see an anonymous research ID, never your name or email.'
         : tracking.offByAdmin
@@ -68,16 +72,18 @@ export function ResearchCard() {
           : 'Research tracking is off. Nothing you save from now on is used for research. You can turn it back on anytime.'
 
   return (
-    <div className="account-card research-card">
+    <div className="account-card research-card" aria-busy={held}>
       <div className="account-card-head">
         <span className="account-card-icon">
           <FlaskIcon />
         </span>
         <div className="account-card-head-text">
           <h2 className="account-card-title">Help with research</h2>
-          <p className="account-card-text">{text}</p>
+          {held ? <AccountTextSkeleton lines={2} /> : <p className="account-card-text">{text}</p>}
         </div>
       </div>
+
+      {held && <AccountCardSkeleton chip />}
 
       {loadError && (
         <p className="form-error" role="alert">
@@ -85,7 +91,7 @@ export function ResearchCard() {
         </p>
       )}
 
-      {tracking?.eligible && (
+      {tracking?.eligible && !held && (
         <>
           {tracking.on ? (
             <span className="research-chip is-on">

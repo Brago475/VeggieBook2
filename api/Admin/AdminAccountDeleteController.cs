@@ -20,8 +20,8 @@ namespace VeggieBook.Api.Admin;
 //
 // Works the same as a person deleting their own account
 // (Auth/AccountController.cs): books and uploaded covers go with it through
-// ON DELETE CASCADE, and the deletion is logged by research ID only. The log
-// never blocks the delete.
+// ON DELETE CASCADE, and the deletion is logged by research ID only, marked
+// as removed by an admin. The log never blocks the delete.
 
 public record AdminDeleteAccountRequest(string? ConfirmEmail);
 
@@ -53,7 +53,7 @@ public class AdminAccountDeleteController(
         if (!string.Equals((req.ConfirmEmail ?? "").Trim(), user.Email, StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { error = "The email typed does not match this account." });
 
-        var entry = await ActivityLog.ForAccountAsync(db, logger, user.Id);
+        var entry = await ActivityLog.ForAccountAsync(db, logger, user.Id, byAdmin: true);
 
         var result = await users.DeleteAsync(user);
         if (!result.Succeeded)

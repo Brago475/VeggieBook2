@@ -1,0 +1,70 @@
+/* Identity record history, inside the Identity records card. */
+
+.ih-count {
+  align-self: center;
+  font-size: 13px;
+}
+
+.ih-empty {
+  margin: 0;
+  padding: 16px;
+  font-size: 14px;
+  background: #fafafa;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.ih-list {
+  max-height: 320px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.ih-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+.ih-item:last-child {
+  border-bottom: none;
+}
+
+.ih-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  background: #a1a1aa;
+  border-radius: 50%;
+}
+
+.ih-item.is-reveal .ih-dot {
+  background: #dc2626;
+}
+
+.ih-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ih-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.ih-meta {
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}

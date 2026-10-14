@@ -13,6 +13,9 @@ namespace VeggieBook.Api.Activity;
 // Participant lines are prepared while the account still exists (null for
 // guests and admins), then stored with SaveAsync. Logging never blocks the
 // main action; failures go to the server log.
+//
+// An account deleted from the admin site is an account_deleted line with
+// Detail set to RemovedByAdmin, so no new kind is needed in the database.
 
 public static class ActivityLog
 {
@@ -21,6 +24,9 @@ public static class ActivityLog
     public const string AccountDeleted = "account_deleted";
     public const string StudyRenamed = "study_renamed";
     public const string StudyDeleted = "study_deleted";
+
+    /// <summary>Detail on an account_deleted line when an admin removed the account.</summary>
+    public const string RemovedByAdmin = "removed_by_admin";
 
     public static async Task<ActivityEntry?> ForBookAsync(
         AccountsContext db,
@@ -52,7 +58,11 @@ public static class ActivityLog
         }
     }
 
-    public static async Task<ActivityEntry?> ForAccountAsync(AccountsContext db, ILogger logger, Guid userId)
+    public static async Task<ActivityEntry?> ForAccountAsync(
+        AccountsContext db,
+        ILogger logger,
+        Guid userId,
+        bool byAdmin = false)
     {
         try
         {
@@ -60,7 +70,8 @@ public static class ActivityLog
             return new ActivityEntry
             {
                 Kind = AccountDeleted,
-                ParticipantId = await ParticipantIds.ForUserAsync(db, userId)
+                ParticipantId = await ParticipantIds.ForUserAsync(db, userId),
+                Detail = byAdmin ? RemovedByAdmin : null
             };
         }
         catch (Exception ex)
@@ -69,6 +80,10 @@ public static class ActivityLog
             return null;
         }
     }
+
+    /// <summary>True when an account_deleted line was written by an admin removal.</summary>
+    public static bool IsRemovedByAdmin(ActivityEntry entry) =>
+        entry.Kind == AccountDeleted && entry.Detail == RemovedByAdmin;
 
     /// <summary>An admin study action. No participant; the study number goes in ItemCount.</summary>
     public static ActivityEntry ForStudy(string kind, int studyNumber, string detail) => new()

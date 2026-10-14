@@ -53,6 +53,19 @@ export type IdentityRow = {
   isAdmin: boolean
 }
 
+export type IdentityHistoryEntry = {
+  at: string
+  action: 'identity_opened' | 'research_id_revealed'
+  adminEmail: string
+  targetEmail: string | null
+  targetDeleted: boolean
+}
+
+export type IdentityHistoryResponse = {
+  limit: number
+  entries: IdentityHistoryEntry[]
+}
+
 export type SiteSettingsInfo = {
   me: { email: string; isRoot: boolean }
   accounts: { total: number; newThisWeek: number; resetLocked: number; signInLocked: number }
