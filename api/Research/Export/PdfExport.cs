@@ -7,10 +7,12 @@ namespace VeggieBook.Api.Research.Export;
 
 // A sheet as a PDF: US Letter, landscape.
 //
-//   a title, the filters, when it was made, and the row count
+//   a title, then two short lines: when it was made, the filters and the
+//   row count; and the note that rows are anonymous
 //   the table, with its header repeated on every page
 //   a variables list at the end (each short name and its full label)
-//   page numbers in the footer
+//   the footer: VeggieBook2, Kean University on the left, the page on the
+//   right, the same as the book PDFs
 //
 // A sheet too wide for one page is split into parts. The participant ID and
 // book number are repeated in every part, so rows can still be matched up.
@@ -88,20 +90,26 @@ public static class PdfExport
         title.Format.Font.Bold = true;
         title.Format.SpaceAfter = Unit.FromPoint(4);
 
-        var meta = section.AddParagraph(
-            $"Made {sheet.GeneratedAt:yyyy-MM-dd HH:mm} UTC   ·   Filters: {filters}   ·   " +
-            $"{sheet.Rows.Count} rows   ·   Anonymous: rows are keyed by research ID, with no names or emails.");
-        meta.Format.Font.Color = Muted;
-        meta.Format.SpaceAfter = Unit.FromPoint(10);
+        var made = section.AddParagraph(
+            $"Made {sheet.GeneratedAt:yyyy-MM-dd HH:mm} UTC. Filters: {filters}. {sheet.Rows.Count} rows.");
+        made.Format.Font.Color = Muted;
+        made.Format.SpaceAfter = Unit.FromPoint(2);
+
+        var anonymous = section.AddParagraph(
+            "Anonymous: rows are keyed by research ID, with no names or emails.");
+        anonymous.Format.Font.Color = Muted;
+        anonymous.Format.SpaceAfter = Unit.FromPoint(10);
     }
 
     private static void AddFooter(Section section)
     {
         var footer = section.Footers.Primary.AddParagraph();
-        footer.Format.Alignment = ParagraphAlignment.Right;
         footer.Format.Font.Size = 7;
         footer.Format.Font.Color = Muted;
-        footer.AddText("VeggieBook2 · Kean University   ·   Page ");
+        footer.Format.AddTabStop(Unit.FromCentimeter(UsableWidth), TabAlignment.Right);
+        footer.AddText("VeggieBook2, Kean University");
+        footer.AddTab();
+        footer.AddText("Page ");
         footer.AddPageField();
         footer.AddText(" of ");
         footer.AddNumPagesField();
