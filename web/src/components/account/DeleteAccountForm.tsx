@@ -1,4 +1,7 @@
 import { useState, type FormEvent } from 'react'
+import { ACCOUNT } from '../../i18n/strings/account'
+import { COMMON } from '../../i18n/strings/common'
+import { useStrings } from '../../i18n/useStrings'
 import { TrashIcon } from '../icons/AccountIcons'
 import { PasswordField } from '../forms/PasswordField'
 
@@ -14,6 +17,9 @@ type Props = {
 }
 
 export function DeleteAccountForm({ onDeleteAccount }: Props) {
+  const t = useStrings(ACCOUNT)
+  const common = useStrings(COMMON)
+
   const [confirming, setConfirming] = useState(false)
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -24,7 +30,7 @@ export function DeleteAccountForm({ onDeleteAccount }: Props) {
     if (busy) return
 
     if (!password) {
-      setError('Enter your password to confirm.')
+      setError(t.delEnterPassword)
       return
     }
 
@@ -34,9 +40,7 @@ export function DeleteAccountForm({ onDeleteAccount }: Props) {
       await onDeleteAccount(password)
       // On success the parent leaves this screen.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : common.somethingWrong)
       setBusy(false)
     }
   }
@@ -54,11 +58,8 @@ export function DeleteAccountForm({ onDeleteAccount }: Props) {
           <TrashIcon />
         </span>
         <div className="account-card-head-text">
-          <h2 className="account-card-title">Delete account</h2>
-          <p className="account-card-text">
-            This permanently deletes your account, all of your books, and any
-            photos you uploaded. It cannot be undone.
-          </p>
+          <h2 className="account-card-title">{t.delTitle}</h2>
+          <p className="account-card-text">{t.delText}</p>
         </div>
 
         {!confirming && (
@@ -67,7 +68,7 @@ export function DeleteAccountForm({ onDeleteAccount }: Props) {
             className="account-danger-btn"
             onClick={() => setConfirming(true)}
           >
-            Delete my account
+            {t.delButton}
           </button>
         )}
       </div>
@@ -77,7 +78,7 @@ export function DeleteAccountForm({ onDeleteAccount }: Props) {
           {/* Focused as soon as it appears, so the next step is obvious. */}
           <PasswordField
             id="delete-password"
-            label="Enter your password to confirm"
+            label={t.delConfirmLabel}
             autoComplete="current-password"
             value={password}
             onChange={setPassword}
@@ -95,10 +96,10 @@ export function DeleteAccountForm({ onDeleteAccount }: Props) {
             className="account-danger-btn is-filled"
             disabled={busy}
           >
-            {busy ? 'Deleting...' : 'Permanently delete my account'}
+            {busy ? t.deleting : t.delFinal}
           </button>
           <button type="button" className="link-btn" onClick={cancel}>
-            Cancel
+            {common.cancel}
           </button>
         </>
       )}

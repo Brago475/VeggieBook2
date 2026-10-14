@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useHeld } from '../../hooks/useHeld'
+import { ACCOUNT } from '../../i18n/strings/account'
+import { COMMON } from '../../i18n/strings/common'
+import { useStrings } from '../../i18n/useStrings'
 import { getTracking, setTracking, type Tracking } from '../../utils/trackingApi'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { FlaskIcon } from '../icons/ResearchIcons'
@@ -21,23 +24,27 @@ import '../../styles/research.css'
 // See api/Research/TrackingController.cs.
 
 export function ResearchCard() {
+  const t = useStrings(ACCOUNT)
+  const common = useStrings(COMMON)
+
   const [tracking, setState] = useState<Tracking | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadFailed, setLoadFailed] = useState<{ message: string | null } | null>(null)
   const [confirmOff, setConfirmOff] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<string | null>(null)
+  const [done, setDone] = useState<'on' | 'off' | null>(null)
 
-  const held = useHeld(tracking === null && loadError === null)
+  const held = useHeld(tracking === null && loadFailed === null)
+  const loadError = loadFailed ? (loadFailed.message ?? t.loadCardError) : null
 
   useEffect(() => {
     let cancelled = false
     getTracking()
-      .then((t) => {
-        if (!cancelled) setState(t)
+      .then((result) => {
+        if (!cancelled) setState(result)
       })
       .catch((err) => {
-        if (!cancelled) setLoadError(err instanceof Error ? err.message : 'Could not load this card.')
+        if (!cancelled) setLoadFailed({ message: err instanceof Error ? err.message : null })
       })
     return () => {
       cancelled = true
@@ -51,9 +58,9 @@ export function ResearchCard() {
     setDone(null)
     try {
       setState(await setTracking(on))
-      setDone(on ? 'Research tracking is on. Thank you for helping.' : 'Research tracking is off.')
+      setDone(on ? 'on' : 'off')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setError(err instanceof Error ? err.message : common.somethingWrong)
     } finally {
       setBusy(false)
       setConfirmOff(false)
@@ -64,12 +71,12 @@ export function ResearchCard() {
 
   const text =
     tracking === null
-      ? 'Research tracking for your account.'
+      ? t.rsLoading
       : tracking.on
-        ? 'Your saved books help the VeggieBook research team at Kean University. They only see an anonymous research ID, never your name or email.'
+        ? t.rsOn
         : tracking.offByAdmin
-          ? 'The research team turned research tracking off for your account. Nothing you save is used for research.'
-          : 'Research tracking is off. Nothing you save from now on is used for research. You can turn it back on anytime.'
+          ? t.rsOffAdmin
+          : t.rsOff
 
   return (
     <div className="account-card research-card" aria-busy={held}>
@@ -78,7 +85,7 @@ export function ResearchCard() {
           <FlaskIcon />
         </span>
         <div className="account-card-head-text">
-          <h2 className="account-card-title">Help with research</h2>
+          <h2 className="account-card-title">{t.rsTitle}</h2>
           {held ? <AccountTextSkeleton lines={2} /> : <p className="account-card-text">{text}</p>}
         </div>
       </div>
@@ -96,23 +103,23 @@ export function ResearchCard() {
           {tracking.on ? (
             <span className="research-chip is-on">
               <i aria-hidden="true" />
-              Tracking on
+              {t.rsChipOn}
             </span>
           ) : tracking.offByAdmin ? (
             <span className="research-chip is-locked">
               <i aria-hidden="true" />
-              Turned off by the research team
+              {t.rsChipLocked}
             </span>
           ) : (
             <span className="research-chip is-off">
               <i aria-hidden="true" />
-              Tracking off
+              {t.rsChipOff}
             </span>
           )}
 
           {tracking.on && tracking.researchId && (
             <div className="research-id">
-              <span className="research-id-label">Your anonymous research ID</span>
+              <span className="research-id-label">{t.rsYourId}</span>
               <span className="research-id-code">{tracking.researchId}</span>
             </div>
           )}
@@ -124,36 +131,32 @@ export function ResearchCard() {
           )}
           {done && (
             <p className="form-success" role="status">
-              {done}
+              {done === 'on' ? t.rsDoneOn : t.rsDoneOff}
             </p>
           )}
 
           {tracking.on && (
             <button type="button" className="link-btn" onClick={() => setConfirmOff(true)} disabled={busy}>
-              Turn off research tracking
+              {t.rsTurnOff}
             </button>
           )}
 
           {!tracking.on && !tracking.offByAdmin && (
             <button type="button" className="account-primary" onClick={() => void change(true)} disabled={busy}>
-              {busy ? 'Turning on...' : 'Turn research tracking on'}
+              {busy ? t.rsTurningOn : t.rsTurnOn}
             </button>
           )}
 
-          {tracking.offByAdmin && (
-            <p className="field-hint">
-              Only the research team can turn it back on. Questions? Contact the research team through the About page.
-            </p>
-          )}
+          {tracking.offByAdmin && <p className="field-hint">{t.rsAdminHint}</p>}
         </>
       )}
 
       <ConfirmDialog
         open={confirmOff}
-        title="Turn off research tracking?"
-        body="From now on, nothing you save is used for research. Books you saved before stay part of the research. You can turn it back on anytime."
-        confirmLabel="Turn it off"
-        cancelLabel="Keep it on"
+        title={t.rsConfirmTitle}
+        body={t.rsConfirmBody}
+        confirmLabel={t.rsConfirmYes}
+        cancelLabel={t.rsConfirmNo}
         danger
         busy={busy}
         onConfirm={() => void change(false)}

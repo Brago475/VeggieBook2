@@ -1,4 +1,6 @@
 import { useId, useState } from 'react'
+import { AUTH } from '../../i18n/strings/auth'
+import { useStrings } from '../../i18n/useStrings'
 import { EyeIcon, EyeOffIcon } from '../icons/AccountIcons'
 
 // A password input for the account screen cards.
@@ -11,7 +13,7 @@ import { EyeIcon, EyeOffIcon } from '../icons/AccountIcons'
 // browser fills in the saved password on its own, and anyone at an unlocked
 // computer could press the eye and read it. noAutofill keeps the box read
 // only until it is clicked, which browsers skip when filling a page. A
-// password manager can still fill it when the person picks it.
+// password manager can still fill it when it is picked.
 
 type Props = {
   label: string
@@ -38,6 +40,7 @@ export function PasswordField({
   reveal = true,
   noAutofill = false,
 }: Props) {
+  const t = useStrings(AUTH)
   const generatedId = useId()
   const inputId = id ?? generatedId
   const hintId = `${inputId}-hint`
@@ -69,7 +72,7 @@ export function PasswordField({
           <button
             type="button"
             className="field-icon-btn"
-            aria-label={shown ? 'Hide password' : 'Show password'}
+            aria-label={shown ? t.hidePassword : t.showPassword}
             aria-pressed={shown}
             onClick={() => setShown((s) => !s)}
           >

@@ -1,5 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useHeld } from '../../hooks/useHeld'
+import { useLang } from '../../i18n/languageContext'
+import { ACCOUNT } from '../../i18n/strings/account'
+import { AUTH } from '../../i18n/strings/auth'
+import { COMMON } from '../../i18n/strings/common'
+import { useStrings } from '../../i18n/useStrings'
 import { getProfile, notifyProfileChanged, saveProfile, type Profile } from '../../utils/profileApi'
 import { checkName, checkUsername } from '../../utils/signUpRules'
 import { PersonIcon } from '../icons/LibraryIcons'
@@ -12,8 +17,13 @@ import { AccountCardSkeleton, AccountTextSkeleton } from './AccountCardSkeleton'
 // The rules match Create Account, except the username can't be blank.
 
 export function ProfileCard() {
+  const { lang } = useLang()
+  const t = useStrings(ACCOUNT)
+  const auth = useStrings(AUTH)
+  const common = useStrings(COMMON)
+
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadFailed, setLoadFailed] = useState<{ message: string | null } | null>(null)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [username, setUsername] = useState('')
@@ -21,8 +31,9 @@ export function ProfileCard() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  const held = useHeld(profile === null && loadError === null)
+  const held = useHeld(profile === null && loadFailed === null)
   const ready = profile !== null && !held
+  const loadError = loadFailed ? (loadFailed.message ?? t.loadProfileError) : null
 
   function fill(p: Profile) {
     setProfile(p)
@@ -38,8 +49,7 @@ export function ProfileCard() {
         if (!cancelled) fill(p)
       })
       .catch((err) => {
-        if (!cancelled)
-          setLoadError(err instanceof Error ? err.message : 'Could not load your profile.')
+        if (!cancelled) setLoadFailed({ message: err instanceof Error ? err.message : null })
       })
     return () => {
       cancelled = true
@@ -58,10 +68,10 @@ export function ProfileCard() {
     setDone(false)
 
     const problem =
-      checkName(firstName, 'first name') ??
-      checkName(lastName, 'last name') ??
-      (username.trim() ? null : 'Please enter a username.') ??
-      checkUsername(username)
+      checkName(firstName, 'first name', lang) ??
+      checkName(lastName, 'last name', lang) ??
+      (username.trim() ? null : t.enterUsername) ??
+      checkUsername(username, lang)
     if (problem) {
       setError(problem)
       return
@@ -74,7 +84,7 @@ export function ProfileCard() {
       notifyProfileChanged()
       setDone(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setError(err instanceof Error ? err.message : common.somethingWrong)
     } finally {
       setBusy(false)
     }
@@ -87,12 +97,12 @@ export function ProfileCard() {
           <PersonIcon />
         </span>
         <div className="account-card-head-text">
-          <h2 className="account-card-title">Profile</h2>
+          <h2 className="account-card-title">{t.profileTitle}</h2>
           {held ? (
             <AccountTextSkeleton />
           ) : (
             <p className="account-card-text">
-              {profile?.email ? `Signed in with ${profile.email}` : 'Your name and username.'}
+              {profile?.email ? t.signedInWith(profile.email) : t.profileFallback}
             </p>
           )}
         </div>
@@ -110,7 +120,7 @@ export function ProfileCard() {
         <>
           <div className="field">
             <label className="field-label" htmlFor="profile-first">
-              First name
+              {auth.firstName}
             </label>
             <input
               id="profile-first"
@@ -125,7 +135,7 @@ export function ProfileCard() {
 
           <div className="field">
             <label className="field-label" htmlFor="profile-last">
-              Last name
+              {auth.lastName}
             </label>
             <input
               id="profile-last"
@@ -140,7 +150,7 @@ export function ProfileCard() {
 
           <div className="field">
             <label className="field-label" htmlFor="profile-username">
-              Username
+              {t.username}
             </label>
             <input
               id="profile-username"
@@ -155,8 +165,7 @@ export function ProfileCard() {
               aria-describedby="profile-username-hint"
             />
             <p className="field-hint" id="profile-username-hint">
-              3 to 20 letters, numbers, or underscores. This is the name shown on your home
-              screen.
+              {t.usernameHint}
             </p>
           </div>
 
@@ -167,12 +176,12 @@ export function ProfileCard() {
           )}
           {done && (
             <p className="form-success" role="status">
-              Profile saved.
+              {t.profileSaved}
             </p>
           )}
 
           <button type="submit" className="account-primary" disabled={busy || !changed}>
-            {busy ? 'Saving...' : 'Save profile'}
+            {busy ? t.saving : t.saveProfile}
           </button>
         </>
       )}

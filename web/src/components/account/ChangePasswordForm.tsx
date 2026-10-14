@@ -1,6 +1,12 @@
 import { useState, type FormEvent } from 'react'
+import { useLang } from '../../i18n/languageContext'
+import { ACCOUNT } from '../../i18n/strings/account'
+import { AUTH } from '../../i18n/strings/auth'
+import { COMMON } from '../../i18n/strings/common'
+import { FORGOT } from '../../i18n/strings/forgot'
+import { useStrings } from '../../i18n/useStrings'
 import { verifyForPasswordChange } from '../../utils/authApi'
-import { checkPassword, PASSWORD_HINT } from '../../utils/passwordRule'
+import { checkPassword, passwordHint } from '../../utils/passwordRule'
 import { LockIcon } from '../icons/LibraryIcons'
 import { PasswordField } from '../forms/PasswordField'
 import { PinField } from '../forms/PinField'
@@ -13,7 +19,7 @@ import { PinField } from '../forms/PinField'
 //   choose  the new password, twice.
 //
 // The current password box is not filled in by the browser on its own, so
-// its eye only shows what the person typed, never a saved password.
+// its eye only shows what was typed, never a saved password.
 //
 // On success the API gives this device a fresh session and signs out every
 // other one, and the card goes back to the first step.
@@ -27,6 +33,12 @@ type Step = 'verify' | 'choose'
 type Proof = 'password' | 'pin'
 
 export function ChangePasswordForm({ email, onChangePassword }: Props) {
+  const { lang } = useLang()
+  const t = useStrings(ACCOUNT)
+  const auth = useStrings(AUTH)
+  const forgot = useStrings(FORGOT)
+  const common = useStrings(COMMON)
+
   const [step, setStep] = useState<Step>('verify')
   const [proof, setProof] = useState<Proof>('password')
   const [current, setCurrent] = useState('')
@@ -66,10 +78,10 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
       proof === 'password'
         ? current
           ? null
-          : 'Enter your current password.'
+          : t.enterCurrent
         : pin.length === 6
           ? null
-          : 'Enter your 6-digit PIN.'
+          : forgot.enterPin
     if (problem) {
       setError(problem)
       return
@@ -78,15 +90,15 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
     setBusy(true)
     setError(null)
     try {
-      const t = await verifyForPasswordChange(
+      const issued = await verifyForPasswordChange(
         proof === 'password' ? { currentPassword: current } : { pin },
       )
-      setTicket(t)
+      setTicket(issued)
       setCurrent('')
       setPin('')
       setStep('choose')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setError(err instanceof Error ? err.message : common.somethingWrong)
       // A wrong PIN is cleared so it can be typed again.
       setPin('')
     } finally {
@@ -99,7 +111,7 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
     if (busy || !ticket) return
 
     const problem =
-      checkPassword(next) ?? (next === nextAgain ? null : 'The two passwords do not match.')
+      checkPassword(next, lang) ?? (next === nextAgain ? null : auth.passwordsDiffer)
     if (problem) {
       setError(problem)
       return
@@ -112,7 +124,7 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
       reset()
       setDone(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setError(err instanceof Error ? err.message : common.somethingWrong)
     } finally {
       setBusy(false)
     }
@@ -124,12 +136,8 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
         <LockIcon />
       </span>
       <div className="account-card-head-text">
-        <h2 className="account-card-title">Change password</h2>
-        <p className="account-card-text">
-          {step === 'verify'
-            ? 'First, confirm it is you.'
-            : 'Now choose your new password.'}
-        </p>
+        <h2 className="account-card-title">{t.cpTitle}</h2>
+        <p className="account-card-text">{step === 'verify' ? t.cpVerify : t.cpChoose}</p>
       </div>
     </div>
   )
@@ -143,7 +151,7 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
       )}
       {done && (
         <p className="form-success" role="status">
-          Password changed. You were signed out on your other devices.
+          {t.cpDone}
         </p>
       )}
     </>
@@ -159,16 +167,16 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
 
         <PasswordField
           id="new-password"
-          label="New password"
+          label={forgot.newPassword}
           autoComplete="new-password"
-          placeholder="Enter a new password"
-          hint={PASSWORD_HINT}
+          placeholder={t.newPasswordPlaceholder}
+          hint={passwordHint(lang)}
           value={next}
           onChange={setNext}
         />
         <PasswordField
           id="new-password-again"
-          label="Confirm new password"
+          label={forgot.confirmNewPassword}
           autoComplete="new-password"
           value={nextAgain}
           onChange={setNextAgain}
@@ -177,10 +185,10 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
         {messages}
 
         <button type="submit" className="account-primary" disabled={busy}>
-          {busy ? 'Changing...' : 'Change password'}
+          {busy ? t.changing : t.cpTitle}
         </button>
         <button type="button" className="link-btn" onClick={reset} disabled={busy}>
-          Cancel
+          {common.cancel}
         </button>
       </form>
     )
@@ -193,7 +201,7 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
       {proof === 'password' ? (
         <PasswordField
           id="current-password"
-          label="Current password"
+          label={t.currentPassword}
           autoComplete="off"
           value={current}
           onChange={setCurrent}
@@ -202,7 +210,7 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
       ) : (
         <PinField
           id="change-pin"
-          label="Your 6-digit recovery PIN"
+          label={t.yourPin}
           value={pin}
           onChange={setPin}
           variant="card"
@@ -212,16 +220,16 @@ export function ChangePasswordForm({ email, onChangePassword }: Props) {
       {messages}
 
       <button type="submit" className="account-primary" disabled={busy}>
-        {busy ? 'Checking...' : 'Continue'}
+        {busy ? t.checking : forgot.continue}
       </button>
 
       {proof === 'password' ? (
         <button type="button" className="link-btn" onClick={() => switchProof('pin')}>
-          Forgot your current password? Use your PIN instead
+          {t.usePin}
         </button>
       ) : (
         <button type="button" className="link-btn" onClick={() => switchProof('password')}>
-          Use my current password instead
+          {t.usePassword}
         </button>
       )}
     </form>

@@ -6,6 +6,10 @@ import { LeafDecor } from '../components/layout/LeafDecor'
 import { ProfileCard } from '../components/account/ProfileCard'
 import { RecoveryCard } from '../components/account/RecoveryCard'
 import { ResearchCard } from '../components/account/ResearchCard'
+import { ACCOUNT } from '../i18n/strings/account'
+import { COMMON } from '../i18n/strings/common'
+import { HOME } from '../i18n/strings/home'
+import { useStrings } from '../i18n/useStrings'
 
 // Profile and settings: the profile (name and username), change password,
 // password recovery (PIN and security question), help with research
@@ -30,6 +34,10 @@ export function AccountSettings({
   onChangePassword,
   onDeleteAccount,
 }: Props) {
+  const t = useStrings(ACCOUNT)
+  const home = useStrings(HOME)
+  const common = useStrings(COMMON)
+
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,9 +49,7 @@ export function AccountSettings({
       await onSignOut()
       // On success the parent leaves this screen.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : common.somethingWrong)
       setBusy(false)
     }
   }
@@ -58,9 +64,9 @@ export function AccountSettings({
           <UserIcon />
         </span>
         <div className="account-hero-text">
-          <h1 className="account-title">Profile and settings</h1>
+          <h1 className="account-title">{home.profile}</h1>
           <p className="account-email">{email}</p>
-          <p className="account-tagline">Manage your account and preferences.</p>
+          <p className="account-tagline">{t.tagline}</p>
         </div>
       </div>
 
@@ -83,9 +89,9 @@ export function AccountSettings({
         disabled={busy}
       >
         <SignOutIcon />
-        {busy ? 'Signing out...' : 'Sign out'}
+        {busy ? t.signingOut : home.signOut}
       </button>
-      <p className="account-signout-note">You'll be signed out on this device.</p>
+      <p className="account-signout-note">{t.signOutNote}</p>
 
       {error && (
         <p className="form-error" role="alert">

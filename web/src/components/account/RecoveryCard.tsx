@@ -1,6 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useHeld } from '../../hooks/useHeld'
 import { useRecoveryQuestions } from '../../hooks/useRecoveryQuestions'
+import { useLang } from '../../i18n/languageContext'
+import { ACCOUNT } from '../../i18n/strings/account'
+import { AUTH } from '../../i18n/strings/auth'
+import { COMMON } from '../../i18n/strings/common'
+import { questionText } from '../../i18n/strings/questions'
+import { useStrings } from '../../i18n/useStrings'
 import {
   getRecoverySettings,
   saveRecoverySettings,
@@ -28,10 +34,14 @@ import '../../styles/recovery-card.css'
 // since knowing the password proves it is their account.
 
 export function RecoveryCard() {
+  const { lang } = useLang()
+  const t = useStrings(ACCOUNT)
+  const auth = useStrings(AUTH)
+  const common = useStrings(COMMON)
   const { questions } = useRecoveryQuestions()
 
   const [settings, setSettings] = useState<RecoverySettings | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadFailed, setLoadFailed] = useState<{ message: string | null } | null>(null)
   const [open, setOpen] = useState(false)
   const [current, setCurrent] = useState('')
   const [value, setValue] = useState<RecoveryValue>(EMPTY_RECOVERY)
@@ -39,7 +49,8 @@ export function RecoveryCard() {
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
 
-  const held = useHeld(settings === null && loadError === null)
+  const held = useHeld(settings === null && loadFailed === null)
+  const loadError = loadFailed ? (loadFailed.message ?? t.loadCardError) : null
 
   useEffect(() => {
     let cancelled = false
@@ -48,8 +59,7 @@ export function RecoveryCard() {
         if (!cancelled) setSettings(s)
       })
       .catch((err) => {
-        if (!cancelled)
-          setLoadError(err instanceof Error ? err.message : 'Could not load this card.')
+        if (!cancelled) setLoadFailed({ message: err instanceof Error ? err.message : null })
       })
     return () => {
       cancelled = true
@@ -71,7 +81,7 @@ export function RecoveryCard() {
     event.preventDefault()
     if (busy) return
 
-    const problem = (current ? null : 'Enter your current password.') ?? checkRecovery(value)
+    const problem = (current ? null : t.enterCurrent) ?? checkRecovery(value, lang)
     if (problem) {
       setError(problem)
       return
@@ -90,7 +100,7 @@ export function RecoveryCard() {
       close()
       setDone(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setError(err instanceof Error ? err.message : common.somethingWrong)
     } finally {
       setBusy(false)
     }
@@ -98,11 +108,13 @@ export function RecoveryCard() {
 
   const isSet = settings !== null && settings.hasPin && settings.question !== null
 
-  const summary = settings === null
-    ? 'Your recovery PIN and security question.'
-    : isSet
-      ? 'Your recovery PIN and security question are set. You use them if you forget your password.'
-      : 'Set a recovery PIN and security question so you can reset a forgotten password.'
+  // The question in the site language, by its id.
+  const questionShown =
+    isSet && settings.questionId !== null
+      ? questionText(lang, settings.questionId, settings.question ?? '')
+      : (settings?.question ?? null)
+
+  const summary = settings === null ? t.rcLoading : isSet ? t.rcSet : t.rcNotSet
 
   return (
     <div className="account-card recovery-card" aria-busy={held}>
@@ -111,14 +123,18 @@ export function RecoveryCard() {
           <KeyIcon />
         </span>
         <div className="account-card-head-text">
-          <h2 className="account-card-title">Password recovery</h2>
+          <h2 className="account-card-title">{t.rcTitle}</h2>
           {held ? <AccountTextSkeleton lines={2} /> : <p className="account-card-text">{summary}</p>}
         </div>
       </div>
 
       {held && <AccountCardSkeleton />}
 
-      {isSet && !held && <p className="recovery-question">Your question: {settings.question}</p>}
+      {isSet && !held && (
+        <p className="recovery-question">
+          {t.rcYourQuestion} {questionShown}
+        </p>
+      )}
 
       {loadError && (
         <p className="form-error" role="alert">
@@ -127,7 +143,7 @@ export function RecoveryCard() {
       )}
       {done && (
         <p className="form-success" role="status">
-          Saved. Use your new PIN and question if you forget your password.
+          {t.rcSaved}
         </p>
       )}
 
@@ -140,7 +156,7 @@ export function RecoveryCard() {
             setDone(false)
           }}
         >
-          {isSet ? 'Change PIN and question' : 'Set PIN and question'}
+          {isSet ? t.rcChange : t.rcSetButton}
         </button>
       )}
 
@@ -148,7 +164,7 @@ export function RecoveryCard() {
         <form className="recovery-form" onSubmit={submit} noValidate>
           <PasswordField
             id="recovery-current-password"
-            label="Current password"
+            label={t.currentPassword}
             autoComplete="off"
             value={current}
             onChange={setCurrent}
@@ -157,16 +173,16 @@ export function RecoveryCard() {
 
           <PinField
             id="recovery-pin"
-            label="New 6-digit PIN"
+            label={t.rcNewPin}
             value={value.pin}
             onChange={(v) => set('pin', v)}
-            hint="Avoid easy ones like 123456 or 111111."
+            hint={t.rcPinHint}
             variant="card"
           />
 
           <PinField
             id="recovery-pin-again"
-            label="Confirm PIN"
+            label={auth.confirmPin}
             value={value.pinAgain}
             onChange={(v) => set('pinAgain', v)}
             variant="card"
@@ -174,7 +190,7 @@ export function RecoveryCard() {
 
           <div className="field">
             <label className="field-label" htmlFor="recovery-question">
-              Security question
+              {auth.securityQuestion}
             </label>
             <select
               id="recovery-question"
@@ -183,7 +199,7 @@ export function RecoveryCard() {
               onChange={(e) => set('questionId', e.target.value)}
             >
               <option value="" disabled>
-                {questions.length ? 'Choose a question' : 'Loading questions...'}
+                {questions.length ? auth.chooseQuestion : auth.loadingQuestions}
               </option>
               {questions.map((q) => (
                 <option key={q.id} value={String(q.id)}>
@@ -195,7 +211,7 @@ export function RecoveryCard() {
 
           <div className="field">
             <label className="field-label" htmlFor="recovery-answer">
-              Your answer
+              {auth.answer}
             </label>
             <input
               id="recovery-answer"
@@ -209,7 +225,7 @@ export function RecoveryCard() {
               aria-describedby="recovery-answer-hint"
             />
             <p className="field-hint" id="recovery-answer-hint">
-              Capital letters and extra spaces don't matter.
+              {auth.answerHint}
             </p>
           </div>
 
@@ -221,10 +237,10 @@ export function RecoveryCard() {
 
           <div className="recovery-actions">
             <button type="submit" className="account-primary" disabled={busy}>
-              {busy ? 'Saving...' : 'Save PIN and question'}
+              {busy ? t.saving : t.rcSave}
             </button>
             <button type="button" className="link-btn" onClick={close} disabled={busy}>
-              Cancel
+              {common.cancel}
             </button>
           </div>
         </form>
