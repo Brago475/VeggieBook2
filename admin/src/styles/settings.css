@@ -41,14 +41,14 @@
   outline-offset: 2px;
 }
 
-/* Cards and rows */
+/* Cards and rows. Cards do not clip, so dropdowns can open over the cards
+   below them. */
 
 .se-card {
   scroll-margin-top: 24px;
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 16px;
-  overflow: hidden;
 }
 
 .se-card.is-root-only {
@@ -392,9 +392,11 @@
   gap: 24px;
 }
 
+/* The table card clips so its gray header row keeps the rounded corners. */
 .se-table-card {
   flex: 999 1 520px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .se-tools {

@@ -42,6 +42,11 @@ export function AccountsTab({ info, isRoot, currentEmail, onChanged }: Props) {
     onChanged()
   }
 
+  function deleted() {
+    setOpenId(null)
+    changed()
+  }
+
   function status(r: { recoveryLocked: boolean; signInLocked: boolean; isAdmin: boolean; isRootAdmin: boolean }) {
     if (r.recoveryLocked) return { text: 'Reset locked', tone: 'is-warn' }
     if (r.signInLocked) return { text: 'Sign-in locked', tone: 'is-warn' }
@@ -168,6 +173,7 @@ export function AccountsTab({ info, isRoot, currentEmail, onChanged }: Props) {
             currentEmail={currentEmail}
             onClose={() => setOpenId(null)}
             onChanged={changed}
+            onDeleted={deleted}
           />
         )}
       </div>

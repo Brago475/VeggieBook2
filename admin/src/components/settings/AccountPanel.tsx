@@ -6,8 +6,9 @@ import { ConfirmDialog } from '../common/ConfirmDialog'
 import { NavIcon } from '../icons/NavIcons'
 
 // One account, opened from the Accounts table. Never shows a research ID,
-// so an email is never matched to research data here. Admin access is
-// changed by the root admin only (enforced by the API as well).
+// so an email is never matched to research data here. Admin access and
+// deleting an account are for the root admin only (enforced by the API as
+// well).
 
 type Props = {
   id: string
@@ -15,6 +16,7 @@ type Props = {
   currentEmail: string
   onClose: () => void
   onChanged: () => void
+  onDeleted: () => void
 }
 
 type Pending = {
@@ -25,12 +27,16 @@ type Pending = {
   run: () => Promise<unknown>
 }
 
-export function AccountPanel({ id, isRoot, currentEmail, onClose, onChanged }: Props) {
+export function AccountPanel({ id, isRoot, currentEmail, onClose, onChanged, onDeleted }: Props) {
   const [account, setAccount] = useState<AccountDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [version, setVersion] = useState(0)
   const [pending, setPending] = useState<Pending | null>(null)
   const [busy, setBusy] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [typed, setTyped] = useState('')
+  const [deleteBusy, setDeleteBusy] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -63,9 +69,23 @@ export function AccountPanel({ id, isRoot, currentEmail, onClose, onChanged }: P
     }
   }
 
+  async function deleteAccount() {
+    if (!current || deleteBusy) return
+    setDeleteBusy(true)
+    setDeleteError(null)
+    try {
+      await api(`/admin/accounts/${id}/delete`, { method: 'POST', body: { confirmEmail: typed.trim() } })
+      onDeleted()
+    } catch (err) {
+      setDeleteError((err as Error).message)
+      setDeleteBusy(false)
+    }
+  }
+
   const current = account?.id === id ? account : null
   const isAdmin = current?.roles.includes('Admin') ?? false
   const isSelf = (current?.email ?? '').toLowerCase() === currentEmail.toLowerCase()
+  const typedMatches = current !== null && typed.trim().toLowerCase() === current.email.toLowerCase()
   const base = `/admin/accounts/${id}`
 
   return (
@@ -169,7 +189,7 @@ export function AccountPanel({ id, isRoot, currentEmail, onClose, onChanged }: P
               <div className="se-panel-line">
                 <strong>Admin access</strong>
                 <span className="se-root">
-                  <NavIcon name="lock" size={13} />
+                  <NavIcon name="lock" size={12} />
                   Main admin only
                 </span>
               </div>
@@ -209,6 +229,72 @@ export function AccountPanel({ id, isRoot, currentEmail, onClose, onChanged }: P
                 >
                   Make admin
                 </button>
+              )}
+            </div>
+          )}
+
+          {isRoot && !current.isRootAdmin && !isSelf && (
+            <div className="se-panel-block">
+              <div className="se-panel-line">
+                <strong>Delete account</strong>
+                <span className="se-root">
+                  <NavIcon name="lock" size={12} />
+                  Main admin only
+                </span>
+              </div>
+
+              {isAdmin ? (
+                <p className="se-muted">Remove this account's admin access before deleting it.</p>
+              ) : !deleting ? (
+                <>
+                  <p className="se-muted">
+                    Deletes the account and its {current.bookCount === 1 ? 'book' : `${current.bookCount} books`} for good.
+                    This cannot be undone.
+                  </p>
+                  <button
+                    type="button"
+                    className="se-btn is-danger"
+                    onClick={() => {
+                      setDeleting(true)
+                      setTyped('')
+                      setDeleteError(null)
+                    }}
+                  >
+                    Delete account
+                  </button>
+                </>
+              ) : (
+                <>
+                  <label className="se-muted" htmlFor="se-delete-confirm">
+                    Type <strong>{current.email}</strong> to confirm.
+                  </label>
+                  <input
+                    id="se-delete-confirm"
+                    type="text"
+                    className="se-search"
+                    autoComplete="off"
+                    value={typed}
+                    onChange={(e) => setTyped(e.target.value)}
+                  />
+                  {deleteError && (
+                    <p className="error" role="alert">
+                      {deleteError}
+                    </p>
+                  )}
+                  <div className="se-me-actions">
+                    <button
+                      type="button"
+                      className="se-btn is-danger"
+                      disabled={!typedMatches || deleteBusy}
+                      onClick={() => void deleteAccount()}
+                    >
+                      {deleteBusy ? 'Deleting...' : 'Delete for good'}
+                    </button>
+                    <button type="button" className="se-btn" disabled={deleteBusy} onClick={() => setDeleting(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}
