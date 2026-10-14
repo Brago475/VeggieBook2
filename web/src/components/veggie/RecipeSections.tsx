@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
 import { SafeImage } from '../common/SafeImage'
+import { RECIPE } from '../../i18n/strings/recipe'
+import { useStrings } from '../../i18n/useStrings'
 import type { RecipeDetail } from '../../types'
 import { coverSrc } from '../../utils/coverSrc'
 
 // The body of one recipe: Ingredients, Summary, Instructions, Notes, and
 // Photos, each in a green outlined box with a tab label, as the original
-// app showed them.
+// app showed them. Labels follow the site language; the recipe text comes
+// from the API in the same language.
 //
 // Used by both the review step (RecipeCard) and a saved book
 // (BookViewer), so a recipe looks the same whether it is being chosen or
@@ -24,11 +27,12 @@ type Props = {
 }
 
 export function RecipeSections({ detail, topPhoto }: Props) {
+  const t = useStrings(RECIPE)
   const extraPhotos = withoutFirst(detail.photos, topPhoto)
 
   return (
     <>
-      <Section label="Ingredients">
+      <Section label={t.ingredients}>
         <ul className="recipe-list">
           {detail.ingredients.map((line, i) => (
             <li key={i}>{line}</li>
@@ -36,26 +40,26 @@ export function RecipeSections({ detail, topPhoto }: Props) {
         </ul>
       </Section>
 
-      <Section label="Summary">
+      <Section label={t.summary}>
         <div className="recipe-summary">
-          <span className="recipe-summary-key">Preparation Time:</span>
+          <span className="recipe-summary-key">{t.prepTime}</span>
           <span className="recipe-summary-val">{detail.timeToPrepare}</span>
-          <span className="recipe-summary-key">Can be made ahead:</span>
+          <span className="recipe-summary-key">{t.madeAhead}</span>
           <span className="recipe-summary-val">{detail.canBeMadeAhead}</span>
 
-          <span className="recipe-summary-key">Cooking Time:</span>
+          <span className="recipe-summary-key">{t.cookTime}</span>
           <span className="recipe-summary-val">{detail.timeToCook}</span>
-          <span className="recipe-summary-key">Can be frozen:</span>
+          <span className="recipe-summary-key">{t.frozen}</span>
           <span className="recipe-summary-val">{detail.canBeFrozen}</span>
 
-          <span className="recipe-summary-key">Servings:</span>
+          <span className="recipe-summary-key">{t.servings}</span>
           <span className="recipe-summary-val">{detail.servings}</span>
-          <span className="recipe-summary-key">Good for leftovers:</span>
+          <span className="recipe-summary-key">{t.leftovers}</span>
           <span className="recipe-summary-val">{detail.goodForLeftovers}</span>
         </div>
       </Section>
 
-      <Section label="Instructions">
+      <Section label={t.instructions}>
         <ol className="recipe-list recipe-steps">
           {detail.steps.map((step, i) => (
             <li key={i}>{step}</li>
@@ -64,7 +68,7 @@ export function RecipeSections({ detail, topPhoto }: Props) {
       </Section>
 
       {detail.notes.length > 0 && (
-        <Section label="Notes">
+        <Section label={t.notes}>
           <ul className="recipe-list">
             {detail.notes.map((note, i) => (
               <li key={i}>{note}</li>
@@ -74,16 +78,16 @@ export function RecipeSections({ detail, topPhoto }: Props) {
       )}
 
       {extraPhotos.length > 0 && (
-        <Section label="Photos">
+        <Section label={t.photos}>
           <div className="recipe-photos">
             {extraPhotos.map((path, i) => {
-              const label = photoLabel(path)
+              const step = prepStep(path)
               return (
                 <figure key={`${i}-${path}`} className="recipe-photos-item">
                   <SafeImage className="recipe-photos-img" src={coverSrc(path)} />
-                  {label && (
+                  {step && (
                     <figcaption className="recipe-photos-caption">
-                      {label}
+                      {t.prepStep(step)}
                     </figcaption>
                   )}
                 </figure>
@@ -117,9 +121,9 @@ function withoutFirst(photos: string[], top: string | null): string[] {
 
 // The database stores no captions, only file paths. The original named
 // preparation shots with "prep" and a number (Cabbage-5-2012-prep1.jpg),
-// so that is the one label that can be read honestly. Any other photo gets
-// no label rather than an invented one.
-function photoLabel(path: string): string | null {
+// so that number is the one caption that can be read honestly. Any other
+// photo gets no caption rather than an invented one.
+function prepStep(path: string): string | null {
   const match = /prep(\d+)/i.exec(path)
-  return match ? `Preparation step ${match[1]}` : null
+  return match ? match[1] : null
 }
