@@ -15,7 +15,7 @@ namespace VeggieBook.Api.Books;
 //   GET /api/books/{id}/secrets/{secretId}/pdf     one secret's page
 //
 // Each takes ?lang=en|es (default: the language the book was made in) and
-// ?download=1 to save as a file instead of opening in the browser.
+// ?download=1 (or true) to save as a file instead of opening in the browser.
 //
 // Same rules as BooksController: a signed-in account only, and a book, or a
 // recipe or secret not kept in it, that belongs to no one here answers 404.
@@ -30,16 +30,19 @@ public class BookPdfController(
     IConfiguration config) : ControllerBase
 {
     [HttpGet("{id:guid}/pdf")]
-    public Task<IActionResult> Book(Guid id, [FromQuery] string? lang, [FromQuery] bool download = false) =>
-        Send(id, null, null, lang, download);
+    public Task<IActionResult> Book(Guid id, [FromQuery] string? lang, [FromQuery] string? download) =>
+        Send(id, null, null, lang, IsYes(download));
 
     [HttpGet("{id:guid}/recipes/{recipeId:int}/pdf")]
-    public Task<IActionResult> Recipe(Guid id, int recipeId, [FromQuery] string? lang, [FromQuery] bool download = false) =>
-        Send(id, "veggie", recipeId, lang, download);
+    public Task<IActionResult> Recipe(Guid id, int recipeId, [FromQuery] string? lang, [FromQuery] string? download) =>
+        Send(id, "veggie", recipeId, lang, IsYes(download));
 
     [HttpGet("{id:guid}/secrets/{secretId:int}/pdf")]
-    public Task<IActionResult> Secret(Guid id, int secretId, [FromQuery] string? lang, [FromQuery] bool download = false) =>
-        Send(id, "secrets", secretId, lang, download);
+    public Task<IActionResult> Secret(Guid id, int secretId, [FromQuery] string? lang, [FromQuery] string? download) =>
+        Send(id, "secrets", secretId, lang, IsYes(download));
+
+    private static bool IsYes(string? value) =>
+        value is "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
 
     private async Task<IActionResult> Send(Guid id, string? kind, int? only, string? lang, bool download)
     {
