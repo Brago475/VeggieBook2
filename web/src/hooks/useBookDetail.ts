@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useLang } from '../i18n/languageContext'
 import { ApiError, apiFetch } from '../utils/api'
 
 // One saved book with its recipes, for the screen that opens a book from
 // the home library.
 //
-// The recipes arrive with their titles and first photo, so the list needs
-// no further requests. Opening one recipe still loads its full content
-// through useRecipeDetail, the same way the review step does.
+// The recipes arrive with their titles (in the current language) and first
+// photo, so the list needs no further requests. Opening one recipe still
+// loads its full content through useRecipeDetail, the same way the review
+// step does. A language change reloads the titles; the old ones stay on
+// screen until the new ones arrive.
 //
 // Takes the book id, or null when no book is open. A book belonging to
 // another account answers 404, the same as one that does not exist, so
@@ -36,6 +39,7 @@ type Loaded = { id: string; book: BookDetail }
 type Failed = { id: string; message: string }
 
 export function useBookDetail(id: string | null) {
+  const { lang } = useLang()
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [failed, setFailed] = useState<Failed | null>(null)
 
@@ -45,7 +49,7 @@ export function useBookDetail(id: string | null) {
     let cancelled = false
     setFailed(null)
 
-    apiFetch<BookDetail>(`/books/${id}`)
+    apiFetch<BookDetail>(`/books/${id}?lang=${lang}`)
       .then((book) => {
         if (!cancelled) setLoaded({ id, book })
       })
@@ -64,7 +68,7 @@ export function useBookDetail(id: string | null) {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, lang])
 
   // Takes one recipe out of this book. Throws with a message for the user
   // if the server refuses, so the screen can show it. On success the recipe

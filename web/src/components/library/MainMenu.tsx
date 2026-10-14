@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MenuIcon } from '../icons/LibraryIcons'
+import { LanguageSwitch } from './LanguageSwitch'
 
 // The ☰ Menu button on the home screen, and the list it opens.
 //
@@ -11,7 +12,8 @@ import { MenuIcon } from '../icons/LibraryIcons'
 //                 Kept at the bottom, the way most apps do it, so signing
 //                 out is always in the same easy place.
 //
-// An item marked danger (Sign out, End guest visit) shows in red.
+// The language switch sits in the account group, just above the red items
+// (Sign out, End guest visit).
 //
 // Labeled "Menu", not three lines alone: the original VeggieBook's research
 // found pantry clients did best with plainly labeled controls.
@@ -19,7 +21,8 @@ import { MenuIcon } from '../icons/LibraryIcons'
 // The list uses the ⋮ menu's styles (menu.css), so both menus look and
 // behave the same. Like the ⋮ menu, it closes when an item is picked, on a
 // click anywhere outside, and on Escape, which also puts focus back on the
-// button so keyboard users keep their place.
+// button so keyboard users keep their place. Changing the language keeps
+// it open.
 
 export type MainMenuItem = {
   label: string
@@ -85,6 +88,9 @@ export function MainMenu({ items, accountItems }: Props) {
     )
   }
 
+  const accountPlain = accountItems.filter((item) => !item.danger)
+  const accountDanger = accountItems.filter((item) => item.danger)
+
   return (
     <div className="menu main-menu" ref={rootRef}>
       <button
@@ -102,10 +108,12 @@ export function MainMenu({ items, accountItems }: Props) {
       {open && (
         <ul className="menu-list" role="menu" ref={listRef}>
           {items.map(row)}
-          {items.length > 0 && accountItems.length > 0 && (
-            <li role="separator" className="main-menu-divider" />
-          )}
-          {accountItems.map(row)}
+          {items.length > 0 && <li role="separator" className="main-menu-divider" />}
+          {accountPlain.map(row)}
+          <li role="none">
+            <LanguageSwitch />
+          </li>
+          {accountDanger.map(row)}
         </ul>
       )}
     </div>

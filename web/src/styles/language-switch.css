@@ -1,0 +1,61 @@
+/* The language switch row inside the home menu (LanguageSwitch.tsx). */
+
+.lang-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding: 10px 14px;
+}
+
+.lang-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: inherit;
+}
+
+.lang-switch-label svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.lang-switch-options {
+  display: inline-flex;
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+}
+
+.lang-switch-btn {
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  opacity: 0.7;
+  appearance: none;
+}
+
+.lang-switch-btn:hover {
+  opacity: 1;
+}
+
+.lang-switch-btn.is-on {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+
+.lang-switch-btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { useLang } from '../../i18n/languageContext'
 
 // An image that degrades instead of breaking.
 //
 // Three sources, tried in order:
 //
 //   src         the photo we want
-//   the logo    from /brand, the same path convention Masthead uses
+//   the logo    from /brand, in the site language, as Masthead uses
 //   the drawing inline SVG, below
 //
 // The first two are fetched files and can fail. The drawing cannot, because
@@ -39,7 +40,7 @@ type Props = {
   src?: string | null
   /** An optional second guess, tried before the logo. Unused today. */
   fallbackSrc?: string | null
-  /** Which logo to fall back to. Matches Masthead's default. */
+  /** Which logo to fall back to. Defaults to the site language. */
   lang?: 'en' | 'es'
   alt?: string
   className?: string
@@ -56,12 +57,13 @@ type Fallback = {
 export function SafeImage({
   src,
   fallbackSrc,
-  lang = 'en',
+  lang,
   alt = '',
   className,
   loading = 'lazy',
 }: Props) {
-  const logo = `/brand/logo-negative-${lang}.png`
+  const { lang: siteLang } = useLang()
+  const logo = `/brand/logo-negative-${lang ?? siteLang}.png`
 
   const chain = [src, fallbackSrc]
     .filter((s): s is string => Boolean(s))
