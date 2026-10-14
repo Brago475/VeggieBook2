@@ -1,23 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
+import type { Lang } from '../i18n/language'
+import { useLang } from '../i18n/languageContext'
 import type { CategorySecrets, SecretCategory } from '../types'
 import { apiFetch } from '../utils/api'
 
 // The Secrets Book content. Three loads, used by different screens:
 //
 //   useSecretCategories  the five categories, for the picker and the home
-//                        cards. Loaded once.
+//                        cards. Reloaded when the language changes.
 //   useCategorySecrets   every secret in one category, for the review step.
 //                        Loaded when a category is picked.
 //   useSecretCovers      one category's pictures, for the cover browser.
 //                        Loaded as the user moves between categories, and
 //                        remembered, so going back to one is instant.
 //
-// All open to guests, the same as the vegetables and recipes.
-//
-// lang is ready for the English/Spanish toggle planned for later. Until
-// then every caller leaves it out and gets English.
+// All open to guests, the same as the vegetables and recipes. Each takes
+// the current site language unless one is passed in.
 
-export function useSecretCategories(lang: 'en' | 'es' = 'en') {
+export function useSecretCategories(langOverride?: Lang) {
+  const { lang: siteLang } = useLang()
+  const lang = langOverride ?? siteLang
+
   const [categories, setCategories] = useState<SecretCategory[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -26,7 +29,6 @@ export function useSecretCategories(lang: 'en' | 'es' = 'en') {
     // Ignores a reply that arrives after the screen has moved on, so a
     // slow answer never overwrites a newer one.
     let current = true
-    setLoading(true)
     setError(null)
 
     apiFetch<SecretCategory[]>(`/secret-categories?lang=${lang}`)
@@ -49,17 +51,17 @@ export function useSecretCategories(lang: 'en' | 'es' = 'en') {
 }
 
 // null while no category is chosen: nothing is loaded and data stays null.
-export function useCategorySecrets(
-  categoryId: number | null,
-  lang: 'en' | 'es' = 'en',
-) {
+export function useCategorySecrets(categoryId: number | null, langOverride?: Lang) {
+  const { lang: siteLang } = useLang()
+  const lang = langOverride ?? siteLang
+
   const [data, setData] = useState<CategorySecrets | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // A new category clears the old one's secrets first, so the review
-    // screen never shows Breakfast secrets while Lunch is loading.
+    // A new category or language clears the old secrets first, so the
+    // review screen never shows Breakfast secrets while Lunch is loading.
     setData(null)
     setError(null)
 
@@ -92,9 +94,13 @@ export function useCategorySecrets(
 
 // covers is null while a category's pictures are loading, which is when
 // the cover grid shows its skeleton tiles.
-export function useSecretCovers(categoryId: number, lang: 'en' | 'es' = 'en') {
-  // Pictures already loaded, by category. A ref rather than state, the
-  // same as useCovers: it is a cache, and filling it should not redraw.
+export function useSecretCovers(categoryId: number, langOverride?: Lang) {
+  const { lang: siteLang } = useLang()
+  const lang = langOverride ?? siteLang
+
+  // Pictures already loaded, by language and category. A ref rather than
+  // state, the same as useCovers: it is a cache, and filling it should not
+  // redraw.
   const cache = useRef(new Map<string, string[]>())
   const key = `${lang}:${categoryId}`
 

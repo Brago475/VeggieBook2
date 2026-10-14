@@ -1,6 +1,8 @@
+import { useLang } from '../../i18n/languageContext'
 import { LeafDecor } from './LeafDecor'
 
-// Green brand bar. Appears on every screen.
+// Green brand bar. Appears on every screen except Welcome and the account
+// forms. Holds only the Back button and the logo.
 //
 // The original app used a bare chevron here, which works on a phone where
 // that gesture is conventional. On the web it reads as decoration, so the
@@ -11,22 +13,18 @@ import { LeafDecor } from './LeafDecor'
 //
 // brand picks the logo, as the original app did: the VeggieBook logo
 // everywhere, and the SecretsBook logo while making or reading a Secrets
-// Book. The SecretsBook file is the large one from the original assets
-// (SecretsBook_logo_reversed), since the small one the original header used
-// is too few pixels to stay sharp on a modern screen.
-//
-// Both are the versions built for a colored background. Files live in
-// public/brand/ and are referenced by absolute path rather than imported,
-// so switching to the Spanish logo later is a string change.
+// Book. Both follow the site language (files in public/brand/, one per
+// language).
 
 type Props = {
-  lang?: 'en' | 'es'
   brand?: 'veggie' | 'secrets'
   onBack?: () => void
   decor?: boolean
 }
 
-export function Masthead({ lang = 'en', brand = 'veggie', onBack, decor = false }: Props) {
+export function Masthead({ brand = 'veggie', onBack, decor = false }: Props) {
+  const { lang } = useLang()
+
   const logo =
     brand === 'secrets'
       ? {
