@@ -1,6 +1,8 @@
 import { RecipeSections } from './RecipeSections'
 import { SafeImage } from '../common/SafeImage'
 import { useRecipeDetail } from '../../hooks/useRecipeDetail'
+import { RECIPE } from '../../i18n/strings/recipe'
+import { useStrings } from '../../i18n/useStrings'
 import type { RecipeSummary } from '../../types'
 import { coverSrc } from '../../utils/coverSrc'
 
@@ -23,6 +25,7 @@ type Props = {
 }
 
 export function RecipeCard({ recipe, position, total }: Props) {
+  const t = useStrings(RECIPE)
   const { detail, error } = useRecipeDetail(recipe.id)
 
   // The match response sends the first photo, or null if the recipe has
@@ -31,9 +34,7 @@ export function RecipeCard({ recipe, position, total }: Props) {
 
   return (
     <div className="recipe">
-      <p className="recipe-counter">
-        Recipe {position} of {total}
-      </p>
+      <p className="recipe-counter">{t.counter(position, total)}</p>
 
       {recipe.badges.length > 0 && (
         <div className="recipe-badges">
@@ -61,14 +62,14 @@ export function RecipeCard({ recipe, position, total }: Props) {
         />
       </div>
 
-      {error && <p className="message">Could not load details: {error}</p>}
+      {error && <p className="message">{t.couldNotLoad(error)}</p>}
 
       {/* Skeleton placeholders while the detail fetch is in flight, sized to
           roughly match the real sections so the card does not jump when the
           content arrives. */}
       {!detail && !error && (
         <div className="recipe-loading" aria-live="polite">
-          <span className="visually-hidden">Loading recipe details</span>
+          <span className="visually-hidden">{t.loadingDetails}</span>
           <div className="skeleton skeleton-tab" />
           <div className="skeleton skeleton-line" />
           <div className="skeleton skeleton-line" />

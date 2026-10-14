@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { BookCard } from '../components/library/BookCard'
 import { CoverOptions } from '../components/veggie/CoverOptions'
 import { NavBar } from '../components/layout/NavBar'
+import { FLOW } from '../i18n/strings/flow'
+import { useStrings } from '../i18n/useStrings'
 import type { Vegetable } from '../types'
 
 // Last screen of a VeggieBook: pick the cover, then save the book.
@@ -22,6 +24,7 @@ type Props = {
 }
 
 export function CoverChooser({ vegetable, vegetables, onSave }: Props) {
+  const t = useStrings(FLOW)
   const defaultCover = `cover/${vegetable.shortCode}.jpg`
 
   const [selected, setSelected] = useState(defaultCover)
@@ -37,9 +40,7 @@ export function CoverChooser({ vegetable, vegetables, onSave }: Props) {
       await onSave(selected)
       // On success the parent moves on to the home screen.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Your book could not be saved. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : t.couldNotSave)
       setSaving(false)
     }
   }
@@ -47,7 +48,7 @@ export function CoverChooser({ vegetable, vegetables, onSave }: Props) {
   return (
     <>
       <div className="intro-text">
-        <p>Choose a cover for your {vegetable.name} VeggieBook.</p>
+        <p>{t.chooseCover(vegetable.name)}</p>
       </div>
 
       <div className="cover-preview">
@@ -65,7 +66,7 @@ export function CoverChooser({ vegetable, vegetables, onSave }: Props) {
 
       {error && <p className="message">{error}</p>}
 
-      <NavBar primaryLabel={saving ? 'SAVING...' : 'SAVE BOOK'} onPrimary={save} />
+      <NavBar primaryLabel={saving ? t.saving : t.saveBook} onPrimary={save} />
     </>
   )
 }

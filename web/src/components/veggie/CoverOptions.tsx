@@ -1,5 +1,7 @@
 import { useState, type ChangeEvent } from 'react'
 import { useCovers } from '../../hooks/useCovers'
+import { COVERS } from '../../i18n/strings/covers'
+import { useStrings } from '../../i18n/useStrings'
 import type { Vegetable } from '../../types'
 import { coverSrc } from '../../utils/coverSrc'
 import { resizeImage } from '../../utils/resizeImage'
@@ -40,6 +42,8 @@ export function CoverOptions({
   onSelect,
   onBusy,
 }: Props) {
+  const t = useStrings(COVERS)
+
   const [mode, setMode] = useState<Mode>('default')
   const [browsing, setBrowsing] = useState(vegetable.code)
   const [uploaded, setUploaded] = useState<string | null>(null)
@@ -71,9 +75,9 @@ export function CoverOptions({
   }
 
   function label(image: string): string {
-    if (image.startsWith('cover/')) return `${browsingName} cover`
-    if (image.startsWith('stock/')) return `${browsingName} photo`
-    return `${browsingName} recipe photo`
+    if (image.startsWith('cover/')) return t.coverLabel(browsingName)
+    if (image.startsWith('stock/')) return t.photoLabel(browsingName)
+    return t.recipePhotoLabel(browsingName)
   }
 
   function tiles(images: string[]) {
@@ -108,7 +112,7 @@ export function CoverOptions({
       onSelect(dataUrl)
       setMode('upload')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'This photo could not be used.')
+      setError(err instanceof Error ? err.message : t.photoUnusable)
     } finally {
       working(false)
     }
@@ -123,7 +127,7 @@ export function CoverOptions({
           aria-pressed={mode === 'default'}
           onClick={pickDefault}
         >
-          Use default cover
+          {t.useDefault}
         </button>
 
         <button
@@ -132,7 +136,7 @@ export function CoverOptions({
           aria-pressed={mode === 'choose'}
           onClick={() => setMode('choose')}
         >
-          Choose a cover
+          {t.choose}
         </button>
 
         <label className={mode === 'upload' ? 'cover-mode is-active' : 'cover-mode'}>
@@ -143,13 +147,13 @@ export function CoverOptions({
             onChange={handleFile}
             disabled={busy}
           />
-          {uploaded ? 'Upload a different cover' : 'Upload your own cover'}
+          {uploaded ? t.uploadDifferent : t.uploadOwn}
         </label>
       </div>
 
       {mode === 'choose' && (
         <>
-          <div className="cover-veg-row" role="group" aria-label="Browse covers by vegetable">
+          <div className="cover-veg-row" role="group" aria-label={t.browseBy}>
             {browseOrder.map((v) => (
               <button
                 key={v.code}
@@ -163,14 +167,14 @@ export function CoverOptions({
             ))}
           </div>
 
-          {!covers && !coversError && <p className="message">Loading covers...</p>}
+          {!covers && !coversError && <p className="message">{t.loadingCovers}</p>}
           {coversError && <p className="message">{coversError}</p>}
 
           {covers && <ul className="cover-grid">{tiles(covers)}</ul>}
         </>
       )}
 
-      {busy && <p className="message">Preparing your photo...</p>}
+      {busy && <p className="message">{t.preparing}</p>}
       {error && <p className="message">{error}</p>}
     </>
   )
