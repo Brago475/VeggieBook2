@@ -5,10 +5,8 @@ import { useState, type CSSProperties } from 'react'
 // right while a green bar grows under them.
 //
 // The same screen is written directly into web/index.html, where it shows
-// before any JavaScript has loaded. This component takes over while the
-// app checks whether the visitor is signed in. Both use the class names
-// styled in index.html. Keep this markup, and the order of VEGGIES,
-// matching the markup there.
+// before any JavaScript has loaded. Both use the class names styled in
+// index.html. Keep this markup, and the order of VEGGIES, matching there.
 //
 // The icons are Microsoft Fluent Emoji, MIT license, kept with the files
 // in public/icons/veg/LICENSE.txt.
@@ -27,11 +25,14 @@ const VEGGIES = [
 // Must match the 2.6s animation length in index.html.
 const CYCLE_MS = 2600
 
-export function LoadingScreen() {
-  // The static screen started animating when the page was first drawn. A
-  // new animation here would jump back to an empty bar, so this one starts
-  // partway through, by how long the page has been open, and the bar keeps
-  // moving smoothly across the switch.
+type Props = {
+  // Fades the screen out (see hooks/useSplash.ts).
+  leaving?: boolean
+}
+
+export function LoadingScreen({ leaving = false }: Props) {
+  // Starts the animation partway through so it continues from the static
+  // screen without jumping back to an empty bar.
   const [offset] = useState(() => Math.round(performance.now() % CYCLE_MS))
   const style = { '--loading-offset': `-${offset}ms` } as CSSProperties
 
@@ -41,9 +42,10 @@ export function LoadingScreen() {
 
   return (
     <div
-      className="loading-screen"
+      className={leaving ? 'loading-screen is-leaving' : 'loading-screen'}
       role="status"
       aria-label="Loading VeggieBook"
+      aria-hidden={leaving || undefined}
       style={style}
     >
       <img className="loading-logo" src="/brand/logo-positive-en.png" alt="" />

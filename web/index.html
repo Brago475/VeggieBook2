@@ -8,22 +8,15 @@
     <title>VeggieBook</title>
     <meta name="description" content="Quick Help for Meals" />
 
-    <!-- Fetched early so the logo is on the loading screen from the start
-         rather than popping in a moment later. -->
+    <!-- Fetched early so the logo is on the loading screen from the start. -->
     <link rel="preload" as="image" href="/brand/logo-positive-en.png" />
 
     <!--
-      The loading screen's styles live here, not in src/styles, on purpose.
-      Stylesheets under src/ arrive with the JavaScript bundle, and the gap
-      before that bundle loads is exactly when the page used to show plain
-      white. Styles in the page itself apply as soon as it arrives.
+      Loading screen styles live here so they apply before the JavaScript
+      bundle loads. components/layout/LoadingScreen.tsx uses the same class
+      names, so the handover between the two cannot be seen.
 
-      components/LoadingScreen.tsx uses the same class names while the
-      sign-in check runs, so the static screen below and React's version
-      are the same screen, and the handover between them cannot be seen.
-
-      Colors are written out because the design tokens in tokens.css have
-      not loaded yet at this point.
+      Colors are written out because tokens.css has not loaded yet.
 
       The vegetable icons are Microsoft Fluent Emoji, MIT license, kept with
       the files in public/icons/veg/LICENSE.txt.
@@ -39,6 +32,14 @@
         justify-content: center;
         padding: 24px;
         background: #ffffff;
+        opacity: 1;
+        transition: opacity 0.35s ease;
+      }
+
+      /* Fade out once the app is ready. Must match SPLASH_FADE_MS. */
+      .loading-screen.is-leaving {
+        opacity: 0;
+        pointer-events: none;
       }
 
       .loading-logo {
@@ -62,10 +63,8 @@
         width: min(320px, 80vw);
       }
 
-      /* Two identical rows of vegetables stacked on top of each other: a
-         gray one underneath, and a full-color one on top that is revealed
-         from left to right. The bar below uses the same timing, so the
-         color and the bar always line up. */
+      /* A gray row underneath and a full-color row on top, revealed left to
+         right on the same timing as the bar. */
       .loading-veg {
         position: relative;
         margin-bottom: 14px;
@@ -114,8 +113,7 @@
         animation-delay: var(--loading-offset, 0s);
       }
 
-      /* Fills over the first 80%, then holds full for a beat before
-         starting again. */
+      /* Fills over the first 80%, then holds full before starting again. */
       @keyframes loading-reveal {
         0% {
           clip-path: inset(0 100% 0 0);
@@ -137,6 +135,10 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
+        .loading-screen {
+          transition: none;
+        }
+
         .loading-veg-lit {
           animation: none;
           clip-path: none;
@@ -150,9 +152,8 @@
     </style>
   </head>
   <body>
-    <!-- Shown until React starts, which replaces everything inside root.
-         Keep this markup, and the order of the vegetables, matching
-         components/LoadingScreen.tsx. -->
+    <!-- Shown until React starts. Keep this markup, and the order of the
+         vegetables, matching components/layout/LoadingScreen.tsx. -->
     <div id="root">
       <div class="loading-screen" role="status" aria-label="Loading VeggieBook">
         <img class="loading-logo" src="/brand/logo-positive-en.png" alt="" />

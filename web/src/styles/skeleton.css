@@ -1,0 +1,37 @@
+/* Skeleton shimmer. Loads after components.css and replaces its opacity
+   pulse with a light sweep, so the outlines read clearly on the off-white
+   pages. Shape and size classes stay in their own page stylesheets. */
+
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: #e8e8e0;
+  animation: none;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.65) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: skeleton-sweep 1.3s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+    display: none;
+  }
+}
