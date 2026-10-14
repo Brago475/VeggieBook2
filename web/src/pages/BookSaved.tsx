@@ -7,7 +7,8 @@ import { useStrings } from '../i18n/useStrings'
 import { downloadPdf, printPdf } from '../utils/bookPdf'
 import { coverSrc } from '../utils/coverSrc'
 
-// Shown right after a book is saved, in place of home.
+// Shown right after a book is saved, in place of home. The heading names
+// what was saved: the book, or the secrets.
 //
 // With recipes or secrets picked for extra copies, it offers those: one
 // prints or downloads on its own, several print or download together in
@@ -79,6 +80,7 @@ export function BookSaved({
 }: Props) {
   const t = useStrings(SAVED)
   const isSecrets = countNoun === 'secret'
+  const heading = t.title(countNoun)
 
   // Only the hook for this kind of book loads anything.
   const veggie = useBookDetail(isSecrets ? null : bookId)
@@ -106,7 +108,7 @@ export function BookSaved({
     return (
       <div className="book-saved" role="status" aria-busy="true">
         <CheckBadge />
-        <h1 className="book-saved-title">{t.title}</h1>
+        <h1 className="book-saved-title">{heading}</h1>
         <p className="book-saved-sub">{t.loading}</p>
       </div>
     )
@@ -123,7 +125,7 @@ export function BookSaved({
     return (
       <div className="book-saved">
         <CheckBadge />
-        <h1 className="book-saved-title">{t.title}</h1>
+        <h1 className="book-saved-title">{heading}</h1>
         <p className="book-saved-sub">
           {one ? t.extraOne(countNoun) : t.extraMany(extras.length, countNoun)}
         </p>
@@ -183,7 +185,7 @@ export function BookSaved({
   return (
     <div className="book-saved">
       <CheckBadge />
-      <h1 className="book-saved-title">{t.title}</h1>
+      <h1 className="book-saved-title">{heading}</h1>
       <p className="book-saved-sub">{t.sub}</p>
 
       <div className="book-saved-card">

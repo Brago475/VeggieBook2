@@ -326,10 +326,13 @@ export default function App() {
   // would cut off at the top.
   const onAuthScreen = showWelcome || authPage || passwordPage
 
-  // The SecretsBook logo while making or reading a Secrets Book, as in the
-  // original app; the VeggieBook logo everywhere else.
+  // The SecretsBook logo while making, reading, or just having saved a
+  // Secrets Book, as in the original app; the VeggieBook logo everywhere
+  // else.
   const mastheadBrand: 'veggie' | 'secrets' =
-    current === 'secrets' || (current === 'book' && openBookKind === 'secrets')
+    current === 'secrets' ||
+    (current === 'book' && openBookKind === 'secrets') ||
+    savedBook?.kind === 'secrets'
       ? 'secrets'
       : 'veggie'
 

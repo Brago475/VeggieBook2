@@ -5,7 +5,8 @@
 type Noun = 'recipe' | 'secret'
 
 const en = {
-  title: 'Your book is saved',
+  title: (noun: Noun): string =>
+    noun === 'secret' ? 'Your secrets are saved' : 'Your book is saved',
   sub: 'Want a copy you can hold?',
   loading: 'Loading...',
 
@@ -29,7 +30,8 @@ const en = {
 }
 
 const es: typeof en = {
-  title: 'Tu libro está guardado',
+  title: (noun: Noun) =>
+    noun === 'secret' ? 'Tus secretos están guardados' : 'Tu libro está guardado',
   sub: '¿Quieres una copia en papel?',
   loading: 'Cargando...',
 
