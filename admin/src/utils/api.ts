@@ -16,8 +16,9 @@ export class ApiError extends Error {
   }
 }
 
+// PUT replaces a value that already exists, such as a site setting.
 type Options = {
-  method?: 'GET' | 'POST' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   body?: unknown
 }
 

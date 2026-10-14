@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { NavIcon } from '../icons/NavIcons'
 
 // One Settings section: a white card with a header bar. rootOnly adds the
-// small lock and "Main admin only" on the right.
+// "Main admin only" label on the right.
 
 type Props = {
   id: string
@@ -14,12 +14,12 @@ type Props = {
 
 export function SettingsCard({ id, title, rootOnly = false, aside, children }: Props) {
   return (
-    <section id={id} className="se-card" aria-labelledby={`${id}-title`}>
+    <section id={id} className={rootOnly ? 'se-card is-root-only' : 'se-card'} aria-labelledby={`${id}-title`}>
       <div className="se-card-head">
         <h2 id={`${id}-title`}>{title}</h2>
         {rootOnly ? (
           <span className="se-root">
-            <NavIcon name="lock" size={13} />
+            <NavIcon name="lock" size={12} />
             Main admin only
           </span>
         ) : (

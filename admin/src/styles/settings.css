@@ -26,6 +26,10 @@
   cursor: pointer;
 }
 
+.se-tab:hover {
+  color: var(--ink);
+}
+
 .se-tab.is-on {
   font-weight: 800;
   color: var(--ink);
@@ -40,10 +44,15 @@
 /* Cards and rows */
 
 .se-card {
+  scroll-margin-top: 24px;
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 16px;
   overflow: hidden;
+}
+
+.se-card.is-root-only {
+  border-top: 3px solid #dc2626;
 }
 
 .se-card-head {
@@ -65,13 +74,19 @@
   font-weight: 800;
 }
 
+/* "Main admin only": a soft red label, matching the main admin's red ADMIN. */
 .se-root {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 4px 10px;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
+  font-weight: 700;
+  color: #b91c1c;
+  white-space: nowrap;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 999px;
 }
 
 .se-row {
@@ -278,16 +293,13 @@
   border-radius: 999px;
 }
 
-.se-status.is-ok {
+.se-status.is-ok,
+.se-status.is-admin {
   color: #15803d;
 }
 
 .se-status.is-warn {
   color: #c2410c;
-}
-
-.se-status.is-admin {
-  color: #15803d;
 }
 
 .se-status.is-root {
@@ -597,20 +609,35 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 28px;
+  gap: 24px;
 }
 
-.se-toc {
+/* Side list, styled like the main admin sidebar: bold black items, green
+   hover, and a green bar on the section in view. */
+.se-nav {
   position: sticky;
   top: 24px;
   display: flex;
-  flex: 0 1 200px;
+  flex: 0 1 220px;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px 12px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.se-nav-group {
+  display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.se-toc-title {
-  padding: 0 10px 8px;
+.se-nav-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 6px;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -618,33 +645,59 @@
   color: #a1a1aa;
 }
 
-.se-toc a {
+.se-nav-label.is-root {
+  color: #b91c1c;
+}
+
+.se-nav-label.is-root::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: #dc2626;
+  border-radius: 999px;
+}
+
+.se-nav-item {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 36px;
-  padding: 0 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #3f3f46;
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #18181b;
   text-decoration: none;
   border-radius: 8px;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
-.se-toc a:hover {
-  color: var(--ink);
-  background: #ffffff;
+.se-nav-item:hover {
+  color: #14532d;
+  background: #f0faf3;
 }
 
-.se-toc-key {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  padding: 0 10px;
-  font-size: 12px;
-  color: var(--muted);
+.se-nav-item.is-active {
+  font-weight: 800;
+  color: #14532d;
+  background: #f0faf3;
+}
+
+.se-nav-item.is-active::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: -12px;
+  width: 4px;
+  background: #15803d;
+  border-radius: 0 4px 4px 0;
+}
+
+.se-nav-item:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 2px;
 }
 
 .se-sections {
@@ -703,16 +756,6 @@
   gap: 8px;
 }
 
-.se-inline-form input {
-  flex: 1 1 220px;
-  min-height: 44px;
-  padding: 0 14px;
-  font: inherit;
-  font-size: 14px;
-  border: 1px solid #d4d4d8;
-  border-radius: 10px;
-}
-
 .se-inline-form .se-btn {
   min-height: 44px;
 }
@@ -721,6 +764,97 @@
   flex-basis: 100%;
   margin: 0;
 }
+
+/* Account dropdown for Add an admin */
+
+.se-picker {
+  position: relative;
+  flex: 1 1 260px;
+}
+
+.se-picker input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 38px 0 14px;
+  font: inherit;
+  font-size: 14px;
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.se-picker input:focus {
+  border-color: #15803d;
+  outline: 2px solid #dcf2e3;
+  cursor: text;
+}
+
+.se-picker-caret {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  pointer-events: none;
+  border-right: 2px solid #71717a;
+  border-bottom: 2px solid #71717a;
+  transform: translateY(-70%) rotate(45deg);
+}
+
+.se-picker-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  max-height: 280px;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.se-picker-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.se-picker-option strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.se-picker-option span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.se-picker-option.is-active {
+  background: #f0faf3;
+}
+
+.se-picker-option.is-active strong {
+  color: #14532d;
+}
+
+.se-picker-empty {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Identity records */
 
 .se-locked {
   display: flex;
@@ -754,6 +888,8 @@
   border: 1px solid var(--line);
   border-radius: 12px;
 }
+
+/* Guests */
 
 .se-guests {
   display: flex;
@@ -834,6 +970,8 @@
   justify-content: flex-end;
 }
 
+/* System */
+
 .se-health {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -873,6 +1011,8 @@
 .se-list div:last-child {
   border-bottom: none;
 }
+
+/* Your account */
 
 .se-me {
   display: flex;
@@ -929,15 +1069,24 @@
 }
 
 @media (max-width: 900px) {
-  .se-toc {
+  .se-nav {
     position: static;
     flex-direction: row;
     flex-wrap: wrap;
     flex-basis: 100%;
+    gap: 6px;
   }
 
-  .se-toc-title,
-  .se-toc-key {
+  .se-nav-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .se-nav-label {
+    display: none;
+  }
+
+  .se-nav-item.is-active::before {
     display: none;
   }
 
@@ -954,7 +1103,8 @@
   }
 
   .se-switch,
-  .se-switch-knob {
+  .se-switch-knob,
+  .se-nav-item {
     transition: none;
   }
 }

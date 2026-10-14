@@ -1,20 +1,23 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import type { AdminRow } from '../../types/settings'
+import type { AccountRow, AdminRow } from '../../types/settings'
 import { api } from '../../utils/api'
 import { formatDate } from '../../utils/format'
 import { ConfirmDialog } from '../common/ConfirmDialog'
+import { AccountPicker } from './AccountPicker'
 import { SettingsCard, SettingsRow } from './SettingsCard'
 
-// Main admin only: every admin, removing one, and adding one by email.
+// Main admin only: every admin, removing one, and adding one from the list
+// of existing accounts.
 
 export function AdminsSection() {
   const [admins, setAdmins] = useState<AdminRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [email, setEmail] = useState('')
+  const [picked, setPicked] = useState<AccountRow | null>(null)
   const [adding, setAdding] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
   const [removing, setRemoving] = useState<AdminRow | null>(null)
   const [busy, setBusy] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const load = useCallback(async () => {
     try {
@@ -31,12 +34,13 @@ export function AdminsSection() {
 
   async function add(e: FormEvent) {
     e.preventDefault()
-    if (!email.trim() || adding) return
+    if (!picked || adding) return
     setAdding(true)
     setAddError(null)
     try {
-      await api('/admin/settings/admins', { method: 'POST', body: { email: email.trim() } })
-      setEmail('')
+      await api(`/admin/accounts/${picked.id}/admin`, { method: 'POST' })
+      setPicked(null)
+      setRefreshKey((k) => k + 1)
       await load()
     } catch (err) {
       setAddError((err as Error).message)
@@ -50,6 +54,7 @@ export function AdminsSection() {
     setBusy(true)
     try {
       await api(`/admin/accounts/${removing.id}/admin`, { method: 'DELETE' })
+      setRefreshKey((k) => k + 1)
       await load()
     } catch (err) {
       setError((err as Error).message)
@@ -90,16 +95,13 @@ export function AdminsSection() {
         </div>
       </SettingsRow>
 
-      <SettingsRow label={<label htmlFor="se-add-admin">Add an admin</label>} help="The account must already exist.">
+      <SettingsRow
+        label={<label htmlFor="se-add-admin">Add an admin</label>}
+        help="Pick an existing account. Accounts that are already admins are not listed."
+      >
         <form className="se-inline-form" onSubmit={add}>
-          <input
-            id="se-add-admin"
-            type="email"
-            placeholder="Account email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <button type="submit" className="se-btn is-dark" disabled={adding || !email.trim()}>
+          <AccountPicker picked={picked} onPick={setPicked} refreshKey={refreshKey} />
+          <button type="submit" className="se-btn is-dark" disabled={adding || !picked}>
             {adding ? 'Adding...' : 'Make admin'}
           </button>
           {addError && (
