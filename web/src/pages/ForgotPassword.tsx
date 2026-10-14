@@ -12,6 +12,7 @@ import { useLang } from '../i18n/languageContext'
 import { AUTH } from '../i18n/strings/auth'
 import { COMMON } from '../i18n/strings/common'
 import { FORGOT } from '../i18n/strings/forgot'
+import { questionText } from '../i18n/strings/questions'
 import { useStrings } from '../i18n/useStrings'
 import { ApiError } from '../utils/api'
 import {
@@ -259,7 +260,9 @@ export function ForgotPassword({ onBack, onSignIn }: Props) {
             {notice && <p className="auth-notice">{notice}</p>}
           </div>
           <div className="auth-fields">
-            <p className="auth-question">{question?.text}</p>
+            <p className="auth-question">
+              {question ? questionText(lang, question.id, question.text) : null}
+            </p>
             <TextPillField
               id="forgot-answer"
               label={auth.answer}
