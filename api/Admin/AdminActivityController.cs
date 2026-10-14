@@ -25,6 +25,9 @@ namespace VeggieBook.Api.Admin;
 /// lines for books deleted since (matched on research ID and saved time).
 /// Admin and guest accounts never appear. study limits events to that
 /// study's window.
+///
+/// An account_deleted event reads "Account removed by an admin" when the root
+/// admin deleted it from Settings, and "Deleted their account" otherwise.
 /// </summary>
 [ApiController]
 [Route("api/admin/activity")]
@@ -113,8 +116,11 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             }
             else if (a.Kind == ActivityLog.AccountDeleted)
             {
-                events.Add(new Event("account_deleted", a.ParticipantId, "Deleted their account",
-                    "Account and all books removed", a.At));
+                events.Add(ActivityLog.IsRemovedByAdmin(a)
+                    ? new Event("account_deleted", a.ParticipantId, "Account removed by an admin",
+                        "Admin action, all books removed", a.At)
+                    : new Event("account_deleted", a.ParticipantId, "Deleted their account",
+                        "Account and all books removed", a.At));
             }
             else if (a.Kind == ActivityLog.BookDeleted && OwnerTracked(a, a.At))
             {

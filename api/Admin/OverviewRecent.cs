@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Data;
 using VeggieBook.Api.Research;
 
@@ -10,7 +11,8 @@ namespace VeggieBook.Api.Admin;
 //   book             a book saved          (from book_session)
 //   joined           a new account         (from app_user)
 //   book_deleted     a book deleted        (from activity_log)
-//   account_deleted  an account deleted    (from activity_log)
+//   account_deleted  an account deleted    (from activity_log), by its owner
+//                    or removed by an admin
 //
 // Deletions come from the activity log (db/migrations/007_activity_log.sql).
 // If that table doesn't exist yet, the list simply has no deletions.
@@ -83,7 +85,7 @@ public static class OverviewRecent
         // A deleted book counts only while its owner's tracking is on. A
         // deleted account no longer has an owner to check.
         bool Shows(ActivityEntry a) =>
-            a.Kind == "account_deleted"
+            a.Kind == ActivityLog.AccountDeleted
             || string.IsNullOrEmpty(a.ParticipantId)
             || !userOf.TryGetValue(a.ParticipantId, out var owner)
             || scope.CountsPerson(owner);
@@ -91,6 +93,12 @@ public static class OverviewRecent
         string Name(string kind, string? vegetableCode, int? categoryId) => kind == "secrets"
             ? (categoryId is int id ? categoryNames.GetValueOrDefault(id, "") : "")
             : (vegetableCode is string code ? vegetableNames.GetValueOrDefault(code, code) : "");
+
+        Line AccountLine(ActivityEntry a) => ActivityLog.IsRemovedByAdmin(a)
+            ? new Line("account_deleted", a.ParticipantId, "Account removed by an admin",
+                "Admin action, all books removed", a.At)
+            : new Line("account_deleted", a.ParticipantId, "Deleted their account",
+                "Account and all books removed", a.At);
 
         var lines = saved
             .Select(b => new Line(
@@ -105,13 +113,8 @@ public static class OverviewRecent
                 "Joined",
                 string.IsNullOrEmpty(u.AgeRange) ? "No age range given" : $"Age {u.AgeRange}",
                 u.CreatedAt)))
-            .Concat(logged.Where(Shows).Select(a => a.Kind == "account_deleted"
-                ? new Line(
-                    "account_deleted",
-                    a.ParticipantId,
-                    "Deleted their account",
-                    "Account and all books removed",
-                    a.At)
+            .Concat(logged.Where(Shows).Select(a => a.Kind == ActivityLog.AccountDeleted
+                ? AccountLine(a)
                 : new Line(
                     "book_deleted",
                     a.ParticipantId,
