@@ -1,8 +1,12 @@
 import { useState, type CSSProperties } from 'react'
+import { useLang } from '../../i18n/languageContext'
+import { COMMON } from '../../i18n/strings/common'
+import { useStrings } from '../../i18n/useStrings'
 
 // The full-screen loading state: the VeggieBook logo on white, the word
 // LOADING, and a row of vegetables that fill in with color from left to
-// right while a green bar grows under them.
+// right while a green bar grows under them. The logo and word follow the
+// site language.
 //
 // The same screen is written directly into web/index.html, where it shows
 // before any JavaScript has loaded. Both use the class names styled in
@@ -31,6 +35,9 @@ type Props = {
 }
 
 export function LoadingScreen({ leaving = false }: Props) {
+  const { lang } = useLang()
+  const t = useStrings(COMMON)
+
   // Starts the animation partway through so it continues from the static
   // screen without jumping back to an empty bar.
   const [offset] = useState(() => Math.round(performance.now() % CYCLE_MS))
@@ -44,13 +51,13 @@ export function LoadingScreen({ leaving = false }: Props) {
     <div
       className={leaving ? 'loading-screen is-leaving' : 'loading-screen'}
       role="status"
-      aria-label="Loading VeggieBook"
+      aria-label={t.loadingLabel}
       aria-hidden={leaving || undefined}
       style={style}
     >
-      <img className="loading-logo" src="/brand/logo-positive-en.png" alt="" />
+      <img className="loading-logo" src={`/brand/logo-positive-${lang}.png`} alt="" />
       <p className="loading-label" aria-hidden="true">
-        Loading...
+        {t.loading}
       </p>
       <div className="loading-progress" aria-hidden="true">
         <div className="loading-veg">

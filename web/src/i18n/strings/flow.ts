@@ -1,6 +1,8 @@
 // Making a VeggieBook: picker, questions, transition, review, extra copies,
 // the cover screen, and the bottom buttons. The transition text names the
-// KEEP and DROP buttons, so it is built from the same words.
+// KEEP and DROP buttons, so it is built from the same words. Spanish
+// follows the original app (vb-android values-es/strings.xml and
+// recipes_loading_es.html) where it had the same words.
 
 const en = {
   selectBook: 'Select VeggieBook',
@@ -25,23 +27,23 @@ const en = {
 }
 
 const es: typeof en = {
-  selectBook: 'Elija su VeggieBook',
+  selectBook: 'Seleccione una Verdura',
   loading: 'Cargando...',
   next: 'SIGUIENTE',
-  keep: 'CONSERVAR',
-  drop: 'DESCARTAR',
+  keep: 'LA QUIERO',
+  drop: 'NO LA QUIERO',
   noRecipes: 'No pudimos encontrar recetas en este momento. Regrese e inténtelo de nuevo.',
-  gettingRecipes: 'Estamos buscando sus recetas.',
+  gettingRecipes: 'Estamos creando su VeggieBook.',
   reviewEach: (keep: string, drop: string) =>
-    `Puede revisar cada receta y elegir ${keep} o ${drop}.`,
-  pressNext: (next: string) => `Presione ${next} abajo para continuar`,
+    `A continuación, revise cada receta y elija ${keep} o ${drop}.`,
+  pressNext: (next: string) => `Pulse ${next} abajo para continuar.`,
   noMatches: 'Ninguna receta coincide con sus respuestas.',
 
   extraIntro:
-    'Puede imprimir una COPIA EXTRA de cualquier receta para dársela a su familia o amigos.',
-  extraTouch: 'Solo toque una receta para pedir una COPIA EXTRA.',
+    'Usted puede imprimir una COPIA EXTRA de cualquier receta para dársela a familiares o amigos.',
+  extraTouch: 'Solo seleccione las recetas de las que quiera una COPIA EXTRA.',
 
-  chooseCover: (vegetable: string) => `Elija una portada para su VeggieBook de ${vegetable}.`,
+  chooseCover: (vegetable: string) => `Ahora escoja la portada para su VeggieBook de ${vegetable}.`,
   saveBook: 'GUARDAR LIBRO',
   saving: 'GUARDANDO...',
   couldNotSave: 'No se pudo guardar su libro. Inténtelo de nuevo.',

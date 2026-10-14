@@ -1,4 +1,6 @@
-// The home screen, its menu, book cards, and the study notice.
+// The home screen, its menu, book cards, and the study notice. Spanish
+// follows the original app (vb-android values-es/strings.xml) where it had
+// the same words.
 
 const en = {
   title: 'My VeggieBooks',
@@ -62,14 +64,14 @@ const es: typeof en = {
   profile: 'Perfil y configuración',
   signOut: 'Cerrar sesión',
 
-  createVeggie: 'Crear un VeggieBook nuevo',
-  createSecrets: 'Crear un Secrets Book nuevo',
+  createVeggie: 'Crear un VeggieBook Nuevo',
+  createSecrets: 'Crear un Libro de Secretos',
   loadingBooks: 'Cargando sus libros...',
   empty:
-    'Todavía no ha hecho ningún libro. Empiece con Crear un VeggieBook nuevo o Crear un Secrets Book nuevo.',
+    'Todavía no ha hecho ningún libro. Empiece con Crear un VeggieBook Nuevo o Crear un Libro de Secretos.',
 
   veggieBook: 'VeggieBook',
-  secretsBook: 'Secrets Book',
+  secretsBook: 'Libro de Secretos',
   veggieBookName: (vegetable: string) => `VeggieBook de ${vegetable}`,
   secretsBookName: (category: string) => `libro de ${category}`,
   veggieSubtitle: 'Recetas, consejos y más',

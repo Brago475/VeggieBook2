@@ -8,8 +8,31 @@
     <title>VeggieBook</title>
     <meta name="description" content="Quick Help for Meals" />
 
-    <!-- Fetched early so the logo is on the loading screen from the start. -->
-    <link rel="preload" as="image" href="/brand/logo-positive-en.png" />
+    <!--
+      Picks the site language before anything shows, using the same saved
+      choice and rule as src/i18n/language.ts (key vb2-lang; otherwise a
+      browser set to Spanish starts in Spanish). Sets the page language and
+      fetches that language's logo early for the loading screen.
+    -->
+    <script>
+      (function () {
+        var lang = 'en'
+        var browser = (navigator.language || '').toLowerCase()
+        try {
+          var saved = localStorage.getItem('vb2-lang')
+          if (saved === 'en' || saved === 'es') lang = saved
+          else if (browser.indexOf('es') === 0) lang = 'es'
+        } catch (e) {
+          if (browser.indexOf('es') === 0) lang = 'es'
+        }
+        document.documentElement.lang = lang
+        var link = document.createElement('link')
+        link.rel = 'preload'
+        link.as = 'image'
+        link.href = '/brand/logo-positive-' + lang + '.png'
+        document.head.appendChild(link)
+      })()
+    </script>
 
     <!--
       Loading screen styles live here so they apply before the JavaScript
@@ -153,11 +176,12 @@
   </head>
   <body>
     <!-- Shown until React starts. Keep this markup, and the order of the
-         vegetables, matching components/layout/LoadingScreen.tsx. -->
+         vegetables, matching components/layout/LoadingScreen.tsx. The logo
+         and word are filled in by the script below, in the page language. -->
     <div id="root">
-      <div class="loading-screen" role="status" aria-label="Loading VeggieBook">
-        <img class="loading-logo" src="/brand/logo-positive-en.png" alt="" />
-        <p class="loading-label" aria-hidden="true">Loading...</p>
+      <div class="loading-screen" id="boot-screen" role="status" aria-label="Loading VeggieBook">
+        <img class="loading-logo" id="boot-logo" alt="" />
+        <p class="loading-label" id="boot-label" aria-hidden="true">Loading...</p>
         <div class="loading-progress" aria-hidden="true">
           <div class="loading-veg">
             <div class="loading-veg-row loading-veg-base">
@@ -185,6 +209,17 @@
         </div>
       </div>
     </div>
+    <script>
+      (function () {
+        var es = document.documentElement.lang === 'es'
+        document.getElementById('boot-logo').src =
+          '/brand/logo-positive-' + (es ? 'es' : 'en') + '.png'
+        document.getElementById('boot-label').textContent = es ? 'Cargando...' : 'Loading...'
+        document
+          .getElementById('boot-screen')
+          .setAttribute('aria-label', es ? 'Cargando VeggieBook' : 'Loading VeggieBook')
+      })()
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

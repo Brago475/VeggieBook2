@@ -1,6 +1,8 @@
-// Making and reading a Secrets Book. The bottom buttons (NEXT, KEEP, DROP,
-// SAVE BOOK) come from flow.ts, and the cover buttons from covers.ts, so
-// both kinds of book use the same words.
+// Making and reading a Secrets Book. NEXT, SAVE BOOK, and the cover buttons
+// come from flow.ts and covers.ts. KEEP and DROP are here because Spanish
+// uses the masculine form for a secret (LO QUIERO), as the original app
+// did. Spanish follows the original app (vb-android values-es/strings.xml
+// and secret_mobile_es.html) where it had the same words.
 
 const en = {
   chooseTitle: 'Choose the Secrets You Want',
@@ -8,6 +10,8 @@ const en = {
   couldNotLoad: (error: string) => `Could not load: ${error}`,
   whoSaysSo: 'Who Says So?',
 
+  keep: 'KEEP',
+  drop: 'DROP',
   gettingCategory: (category: string) => `We are getting ${category}.`,
   reviewEach: (keep: string, drop: string) =>
     `You can review each Secret and ${keep} or ${drop} it.`,
@@ -38,32 +42,34 @@ const en = {
 }
 
 const es: typeof en = {
-  chooseTitle: 'Elija los secretos que quiere',
-  loadingKinds: 'Cargando los tipos de secretos...',
+  chooseTitle: 'Elegir una clase de Secretos',
+  loadingKinds: 'Cargando las clases de secretos...',
   couldNotLoad: (error: string) => `No se pudo cargar: ${error}`,
   whoSaysSo: '¿Quién lo dice?',
 
+  keep: 'LO QUIERO',
+  drop: 'NO LO QUIERO',
   gettingCategory: (category: string) => `Estamos buscando sus ${category}.`,
   reviewEach: (keep: string, drop: string) =>
-    `Puede revisar cada secreto y elegir ${keep} o ${drop}.`,
+    `A continuación, revise cada secreto y elija ${keep} o ${drop}.`,
   loadError: 'No pudimos cargar estos secretos en este momento. Regrese e inténtelo de nuevo.',
-  noSecrets: 'Todavía no hay secretos en esta categoría.',
+  noSecrets: 'Todavía no hay secretos en esta clase.',
 
-  noneKept: 'No conservó ningún secreto',
+  noneKept: 'No escogió ningún secreto',
   noneText: (category: string) =>
-    `No conservó ningún secreto de la categoría ${category}. Un Secrets Book necesita al menos un secreto.`,
+    `No escogió ningún secreto de ${category}. Un Libro de Secretos necesita al menos un secreto.`,
   chooseAnother: 'ELEGIR OTRA',
   reviewAgain: 'REVISAR DE NUEVO',
 
   extraIntro:
-    'Puede imprimir una COPIA EXTRA de cualquier secreto para dársela a su familia o amigos.',
-  extraTouch: 'Solo toque un secreto para pedir una COPIA EXTRA.',
+    'Usted puede imprimir una COPIA EXTRA de cualquier secreto para dárselo a familiares o amigos.',
+  extraTouch: 'Solo seleccione los secretos de los que quiera una COPIA EXTRA.',
 
-  chooseCoverLabel: 'Elija una portada',
+  chooseCoverLabel: 'Escoja una portada',
   noPictures:
-    'Sus secretos no tienen imágenes para usar como portada. Elija otro tipo de secreto.',
-  chooseCover: (category: string) => `Elija una portada para su libro de ${category}.`,
-  browseBy: 'Ver portadas por tipo de secreto',
+    'Sus secretos no tienen imágenes para usar como portada. Elija otra clase de secretos.',
+  chooseCover: () => 'Ahora escoja la portada para su Libro de Secretos.',
+  browseBy: 'Ver portadas por clase de secreto',
   pictureLabel: (category: string, n: number) => `Imagen de secreto de ${category} ${n}`,
   secretFallback: 'Secreto',
 

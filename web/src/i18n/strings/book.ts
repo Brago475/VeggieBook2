@@ -35,10 +35,10 @@ const en = {
 const es: typeof en = {
   your: 'Su',
   veggieLabel: 'VeggieBook',
-  secretsLabel: 'Secrets Book',
+  secretsLabel: 'Libro de Secretos',
   secretsFallback: 'Secretos',
 
-  changeCover: 'Cambiar portada',
+  changeCover: 'Cambiar la portada',
   deleteRecipe: 'Eliminar receta',
   deleteSecret: 'Eliminar secreto',
   optionsFor: (title: string) => `Opciones para ${title}`,
@@ -56,8 +56,8 @@ const es: typeof en = {
   backToBookButton: 'VOLVER AL LIBRO',
 
   newCoverVeggie: (vegetable: string) =>
-    `Elija una nueva portada para su VeggieBook de ${vegetable}.`,
-  newCoverSecrets: (category: string) => `Elija una nueva portada para su libro de ${category}.`,
+    `Escoja una nueva portada para su VeggieBook de ${vegetable}.`,
+  newCoverSecrets: () => 'Escoja una nueva portada para su Libro de Secretos.',
   cancel: 'CANCELAR',
   saveCover: 'GUARDAR PORTADA',
   coverNotSaved: 'No se pudo guardar la portada. Inténtelo de nuevo.',

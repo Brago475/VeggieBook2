@@ -7,7 +7,7 @@ import { useStrings } from '../i18n/useStrings'
 // original app: "We are getting Breakfast Secrets. You can review each
 // Secret and KEEP or DROP it." The Secrets counterpart of Transition, with
 // the same layout and classes, and the same drawn arrow pointing at NEXT.
-// The sentences use the same button words as the review screen.
+// The sentences use the same button words as the secret review screen.
 //
 // A separate file so the VeggieBook transition stays exactly as it is.
 //
@@ -27,7 +27,7 @@ export function SecretTransition({ categoryName, onNext }: Props) {
     <>
       <div className="transition">
         <p className="transition-line">{t.gettingCategory(categoryName)}</p>
-        <p className="transition-line">{t.reviewEach(flow.keep, flow.drop)}</p>
+        <p className="transition-line">{t.reviewEach(t.keep, t.drop)}</p>
 
         <p className="transition-cue">{flow.pressNext(flow.next)}</p>
         <div className="transition-arrow" aria-hidden="true" />

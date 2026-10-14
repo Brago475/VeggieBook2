@@ -1,4 +1,6 @@
 // One recipe: the review card and the sections shared with a saved book.
+// Spanish labels follow the original app's recipe page
+// (recipe_mobile_es.html).
 
 const en = {
   counter: (position: number, total: number) => `Recipe ${position} of ${total}`,
@@ -27,17 +29,17 @@ const es: typeof en = {
   loadingDetails: 'Cargando los detalles de la receta',
 
   ingredients: 'Ingredientes',
-  summary: 'Resumen',
+  summary: 'En Resumen',
   instructions: 'Instrucciones',
   notes: 'Notas',
   photos: 'Fotos',
 
   prepTime: 'Tiempo de preparación:',
-  madeAhead: 'Se puede preparar con anticipación:',
-  cookTime: 'Tiempo de cocción:',
-  frozen: 'Se puede congelar:',
+  madeAhead: '¿Se puede hacer por adelantado?',
+  cookTime: 'Tiempo para cocinar:',
+  frozen: '¿Se puede congelar?',
   servings: 'Porciones:',
-  leftovers: 'Buena para sobras:',
+  leftovers: '¿Se puede guardar lo que sobre?',
 
   prepStep: (n: string) => `Paso de preparación ${n}`,
 }

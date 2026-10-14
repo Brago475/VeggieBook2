@@ -1,4 +1,5 @@
 // Choosing a VeggieBook cover, when making a book or changing a saved one.
+// Spanish follows the original app where it had the same words.
 
 const en = {
   useDefault: 'Use default cover',
@@ -16,12 +17,12 @@ const en = {
 
 const es: typeof en = {
   useDefault: 'Usar la portada predeterminada',
-  choose: 'Elegir una portada',
-  uploadOwn: 'Subir su propia portada',
-  uploadDifferent: 'Subir otra portada',
+  choose: 'Escoger una portada',
+  uploadOwn: 'Usar su propia foto',
+  uploadDifferent: 'Usar otra foto',
   browseBy: 'Ver portadas por verdura',
   loadingCovers: 'Cargando portadas...',
-  preparing: 'Preparando su foto...',
+  preparing: 'Subiendo su foto...',
   photoUnusable: 'No se pudo usar esta foto.',
   coverLabel: (vegetable: string) => `Portada de ${vegetable}`,
   photoLabel: (vegetable: string) => `Foto de ${vegetable}`,
