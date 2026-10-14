@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { ABOUT } from '../../i18n/strings/about'
+import { useStrings } from '../../i18n/useStrings'
 import { LeafDecor } from '../layout/LeafDecor'
 
 // The layout for the Terms of Use and the Privacy Policy. The words live in
@@ -49,7 +51,7 @@ export function LegalPage({ doc }: Props) {
         />
         <h1 className="about-title">{doc.title}</h1>
         <p className="legal-meta">
-          Version {doc.version} · Last updated {doc.updated}
+          Version {doc.version}, last updated {doc.updated}
         </p>
       </header>
 
@@ -69,13 +71,15 @@ export function LegalPage({ doc }: Props) {
   )
 }
 
-// The contact block both documents end with.
+// The contact block both documents end with. Also shown when password
+// reset is locked.
 export function LegalContact() {
+  const t = useStrings(ABOUT)
   return (
     <p>
       Dr. Kim Spaccarotella
       <br />
-      Department of Biological Sciences, Kean University
+      {t.contactDept}
       <br />
       <a className="about-link" href="mailto:kim.spaccarotella@kean.edu">
         kim.spaccarotella@kean.edu

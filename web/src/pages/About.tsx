@@ -7,6 +7,10 @@ import {
   SchoolIcon,
 } from '../components/icons/AboutIcons'
 import { LeafDecor } from '../components/layout/LeafDecor'
+import { useLang } from '../i18n/languageContext'
+import { ABOUT } from '../i18n/strings/about'
+import { COMMON } from '../i18n/strings/common'
+import { useStrings } from '../i18n/useStrings'
 
 // About VeggieBook: who created the original app, who funded it, who built
 // the phone apps, how it was rebuilt at Kean, and where to read the
@@ -18,10 +22,10 @@ import { LeafDecor } from '../components/layout/LeafDecor'
 // published papers listed at the bottom. Crediting the original creators
 // is also required by the CC BY-SA 4.0 license on the original images.
 //
-// Open to everyone, signed in or not. Read only. Back returns home.
+// The words are in strings/about.ts. Paper titles stay in English, as
+// published.
 //
-// English only for now; the Spanish text comes in with the English/Spanish
-// toggle, like the rest of the site.
+// Open to everyone, signed in or not. Read only. Back returns home.
 
 type Paper = {
   authors: string
@@ -74,11 +78,12 @@ const CC_BY_SA_URL = 'https://creativecommons.org/licenses/by-sa/4.0/'
 // A link to another site: opens in a new tab, and says so to screen
 // readers, since the arrow icon is decorative.
 function OutLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const t = useStrings(ABOUT)
   return (
     <a className="about-link" href={href} target="_blank" rel="noopener noreferrer">
       {children}
       <ExternalIcon className="about-link-icon" />
-      <span className="visually-hidden"> (opens in a new tab)</span>
+      <span className="visually-hidden">{t.newTab}</span>
     </a>
   )
 }
@@ -103,7 +108,21 @@ function AboutCard({ icon, title, children }: CardProps) {
   )
 }
 
+function Paragraphs({ lines }: { lines: string[] }) {
+  return (
+    <>
+      {lines.map((line, i) => (
+        <p key={i}>{line}</p>
+      ))}
+    </>
+  )
+}
+
 export function About() {
+  const { lang } = useLang()
+  const t = useStrings(ABOUT)
+  const common = useStrings(COMMON)
+
   return (
     <div className="account-screen about-screen">
       <LeafDecor className="account-leaf" />
@@ -112,79 +131,34 @@ export function About() {
       <header className="about-hero">
         <img
           className="about-logo"
-          src="/brand/logo-positive-en.png"
-          alt="VeggieBook, Quick Help for Meals"
+          src={`/brand/logo-positive-${lang}.png`}
+          alt={common.veggieLogoAlt}
         />
-        <h1 className="about-title">About VeggieBook</h1>
-        <p className="about-intro">
-          VeggieBook helps home cooks make more meals with vegetables. You pick a
-          vegetable you have, answer a few questions, and get your own book of
-          recipes and tips. Secrets Books add simple, no-cost ideas for better
-          breakfasts, lunches, dinners, snacks, and food shopping.
-        </p>
+        <h1 className="about-title">{t.title}</h1>
+        <p className="about-intro">{t.intro}</p>
       </header>
 
-      <AboutCard icon={<SchoolIcon />} title="Where it came from">
+      <AboutCard icon={<SchoolIcon />} title={t.originTitle}>
+        <Paragraphs lines={t.origin} />
+      </AboutCard>
+
+      <AboutCard icon={<AwardIcon />} title={t.fundingTitle}>
+        <Paragraphs lines={t.funding} />
+      </AboutCard>
+
+      <AboutCard icon={<PhoneIcon />} title={t.appsTitle}>
+        <Paragraphs lines={t.apps} />
         <p>
-          VeggieBook was created by Dr. Peter Clarke and Dr. Susan H. Evans at the
-          Annenberg School for Communication and Journalism, University of
-          Southern California.
-        </p>
-        <p>
-          It was shaped by years of research with families who use community food
-          pantries. Professional chefs contributed recipes, and families tested
-          the recipes and Secrets before they were added.
-        </p>
-        <p>
-          In a study with nearly 300 households, cooks who used VeggieBook
-          prepared 38% more vegetable dishes than cooks who did not. VeggieBook is
-          listed in the USDA SNAP-Ed Toolkit.
+          <OutLink href={OPEN_SOURCE_URL}>{t.openSource}</OutLink>
         </p>
       </AboutCard>
 
-      <AboutCard icon={<AwardIcon />} title="Funding">
-        <p>
-          The original VeggieBook was supported by the U.S. Department of
-          Agriculture, National Institute of Food and Agriculture, through an
-          Agriculture and Food Initiative grant (2012-68001-15952) for Childhood
-          Obesity Prevention.
-        </p>
-        <p>
-          Earlier research that led to the app was supported by USDA grant
-          2006-55215-16730.
-        </p>
+      <AboutCard icon={<BrowserIcon />} title={t.keanTitle}>
+        <Paragraphs lines={t.kean} />
       </AboutCard>
 
-      <AboutCard icon={<PhoneIcon />} title="The original apps">
-        <p>
-          The iPhone app was built by TechEmpower, and the Android app was built
-          by DiPasquo Consulting.
-        </p>
-        <p>
-          In 2021, the creators made the app's code freely available so other
-          organizations could use and adapt it.
-        </p>
-        <p>
-          <OutLink href={OPEN_SOURCE_URL}>VeggieBook open source code</OutLink>
-        </p>
-      </AboutCard>
-
-      <AboutCard icon={<BrowserIcon />} title="Rebuilt at Kean University">
-        <p>
-          In 2026, VeggieBook was rebuilt as a website at Kean University, in the
-          Department of Biological Sciences, under the direction of Dr.
-          Spaccarotella.
-        </p>
-        <p>
-          The website keeps the original recipes, Secrets, and questions. It adds
-          personal accounts, so your books are saved and can be opened on any
-          device with a web browser. There is nothing to download, and you can
-          still use it as a guest.
-        </p>
-      </AboutCard>
-
-      <AboutCard icon={<PaperIcon />} title="Research">
-        <p>Published studies about VeggieBook and the research behind it:</p>
+      <AboutCard icon={<PaperIcon />} title={t.researchTitle}>
+        <p>{t.researchIntro}</p>
         <ul className="about-papers">
           {PAPERS.map((paper) => (
             <li key={paper.doi}>
@@ -199,11 +173,11 @@ export function About() {
       </AboutCard>
 
       <p className="about-license">
-        The original VeggieBook code is open source under the{' '}
-        <OutLink href={GPL_URL}>GNU General Public License v3.0</OutLink>. Photos from
-        the original project are used under the{' '}
-        <OutLink href={CC_BY_SA_URL}>Creative Commons Attribution-ShareAlike 4.0</OutLink>{' '}
-        license.
+        {t.licenseBefore}
+        <OutLink href={GPL_URL}>GNU General Public License v3.0</OutLink>
+        {t.licenseMiddle}
+        <OutLink href={CC_BY_SA_URL}>Creative Commons Attribution-ShareAlike 4.0</OutLink>
+        {t.licenseAfter}
       </p>
     </div>
   )
