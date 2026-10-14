@@ -7,6 +7,7 @@ import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { NavBar } from '../components/layout/NavBar'
 import { SafeImage } from '../components/common/SafeImage'
 import { SecretCard } from '../components/secrets/SecretCard'
+import { useHeld } from '../hooks/useHeld'
 import { useSecretBook } from '../hooks/useSecretBook'
 import { coverSrc } from '../utils/coverSrc'
 
@@ -16,18 +17,18 @@ import { coverSrc } from '../utils/coverSrc'
 //
 // The book's secrets are listed as rows: a picture, a title and a chevron.
 // Tapping one opens it in SecretCard, the same component the review step
-// uses, so a secret reads the same in both places. Coming back, by either
-// Back button, returns to the same place in the list.
+// uses. Coming back, by either Back button, returns to the same place in
+// the list.
 //
 // Which secret is open is held by App rather than here, so the Back button
 // in the green header can close a secret before it leaves the book.
 //
 // Changes live in ⋮ menus: on the cover card, Change cover and Delete
 // book; on each secret, Delete secret. The last secret has no menu, since
-// a book cannot be left empty; deleting the book covers that case.
+// a book cannot be left empty.
 //
-// While the book loads, the book skeleton shows, so the screen is never a
-// blank page or a lone line of text.
+// While the book loads, the book skeleton shows, held long enough to be
+// seen (useHeld).
 
 type Props = {
   bookId: string
@@ -56,6 +57,7 @@ export function SecretBookViewer({
   onChanged,
 }: Props) {
   const { book, category, secrets, loading, error, removeSecret } = useSecretBook(bookId)
+  const bookLoading = useHeld(loading)
 
   // What the confirm dialog is asking about, or null when it is closed.
   const [pending, setPending] = useState<Pending | null>(null)
@@ -65,8 +67,7 @@ export function SecretBookViewer({
   // Where the list was scrolled when a secret was opened.
   const listScroll = useRef(0)
 
-  // When a secret closes, by the header's Back or the one at the bottom,
-  // put the list back where it was. After the list renders, not before.
+  // When a secret closes, put the list back where it was, after it renders.
   const wasOpen = useRef(openSecret !== null)
   useEffect(() => {
     const isOpen = openSecret !== null
@@ -99,8 +100,7 @@ export function SecretBookViewer({
       await removeSecret(pending.id)
       onChanged()
     } catch (err) {
-      // Shown on the page behind the dialog, where it stays readable
-      // instead of vanishing when the dialog closes.
+      // Shown on the page behind the dialog, where it stays readable.
       setActionError(
         err instanceof Error ? err.message : 'Something went wrong. Please try again.',
       )
@@ -109,10 +109,9 @@ export function SecretBookViewer({
     setPending(null)
   }
 
-  if (loading) return <BookSkeleton />
+  if (bookLoading) return <BookSkeleton />
 
-  // Same off-white page as the book, so a missing book does not flash to a
-  // white screen, with a plain way back to the library under the message.
+  // Same off-white page as the book, with a plain way back to the library.
   if (error || !book || !category) {
     return (
       <div className="book-view">
@@ -159,9 +158,8 @@ export function SecretBookViewer({
       {/* Logo, a small "YOUR", then the book's name. */}
       <BookHeading title={category.name} />
 
-      {/* The same card the home screen and the cover chooser show, so a
-          book looks the same wherever it appears. Here it also carries the
-          small "SECRETS BOOK" label, and the book's ⋮ in its corner. */}
+      {/* The same card the home screen and the cover chooser show, with the
+          small "SECRETS BOOK" label and the book's ⋮ in its corner. */}
       <div className="cover-preview">
         <div className="book-hero">
           <BookCard
@@ -230,8 +228,7 @@ export function SecretBookViewer({
               </svg>
             </button>
 
-            {/* A sibling of the row, not inside it, so tapping ⋮ never
-                opens the secret. */}
+            {/* A sibling of the row, so tapping ⋮ never opens the secret. */}
             {canRemoveSecret && (
               <ActionMenu
                 className="recipe-row-menu"

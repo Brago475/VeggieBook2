@@ -4,11 +4,12 @@ import { BookSkeleton } from '../components/library/BookSkeleton'
 import { CoverOptions } from '../components/veggie/CoverOptions'
 import { NavBar } from '../components/layout/NavBar'
 import { useBookDetail, type BookDetail } from '../hooks/useBookDetail'
+import { useHeld } from '../hooks/useHeld'
 import type { Vegetable } from '../types'
 
 // Changing a saved VeggieBook's cover, as the original app allowed. The
-// same cover screen as the last step of making a book (CoverChooser):
-// a live preview, then the three ways to set a cover. It starts on the
+// same cover screen as the last step of making a book (CoverChooser): a
+// live preview, then the three ways to set a cover. It starts on the
 // book's current cover.
 //
 // SAVE COVER saves and returns to the book. CANCEL returns without a
@@ -26,8 +27,9 @@ type Props = {
 export function ChangeVeggieCover({ bookId, vegetables, onSave, onCancel }: Props) {
   const { book, loading, error } = useBookDetail(bookId)
   const vegetable = vegetables.find((v) => v.code === book?.vegetableCode)
+  const waiting = useHeld(loading || (book !== null && !vegetable && vegetables.length === 0))
 
-  if (loading || (book && !vegetable && vegetables.length === 0)) return <BookSkeleton />
+  if (waiting) return <BookSkeleton />
 
   if (error || !book || !vegetable) {
     return (

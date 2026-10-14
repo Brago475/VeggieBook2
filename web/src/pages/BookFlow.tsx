@@ -1,5 +1,6 @@
 import { RecipeSkeleton } from '../components/veggie/RecipeSkeleton'
 import type { BookFlowState } from '../hooks/useBookFlow'
+import { useHeld } from '../hooks/useHeld'
 import type { Question, Vegetable } from '../types'
 import { CoverChooser } from './CoverChooser'
 import { ExtraCopies } from './ExtraCopies'
@@ -22,6 +23,8 @@ type Props = {
 
 export function BookFlow({ flow, vegetables, questions, loading, onSave }: Props) {
   const { step, vegetable, match } = flow
+  // The review skeleton, held long enough to be seen.
+  const matching = useHeld(step === 'review' && match.running)
 
   if (step === 'pick') {
     return (
@@ -56,13 +59,13 @@ export function BookFlow({ flow, vegetables, questions, loading, onSave }: Props
       <>
         {/* The recipes are usually ready by the time the transition screen
             is passed; if not, the shape of the first one holds its place. */}
-        {match.running && <RecipeSkeleton />}
-        {match.error && (
+        {matching && <RecipeSkeleton />}
+        {!matching && match.error && (
           <p className="message">
             We could not find recipes right now. Please go back and try again.
           </p>
         )}
-        {match.result && (
+        {!matching && match.result && (
           <RecipeReview
             recipes={match.result.recipes}
             index={flow.reviewIndex}

@@ -3,14 +3,14 @@ import { BookCard } from '../components/library/BookCard'
 import { BookSkeleton } from '../components/library/BookSkeleton'
 import { NavBar } from '../components/layout/NavBar'
 import { SecretCoverOptions } from '../components/secrets/SecretCoverOptions'
+import { useHeld } from '../hooks/useHeld'
 import { useSecretBook, type SavedSecretsBook } from '../hooks/useSecretBook'
 import type { CategorySecrets, Secret, SecretCategory } from '../types'
 
 // Changing a saved Secrets Book's cover, as the original app allowed. The
 // Secrets counterpart of ChangeVeggieCover, and the same cover screen as
-// the last step of making a Secrets Book (SecretCoverChooser): a live
-// preview, then the three ways to set a cover. It starts on the book's
-// current cover.
+// the last step of making a Secrets Book (SecretCoverChooser). It starts
+// on the book's current cover.
 //
 // "Use default cover" is the book's first secret that has a picture, the
 // same default the book was made with.
@@ -29,8 +29,9 @@ type Props = {
 
 export function ChangeSecretCover({ bookId, categories, onSave, onCancel }: Props) {
   const { book, category, secrets, loading, error } = useSecretBook(bookId)
+  const waiting = useHeld(loading)
 
-  if (loading) return <BookSkeleton />
+  if (waiting) return <BookSkeleton />
 
   if (error || !book || !category) {
     return (
