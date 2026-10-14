@@ -1,0 +1,104 @@
+/* The screen shown right after a book is saved (pages/BookSaved.tsx). */
+
+.book-saved {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 32px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.book-saved-check {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e3eed9;
+  color: #3f7a1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-saved-check svg {
+  width: 32px;
+  height: 32px;
+}
+
+.book-saved-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.book-saved-sub {
+  margin: -8px 0 0;
+  color: #4b5545;
+}
+
+.book-saved-card {
+  width: 100%;
+  max-width: 340px;
+  margin: 8px 0;
+}
+
+.book-saved-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.book-saved-btn {
+  min-height: 52px;
+  border-radius: 10px;
+  border: 2px solid #4f8a2b;
+  background: #ffffff;
+  color: #2d5a15;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.book-saved-btn.is-primary {
+  background: #4f8a2b;
+  color: #ffffff;
+}
+
+.book-saved-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.book-saved-btn:hover {
+  filter: brightness(0.95);
+}
+
+.book-saved-btn:focus-visible,
+.book-saved-skip:focus-visible {
+  outline: 3px solid #2d5a15;
+  outline-offset: 2px;
+}
+
+.book-saved-skip {
+  min-height: 48px;
+  border: none;
+  background: transparent;
+  color: #4b5545;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

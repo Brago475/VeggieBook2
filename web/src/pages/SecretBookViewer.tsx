@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ActionMenu } from '../components/common/ActionMenu'
+import { ActionMenu, type ActionMenuItem } from '../components/common/ActionMenu'
 import { BookCard } from '../components/library/BookCard'
 import { BookHeading } from '../components/library/BookHeading'
 import { BookSkeleton } from '../components/library/BookSkeleton'
@@ -14,6 +14,7 @@ import { COMMON } from '../i18n/strings/common'
 import { HOME } from '../i18n/strings/home'
 import { useStrings } from '../i18n/useStrings'
 import { coverSrc } from '../utils/coverSrc'
+import { downloadPdf, printPdf } from '../utils/bookPdf'
 
 // A saved Secrets Book, opened from the home library. The Secrets
 // counterpart of BookViewer, built from the same pieces so both kinds of
@@ -27,9 +28,10 @@ import { coverSrc } from '../utils/coverSrc'
 // Which secret is open is held by App rather than here, so the Back button
 // in the green header can close a secret before it leaves the book.
 //
-// Changes live in ⋮ menus: on the cover card, Change cover and Delete
-// book; on each secret, Delete secret. The last secret has no menu, since
-// a book cannot be left empty.
+// Actions live in ⋮ menus: on the cover card, Change cover, Print book,
+// Download book and Delete book; on each secret, Print secret, Download
+// secret and Delete secret. The last secret cannot be deleted, since a book
+// cannot be left empty.
 //
 // While the book loads, the book skeleton shows, held long enough to be
 // seen (useHeld).
@@ -156,6 +158,30 @@ export function SecretBookViewer({
 
   const canRemoveSecret = secrets.length > 1
 
+  function secretItems(id: number, title: string): ActionMenuItem[] {
+    const items: ActionMenuItem[] = [
+      {
+        label: t.printSecret,
+        icon: 'print',
+        onSelect: () => printPdf({ bookId, secretId: id }),
+      },
+      {
+        label: t.downloadSecret,
+        icon: 'download',
+        onSelect: () => downloadPdf({ bookId, secretId: id }),
+      },
+    ]
+    if (canRemoveSecret) {
+      items.push({
+        label: t.deleteSecret,
+        danger: true,
+        icon: 'trash',
+        onSelect: () => setPending({ kind: 'secret', id, title }),
+      })
+    }
+    return items
+  }
+
   // The book's list of secrets.
   return (
     <div className="book-view">
@@ -182,6 +208,16 @@ export function SecretBookViewer({
                 onSelect: onChangeCover,
               },
               {
+                label: t.printBook,
+                icon: 'print',
+                onSelect: () => printPdf({ bookId }),
+              },
+              {
+                label: t.downloadBook,
+                icon: 'download',
+                onSelect: () => downloadPdf({ bookId }),
+              },
+              {
                 label: home.deleteBook,
                 danger: true,
                 icon: 'trash',
@@ -203,7 +239,7 @@ export function SecretBookViewer({
           <li key={s.id}>
             <button
               type="button"
-              className={`recipe-row${canRemoveSecret ? ' has-menu' : ''}`}
+              className="recipe-row has-menu"
               onClick={() => openSecretAt(s.id)}
             >
               {/* The pictures have words drawn into them, so the thumbnail
@@ -231,21 +267,11 @@ export function SecretBookViewer({
             </button>
 
             {/* A sibling of the row, so tapping ⋮ never opens the secret. */}
-            {canRemoveSecret && (
-              <ActionMenu
-                className="recipe-row-menu"
-                label={t.optionsFor(s.headline)}
-                items={[
-                  {
-                    label: t.deleteSecret,
-                    danger: true,
-                    icon: 'trash',
-                    onSelect: () =>
-                      setPending({ kind: 'secret', id: s.id, title: s.headline }),
-                  },
-                ]}
-              />
-            )}
+            <ActionMenu
+              className="recipe-row-menu"
+              label={t.optionsFor(s.headline)}
+              items={secretItems(s.id, s.headline)}
+            />
           </li>
         ))}
       </ul>

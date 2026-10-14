@@ -7,6 +7,8 @@ namespace VeggieBook.Api.Books.Print;
 // A VeggieBook as a PDF: the cover, one page per kept recipe (printed again
 // for each extra copy), then the vegetable's tips that match the book's
 // answers. Recipes run in the same order as the book viewer.
+//
+// With one recipe asked for, the PDF is just that recipe's page.
 
 internal static class VeggieBookPdf
 {
@@ -30,17 +32,18 @@ internal static class VeggieBookPdf
 
     private sealed record TipPage(string Heading, List<TipPart> Parts);
 
-    public static async Task<BookPdfFile> BuildAsync(
-        VeggieBookContext content, BookPrint book, bool es, string imagesRoot)
+    // Null when the book has no such recipe.
+    public static async Task<BookPdfFile?> BuildAsync(
+        VeggieBookContext content, BookPrint book, bool es, string imagesRoot, int? only = null)
     {
         var words = BookWords.For(es);
 
-        var veg = await content.Vegetables
-            .AsNoTracking()
-            .FirstOrDefaultAsync(v => v.Code == book.VegetableCode);
-        var name = veg is null ? "VeggieBook" : es ? veg.NameEs : veg.NameEn;
+        var ids = book.Items
+            .Select(i => i.Id)
+            .Where(i => only is null || i == only)
+            .ToArray();
+        if (ids.Length == 0) return null;
 
-        var ids = book.Items.Select(i => i.Id).ToArray();
         var rows = await content.Recipes
             .AsNoTracking()
             .Where(r => ids.Contains(r.Id))
@@ -75,6 +78,21 @@ internal static class VeggieBookPdf
             .ThenBy(r => r.Code)
             .ThenBy(r => r.Id)
             .ToList();
+        if (recipes.Count == 0) return null;
+
+        if (only is not null)
+        {
+            var single = recipes[0];
+            var title = BookPdf.Clean(single.Title);
+            var (one, page) = BookPdf.Start(title, words);
+            AddRecipe(page, single, words, imagesRoot);
+            return new BookPdfFile(BookPdf.Render(one, es), BookPdf.FileName("Recipe", title));
+        }
+
+        var veg = await content.Vegetables
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Code == book.VegetableCode);
+        var name = veg is null ? "VeggieBook" : es ? veg.NameEs : veg.NameEn;
 
         var attributes = book.Attributes;
         var tipRows = await content.Tips

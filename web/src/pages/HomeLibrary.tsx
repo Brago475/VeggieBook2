@@ -12,10 +12,12 @@ import {
 } from '../components/icons/LibraryIcons'
 import { MainMenu, type MainMenuItem } from '../components/library/MainMenu'
 import { StudyNoticeCard } from '../components/library/StudyNoticeCard'
+import { BOOK } from '../i18n/strings/book'
 import { COMMON } from '../i18n/strings/common'
 import { HOME } from '../i18n/strings/home'
 import { useStrings } from '../i18n/useStrings'
 import type { BookSummary, SecretCategory, Vegetable } from '../types'
+import { downloadPdf, printPdf } from '../utils/bookPdf'
 
 // Home screen: a heading that says who is using the site, the two create
 // buttons, then the books.
@@ -38,7 +40,7 @@ import type { BookSummary, SecretCategory, Vegetable } from '../types'
 // vegetable's; for a Secrets Book it is the category's (the toaster, the
 // cart), as on the original app's home screen. Every card opens its book,
 // for a guest as well as an account. Actions on a book live in the ⋮ on its
-// card.
+// card: Print book, Download book, and Delete book.
 //
 // While the books load, two gray card shapes hold their place, so the list
 // does not pop in under a line of text.
@@ -102,6 +104,7 @@ export function HomeLibrary({
   onViewBook,
 }: Props) {
   const t = useStrings(HOME)
+  const bookWords = useStrings(BOOK)
   const common = useStrings(COMMON)
   const isGuest = email === null
 
@@ -289,6 +292,16 @@ export function HomeLibrary({
                 className="book-item-menu"
                 label={t.options(info.bookName)}
                 items={[
+                  {
+                    label: bookWords.printBook,
+                    icon: 'print',
+                    onSelect: () => printPdf({ bookId: book.id }),
+                  },
+                  {
+                    label: bookWords.downloadBook,
+                    icon: 'download',
+                    onSelect: () => downloadPdf({ bookId: book.id }),
+                  },
                   {
                     label: t.deleteBook,
                     danger: true,

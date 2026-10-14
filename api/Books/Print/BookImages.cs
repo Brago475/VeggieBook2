@@ -7,7 +7,8 @@ namespace VeggieBook.Api.Books.Print;
 // database are checked to stay inside that folder. Only JPEG and PNG are
 // used; anything else, or a missing file, is left out of the PDF.
 //
-// Logos ship with the API under Assets/Brand.
+// Logos ship with the API under Assets/Brand. They are copies of the files
+// in web/public/brand: if the logo changes, update both.
 
 internal static class BookImages
 {

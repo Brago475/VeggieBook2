@@ -7,6 +7,8 @@ namespace VeggieBook.Api.Books.Print;
 // A Secrets Book as a PDF: the cover, then one page per kept secret
 // (printed again for each extra copy), in the category's own order. Each
 // page has the picture, the secret, why it works, and its links.
+//
+// With one secret asked for, the PDF is just that secret's page.
 
 internal static class SecretsBookPdf
 {
@@ -20,18 +22,24 @@ internal static class SecretsBookPdf
         string? Image,
         List<SecretLinkLine> Links);
 
-    public static async Task<BookPdfFile> BuildAsync(
-        VeggieBookContext content, BookPrint book, bool es, string imagesRoot)
+    // Null when the book has no such secret.
+    public static async Task<BookPdfFile?> BuildAsync(
+        VeggieBookContext content, BookPrint book, bool es, string imagesRoot, int? only = null)
     {
         var words = BookWords.For(es);
         var language = es ? "es" : "en";
+
+        var ids = book.Items
+            .Select(i => i.Id)
+            .Where(i => only is null || i == only)
+            .ToArray();
+        if (ids.Length == 0) return null;
 
         var category = await content.SecretCategories
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == book.SecretCategoryId);
         var name = category is null ? "Secrets" : es ? category.NameEs : category.NameEn;
 
-        var ids = book.Items.Select(i => i.Id).ToArray();
         var rows = await content.Secrets
             .AsNoTracking()
             .Where(s => ids.Contains(s.Id))
@@ -59,6 +67,16 @@ internal static class SecretsBookPdf
                 s.Id, s.Headline, s.Body ?? "", s.Why, s.Image,
                 s.Links.Select(l => new SecretLinkLine(l.Url, l.Label)).ToList()))
             .ToList();
+        if (secrets.Count == 0) return null;
+
+        if (only is not null)
+        {
+            var single = secrets[0];
+            var title = BookPdf.Clean(single.Headline);
+            var (one, page) = BookPdf.Start(title, words);
+            AddSecret(page, single, name, words, imagesRoot);
+            return new BookPdfFile(BookPdf.Render(one, es), BookPdf.FileName("Secret", title));
+        }
 
         var extras = book.Items.ToDictionary(i => i.Id, i => i.ExtraCopies);
         var cover = BookPdf.FromBytes(book.Upload)

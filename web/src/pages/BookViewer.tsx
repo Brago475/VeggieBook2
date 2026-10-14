@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ActionMenu } from '../components/common/ActionMenu'
+import { ActionMenu, type ActionMenuItem } from '../components/common/ActionMenu'
 import { BookCard } from '../components/library/BookCard'
 import { BookHeading } from '../components/library/BookHeading'
 import { BookSkeleton } from '../components/library/BookSkeleton'
@@ -17,6 +17,7 @@ import { HOME } from '../i18n/strings/home'
 import { useStrings } from '../i18n/useStrings'
 import type { Vegetable } from '../types'
 import { coverSrc } from '../utils/coverSrc'
+import { downloadPdf, printPdf } from '../utils/bookPdf'
 
 // A saved book, opened from the home library.
 //
@@ -29,9 +30,10 @@ import { coverSrc } from '../utils/coverSrc'
 // Which recipe is open is held by App rather than here, so the Back button
 // in the green header can close a recipe before it leaves the book.
 //
-// Changes live in ⋮ menus: on the cover card, Change cover and Delete
-// book; on each recipe, Delete recipe. The last recipe has no menu, since
-// a book cannot be left empty; deleting the book covers that case.
+// Actions live in ⋮ menus: on the cover card, Change cover, Print book,
+// Download book and Delete book; on each recipe, Print recipe, Download
+// recipe and Delete recipe. The last recipe cannot be deleted, since a book
+// cannot be left empty; deleting the book covers that case.
 //
 // While the book or a recipe loads, a skeleton of its shape shows, held
 // long enough to be seen (useHeld).
@@ -171,6 +173,30 @@ export function BookViewer({
 
   const canRemoveRecipe = book.recipes.length > 1
 
+  function recipeItems(id: number, title: string): ActionMenuItem[] {
+    const items: ActionMenuItem[] = [
+      {
+        label: t.printRecipe,
+        icon: 'print',
+        onSelect: () => printPdf({ bookId, recipeId: id }),
+      },
+      {
+        label: t.downloadRecipe,
+        icon: 'download',
+        onSelect: () => downloadPdf({ bookId, recipeId: id }),
+      },
+    ]
+    if (canRemoveRecipe) {
+      items.push({
+        label: t.deleteRecipe,
+        danger: true,
+        icon: 'trash',
+        onSelect: () => setPending({ kind: 'recipe', id, title }),
+      })
+    }
+    return items
+  }
+
   // The book's recipe list.
   return (
     <div className="book-view">
@@ -197,6 +223,16 @@ export function BookViewer({
                 onSelect: onChangeCover,
               },
               {
+                label: t.printBook,
+                icon: 'print',
+                onSelect: () => printPdf({ bookId }),
+              },
+              {
+                label: t.downloadBook,
+                icon: 'download',
+                onSelect: () => downloadPdf({ bookId }),
+              },
+              {
                 label: home.deleteBook,
                 danger: true,
                 icon: 'trash',
@@ -219,7 +255,7 @@ export function BookViewer({
           <li key={r.id}>
             <button
               type="button"
-              className={`recipe-row${canRemoveRecipe ? ' has-menu' : ''}`}
+              className="recipe-row has-menu"
               onClick={() => openRecipeAt(r.id)}
             >
               {/* No photo, or one that will not load, shows the VeggieBook mark. */}
@@ -246,21 +282,11 @@ export function BookViewer({
             </button>
 
             {/* A sibling of the row, so tapping ⋮ never opens the recipe. */}
-            {canRemoveRecipe && (
-              <ActionMenu
-                className="recipe-row-menu"
-                label={t.optionsFor(r.title)}
-                items={[
-                  {
-                    label: t.deleteRecipe,
-                    danger: true,
-                    icon: 'trash',
-                    onSelect: () =>
-                      setPending({ kind: 'recipe', id: r.id, title: r.title }),
-                  },
-                ]}
-              />
-            )}
+            <ActionMenu
+              className="recipe-row-menu"
+              label={t.optionsFor(r.title)}
+              items={recipeItems(r.id, r.title)}
+            />
           </li>
         ))}
       </ul>

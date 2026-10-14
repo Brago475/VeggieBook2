@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BookSkeleton } from './components/library/BookSkeleton'
 import { LegalPage } from './components/layout/LegalPage'
 import { LoadingScreen } from './components/layout/LoadingScreen'
@@ -15,10 +15,13 @@ import { useSecretCategories } from './hooks/useSecrets'
 import { useSecretsFlow } from './hooks/useSecretsFlow'
 import { useSplash } from './hooks/useSplash'
 import { useVeggieBookData } from './hooks/useVeggieBookData'
+import { BOOK } from './i18n/strings/book'
+import { useStrings } from './i18n/useStrings'
 import { About } from './pages/About'
 import { AccountSettings } from './pages/AccountSettings'
 import { AuthForm } from './pages/AuthForm'
 import { BookFlow } from './pages/BookFlow'
+import { BookSaved } from './pages/BookSaved'
 import { BookViewer } from './pages/BookViewer'
 import { ChangeSecretCover } from './pages/ChangeSecretCover'
 import { ChangeVeggieCover } from './pages/ChangeVeggieCover'
@@ -53,6 +56,7 @@ import './styles/library.css'
 import './styles/reading.css'
 import './styles/recipe-sections.css'
 import './styles/secrets.css'
+import './styles/book-saved.css'
 import './styles/about.css'
 import './styles/legal.css'
 import './styles/footer.css'
@@ -73,6 +77,12 @@ import './styles/responsive.css'
 // A signed-in account's book in progress, of either kind, is also kept
 // through a refresh (see hooks/useBookFlow.ts and hooks/useSecretsFlow.ts).
 // A guest's saved books survive a refresh; their book in progress does not.
+//
+// Right after a book is saved, home shows the saved screen (pages/
+// BookSaved.tsx) until Skip. It is held here, not in the address, so a
+// refresh lands on the library and a book can never be saved twice.
+
+type JustSaved = { id: string; kind: 'veggie' | 'secrets' }
 
 export default function App() {
   const { vegetables, questions, error, loading } = useVeggieBookData()
@@ -82,6 +92,7 @@ export default function App() {
   const account = useAuth()
   const auth = account.auth
   const status = auth.status
+  const bookWords = useStrings(BOOK)
 
   const email = auth.status === 'signedIn' ? auth.email : null
   // The username shown on home; null for a guest or an older account.
@@ -102,7 +113,10 @@ export default function App() {
   const secrets = useSecretsFlow(email)
   const { route, path, navigate, goUp } = useRoute()
 
-  // First-load screen, held until its bar fills, then faded out.
+  // The book that was just saved, while its saved screen shows.
+  const [justSaved, setJustSaved] = useState<JustSaved | null>(null)
+
+  // First-load screen, held until the app is ready, then faded out.
   const splash = useSplash(status !== 'loading')
   // Home book skeleton, held long enough to be seen.
   const booksLoading = useHeld(library.loading, SKELETON_MIN_MS)
@@ -172,16 +186,19 @@ export default function App() {
   }
 
   function startBook() {
+    setJustSaved(null)
     flow.start()
     navigate('/new')
   }
 
   function startSecrets() {
+    setJustSaved(null)
     secrets.start()
     navigate('/secrets')
   }
 
   function viewBook(id: string) {
+    setJustSaved(null)
     navigate(`/book/${id}`)
   }
 
@@ -220,20 +237,22 @@ export default function App() {
 
   // A guest or an account. A failure throws, and the cover screen shows the
   // reason. Once saved, the book in progress is cleared, so a refresh or the
-  // next Create New starts fresh.
+  // next Create New starts fresh, and the saved screen shows.
   async function saveBook(cover: string) {
     const book = flow.buildBook(cover)
     if (!book) return
-    await library.saveBook(book)
+    const id = await library.saveBook(book)
     flow.start()
+    setJustSaved({ id, kind: 'veggie' })
     finishToHome()
   }
 
   async function saveSecrets(cover: string) {
     const book = secrets.buildBook(cover)
     if (!book) return
-    await library.saveSecretsBook(book)
+    const id = await library.saveSecretsBook(book)
     secrets.start()
+    setJustSaved({ id, kind: 'secrets' })
     finishToHome()
   }
 
@@ -242,6 +261,7 @@ export default function App() {
   // Both sign in and Create Account sign in right away. A failure throws
   // and stays on the form.
   function afterSignIn() {
+    setJustSaved(null)
     flow.start()
     secrets.start()
     navigate('/', { replace: true })
@@ -260,6 +280,7 @@ export default function App() {
   // For a guest, this also deletes the guest and all their books.
   async function signOut() {
     await account.signOut()
+    setJustSaved(null)
     flow.start()
     secrets.start()
     finishToHome()
@@ -267,6 +288,7 @@ export default function App() {
 
   async function deleteAccount(password: string) {
     await account.deleteAccount(password)
+    setJustSaved(null)
     flow.start()
     secrets.start()
     finishToHome()
@@ -285,6 +307,19 @@ export default function App() {
   const passwordPage = current === 'forgotPassword'
   const readingPage =
     current === 'about' || current === 'terms' || current === 'privacy'
+
+  // The book on the saved screen, as the home list now holds it.
+  const savedBook =
+    current === 'home' && !showWelcome && justSaved
+      ? library.books.find((b) => b.id === justSaved.id) ?? null
+      : null
+  const savedVegetable = savedBook
+    ? vegetables.find((v) => v.code === savedBook.vegetableCode)
+    : undefined
+  const savedCategory = savedBook
+    ? secretCategories.categories.find((c) => c.id === savedBook.secretCategoryId)
+    : undefined
+  const showSaved = savedBook !== null
 
   // Welcome and every account screen hide the green bar. They show the logo
   // in the page and run a photograph to the bottom edge, which the masthead
@@ -319,10 +354,10 @@ export default function App() {
   // The footer shows on the main screens: Welcome, home, account, the
   // reading pages, and reading a saved book. It stays off while a book is
   // being made or its cover changed, so it never sits under the NEXT, KEEP
-  // or SAVE buttons, and off on the account screens, so nothing pulls
-  // attention from the form.
+  // or SAVE buttons, off on the account screens, so nothing pulls
+  // attention from the form, and off on the saved screen.
   const showFooter =
-    current === 'home' ||
+    (current === 'home' && !showSaved) ||
     current === 'account' ||
     readingPage ||
     (showBook && !editingCover)
@@ -353,7 +388,30 @@ export default function App() {
             />
           )}
 
-          {current === 'home' && !showWelcome && (
+          {showSaved && savedBook && (
+            <BookSaved
+              bookId={savedBook.id}
+              title={
+                savedBook.kind === 'secrets'
+                  ? (savedCategory?.name ?? bookWords.secretsFallback)
+                  : (savedVegetable?.name ?? bookWords.veggieLabel)
+              }
+              background={
+                savedBook.kind === 'secrets'
+                  ? (savedCategory?.image ?? null)
+                  : savedVegetable
+                    ? `cover/${savedVegetable.shortCode}.jpg`
+                    : null
+              }
+              cover={savedBook.cover}
+              label={savedBook.kind === 'secrets' ? bookWords.secretsLabel : bookWords.veggieLabel}
+              count={savedBook.recipeCount}
+              countNoun={savedBook.kind === 'secrets' ? 'secret' : 'recipe'}
+              onDone={() => setJustSaved(null)}
+            />
+          )}
+
+          {current === 'home' && !showWelcome && !showSaved && (
             <HomeLibrary
               email={email}
               displayName={displayName}

@@ -9,14 +9,18 @@ import { useEffect, useRef, useState } from 'react'
 // their place.
 //
 // Icons, drawn in the same line style:
-//   trash  deleting something
-//   image  changing a picture, such as a book's cover
+//   trash     deleting something
+//   image     changing a picture, such as a book's cover
+//   print     printing a book, recipe or secret
+//   download  saving one as a PDF
+
+export type ActionMenuIcon = 'trash' | 'image' | 'print' | 'download'
 
 export type ActionMenuItem = {
   label: string
   onSelect: () => void
   danger?: boolean
-  icon?: 'trash' | 'image'
+  icon?: ActionMenuIcon
 }
 
 type Props = {
@@ -24,6 +28,52 @@ type Props = {
   label: string
   items: ActionMenuItem[]
   className?: string
+}
+
+function MenuIcon({ icon }: { icon: ActionMenuIcon }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {icon === 'trash' && (
+        <>
+          <path d="M3 6h18" />
+          <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+          <path d="M10 11v6" />
+          <path d="M14 11v6" />
+        </>
+      )}
+      {icon === 'image' && (
+        <>
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <circle cx="8.5" cy="9.5" r="1.5" />
+          <path d="M21 16l-5-5-9 9" />
+        </>
+      )}
+      {icon === 'print' && (
+        <>
+          <path d="M6 9V3h12v6" />
+          <rect x="3" y="9" width="18" height="8" rx="2" />
+          <path d="M7 14h10v7H7z" />
+        </>
+      )}
+      {icon === 'download' && (
+        <>
+          <path d="M12 3v12" />
+          <path d="M7 10l5 5 5-5" />
+          <path d="M4 19h16" />
+        </>
+      )}
+    </svg>
+  )
 }
 
 export function ActionMenu({ label, items, className = '' }: Props) {
@@ -90,40 +140,7 @@ export function ActionMenu({ label, items, className = '' }: Props) {
                   item.onSelect()
                 }}
               >
-                {item.icon === 'trash' && (
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path d="M3 6h18" />
-                    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
-                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                    <path d="M10 11v6" />
-                    <path d="M14 11v6" />
-                  </svg>
-                )}
-                {item.icon === 'image' && (
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <rect x="3" y="4" width="18" height="16" rx="2" />
-                    <circle cx="8.5" cy="9.5" r="1.5" />
-                    <path d="M21 16l-5-5-9 9" />
-                  </svg>
-                )}
+                {item.icon && <MenuIcon icon={item.icon} />}
                 {item.label}
               </button>
             </li>
