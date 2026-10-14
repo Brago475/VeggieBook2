@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 // Minimum time a skeleton stays up once shown, so a fast answer does not
 // flash for a single frame.
-export const SKELETON_MIN_MS = 600
+export const SKELETON_MIN_MS = 300
 
 // Returns true while active, and for at least minMs after active turns on.
 export function useHeld(active: boolean, minMs: number = SKELETON_MIN_MS): boolean {

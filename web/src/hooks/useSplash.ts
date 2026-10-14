@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 
-// First-load screen phases: shown until the app is ready and the bar has
-// filled, then faded out, then removed.
+// First-load screen phases. The screen stays at least SPLASH_MIN_VISIBLE_MS
+// from page start so it never flashes, then leaves as soon as the app is
+// ready: the bar sweeps to full, then the screen fades out.
 
 export type SplashPhase = 'showing' | 'leaving' | 'gone'
 
-// Must match the 2.6s cycle in index.html. The bar is full from 80% on.
-const CYCLE_MS = 2600
-const FULL_AT_MS = 2100
+export const SPLASH_MIN_VISIBLE_MS = 600
+export const SPLASH_FINISH_MS = 300
 export const SPLASH_FADE_MS = 350
 
 export function useSplash(ready: boolean): SplashPhase {
@@ -15,15 +15,17 @@ export function useSplash(ready: boolean): SplashPhase {
 
   useEffect(() => {
     if (!ready || phase !== 'showing') return
-    const pos = performance.now() % CYCLE_MS
-    const wait = pos >= FULL_AT_MS ? 0 : FULL_AT_MS - pos
+    const wait = Math.max(0, SPLASH_MIN_VISIBLE_MS - performance.now())
     const t = window.setTimeout(() => setPhase('leaving'), wait)
     return () => window.clearTimeout(t)
   }, [ready, phase])
 
   useEffect(() => {
     if (phase !== 'leaving') return
-    const t = window.setTimeout(() => setPhase('gone'), SPLASH_FADE_MS)
+    const t = window.setTimeout(
+      () => setPhase('gone'),
+      SPLASH_FINISH_MS + SPLASH_FADE_MS,
+    )
     return () => window.clearTimeout(t)
   }, [phase])
 

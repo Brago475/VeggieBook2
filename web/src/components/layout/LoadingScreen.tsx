@@ -1,4 +1,5 @@
-import { useState, type CSSProperties } from 'react'
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { SPLASH_FINISH_MS } from '../../hooks/useSplash'
 import { useLang } from '../../i18n/languageContext'
 import { COMMON } from '../../i18n/strings/common'
 import { useStrings } from '../../i18n/useStrings'
@@ -7,6 +8,9 @@ import { useStrings } from '../../i18n/useStrings'
 // LOADING, and a row of vegetables that fill in with color from left to
 // right while a green bar grows under them. The logo and word follow the
 // site language.
+//
+// When leaving, the bar sweeps from its current point to full, then the
+// screen fades (timings in hooks/useSplash.ts).
 //
 // The same screen is written directly into web/index.html, where it shows
 // before any JavaScript has loaded. Both use the class names styled in
@@ -30,18 +34,43 @@ const VEGGIES = [
 const CYCLE_MS = 2600
 
 type Props = {
-  // Fades the screen out (see hooks/useSplash.ts).
+  // Finishes the bar and fades the screen out (see hooks/useSplash.ts).
   leaving?: boolean
+}
+
+// Stops the looping animation where it is and eases the element to full.
+function sweepToFull(el: HTMLElement, prop: 'clipPath' | 'transform', full: string) {
+  const current = getComputedStyle(el)[prop]
+  el.style.animation = 'none'
+  el.style[prop] = current
+  void el.offsetWidth
+  const cssProp = prop === 'clipPath' ? 'clip-path' : 'transform'
+  el.style.transition = `${cssProp} ${SPLASH_FINISH_MS}ms ease-out`
+  el.style[prop] = full
 }
 
 export function LoadingScreen({ leaving = false }: Props) {
   const { lang } = useLang()
   const t = useStrings(COMMON)
+  const litRef = useRef<HTMLDivElement>(null)
+  const fillRef = useRef<HTMLDivElement>(null)
+  const [fading, setFading] = useState(false)
 
   // Starts the animation partway through so it continues from the static
   // screen without jumping back to an empty bar.
   const [offset] = useState(() => Math.round(performance.now() % CYCLE_MS))
   const style = { '--loading-offset': `-${offset}ms` } as CSSProperties
+
+  useLayoutEffect(() => {
+    if (!leaving) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!reduce && litRef.current && fillRef.current) {
+      sweepToFull(litRef.current, 'clipPath', 'inset(0 0 0 0)')
+      sweepToFull(fillRef.current, 'transform', 'scaleX(1)')
+    }
+    const timer = window.setTimeout(() => setFading(true), reduce ? 0 : SPLASH_FINISH_MS)
+    return () => window.clearTimeout(timer)
+  }, [leaving])
 
   const icons = VEGGIES.map((v) => (
     <img key={v} src={`/icons/veg/${v}.svg`} alt="" />
@@ -49,7 +78,7 @@ export function LoadingScreen({ leaving = false }: Props) {
 
   return (
     <div
-      className={leaving ? 'loading-screen is-leaving' : 'loading-screen'}
+      className={fading ? 'loading-screen is-leaving' : 'loading-screen'}
       role="status"
       aria-label={t.loadingLabel}
       aria-hidden={leaving || undefined}
@@ -62,10 +91,12 @@ export function LoadingScreen({ leaving = false }: Props) {
       <div className="loading-progress" aria-hidden="true">
         <div className="loading-veg">
           <div className="loading-veg-row loading-veg-base">{icons}</div>
-          <div className="loading-veg-row loading-veg-lit">{icons}</div>
+          <div ref={litRef} className="loading-veg-row loading-veg-lit">
+            {icons}
+          </div>
         </div>
         <div className="loading-track">
-          <div className="loading-track-fill" />
+          <div ref={fillRef} className="loading-track-fill" />
         </div>
       </div>
     </div>
