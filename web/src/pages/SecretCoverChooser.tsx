@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { BookCard } from '../components/library/BookCard'
 import { NavBar } from '../components/layout/NavBar'
 import { SecretCoverOptions } from '../components/secrets/SecretCoverOptions'
+import { FLOW } from '../i18n/strings/flow'
+import { SECRETS } from '../i18n/strings/secrets'
+import { useStrings } from '../i18n/useStrings'
 import type { SecretCategory } from '../types'
 
 // Last screen of a Secrets Book: pick the cover, then save the book.
@@ -34,6 +37,9 @@ export function SecretCoverChooser({
   defaultCover,
   onSave,
 }: Props) {
+  const flow = useStrings(FLOW)
+  const t = useStrings(SECRETS)
+
   const [selected, setSelected] = useState(defaultCover)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -47,9 +53,7 @@ export function SecretCoverChooser({
       await onSave(selected)
       // On success the parent moves on to the home screen.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Your book could not be saved. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : flow.couldNotSave)
       setSaving(false)
     }
   }
@@ -57,7 +61,7 @@ export function SecretCoverChooser({
   return (
     <>
       <div className="intro-text">
-        <p>Choose a cover for your {categoryName} book.</p>
+        <p>{t.chooseCover(categoryName)}</p>
       </div>
 
       <div className="cover-preview">
@@ -75,7 +79,7 @@ export function SecretCoverChooser({
 
       {error && <p className="message">{error}</p>}
 
-      <NavBar primaryLabel={saving ? 'SAVING...' : 'SAVE BOOK'} onPrimary={save} />
+      <NavBar primaryLabel={saving ? flow.saving : flow.saveBook} onPrimary={save} />
     </>
   )
 }

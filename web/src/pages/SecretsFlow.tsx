@@ -3,6 +3,8 @@ import { RecipeSkeleton } from '../components/veggie/RecipeSkeleton'
 import { ScreenLabel } from '../components/layout/ScreenLabel'
 import { useHeld } from '../hooks/useHeld'
 import type { SecretsFlowState } from '../hooks/useSecretsFlow'
+import { SECRETS } from '../i18n/strings/secrets'
+import { useStrings } from '../i18n/useStrings'
 import type { SecretCategory } from '../types'
 import { SecretCategoryPicker } from './SecretCategoryPicker'
 import { SecretCoverChooser } from './SecretCoverChooser'
@@ -36,6 +38,7 @@ export function SecretsFlow({
   categoriesError,
   onSave,
 }: Props) {
+  const t = useStrings(SECRETS)
   const { step, category, secrets } = flow
   // The review skeleton, held long enough to be seen.
   const loadingSecrets = useHeld(step === 'review' && secrets.loading)
@@ -67,12 +70,7 @@ export function SecretsFlow({
             passed; if not, the recipe skeleton, the same shape, holds the
             place. */}
         {loadingSecrets && <RecipeSkeleton />}
-        {!loadingSecrets && secrets.error && (
-          <p className="message">
-            We could not load these secrets right now. Please go back and try
-            again.
-          </p>
-        )}
+        {!loadingSecrets && secrets.error && <p className="message">{t.loadError}</p>}
         {!loadingSecrets && secrets.data && (
           <SecretReview
             data={secrets.data}
@@ -87,15 +85,12 @@ export function SecretsFlow({
   if (step === 'none') {
     return (
       <>
-        <ScreenLabel>No Secrets Kept</ScreenLabel>
-        <p className="message">
-          You did not keep any {category.name}. A Secrets Book needs at least
-          one secret.
-        </p>
+        <ScreenLabel>{t.noneKept}</ScreenLabel>
+        <p className="message">{t.noneText(category.name)}</p>
         <NavBar
-          secondaryLabel="CHOOSE ANOTHER"
+          secondaryLabel={t.chooseAnother}
           onSecondary={flow.chooseAnother}
-          primaryLabel="REVIEW AGAIN"
+          primaryLabel={t.reviewAgain}
           onPrimary={flow.reviewAgain}
         />
       </>
@@ -118,12 +113,9 @@ export function SecretsFlow({
   if (!flow.defaultCover) {
     return (
       <>
-        <ScreenLabel>Choose a Cover</ScreenLabel>
-        <p className="message">
-          Your secrets have no pictures to use as a cover. Please choose a
-          different kind of secret.
-        </p>
-        <NavBar primaryLabel="CHOOSE ANOTHER" onPrimary={flow.chooseAnother} />
+        <ScreenLabel>{t.chooseCoverLabel}</ScreenLabel>
+        <p className="message">{t.noPictures}</p>
+        <NavBar primaryLabel={t.chooseAnother} onPrimary={flow.chooseAnother} />
       </>
     )
   }

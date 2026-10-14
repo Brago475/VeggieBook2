@@ -1,5 +1,8 @@
 import { NavBar } from '../components/layout/NavBar'
 import { SafeImage } from '../components/common/SafeImage'
+import { FLOW } from '../i18n/strings/flow'
+import { SECRETS } from '../i18n/strings/secrets'
+import { useStrings } from '../i18n/useStrings'
 import type { Secret } from '../types'
 
 // The extra-copies step of a Secrets Book: the kept secrets as tiles, and
@@ -21,16 +24,15 @@ type Props = {
 }
 
 export function SecretExtraCopies({ secrets, selected, onToggle, onNext }: Props) {
+  const flow = useStrings(FLOW)
+  const t = useStrings(SECRETS)
   const chosen = new Set(selected)
 
   return (
     <>
       <div className="intro-text">
-        <p>
-          You can print an EXTRA COPY of any secret to give to family or
-          friends.
-        </p>
-        <p>Just touch a secret for an EXTRA COPY.</p>
+        <p>{t.extraIntro}</p>
+        <p>{t.extraTouch}</p>
       </div>
 
       <ul className="copy-grid">
@@ -58,7 +60,7 @@ export function SecretExtraCopies({ secrets, selected, onToggle, onNext }: Props
         ))}
       </ul>
 
-      <NavBar primaryLabel="NEXT" onPrimary={onNext} />
+      <NavBar primaryLabel={flow.next} onPrimary={onNext} />
     </>
   )
 }

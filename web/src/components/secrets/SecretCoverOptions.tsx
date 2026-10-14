@@ -1,5 +1,8 @@
 import { useState, type ChangeEvent } from 'react'
 import { useSecretCovers } from '../../hooks/useSecrets'
+import { COVERS } from '../../i18n/strings/covers'
+import { SECRETS } from '../../i18n/strings/secrets'
+import { useStrings } from '../../i18n/useStrings'
 import type { SecretCategory } from '../../types'
 import { coverSrc } from '../../utils/coverSrc'
 import { resizeImage } from '../../utils/resizeImage'
@@ -35,9 +38,13 @@ type Props = {
 }
 
 // "Breakfast Secrets" reads as just "Breakfast" on a chip, the way the
-// VeggieBook chips name only the vegetable. Other names are left whole.
+// VeggieBook chips name only the vegetable. Spanish names drop a leading
+// "Secretos para el" or similar the same way. Other names are left whole.
 function chipName(name: string): string {
-  return name.replace(/ Secrets$/, '')
+  const short = name
+    .replace(/ Secrets$/, '')
+    .replace(/^Secretos (para |de |del )?(el |la |los |las )?/i, '')
+  return short.charAt(0).toUpperCase() + short.slice(1)
 }
 
 export function SecretCoverOptions({
@@ -48,6 +55,9 @@ export function SecretCoverOptions({
   onSelect,
   onBusy,
 }: Props) {
+  const c = useStrings(COVERS)
+  const t = useStrings(SECRETS)
+
   const [mode, setMode] = useState<Mode>('default')
   const [browsing, setBrowsing] = useState(categoryId)
   const [uploaded, setUploaded] = useState<string | null>(null)
@@ -60,12 +70,12 @@ export function SecretCoverOptions({
   const { covers, error: coversError } = useSecretCovers(browsing)
 
   // The book's own category first, then the rest in their usual order.
-  const own = categories.find((c) => c.id === categoryId)
+  const own = categories.find((cat) => cat.id === categoryId)
   const browseOrder = own
-    ? [own, ...categories.filter((c) => c.id !== categoryId)]
+    ? [own, ...categories.filter((cat) => cat.id !== categoryId)]
     : categories
   const browsingName = chipName(
-    categories.find((c) => c.id === browsing)?.name ?? 'Secret',
+    categories.find((cat) => cat.id === browsing)?.name ?? t.secretFallback,
   )
 
   function working(value: boolean) {
@@ -97,7 +107,7 @@ export function SecretCoverOptions({
       onSelect(dataUrl)
       setMode('upload')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'This photo could not be used.')
+      setError(err instanceof Error ? err.message : c.photoUnusable)
     } finally {
       working(false)
     }
@@ -112,7 +122,7 @@ export function SecretCoverOptions({
           aria-pressed={mode === 'default'}
           onClick={pickDefault}
         >
-          Use default cover
+          {c.useDefault}
         </button>
 
         <button
@@ -121,7 +131,7 @@ export function SecretCoverOptions({
           aria-pressed={mode === 'choose'}
           onClick={() => setMode('choose')}
         >
-          Choose a cover
+          {c.choose}
         </button>
 
         <label className={mode === 'upload' ? 'cover-mode is-active' : 'cover-mode'}>
@@ -132,22 +142,22 @@ export function SecretCoverOptions({
             onChange={handleFile}
             disabled={busy}
           />
-          {uploaded ? 'Upload a different cover' : 'Upload your own cover'}
+          {uploaded ? c.uploadDifferent : c.uploadOwn}
         </label>
       </div>
 
       {mode === 'choose' && (
         <>
-          <div className="cover-veg-row" role="group" aria-label="Browse covers by kind of secret">
-            {browseOrder.map((c) => (
+          <div className="cover-veg-row" role="group" aria-label={t.browseBy}>
+            {browseOrder.map((cat) => (
               <button
-                key={c.id}
+                key={cat.id}
                 type="button"
                 className="cover-veg"
-                aria-pressed={browsing === c.id}
-                onClick={() => setBrowsing(c.id)}
+                aria-pressed={browsing === cat.id}
+                onClick={() => setBrowsing(cat.id)}
               >
-                {chipName(c.name)}
+                {chipName(cat.name)}
               </button>
             ))}
           </div>
@@ -156,7 +166,7 @@ export function SecretCoverOptions({
 
           {!covers && !coversError && (
             <div role="status" aria-busy="true">
-              <span className="visually-hidden">Loading covers...</span>
+              <span className="visually-hidden">{c.loadingCovers}</span>
               <ul className="cover-grid" aria-hidden="true">
                 {Array.from({ length: SKELETON_TILES }, (_, i) => (
                   <li key={i}>
@@ -177,7 +187,7 @@ export function SecretCoverOptions({
                       type="button"
                       className="cover-tile"
                       aria-pressed={selected === image}
-                      aria-label={`${browsingName} secret picture ${i + 1}`}
+                      aria-label={t.pictureLabel(browsingName, i + 1)}
                       onClick={() => onSelect(image)}
                     >
                       <img
@@ -194,7 +204,7 @@ export function SecretCoverOptions({
         </>
       )}
 
-      {busy && <p className="message">Preparing your photo...</p>}
+      {busy && <p className="message">{c.preparing}</p>}
       {error && <p className="message">{error}</p>}
     </>
   )

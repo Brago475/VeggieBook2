@@ -1,3 +1,5 @@
+import { SECRETS } from '../../i18n/strings/secrets'
+import { useStrings } from '../../i18n/useStrings'
 import type { Secret } from '../../types'
 import { RichText } from '../common/RichText'
 import { SafeImage } from '../common/SafeImage'
@@ -13,7 +15,8 @@ import { SafeImage } from '../common/SafeImage'
 //   Additional Information, only when the secret has links or a planner
 //
 // During review, "Secret 1 of 18" sits at the top in the recipe review's
-// own pill (.recipe-counter), so both reviews count the same way.
+// own pill (.recipe-counter), so both reviews count the same way. Labels
+// follow the site language; the secret text comes from the API in it.
 //
 // The illustrations have words drawn into them, so they are shown whole,
 // never cropped.
@@ -36,17 +39,14 @@ export function SecretCard({
   position,
   total,
 }: Props) {
+  const t = useStrings(SECRETS)
   const hasExtras = secret.links.length > 0 || Boolean(secret.attachment)
   const planner = secret.attachment ? `/images/${secret.attachment}` : null
   const counting = position !== undefined && total !== undefined
 
   return (
     <article className="secret-card">
-      {counting && (
-        <p className="recipe-counter">
-          Secret {position} of {total}
-        </p>
-      )}
+      {counting && <p className="recipe-counter">{t.counter(position, total)}</p>}
 
       <p className="secret-tag" style={{ background: `#${categoryColor}` }}>
         {categoryName}
@@ -68,7 +68,7 @@ export function SecretCard({
       </section>
 
       <section className="secret-section">
-        <h3 className="secret-section-title">Why It Works</h3>
+        <h3 className="secret-section-title">{t.whyItWorks}</h3>
         <div className="secret-section-body">
           <p className="secret-text">
             <RichText text={secret.whyItWorks} />
@@ -78,12 +78,12 @@ export function SecretCard({
 
       {hasExtras && (
         <section className="secret-section">
-          <h3 className="secret-section-title">Additional Information</h3>
+          <h3 className="secret-section-title">{t.additional}</h3>
           <div className="secret-section-body">
             <ul className="secret-links">
               {planner && (
                 <li>
-                  <a href={planner} target="_blank" rel="noopener noreferrer">Printable planner (PDF)</a>
+                  <a href={planner} target="_blank" rel="noopener noreferrer">{t.planner}</a>
                 </li>
               )}
               {secret.links.map((link) => (
