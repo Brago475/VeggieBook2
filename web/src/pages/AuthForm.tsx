@@ -4,6 +4,9 @@ import { AuthPasswordField } from '../components/forms/AuthPasswordField'
 import { AuthShell } from '../components/auth/AuthShell'
 import { EmailField } from '../components/forms/EmailField'
 import { GuestBooksChoice } from '../components/auth/GuestBooksChoice'
+import { AUTH } from '../i18n/strings/auth'
+import { COMMON } from '../i18n/strings/common'
+import { useStrings } from '../i18n/useStrings'
 
 // Sign in. Create Account has its own page (CreateAccount.tsx), since it
 // asks for much more.
@@ -29,6 +32,8 @@ export function AuthForm({
   onCreateAccount,
   onBack,
 }: Props) {
+  const t = useStrings(AUTH)
+  const common = useStrings(COMMON)
   const hasGuestBooks = guestBookCount > 0
 
   const [email, setEmail] = useState('')
@@ -47,7 +52,7 @@ export function AuthForm({
       await onSubmit(email.trim(), password, hasGuestBooks && keepBooks)
       // On success the parent moves on to the home screen.
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setError(err instanceof Error ? err.message : common.somethingWrong)
       setBusy(false)
     }
   }
@@ -56,8 +61,8 @@ export function AuthForm({
     <AuthShell onBack={onBack}>
       <form className="auth-form" onSubmit={submit} noValidate>
         <div className="auth-head">
-          <h1 className="auth-greeting">Welcome back</h1>
-          <p className="auth-sub">Sign in to get back to the books you saved.</p>
+          <h1 className="auth-greeting">{t.welcomeBack}</h1>
+          <p className="auth-sub">{t.signInSub}</p>
         </div>
 
         <div className="auth-fields">
@@ -65,7 +70,7 @@ export function AuthForm({
 
           <AuthPasswordField
             id="auth-password"
-            label="Password"
+            label={t.password}
             value={password}
             onChange={setPassword}
             autoComplete="current-password"
@@ -73,17 +78,12 @@ export function AuthForm({
 
           <p className="auth-forgot">
             <button type="button" className="link-btn" onClick={onForgotPassword}>
-              Forgot your password?
+              {t.forgot}
             </button>
           </p>
 
           {hasGuestBooks && (
-            <GuestBooksChoice
-              count={guestBookCount}
-              keep={keepBooks}
-              onChange={setKeepBooks}
-              whenMoved="right away"
-            />
+            <GuestBooksChoice count={guestBookCount} keep={keepBooks} onChange={setKeepBooks} />
           )}
 
           {error && (
@@ -93,14 +93,14 @@ export function AuthForm({
           )}
 
           <button type="submit" className="auth-primary" disabled={busy}>
-            {busy ? 'Please wait...' : 'Sign in'}
+            {busy ? common.pleaseWait : t.signIn}
             {!busy && <ArrowIcon />}
           </button>
 
           <p className="auth-switch">
-            New here?{' '}
+            {t.newHere}{' '}
             <button type="button" className="link-btn" onClick={onCreateAccount}>
-              Create an account
+              {t.createAnAccount}
             </button>
           </p>
         </div>

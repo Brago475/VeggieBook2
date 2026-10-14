@@ -1,4 +1,6 @@
 import { useState, type ReactNode } from 'react'
+import { AUTH } from '../../i18n/strings/auth'
+import { useStrings } from '../../i18n/useStrings'
 import { EyeIcon, LockIcon } from '../icons/AuthIcons'
 
 // The password box on the sign-in screens (sign in, create account, reset
@@ -18,6 +20,7 @@ type Props = {
 }
 
 export function AuthPasswordField({ id, label, value, onChange, autoComplete, hint }: Props) {
+  const t = useStrings(AUTH)
   const [show, setShow] = useState(false)
   const hintId = `${id}-hint`
 
@@ -45,7 +48,7 @@ export function AuthPasswordField({ id, label, value, onChange, autoComplete, hi
           onClick={() => setShow((v) => !v)}
           aria-pressed={show}
           aria-controls={id}
-          aria-label={show ? 'Hide password' : 'Show password'}
+          aria-label={show ? t.hidePassword : t.showPassword}
         >
           <EyeIcon off={show} />
         </button>

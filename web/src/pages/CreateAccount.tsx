@@ -10,9 +10,13 @@ import { TermsAgree } from '../components/auth/TermsAgree'
 import { TextPillField } from '../components/forms/TextPillField'
 import type { RegisterForm } from '../hooks/useAuth'
 import { useRecoveryQuestions } from '../hooks/useRecoveryQuestions'
+import { useLang } from '../i18n/languageContext'
+import { AUTH } from '../i18n/strings/auth'
+import { COMMON } from '../i18n/strings/common'
+import { useStrings } from '../i18n/useStrings'
 import { checkPassword, PASSWORD_HINT } from '../utils/passwordRule'
 import { checkRecovery, EMPTY_RECOVERY, toNewRecovery } from '../utils/recoveryRules'
-import { AGE_RANGES, checkName, checkUsername } from '../utils/signUpRules'
+import { ageRanges, checkName, checkUsername } from '../utils/signUpRules'
 
 // Create Account, in three parts: about you, sign-in details, and account
 // recovery (the PIN and security question used by Forgot password). Then
@@ -32,6 +36,9 @@ type Props = {
 }
 
 export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Props) {
+  const { lang } = useLang()
+  const t = useStrings(AUTH)
+  const common = useStrings(COMMON)
   const hasGuestBooks = guestBookCount > 0
   const { questions, error: questionsError } = useRecoveryQuestions()
 
@@ -51,20 +58,16 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
 
   function check(): string | null {
     return (
-      checkName(firstName, 'first name') ??
-      checkName(lastName, 'last name') ??
-      checkUsername(username) ??
-      (email.trim() ? null : 'Enter your email address.') ??
-      (email.trim().toLowerCase() === emailAgain.trim().toLowerCase()
-        ? null
-        : 'The two email addresses do not match.') ??
+      checkName(firstName, 'first name', lang) ??
+      checkName(lastName, 'last name', lang) ??
+      checkUsername(username, lang) ??
+      (email.trim() ? null : t.enterEmail) ??
+      (email.trim().toLowerCase() === emailAgain.trim().toLowerCase() ? null : t.emailsDiffer) ??
       checkPassword(password) ??
-      (password === passwordAgain ? null : 'The two passwords do not match.') ??
-      (ageRange ? null : 'Please choose your age range.') ??
+      (password === passwordAgain ? null : t.passwordsDiffer) ??
+      (ageRange ? null : t.chooseAgeError) ??
       checkRecovery(recovery) ??
-      (agree
-        ? null
-        : 'Please confirm you are 18 or older and agree to the Terms of Use and Privacy Policy.')
+      (agree ? null : t.agreeError)
     )
   }
 
@@ -94,7 +97,7 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
       })
       // On success the parent moves on to the home screen.
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setError(err instanceof Error ? err.message : common.somethingWrong)
       setBusy(false)
     }
   }
@@ -103,16 +106,16 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
     <AuthShell onBack={onBack}>
       <form className="auth-form" onSubmit={submit} noValidate>
         <div className="auth-head">
-          <h1 className="auth-greeting">Create an account</h1>
-          <p className="auth-sub">Your books are kept in your account, on any device.</p>
+          <h1 className="auth-greeting">{t.createTitle}</h1>
+          <p className="auth-sub">{t.createSub}</p>
         </div>
 
         <div className="auth-fields">
-          <h2 className="auth-section-title">About you</h2>
+          <h2 className="auth-section-title">{t.aboutYou}</h2>
 
           <TextPillField
             id="reg-first"
-            label="First name"
+            label={t.firstName}
             value={firstName}
             onChange={setFirstName}
             autoComplete="given-name"
@@ -121,7 +124,7 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
           />
           <TextPillField
             id="reg-last"
-            label="Last name"
+            label={t.lastName}
             value={lastName}
             onChange={setLastName}
             autoComplete="family-name"
@@ -130,22 +133,22 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
           />
           <TextPillField
             id="reg-username"
-            label="Username (optional)"
+            label={t.usernameOptional}
             value={username}
             onChange={setUsername}
             autoComplete="nickname"
             autoCapitalize="none"
             maxLength={20}
             required={false}
-            hint="3 to 20 letters, numbers, or underscores. Leave it blank and we'll make one for you."
+            hint={t.usernameHint}
           />
 
-          <h2 className="auth-section-title">Sign-in details</h2>
+          <h2 className="auth-section-title">{t.signInDetails}</h2>
 
           <EmailField id="reg-email" value={email} onChange={setEmail} />
           <TextPillField
             id="reg-email-again"
-            label="Confirm email address"
+            label={t.confirmEmail}
             type="email"
             icon={<MailIcon />}
             value={emailAgain}
@@ -157,7 +160,7 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
 
           <AuthPasswordField
             id="reg-password"
-            label="Password"
+            label={t.password}
             value={password}
             onChange={setPassword}
             autoComplete="new-password"
@@ -165,7 +168,7 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
           />
           <AuthPasswordField
             id="reg-password-again"
-            label="Confirm password"
+            label={t.confirmPassword}
             value={passwordAgain}
             onChange={setPasswordAgain}
             autoComplete="new-password"
@@ -173,18 +176,15 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
 
           <PillSelect
             id="reg-age"
-            label="Age range"
+            label={t.ageRange}
             value={ageRange}
             onChange={setAgeRange}
-            placeholder="Choose your age range"
-            options={AGE_RANGES}
+            placeholder={t.chooseAge}
+            options={ageRanges(lang)}
           />
 
-          <h2 className="auth-section-title">Account recovery</h2>
-          <p className="auth-section-text">
-            If you forget your password, you'll use your PIN, or your security question
-            if you forget the PIN too. Keep them to yourself.
-          </p>
+          <h2 className="auth-section-title">{t.recoveryTitle}</h2>
+          <p className="auth-section-text">{t.recoveryText}</p>
 
           <RecoveryFields
             idPrefix="reg"
@@ -199,12 +199,7 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
           )}
 
           {hasGuestBooks && (
-            <GuestBooksChoice
-              count={guestBookCount}
-              keep={keepBooks}
-              onChange={setKeepBooks}
-              whenMoved="right away"
-            />
+            <GuestBooksChoice count={guestBookCount} keep={keepBooks} onChange={setKeepBooks} />
           )}
 
           <TermsAgree checked={agree} onChange={setAgree} />
@@ -216,14 +211,14 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
           )}
 
           <button type="submit" className="auth-primary" disabled={busy}>
-            {busy ? 'Please wait...' : 'Create account'}
+            {busy ? common.pleaseWait : t.createAccount}
             {!busy && <ArrowIcon />}
           </button>
 
           <p className="auth-switch">
-            Already have an account?{' '}
+            {t.haveAccount}{' '}
             <button type="button" className="link-btn" onClick={onSignIn}>
-              Sign in
+              {t.signIn}
             </button>
           </p>
         </div>

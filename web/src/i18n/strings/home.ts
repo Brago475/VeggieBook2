@@ -54,7 +54,7 @@ const en = {
 
 const es: typeof en = {
   title: 'Mis VeggieBooks',
-  guestSub: 'Invitado: sus libros se guardan hasta que cierre la sesión, por un máximo de 24 horas',
+  guestSub: 'Invitado: sus libros se guardan hasta por 24 horas',
   signedInAs: (name: string) => `Sesión iniciada como ${name}`,
 
   about: 'Acerca de VeggieBook',

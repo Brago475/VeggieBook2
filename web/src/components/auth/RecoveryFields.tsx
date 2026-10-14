@@ -1,3 +1,5 @@
+import { AUTH } from '../../i18n/strings/auth'
+import { useStrings } from '../../i18n/useStrings'
 import type { RecoveryQuestion } from '../../utils/authApi'
 import { MAX_ANSWER, type RecoveryValue } from '../../utils/recoveryRules'
 import { PillSelect } from '../forms/PillSelect'
@@ -15,6 +17,8 @@ type Props = {
 }
 
 export function RecoveryFields({ idPrefix, value, onChange, questions }: Props) {
+  const t = useStrings(AUTH)
+
   function set<K extends keyof RecoveryValue>(key: K, next: RecoveryValue[K]) {
     onChange({ ...value, [key]: next })
   }
@@ -23,33 +27,33 @@ export function RecoveryFields({ idPrefix, value, onChange, questions }: Props) 
     <>
       <PinField
         id={`${idPrefix}-pin`}
-        label="6-digit recovery PIN"
+        label={t.pin}
         value={value.pin}
         onChange={(v) => set('pin', v)}
-        hint="You'll use this if you forget your password. Avoid easy ones like 123456."
+        hint={t.pinHint}
       />
       <PinField
         id={`${idPrefix}-pin-again`}
-        label="Confirm PIN"
+        label={t.confirmPin}
         value={value.pinAgain}
         onChange={(v) => set('pinAgain', v)}
       />
       <PillSelect
         id={`${idPrefix}-question`}
-        label="Security question"
+        label={t.securityQuestion}
         value={value.questionId}
         onChange={(v) => set('questionId', v)}
-        placeholder={questions.length ? 'Choose a question' : 'Loading questions...'}
+        placeholder={questions.length ? t.chooseQuestion : t.loadingQuestions}
         options={questions.map((q) => ({ value: String(q.id), label: q.text }))}
       />
       <TextPillField
         id={`${idPrefix}-answer`}
-        label="Your answer"
+        label={t.answer}
         value={value.answer}
         onChange={(v) => set('answer', v)}
         autoComplete="off"
         maxLength={MAX_ANSWER}
-        hint="Capital letters and extra spaces don't matter."
+        hint={t.answerHint}
       />
     </>
   )

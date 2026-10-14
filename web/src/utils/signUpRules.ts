@@ -1,32 +1,40 @@
+import type { Lang } from '../i18n/language'
+import { RULES } from '../i18n/strings/rules'
+
 // The Create Account rules, the same ones the API enforces
 // (api/Auth/SignUpRules.cs). Checked here first so people hear about a
-// problem right away.
+// problem right away. Messages come in the language passed in, English by
+// default.
 
-// Everyone must be 18 or older, so there is no range under 18.
-export const AGE_RANGES: { value: string; label: string }[] = [
-  { value: '18-24', label: '18 to 24' },
-  { value: '25-34', label: '25 to 34' },
-  { value: '35-44', label: '35 to 44' },
-  { value: '45-54', label: '45 to 54' },
-  { value: '55-64', label: '55 to 64' },
-  { value: '65+', label: '65 and older' },
-]
+const AGE_VALUES = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+']
 
-export function checkName(value: string, label: string): string | null {
+// Everyone must be 18 or older, so there is no range under 18. The values
+// are stored; only the labels change with the language.
+export function ageRanges(lang: Lang = 'en'): { value: string; label: string }[] {
+  return AGE_VALUES.map((value, i) => ({ value, label: RULES[lang].ages[i] }))
+}
+
+export const AGE_RANGES = ageRanges('en')
+
+export function checkName(
+  value: string,
+  label: 'first name' | 'last name',
+  lang: Lang = 'en',
+): string | null {
+  const t = RULES[lang]
   const name = value.trim()
-  if (!name) return `Please enter your ${label}.`
-  if (name.length > 50) return `Your ${label} must be at most 50 characters.`
-  if (!/^[\p{L} .'-]+$/u.test(name))
-    return `Your ${label} can only use letters, spaces, hyphens, and apostrophes.`
+  if (!name) return t.nameEmpty(label)
+  if (name.length > 50) return t.nameTooLong(label)
+  if (!/^[\p{L} .'-]+$/u.test(name)) return t.nameChars(label)
   return null
 }
 
 // The username is optional. Left blank, the API makes one up.
-export function checkUsername(value: string): string | null {
+export function checkUsername(value: string, lang: Lang = 'en'): string | null {
+  const t = RULES[lang]
   const name = value.trim()
   if (!name) return null
-  if (name.length < 3 || name.length > 20) return 'Your username must be 3 to 20 characters.'
-  if (!/^[A-Za-z0-9_]+$/.test(name))
-    return 'Your username can only use letters, numbers, and underscores.'
+  if (name.length < 3 || name.length > 20) return t.usernameLength
+  if (!/^[A-Za-z0-9_]+$/.test(name)) return t.usernameChars
   return null
 }
