@@ -25,6 +25,8 @@ namespace VeggieBook.Api.Books;
 // Same rules as BooksController: a signed-in account only, and a book
 // belonging to someone else answers 404, the same as one that does not
 // exist. Nothing the client sends is trusted.
+//
+// Messages carry a code the site translates (ErrorCodes, ApiError).
 
 public record ChangeCoverRequest(string? CoverPath, string? CoverUpload);
 
@@ -55,7 +57,7 @@ public class BookCoverController(AccountsContext db, VeggieBookContext content)
         var hasPreset = !string.IsNullOrEmpty(req.CoverPath);
         var hasUpload = !string.IsNullOrEmpty(req.CoverUpload);
         if (hasPreset == hasUpload)
-            return BadRequest(new { error = "Choose one cover." });
+            return BadRequest(new ApiError(ErrorCodes.ChooseOneCover, "Choose one cover.").Body());
 
         if (hasPreset)
         {
@@ -65,7 +67,7 @@ public class BookCoverController(AccountsContext db, VeggieBookContext content)
                     s.Active && (s.ImagePathEn == path || s.ImagePathEs == path))
                 : await CoverCatalog.IsAllowed(content, path);
             if (!allowed)
-                return BadRequest(new { error = "Unknown cover." });
+                return BadRequest(new ApiError(ErrorCodes.UnknownCover, "Unknown cover.").Body());
 
             book.CoverPath = path;
 
@@ -80,10 +82,8 @@ public class BookCoverController(AccountsContext db, VeggieBookContext content)
         {
             var bytes = JpegUpload.Decode(req.CoverUpload!);
             if (bytes is null)
-                return BadRequest(new
-                {
-                    error = "This photo could not be used. Try a different photo."
-                });
+                return BadRequest(new ApiError(ErrorCodes.PhotoUnusable,
+                    "This photo could not be used. Try a different photo.").Body());
 
             book.CoverPath = null;
 

@@ -33,6 +33,8 @@ namespace VeggieBook.Api.Books;
 //
 // Saving and deleting a book each write a line to the activity log
 // (Activity/ActivityLog.cs) for the admin site; the log never blocks either.
+//
+// Messages carry a code the site translates (ErrorCodes, ApiError).
 
 public record BookRecipe(int Id, int ExtraCopies);
 
@@ -204,44 +206,45 @@ public class BooksController(
         var uid = CurrentUserId;
 
         if (await db.Books.CountAsync(b => b.UserId == uid) >= MaxBooksPerUser)
-            return Conflict(new
-            {
-                error = $"You can keep up to {MaxBooksPerUser} books. Delete one to make room."
-            });
+            return Conflict(new ApiError(ErrorCodes.BookLimit,
+                $"You can keep up to {MaxBooksPerUser} books. Delete one to make room.")
+            { Values = new { max = MaxBooksPerUser } }.Body());
 
         var vegetable = await content.Vegetables
             .FirstOrDefaultAsync(v => v.Code == req.VegetableCode && v.Active);
         if (vegetable is null)
-            return BadRequest(new { error = "Unknown vegetable." });
+            return BadRequest(new ApiError(ErrorCodes.UnknownVegetable, "Unknown vegetable.").Body());
 
         // Answers must be real attributes from the questions.
         var attributes = (req.Attributes ?? []).Distinct().ToArray();
         if (attributes.Length > MaxAttributes)
-            return BadRequest(new { error = "Too many answers." });
+            return BadRequest(new ApiError(ErrorCodes.TooManyAnswers, "Too many answers.").Body());
         var knownAttributes = await content.Attributes
             .CountAsync(a => attributes.Contains(a.Name));
         if (knownAttributes != attributes.Length)
-            return BadRequest(new { error = "Unknown answer." });
+            return BadRequest(new ApiError(ErrorCodes.UnknownAnswer, "Unknown answer.").Body());
 
         // Recipes must be real, active, and for this book's vegetable.
         var recipes = req.Recipes ?? [];
         if (recipes.Length > MaxRecipesPerBook)
-            return BadRequest(new { error = "Too many recipes." });
+            return BadRequest(new ApiError(ErrorCodes.TooManyRecipes, "Too many recipes.").Body());
         var recipeIds = recipes.Select(r => r.Id).Distinct().ToArray();
         if (recipeIds.Length != recipes.Length)
-            return BadRequest(new { error = "A recipe is listed twice." });
+            return BadRequest(new ApiError(ErrorCodes.RecipeTwice, "A recipe is listed twice.").Body());
         if (recipes.Any(r => r.ExtraCopies is < 0 or > MaxExtraCopies))
-            return BadRequest(new { error = "Extra copies must be between 0 and 10." });
+            return BadRequest(new ApiError(ErrorCodes.ExtraCopiesRange,
+                "Extra copies must be between 0 and 10.")
+            { Values = new { min = 0, max = MaxExtraCopies } }.Body());
         var validRecipes = await content.Recipes.CountAsync(r =>
             recipeIds.Contains(r.Id) && r.VegetableCode == vegetable.Code && r.Active);
         if (validRecipes != recipeIds.Length)
-            return BadRequest(new { error = "Unknown recipe." });
+            return BadRequest(new ApiError(ErrorCodes.UnknownRecipe, "Unknown recipe.").Body());
 
         // Exactly one cover: one from the catalog, or an upload.
         var hasPreset = !string.IsNullOrEmpty(req.CoverPath);
         var hasUpload = !string.IsNullOrEmpty(req.CoverUpload);
         if (hasPreset == hasUpload)
-            return BadRequest(new { error = "Choose one cover." });
+            return BadRequest(new ApiError(ErrorCodes.ChooseOneCover, "Choose one cover.").Body());
 
         byte[]? upload = null;
         if (hasPreset)
@@ -249,16 +252,14 @@ public class BooksController(
             // Vegetable covers, shared covers, and recipe photos. See
             // Covers/CoverCatalog.cs.
             if (!await CoverCatalog.IsAllowed(content, req.CoverPath!))
-                return BadRequest(new { error = "Unknown cover." });
+                return BadRequest(new ApiError(ErrorCodes.UnknownCover, "Unknown cover.").Body());
         }
         else
         {
             upload = DecodeJpeg(req.CoverUpload!);
             if (upload is null)
-                return BadRequest(new
-                {
-                    error = "This photo could not be used. Try a different photo."
-                });
+                return BadRequest(new ApiError(ErrorCodes.PhotoUnusable,
+                    "This photo could not be used. Try a different photo.").Body());
         }
 
         var book = new Book
@@ -362,10 +363,8 @@ public class BooksController(
         if (target is null) return NotFound();
 
         if (kept.Count == 1)
-            return Conflict(new
-            {
-                error = "A book needs at least one recipe. Delete the book instead."
-            });
+            return Conflict(new ApiError(ErrorCodes.LastRecipe,
+                "A book needs at least one recipe. Delete the book instead.").Body());
 
         target.Kept = false;
         await db.SaveChangesAsync();

@@ -51,6 +51,31 @@ public static class ErrorCodes
     public const string RecoveryLocked = "recovery_locked";
     public const string ResetExpired = "reset_expired";
 
+    // Saving and editing books, and their covers
+    public const string BookLimit = "book_limit";
+    public const string UnknownVegetable = "unknown_vegetable";
+    public const string TooManyAnswers = "too_many_answers";
+    public const string UnknownAnswer = "unknown_answer";
+    public const string TooManyRecipes = "too_many_recipes";
+    public const string RecipeTwice = "recipe_twice";
+    public const string UnknownRecipe = "unknown_recipe";
+    public const string LastRecipe = "last_recipe";
+    public const string UnknownCategory = "unknown_category";
+    public const string SecretsRequired = "secrets_required";
+    public const string TooManySecrets = "too_many_secrets";
+    public const string SecretTwice = "secret_twice";
+    public const string UnknownSecret = "unknown_secret";
+    public const string LastSecret = "last_secret";
+    public const string ExtraCopiesRange = "extra_copies_range";
+    public const string ChooseOneCover = "choose_one_cover";
+    public const string UnknownCover = "unknown_cover";
+    public const string PhotoUnusable = "photo_unusable";
+
+    // Research tracking and the study notice
+    public const string TrackingOffByAdmin = "tracking_off_by_admin";
+    public const string NoticeAnswerInvalid = "notice_answer_invalid";
+    public const string NoNotice = "no_notice";
+
     // An error from ASP.NET Identity itself, sent with Identity's English text.
     public const string IdentityError = "identity_error";
 

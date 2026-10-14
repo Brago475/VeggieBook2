@@ -30,6 +30,8 @@ namespace VeggieBook.Api.Research;
 //
 //   Admin accounts are never tracked and never see the switch or the notice
 //   (eligible: false).
+//
+// Messages carry a code the site translates (ErrorCodes, ApiError).
 
 [ApiController]
 [Route("api/me")]
@@ -65,7 +67,8 @@ public class TrackingController(AccountsContext db, UserManager<AppUser> users) 
 
         var current = await StudyTracking.ForUserAsync(db, userId.Value);
         if (current.OffByAdmin)
-            return Conflict(new { error = "Tracking was turned off by the research team." });
+            return Conflict(new ApiError(ErrorCodes.TrackingOffByAdmin,
+                "Tracking was turned off by the research team.").Body());
 
         var state = await StudyTracking.SetAsync(db, userId.Value, request.On, "self");
         return Ok(await ShapeAsync(userId.Value, state));
@@ -120,11 +123,13 @@ public class TrackingController(AccountsContext db, UserManager<AppUser> users) 
 
         var answer = (request.Answer ?? "").Trim().ToLowerInvariant();
         if (answer is not ("joined" or "stayed_out"))
-            return BadRequest(new { error = "Answer must be joined or stayed_out." });
+            return BadRequest(new ApiError(ErrorCodes.NoticeAnswerInvalid,
+                "Answer must be joined or stayed_out.").Body());
 
         var study = await NoticeStudyAsync(userId.Value);
         if (study is null)
-            return Conflict(new { error = "There is no study notice to answer right now." });
+            return Conflict(new ApiError(ErrorCodes.NoNotice,
+                "There is no study notice to answer right now.").Body());
 
         var now = DateTime.UtcNow;
         var notice = await db.StudyNotices

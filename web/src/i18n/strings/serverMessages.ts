@@ -15,6 +15,7 @@ function nameMessages(field: 'first_name' | 'last_name', word: string, Word: str
 }
 
 export const SERVER_MESSAGES_ES: Record<string, Message> = {
+  // Signing in, signing up, guests
   already_signed_in: 'Ya iniciaste sesión.',
   email_invalid: 'Escribe un correo electrónico válido.',
   terms_required: 'Acepta los Términos de uso y la Política de privacidad.',
@@ -28,6 +29,7 @@ export const SERVER_MESSAGES_ES: Record<string, Message> = {
   guests_off:
     'Las visitas de invitados están desactivadas en este momento. Crea una cuenta o inicia sesión.',
 
+  // Names, username, age
   ...nameMessages('first_name', 'tu nombre', 'Tu nombre'),
   ...nameMessages('last_name', 'tu apellido', 'Tu apellido'),
   username_required: 'Escribe un nombre de usuario.',
@@ -35,6 +37,7 @@ export const SERVER_MESSAGES_ES: Record<string, Message> = {
   username_chars: 'Tu nombre de usuario solo puede tener letras, números y guiones bajos.',
   age_range_required: 'Elige tu rango de edad. Debes tener 18 años o más para crear una cuenta.',
 
+  // Passwords
   password_rule: (v) =>
     `La contraseña debe tener al menos ${v.min} caracteres e incluir una letra mayúscula, una minúscula y un carácter especial.`,
   password_too_long: (v) => `La contraseña puede tener ${v.max} caracteres como máximo.`,
@@ -44,6 +47,7 @@ export const SERVER_MESSAGES_ES: Record<string, Message> = {
   password_same: 'Tu nueva contraseña no puede ser igual a la anterior.',
   ticket_expired: 'Esto tardó demasiado. Empieza de nuevo.',
 
+  // Recovery PIN and security question
   pin_digits: 'Tu PIN debe tener exactamente 6 dígitos.',
   pin_easy: 'Ese PIN es demasiado fácil de adivinar. Elige otro.',
   pin_wrong: 'Ese PIN no es correcto. Inténtalo de nuevo.',
@@ -58,6 +62,31 @@ export const SERVER_MESSAGES_ES: Record<string, Message> = {
   recovery_locked:
     'El cambio de contraseña está bloqueado para esta cuenta. Comunícate con el administrador de VeggieBook.',
   reset_expired: 'Este cambio de contraseña venció. Empieza de nuevo.',
+
+  // Saving and editing books, and their covers
+  book_limit: (v) => `Puedes guardar hasta ${v.max} libros. Elimina uno para hacer espacio.`,
+  unknown_vegetable: 'No reconocemos esa verdura.',
+  too_many_answers: 'Hay demasiadas respuestas.',
+  unknown_answer: 'No reconocemos una de las respuestas.',
+  too_many_recipes: 'Hay demasiadas recetas.',
+  recipe_twice: 'Una receta aparece dos veces.',
+  unknown_recipe: 'No reconocemos una de las recetas.',
+  last_recipe: 'Un libro necesita al menos una receta. Mejor elimina el libro.',
+  unknown_category: 'No reconocemos ese tipo de secreto.',
+  secrets_required: 'Un Libro de Secretos necesita al menos un secreto.',
+  too_many_secrets: 'Hay demasiados secretos.',
+  secret_twice: 'Un secreto aparece dos veces.',
+  unknown_secret: 'No reconocemos uno de los secretos.',
+  last_secret: 'Un libro necesita al menos un secreto. Mejor elimina el libro.',
+  extra_copies_range: (v) => `Las copias extra deben estar entre ${v.min} y ${v.max}.`,
+  choose_one_cover: 'Escoge una portada.',
+  unknown_cover: 'No reconocemos esa portada.',
+  photo_unusable: 'No se pudo usar esta foto. Prueba con otra foto.',
+
+  // Research tracking and the study notice
+  tracking_off_by_admin: 'El equipo de investigación desactivó el seguimiento.',
+  notice_answer_invalid: 'Esa respuesta no es válida.',
+  no_notice: 'No hay ningún aviso de estudio para responder en este momento.',
 }
 
 // Used when a response has no message of its own, and when the API can't
