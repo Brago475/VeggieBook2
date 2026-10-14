@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLang } from '../i18n/languageContext'
+import { BOOK } from '../i18n/strings/book'
+import { useStrings } from '../i18n/useStrings'
 import { ApiError, apiFetch } from '../utils/api'
 
 // One saved book with its recipes, for the screen that opens a book from
@@ -36,10 +38,12 @@ export type BookDetail = {
 }
 
 type Loaded = { id: string; book: BookDetail }
-type Failed = { id: string; message: string }
+// gone marks a 404; message is the server's own text, if it sent one.
+type Failed = { id: string; gone: boolean; message: string | null }
 
 export function useBookDetail(id: string | null) {
   const { lang } = useLang()
+  const t = useStrings(BOOK)
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [failed, setFailed] = useState<Failed | null>(null)
 
@@ -55,13 +59,11 @@ export function useBookDetail(id: string | null) {
       })
       .catch((err) => {
         if (cancelled) return
-        const message =
-          err instanceof ApiError && err.status === 404
-            ? 'This book is no longer available.'
-            : err instanceof Error
-              ? err.message
-              : 'Could not open this book.'
-        setFailed({ id, message })
+        setFailed({
+          id,
+          gone: err instanceof ApiError && err.status === 404,
+          message: err instanceof Error ? err.message : null,
+        })
       })
 
     // Guards against a slow response for a book the user has already left.
@@ -95,7 +97,12 @@ export function useBookDetail(id: string | null) {
   // Only answers for the book currently asked for, so the previous book's
   // recipes are never shown under a new book's title.
   const book = id !== null && loaded?.id === id ? loaded.book : null
-  const error = id !== null && failed?.id === id ? failed.message : null
+  const current = id !== null && failed?.id === id ? failed : null
+  const error = current
+    ? current.gone
+      ? t.noLongerAvailable
+      : (current.message ?? t.couldNotOpen)
+    : null
   const loading = id !== null && book === null && error === null
 
   return { book, loading, error, removeRecipe }

@@ -5,6 +5,9 @@ import { NavBar } from '../components/layout/NavBar'
 import { SecretCoverOptions } from '../components/secrets/SecretCoverOptions'
 import { useHeld } from '../hooks/useHeld'
 import { useSecretBook, type SavedSecretsBook } from '../hooks/useSecretBook'
+import { BOOK } from '../i18n/strings/book'
+import { FLOW } from '../i18n/strings/flow'
+import { useStrings } from '../i18n/useStrings'
 import type { CategorySecrets, Secret, SecretCategory } from '../types'
 
 // Changing a saved Secrets Book's cover, as the original app allowed. The
@@ -28,6 +31,7 @@ type Props = {
 }
 
 export function ChangeSecretCover({ bookId, categories, onSave, onCancel }: Props) {
+  const t = useStrings(BOOK)
   const { book, category, secrets, loading, error } = useSecretBook(bookId)
   const waiting = useHeld(loading)
 
@@ -36,12 +40,10 @@ export function ChangeSecretCover({ bookId, categories, onSave, onCancel }: Prop
   if (error || !book || !category) {
     return (
       <div className="book-view">
-        <p className="message book-view-message">
-          {error ?? 'Could not open this book.'}
-        </p>
+        <p className="message book-view-message">{error ?? t.couldNotOpen}</p>
         <div className="book-view-back">
           <button type="button" className="link-btn" onClick={onCancel}>
-            Back to the book
+            {t.backToBook}
           </button>
         </div>
       </div>
@@ -72,6 +74,8 @@ type EditorProps = {
 }
 
 function CoverEditor({ book, category, secrets, categories, onSave, onCancel }: EditorProps) {
+  const t = useStrings(BOOK)
+  const flow = useStrings(FLOW)
   const defaultCover =
     secrets.map((s) => s.image).find((image): image is string => Boolean(image)) ??
     book.cover
@@ -93,9 +97,7 @@ function CoverEditor({ book, category, secrets, categories, onSave, onCancel }: 
       await onSave(selected)
       // On success the parent returns to the book.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'The cover could not be saved. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : t.coverNotSaved)
       setSaving(false)
     }
   }
@@ -103,7 +105,7 @@ function CoverEditor({ book, category, secrets, categories, onSave, onCancel }: 
   return (
     <>
       <div className="intro-text">
-        <p>Choose a new cover for your {category.name} book.</p>
+        <p>{t.newCoverSecrets(category.name)}</p>
       </div>
 
       <div className="cover-preview">
@@ -122,9 +124,9 @@ function CoverEditor({ book, category, secrets, categories, onSave, onCancel }: 
       {error && <p className="message">{error}</p>}
 
       <NavBar
-        secondaryLabel="CANCEL"
+        secondaryLabel={t.cancel}
         onSecondary={onCancel}
-        primaryLabel={saving ? 'SAVING...' : 'SAVE COVER'}
+        primaryLabel={saving ? flow.saving : t.saveCover}
         onPrimary={save}
       />
     </>

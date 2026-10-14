@@ -9,6 +9,10 @@ import { SafeImage } from '../components/common/SafeImage'
 import { SecretCard } from '../components/secrets/SecretCard'
 import { useHeld } from '../hooks/useHeld'
 import { useSecretBook } from '../hooks/useSecretBook'
+import { BOOK } from '../i18n/strings/book'
+import { COMMON } from '../i18n/strings/common'
+import { HOME } from '../i18n/strings/home'
+import { useStrings } from '../i18n/useStrings'
 import { coverSrc } from '../utils/coverSrc'
 
 // A saved Secrets Book, opened from the home library. The Secrets
@@ -56,6 +60,10 @@ export function SecretBookViewer({
   onDelete,
   onChanged,
 }: Props) {
+  const t = useStrings(BOOK)
+  const home = useStrings(HOME)
+  const common = useStrings(COMMON)
+
   const { book, category, secrets, loading, error, removeSecret } = useSecretBook(bookId)
   const bookLoading = useHeld(loading)
 
@@ -78,8 +86,8 @@ export function SecretBookViewer({
     wasOpen.current = isOpen
   }, [openSecret])
 
-  const categoryName = category?.name ?? 'Secrets'
-  const bookName = `${categoryName} book`
+  const categoryName = category?.name ?? t.secretsFallback
+  const bookName = home.secretsBookName(categoryName)
 
   function openSecretAt(id: number) {
     listScroll.current = window.scrollY
@@ -101,9 +109,7 @@ export function SecretBookViewer({
       onChanged()
     } catch (err) {
       // Shown on the page behind the dialog, where it stays readable.
-      setActionError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
-      )
+      setActionError(err instanceof Error ? err.message : common.somethingWrong)
     }
     setBusy(false)
     setPending(null)
@@ -115,12 +121,10 @@ export function SecretBookViewer({
   if (error || !book || !category) {
     return (
       <div className="book-view">
-        <p className="message book-view-message">
-          {error ?? 'Could not open this book.'}
-        </p>
+        <p className="message book-view-message">{error ?? t.couldNotOpen}</p>
         <div className="book-view-back">
           <button type="button" className="link-btn" onClick={onClose}>
-            Back to my books
+            {t.backToBooks}
           </button>
         </div>
       </div>
@@ -140,12 +144,12 @@ export function SecretBookViewer({
             categoryColor={category.color}
           />
         ) : (
-          <p className="message">This secret is no longer in this book.</p>
+          <p className="message">{t.secretGone}</p>
         )}
 
         {/* Kept alongside the header's Back: after scrolling through a long
             secret, this is the one within reach. */}
-        <NavBar primaryLabel="BACK TO BOOK" onPrimary={() => onOpenSecret(null)} />
+        <NavBar primaryLabel={t.backToBookButton} onPrimary={() => onOpenSecret(null)} />
       </>
     )
   }
@@ -166,19 +170,19 @@ export function SecretBookViewer({
             title={category.name}
             background={category.image}
             cover={book.cover}
-            label="Secrets Book"
+            label={t.secretsLabel}
           />
           <ActionMenu
             className="book-item-menu"
-            label={`Options for your ${bookName}`}
+            label={home.options(bookName)}
             items={[
               {
-                label: 'Change cover',
+                label: t.changeCover,
                 icon: 'image',
                 onSelect: onChangeCover,
               },
               {
-                label: 'Delete book',
+                label: home.deleteBook,
                 danger: true,
                 icon: 'trash',
                 onSelect: () => setPending({ kind: 'book' }),
@@ -189,9 +193,7 @@ export function SecretBookViewer({
       </div>
 
       <p className="book-count">
-        <span className="book-count-pill">
-          {secrets.length} {secrets.length === 1 ? 'secret' : 'secrets'}
-        </span>
+        <span className="book-count-pill">{common.items(secrets.length, 'secret')}</span>
       </p>
 
       {actionError && <p className="message">{actionError}</p>}
@@ -232,10 +234,10 @@ export function SecretBookViewer({
             {canRemoveSecret && (
               <ActionMenu
                 className="recipe-row-menu"
-                label={`Options for ${s.headline}`}
+                label={t.optionsFor(s.headline)}
                 items={[
                   {
-                    label: 'Delete secret',
+                    label: t.deleteSecret,
                     danger: true,
                     icon: 'trash',
                     onSelect: () =>
@@ -251,17 +253,11 @@ export function SecretBookViewer({
       <ConfirmDialog
         open={pending !== null}
         title={
-          pending?.kind === 'secret'
-            ? `Delete "${pending.title}"?`
-            : `Delete ${bookName}?`
+          pending?.kind === 'secret' ? t.deleteQuoted(pending.title) : t.deleteNamed(bookName)
         }
-        body={
-          pending?.kind === 'secret'
-            ? 'This removes the secret from this book. It cannot be undone.'
-            : 'This action permanently deletes this book and cannot be undone.'
-        }
-        confirmLabel={pending?.kind === 'secret' ? 'Delete secret' : 'Delete book'}
-        cancelLabel="Cancel"
+        body={pending?.kind === 'secret' ? t.removeSecretBody : home.deleteBody}
+        confirmLabel={pending?.kind === 'secret' ? t.deleteSecret : home.deleteBook}
+        cancelLabel={common.cancel}
         danger
         busy={busy}
         onConfirm={confirm}

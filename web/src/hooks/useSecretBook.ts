@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { BOOK } from '../i18n/strings/book'
+import { useStrings } from '../i18n/useStrings'
 import type { Secret } from '../types'
 import { ApiError, apiFetch } from '../utils/api'
 import { useCategorySecrets } from './useSecrets'
@@ -9,8 +11,8 @@ import { useCategorySecrets } from './useSecrets'
 // Two loads, joined here:
 //   /books/{id}/secrets                 which secrets this book keeps,
 //                                       with its category and cover
-//   /secret-categories/{id}/secrets     the category's content, the same
-//                                       for everyone (text and pictures)
+//   /secret-categories/{id}/secrets     the category's content in the site
+//                                       language (text and pictures)
 //
 // The kept secrets come out in the order they were kept. One that has
 // since been turned off in the content is skipped rather than listed
@@ -29,9 +31,11 @@ export type SavedSecretsBook = {
 }
 
 type Loaded = { id: string; book: SavedSecretsBook }
-type Failed = { id: string; message: string }
+// gone marks a 404; message is the server's own text, if it sent one.
+type Failed = { id: string; gone: boolean; message: string | null }
 
 export function useSecretBook(id: string | null) {
+  const t = useStrings(BOOK)
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [failed, setFailed] = useState<Failed | null>(null)
 
@@ -47,13 +51,11 @@ export function useSecretBook(id: string | null) {
       })
       .catch((err) => {
         if (cancelled) return
-        const message =
-          err instanceof ApiError && err.status === 404
-            ? 'This book is no longer available.'
-            : err instanceof Error
-              ? err.message
-              : 'Could not open this book.'
-        setFailed({ id, message })
+        setFailed({
+          id,
+          gone: err instanceof ApiError && err.status === 404,
+          message: err instanceof Error ? err.message : null,
+        })
       })
 
     // Guards against a slow response for a book the user has already left.
@@ -101,7 +103,12 @@ export function useSecretBook(id: string | null) {
     [id],
   )
 
-  const bookError = id !== null && failed?.id === id ? failed.message : null
+  const current = id !== null && failed?.id === id ? failed : null
+  const bookError = current
+    ? current.gone
+      ? t.noLongerAvailable
+      : (current.message ?? t.couldNotOpen)
+    : null
   const error = bookError ?? content.error
   // Loading until both the book and its category's content are in.
   const loading =

@@ -11,6 +11,10 @@ import { SafeImage } from '../components/common/SafeImage'
 import { useBookDetail } from '../hooks/useBookDetail'
 import { useHeld } from '../hooks/useHeld'
 import { useRecipeDetail } from '../hooks/useRecipeDetail'
+import { BOOK } from '../i18n/strings/book'
+import { COMMON } from '../i18n/strings/common'
+import { HOME } from '../i18n/strings/home'
+import { useStrings } from '../i18n/useStrings'
 import type { Vegetable } from '../types'
 import { coverSrc } from '../utils/coverSrc'
 
@@ -60,6 +64,10 @@ export function BookViewer({
   onDelete,
   onChanged,
 }: Props) {
+  const t = useStrings(BOOK)
+  const home = useStrings(HOME)
+  const common = useStrings(COMMON)
+
   const { book, loading, error, removeRecipe } = useBookDetail(bookId)
   const { detail, error: detailError } = useRecipeDetail(openRecipe)
   const bookLoading = useHeld(loading)
@@ -87,7 +95,7 @@ export function BookViewer({
   const vegetable = vegetables.find((v) => v.code === book?.vegetableCode)
   const vegetableName = vegetable?.name ?? ''
   const vegetableShortCode = vegetable?.shortCode ?? ''
-  const bookName = `${vegetableName} VeggieBook`
+  const bookName = vegetableName ? home.veggieBookName(vegetableName) : home.veggieBook
 
   function openRecipeAt(id: number) {
     listScroll.current = window.scrollY
@@ -109,9 +117,7 @@ export function BookViewer({
       onChanged()
     } catch (err) {
       // Shown on the page behind the dialog, where it stays readable.
-      setActionError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
-      )
+      setActionError(err instanceof Error ? err.message : common.somethingWrong)
     }
     setBusy(false)
     setPending(null)
@@ -123,12 +129,10 @@ export function BookViewer({
   if (error || !book) {
     return (
       <div className="book-view">
-        <p className="message book-view-message">
-          {error ?? 'Could not open this book.'}
-        </p>
+        <p className="message book-view-message">{error ?? t.couldNotOpen}</p>
         <div className="book-view-back">
           <button type="button" className="link-btn" onClick={onClose}>
-            Back to my books
+            {t.backToBooks}
           </button>
         </div>
       </div>
@@ -144,7 +148,7 @@ export function BookViewer({
     return (
       <>
         {recipeLoading && <RecipeSkeleton />}
-        {!recipeLoading && detailError && <p className="message">This recipe could not be loaded.</p>}
+        {!recipeLoading && detailError && <p className="message">{t.recipeNotLoaded}</p>}
 
         {!recipeLoading && detail && (
           <article className="recipe-detail">
@@ -160,7 +164,7 @@ export function BookViewer({
 
         {/* Kept alongside the header's Back: after scrolling through a long
             recipe, this is the one within reach. */}
-        <NavBar primaryLabel="BACK TO BOOK" onPrimary={() => onOpenRecipe(null)} />
+        <NavBar primaryLabel={t.backToBookButton} onPrimary={() => onOpenRecipe(null)} />
       </>
     )
   }
@@ -181,19 +185,19 @@ export function BookViewer({
             title={vegetableName}
             background={vegetableShortCode ? `cover/${vegetableShortCode}.jpg` : null}
             cover={book.cover}
-            label="VeggieBook"
+            label={t.veggieLabel}
           />
           <ActionMenu
             className="book-item-menu"
-            label={`Options for your ${bookName}`}
+            label={home.options(bookName)}
             items={[
               {
-                label: 'Change cover',
+                label: t.changeCover,
                 icon: 'image',
                 onSelect: onChangeCover,
               },
               {
-                label: 'Delete book',
+                label: home.deleteBook,
                 danger: true,
                 icon: 'trash',
                 onSelect: () => setPending({ kind: 'book' }),
@@ -205,9 +209,7 @@ export function BookViewer({
 
       {/* A chip for a fact about the book, on its own tint under the cover. */}
       <p className="book-count">
-        <span className="book-count-pill">
-          {book.recipes.length} {book.recipes.length === 1 ? 'recipe' : 'recipes'}
-        </span>
+        <span className="book-count-pill">{common.items(book.recipes.length, 'recipe')}</span>
       </p>
 
       {actionError && <p className="message">{actionError}</p>}
@@ -247,10 +249,10 @@ export function BookViewer({
             {canRemoveRecipe && (
               <ActionMenu
                 className="recipe-row-menu"
-                label={`Options for ${r.title}`}
+                label={t.optionsFor(r.title)}
                 items={[
                   {
-                    label: 'Delete recipe',
+                    label: t.deleteRecipe,
                     danger: true,
                     icon: 'trash',
                     onSelect: () =>
@@ -265,18 +267,10 @@ export function BookViewer({
 
       <ConfirmDialog
         open={pending !== null}
-        title={
-          pending?.kind === 'recipe'
-            ? `Delete ${pending.title}?`
-            : `Delete ${bookName}?`
-        }
-        body={
-          pending?.kind === 'recipe'
-            ? 'This removes the recipe from this book. It cannot be undone.'
-            : 'This action permanently deletes this book and cannot be undone.'
-        }
-        confirmLabel={pending?.kind === 'recipe' ? 'Delete recipe' : 'Delete book'}
-        cancelLabel="Cancel"
+        title={t.deleteNamed(pending?.kind === 'recipe' ? pending.title : bookName)}
+        body={pending?.kind === 'recipe' ? t.removeRecipeBody : home.deleteBody}
+        confirmLabel={pending?.kind === 'recipe' ? t.deleteRecipe : home.deleteBook}
+        cancelLabel={common.cancel}
         danger
         busy={busy}
         onConfirm={confirm}
