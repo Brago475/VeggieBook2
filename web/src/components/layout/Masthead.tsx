@@ -1,4 +1,6 @@
 import { useLang } from '../../i18n/languageContext'
+import { COMMON } from '../../i18n/strings/common'
+import { useStrings } from '../../i18n/useStrings'
 import { LeafDecor } from './LeafDecor'
 
 // Green brand bar. Appears on every screen except Welcome and the account
@@ -24,17 +26,12 @@ type Props = {
 
 export function Masthead({ brand = 'veggie', onBack, decor = false }: Props) {
   const { lang } = useLang()
+  const t = useStrings(COMMON)
 
   const logo =
     brand === 'secrets'
-      ? {
-          src: `/brand/SecretsBook_logo_reversed_${lang}.png`,
-          alt: 'SecretsBook, Quick Help for Meals',
-        }
-      : {
-          src: `/brand/logo-negative-${lang}.png`,
-          alt: 'VeggieBook, Quick Help for Meals',
-        }
+      ? { src: `/brand/SecretsBook_logo_reversed_${lang}.png`, alt: t.secretsLogoAlt }
+      : { src: `/brand/logo-negative-${lang}.png`, alt: t.veggieLogoAlt }
 
   return (
     <header className="masthead">
@@ -57,7 +54,7 @@ export function Masthead({ brand = 'veggie', onBack, decor = false }: Props) {
               strokeLinejoin="round"
             />
           </svg>
-          <span className="masthead-back-label">Back</span>
+          <span className="masthead-back-label">{t.back}</span>
         </button>
       )}
 

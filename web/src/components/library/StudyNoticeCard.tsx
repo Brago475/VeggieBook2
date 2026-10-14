@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react'
+import { COMMON } from '../../i18n/strings/common'
+import { HOME } from '../../i18n/strings/home'
+import { useStrings } from '../../i18n/useStrings'
 import { answerStudyNotice, getStudyNotice, getTracking } from '../../utils/trackingApi'
 import { CloseIcon, LeafIcon } from '../icons/ResearchIcons'
 import '../../styles/research.css'
@@ -20,6 +23,9 @@ import '../../styles/research.css'
 type State = 'hidden' | 'asking' | 'joined'
 
 export function StudyNoticeCard() {
+  const t = useStrings(HOME)
+  const common = useStrings(COMMON)
+
   const [state, setState] = useState<State>('hidden')
   const [researchId, setResearchId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -49,11 +55,11 @@ export function StudyNoticeCard() {
         setState('hidden')
         return
       }
-      const t = await getTracking().catch(() => null)
-      setResearchId(t && t.eligible ? t.researchId : null)
+      const tracking = await getTracking().catch(() => null)
+      setResearchId(tracking && tracking.eligible ? tracking.researchId : null)
       setState('joined')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setError(err instanceof Error ? err.message : common.somethingWrong)
     } finally {
       setBusy(false)
     }
@@ -68,15 +74,20 @@ export function StudyNoticeCard() {
           &#10003;
         </span>
         <p className="study-notice-thanks">
-          Thanks for joining.
+          {t.noticeThanks}
           {researchId && (
             <>
               {' '}
-              Your research ID is <strong>{researchId}</strong>.
+              {t.noticeYourId} <strong>{researchId}</strong>.
             </>
           )}
         </p>
-        <button type="button" className="study-notice-close" aria-label="Close" onClick={() => setState('hidden')}>
+        <button
+          type="button"
+          className="study-notice-close"
+          aria-label={common.close}
+          onClick={() => setState('hidden')}
+        >
           <CloseIcon />
         </button>
       </div>
@@ -90,13 +101,10 @@ export function StudyNoticeCard() {
           <LeafIcon />
         </span>
         <h2 className="study-notice-title" id="study-notice-title">
-          A VeggieBook study is running
+          {t.noticeTitle}
         </h2>
       </div>
-      <p className="study-notice-text">
-        You have research tracking off. Would you like to join? Only an anonymous research ID is used, never your name
-        or email. You can turn it off again anytime in Profile and settings.
-      </p>
+      <p className="study-notice-text">{t.noticeText}</p>
 
       {error && (
         <p className="form-error" role="alert">
@@ -106,10 +114,10 @@ export function StudyNoticeCard() {
 
       <div className="study-notice-actions">
         <button type="button" className="study-notice-join" onClick={() => void answer('joined')} disabled={busy}>
-          {busy ? 'Please wait...' : 'Join the study'}
+          {busy ? common.pleaseWait : t.noticeJoin}
         </button>
         <button type="button" className="study-notice-later" onClick={() => void answer('stayed_out')} disabled={busy}>
-          Not now
+          {t.noticeNotNow}
         </button>
       </div>
     </section>

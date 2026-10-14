@@ -1,3 +1,5 @@
+import { COMMON } from '../../i18n/strings/common'
+import { useStrings } from '../../i18n/useStrings'
 import { coverSrc } from '../../utils/coverSrc'
 import { SafeImage } from '../common/SafeImage'
 
@@ -18,7 +20,8 @@ import { SafeImage } from '../common/SafeImage'
 // it needs:
 //   label      a small spaced-out word under a short rule ("VeggieBook")
 //   subtitle   a short line ("Recipes, tips and more")
-//   count      the number of recipes or secrets, with a book icon
+//   count      the number of recipes or secrets, with a book icon, in the
+//              site language
 //   countNoun  what count counts: "recipe" (the default) or "secret"
 
 type Props = {
@@ -45,6 +48,8 @@ export function BookCard({
   countNoun = 'recipe',
   onClick,
 }: Props) {
+  const t = useStrings(COMMON)
+
   const content = (
     <>
       {background && (
@@ -75,7 +80,7 @@ export function BookCard({
                 strokeLinejoin="round"
               />
             </svg>
-            {count} {count === 1 ? countNoun : `${countNoun}s`}
+            {t.items(count, countNoun)}
           </span>
         )}
       </span>

@@ -12,6 +12,9 @@ import {
 } from '../components/icons/LibraryIcons'
 import { MainMenu, type MainMenuItem } from '../components/library/MainMenu'
 import { StudyNoticeCard } from '../components/library/StudyNoticeCard'
+import { COMMON } from '../i18n/strings/common'
+import { HOME } from '../i18n/strings/home'
+import { useStrings } from '../i18n/useStrings'
 import type { BookSummary, SecretCategory, Vegetable } from '../types'
 
 // Home screen: a heading that says who is using the site, the two create
@@ -25,9 +28,10 @@ import type { BookSummary, SecretCategory, Vegetable } from '../types'
 //
 // Beside the heading, the ☰ Menu (MainMenu.tsx), in two groups. On top,
 // features and information: About VeggieBook, and future features as they
-// are added. Below a line, the account: Profile and settings and Sign out,
-// or for a guest, Create account, Sign in, and End guest visit, which asks
-// first because it deletes their books.
+// are added. Below a line, the account: Profile and settings, the language
+// switch, and Sign out, or for a guest, Create account, Sign in, the
+// language switch, and End guest visit, which asks first because it
+// deletes their books.
 //
 // Each card follows the original app: a picture fills the card and the
 // chosen cover sits as a small inset. For a VeggieBook the picture is the
@@ -97,6 +101,8 @@ export function HomeLibrary({
   onDeleteBook,
   onViewBook,
 }: Props) {
+  const t = useStrings(HOME)
+  const common = useStrings(COMMON)
   const isGuest = email === null
 
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -119,23 +125,23 @@ export function HomeLibrary({
   // The ☰ Menu. Features on top (new ones go at the end of this list), the
   // account below the line.
   const menuItems: MainMenuItem[] = [
-    { label: 'About VeggieBook', icon: <InfoIcon />, onSelect: onAbout },
+    { label: t.about, icon: <InfoIcon />, onSelect: onAbout },
   ]
 
   const accountItems: MainMenuItem[] = isGuest
     ? [
-        { label: 'Create account', icon: <PlusIcon />, onSelect: onRegister },
-        { label: 'Sign in', icon: <PersonIcon />, onSelect: onSignIn },
+        { label: t.createAccount, icon: <PlusIcon />, onSelect: onRegister },
+        { label: t.signIn, icon: <PersonIcon />, onSelect: onSignIn },
         {
-          label: 'End guest visit',
+          label: t.endGuest,
           icon: <SignOutIcon />,
           danger: true,
           onSelect: () => setConfirmEnd(true),
         },
       ]
     : [
-        { label: 'Profile and settings', icon: <PersonIcon />, onSelect: onAccount },
-        { label: 'Sign out', icon: <SignOutIcon />, danger: true, onSelect: signOut },
+        { label: t.profile, icon: <PersonIcon />, onSelect: onAccount },
+        { label: t.signOut, icon: <SignOutIcon />, danger: true, onSelect: signOut },
       ]
 
   function cardInfo(book: BookSummary): CardInfo {
@@ -143,20 +149,20 @@ export function HomeLibrary({
       const category =
         book.secretCategoryId != null ? byCategory.get(book.secretCategoryId) : undefined
       return {
-        title: category?.name ?? 'Secrets Book',
-        bookName: category ? `${category.name} book` : 'Secrets Book',
+        title: category?.name ?? t.secretsBook,
+        bookName: category ? t.secretsBookName(category.name) : t.secretsBook,
         background: category?.image ?? null,
-        subtitle: 'Secrets to better eating',
+        subtitle: t.secretsSubtitle,
         countNoun: 'secret',
       }
     }
 
     const veg = book.vegetableCode ? byCode.get(book.vegetableCode) : undefined
     return {
-      title: veg?.name ?? 'VeggieBook',
-      bookName: veg ? `${veg.name} VeggieBook` : 'VeggieBook',
+      title: veg?.name ?? t.veggieBook,
+      bookName: veg ? t.veggieBookName(veg.name) : t.veggieBook,
       background: veg ? `cover/${veg.shortCode}.jpg` : null,
-      subtitle: 'Recipes, tips and more',
+      subtitle: t.veggieSubtitle,
       countNoun: 'recipe',
     }
   }
@@ -168,9 +174,7 @@ export function HomeLibrary({
     try {
       await onDeleteBook(pending.id)
     } catch (err) {
-      setDeleteError(
-        err instanceof Error ? err.message : 'Could not delete this book.',
-      )
+      setDeleteError(err instanceof Error ? err.message : t.couldNotDelete)
     } finally {
       // Closed either way. On failure the reason is shown on the page
       // behind, where it stays readable instead of vanishing with the box.
@@ -186,9 +190,7 @@ export function HomeLibrary({
       await onSignOut()
       // On success the parent shows Welcome.
     } catch (err) {
-      setSignOutError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
-      )
+      setSignOutError(err instanceof Error ? err.message : common.somethingWrong)
     }
   }
 
@@ -200,31 +202,19 @@ export function HomeLibrary({
       await onSignOut()
       // On success the parent shows Welcome.
     } catch (err) {
-      setSignOutError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
-      )
+      setSignOutError(err instanceof Error ? err.message : common.somethingWrong)
       setEnding(false)
       setConfirmEnd(false)
     }
   }
 
-  // "Delete these 3 books", so the guest knows exactly what they lose.
-  const guestBooksLine =
-    books.length === 0
-      ? 'You have no books yet.'
-      : books.length === 1
-        ? 'This deletes your 1 book.'
-        : `This deletes your ${books.length} books.`
-
   return (
     <div className="library">
       <div className="library-head">
         <div className="library-head-text">
-          <h1 className="library-title">My VeggieBooks</h1>
+          <h1 className="library-title">{t.title}</h1>
           <p className="library-sub">
-            {isGuest
-              ? 'Guest: your books are kept until you sign out, for up to 24 hours'
-              : `Signed in as ${displayName ?? email}`}
+            {isGuest ? t.guestSub : t.signedInAs(displayName ?? email ?? '')}
           </p>
         </div>
         <MainMenu items={menuItems} accountItems={accountItems} />
@@ -243,7 +233,7 @@ export function HomeLibrary({
           <span className="library-create-icon">
             <PlusIcon />
           </span>
-          <span className="library-create-label">Create New VeggieBook</span>
+          <span className="library-create-label">{t.createVeggie}</span>
           <ChevronRightIcon className="library-create-chevron" />
         </button>
 
@@ -256,14 +246,14 @@ export function HomeLibrary({
           <span className="library-create-icon">
             <LockIcon />
           </span>
-          <span className="library-create-label">Create New Secrets Book</span>
+          <span className="library-create-label">{t.createSecrets}</span>
           <ChevronRightIcon className="library-create-chevron" />
         </button>
       </div>
 
       {loading && (
         <div role="status" aria-busy="true">
-          <span className="visually-hidden">Loading your books...</span>
+          <span className="visually-hidden">{t.loadingBooks}</span>
           <ul className="library-books" aria-hidden="true">
             {Array.from({ length: SKELETON_CARDS }, (_, i) => (
               <li key={i}>
@@ -277,12 +267,7 @@ export function HomeLibrary({
       {deleteError && <p className="message">{deleteError}</p>}
       {signOutError && <p className="message">{signOutError}</p>}
 
-      {!loading && !error && books.length === 0 && (
-        <p className="message">
-          You have not made any books yet. Start with Create New VeggieBook or
-          Create New Secrets Book.
-        </p>
-      )}
+      {!loading && !error && books.length === 0 && <p className="message">{t.empty}</p>}
 
       <ul className="library-books">
         {books.map((book) => {
@@ -302,10 +287,10 @@ export function HomeLibrary({
 
               <ActionMenu
                 className="book-item-menu"
-                label={`Options for your ${info.bookName}`}
+                label={t.options(info.bookName)}
                 items={[
                   {
-                    label: 'Delete book',
+                    label: t.deleteBook,
                     danger: true,
                     icon: 'trash',
                     onSelect: () => setPending({ id: book.id, name: info.bookName }),
@@ -319,10 +304,10 @@ export function HomeLibrary({
 
       <ConfirmDialog
         open={pending !== null}
-        title={`Delete ${pending?.name ?? 'this book'}?`}
-        body="This action permanently deletes this book and cannot be undone."
-        confirmLabel="Delete book"
-        cancelLabel="Cancel"
+        title={t.deleteTitle(pending?.name ?? null)}
+        body={t.deleteBody}
+        confirmLabel={t.deleteBook}
+        cancelLabel={common.cancel}
         danger
         busy={deleting}
         onConfirm={confirmDelete}
@@ -333,10 +318,10 @@ export function HomeLibrary({
 
       <ConfirmDialog
         open={confirmEnd}
-        title="End your guest visit?"
-        body={`${guestBooksLine} To keep them, choose Create account or Sign in instead.`}
-        confirmLabel="End visit"
-        cancelLabel="Cancel"
+        title={t.endTitle}
+        body={`${t.guestBooks(books.length)} ${t.endKeep}`}
+        confirmLabel={t.endVisit}
+        cancelLabel={common.cancel}
         danger
         busy={ending}
         onConfirm={endGuestVisit}

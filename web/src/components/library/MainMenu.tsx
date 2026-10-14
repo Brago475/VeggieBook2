@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { COMMON } from '../../i18n/strings/common'
+import { useStrings } from '../../i18n/useStrings'
 import { MenuIcon } from '../icons/LibraryIcons'
 import { LanguageSwitch } from './LanguageSwitch'
 
@@ -37,6 +39,7 @@ type Props = {
 }
 
 export function MainMenu({ items, accountItems }: Props) {
+  const t = useStrings(COMMON)
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -102,7 +105,7 @@ export function MainMenu({ items, accountItems }: Props) {
         onClick={() => setOpen((o) => !o)}
       >
         <MenuIcon />
-        Menu
+        {t.menu}
       </button>
 
       {open && (

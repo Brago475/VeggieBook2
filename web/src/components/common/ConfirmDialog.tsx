@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react'
+import { COMMON } from '../../i18n/strings/common'
+import { useStrings } from '../../i18n/useStrings'
 
 // A yes-or-no question, asked the same way everywhere.
 //
@@ -10,7 +12,8 @@ import { useEffect, useRef } from 'react'
 // this app is aimed at people on phones they have had for a while.
 //
 // Focus lands on the safe option, not the destructive one, so a stray tap
-// or a held Return key cannot delete anything.
+// or a held Return key cannot delete anything. Default button words follow
+// the site language.
 
 type Props = {
   open: boolean
@@ -30,13 +33,14 @@ export function ConfirmDialog({
   open,
   title,
   body,
-  confirmLabel = 'Yes',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   danger = false,
   busy = false,
   onConfirm,
   onCancel,
 }: Props) {
+  const t = useStrings(COMMON)
   const cancelRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -89,7 +93,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             disabled={busy}
           >
-            {busy ? 'Please wait...' : confirmLabel}
+            {busy ? t.pleaseWait : (confirmLabel ?? t.yes)}
           </button>
           <button
             ref={cancelRef}
@@ -98,7 +102,7 @@ export function ConfirmDialog({
             onClick={onCancel}
             disabled={busy}
           >
-            {cancelLabel}
+            {cancelLabel ?? t.cancel}
           </button>
         </div>
       </div>

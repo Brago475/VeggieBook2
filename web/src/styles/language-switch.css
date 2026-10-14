@@ -1,4 +1,5 @@
-/* The language switch row inside the home menu (LanguageSwitch.tsx). */
+/* The language switch (LanguageSwitch.tsx): a row in the home menu, or a
+   small centered switch under Sign in on Welcome. */
 
 .lang-switch {
   display: flex;
@@ -7,6 +8,12 @@
   justify-content: space-between;
   gap: 10px 14px;
   padding: 10px 14px;
+}
+
+.lang-switch.is-inline {
+  justify-content: center;
+  gap: 10px;
+  padding: 2px 0 0;
 }
 
 .lang-switch-label {
@@ -22,6 +29,13 @@
   flex: none;
   width: 20px;
   height: 20px;
+}
+
+.lang-switch-globe {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
 }
 
 .lang-switch-options {

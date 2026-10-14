@@ -1,39 +1,57 @@
 import type { Lang } from '../../i18n/language'
 import { useLang } from '../../i18n/languageContext'
+import { COMMON } from '../../i18n/strings/common'
+import { useStrings } from '../../i18n/useStrings'
 import { GlobeIcon } from '../icons/LanguageIcons'
 import '../../styles/language-switch.css'
 
-// English and Spanish, inside the home menu above Sign out. Each option is
-// written in its own language so it can be found in either one. Choosing
-// one switches the site at once and keeps the menu open.
+// English and Spanish. Each option is written in its own language so it can
+// be found in either one. Choosing one switches the site at once.
+//
+//   menu    a row in the home menu, above Sign out, with a "Language" label
+//   inline  a small centered switch, under Sign in on Welcome
 
 const OPTIONS: { lang: Lang; label: string }[] = [
   { lang: 'en', label: 'English' },
   { lang: 'es', label: 'Español' },
 ]
 
-export function LanguageSwitch() {
+type Props = { variant?: 'menu' | 'inline' }
+
+export function LanguageSwitch({ variant = 'menu' }: Props) {
   const { lang, setLang } = useLang()
+  const t = useStrings(COMMON)
+  const inMenu = variant === 'menu'
 
   return (
-    <div className="lang-switch" role="group" aria-label="Language / Idioma">
-      <span className="lang-switch-label">
-        <GlobeIcon />
-        {lang === 'es' ? 'Idioma' : 'Language'}
-      </span>
+    <div
+      className={inMenu ? 'lang-switch' : 'lang-switch is-inline'}
+      role="group"
+      aria-label="Language / Idioma"
+    >
+      {inMenu ? (
+        <span className="lang-switch-label">
+          <GlobeIcon />
+          {t.language}
+        </span>
+      ) : (
+        <GlobeIcon className="lang-switch-globe" />
+      )}
 
       <span className="lang-switch-options">
         {OPTIONS.map((option) => {
           const on = option.lang === lang
+          const state = inMenu
+            ? { role: 'menuitemradio', 'aria-checked': on }
+            : { 'aria-pressed': on }
           return (
             <button
               key={option.lang}
               type="button"
-              role="menuitemradio"
-              aria-checked={on}
               lang={option.lang}
               className={on ? 'lang-switch-btn is-on' : 'lang-switch-btn'}
               onClick={() => setLang(option.lang)}
+              {...state}
             >
               {option.label}
             </button>

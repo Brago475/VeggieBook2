@@ -1,3 +1,5 @@
+import { FOOTER } from '../../i18n/strings/footer'
+import { useStrings } from '../../i18n/useStrings'
 import { BookSproutIcon } from '../icons/FooterIcons'
 import { LeafDecor } from '../layout/LeafDecor'
 import { ChevronRightIcon } from '../icons/LibraryIcons'
@@ -22,6 +24,8 @@ type Props = {
 }
 
 export function SiteFooter({ onAbout, onTerms, onPrivacy }: Props) {
+  const t = useStrings(FOOTER)
+
   return (
     <footer className="site-footer">
       <div className="site-footer-card">
@@ -32,42 +36,39 @@ export function SiteFooter({ onAbout, onTerms, onPrivacy }: Props) {
             <BookSproutIcon />
           </span>
           <div className="site-footer-head-text">
-            <h2 className="site-footer-title">About VeggieBook</h2>
+            <h2 className="site-footer-title">{t.title}</h2>
             <p className="site-footer-sub">
-              Built from <strong>years of</strong> nutrition research and community
-              work.
+              {t.subBefore}
+              <strong>{t.subStrong}</strong>
+              {t.subAfter}
             </p>
           </div>
         </div>
 
-        <p className="site-footer-credit">
-          Originally created by Dr. Peter Clarke and Dr. Susan H. Evans at the USC
-          Annenberg School for Communication and Journalism, with support from the
-          U.S. Department of Agriculture. Continued and rebuilt at Kean University.
-        </p>
+        <p className="site-footer-credit">{t.credit}</p>
 
         {onAbout && (
           <button type="button" className="site-footer-btn" onClick={onAbout}>
-            Learn about the project
+            {t.learnMore}
             <ChevronRightIcon className="site-footer-chevron" />
           </button>
         )}
 
         {(onTerms || onPrivacy) && (
-          <nav className="site-footer-links" aria-label="Legal">
+          <nav className="site-footer-links" aria-label={t.legal}>
             {onTerms && (
               <button type="button" className="site-footer-link" onClick={onTerms}>
-                Terms of Use
+                {t.terms}
               </button>
             )}
             {onTerms && onPrivacy && (
               <span className="site-footer-dot" aria-hidden="true">
-                ·
+                |
               </span>
             )}
             {onPrivacy && (
               <button type="button" className="site-footer-link" onClick={onPrivacy}>
-                Privacy Policy
+                {t.privacy}
               </button>
             )}
           </nav>
