@@ -2,20 +2,18 @@ using System.Security.Cryptography;
 
 namespace VeggieBook.Api.Auth;
 
-// The rules for the Create Account form, apart from the password (see
-// AuthHelpers) and the PIN and question (see AccountRecovery). Each problem
-// comes back as an ApiError: a code the site translates, and the English.
+// Create Account rules, apart from the password (AuthHelpers) and the PIN and
+// question (AccountRecovery). Each problem returns an ApiError with a code and English text.
 public static class SignUpRules
 {
-    // The Terms of Use version a new account agrees to. Keep this equal to
-    // the version in web/src/content/terms.tsx.
-    public const string TermsVersion = "1.1";
+    // Must match the version in web/src/content/terms.tsx.
+    public const string TermsVersion = "1.2";
 
     public const int MaxNameLength = 50;
     public const int MinDisplayNameLength = 3;
     public const int MaxDisplayNameLength = 20;
 
-    // Everyone must be 18 or older, so there is no range under 18.
+    // Accounts are 18 and older only.
     public static readonly string[] AgeRanges =
         ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"];
 
@@ -52,8 +50,7 @@ public static class SignUpRules
             : new(ErrorCodes.AgeRangeRequired,
                 "Please choose your age range. You must be 18 or older to create an account.");
 
-    // A username for someone who left it blank, such as cook_48213.
-    // The caller checks it is free before using it.
+    // Fallback username such as cook_48213. The caller checks it is free.
     public static string GenerateDisplayName() =>
         $"cook_{RandomNumberGenerator.GetInt32(10000, 1000000)}";
 }

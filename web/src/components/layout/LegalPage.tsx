@@ -1,23 +1,14 @@
 import type { ReactNode } from 'react'
 import { ABOUT } from '../../i18n/strings/about'
-import { useStrings } from '../../i18n/useStrings'
+import { LEGAL } from '../../i18n/strings/legal'
+import { useLang } from '../../i18n/languageContext'
+import { useStrings, type Strings } from '../../i18n/useStrings'
 import { LeafDecor } from '../layout/LeafDecor'
 
-// The layout for the Terms of Use and the Privacy Policy. The words live in
-// src/content/terms.tsx and src/content/privacy.tsx, so the text can be
-// updated without touching this layout.
-//
-// Built on the About page's pieces: the off-white account screen with the
-// two faint corner leaves, the logo heading, and a white card. Each section
-// gets its own heading so the page is easy to scan and link to.
-//
-// The opening line (intro) sits in a highlighted box above the sections,
-// so what the reader agrees to is the first thing they see.
-//
-// Open to everyone, signed in or not. Read only. Back returns home.
+// Layout for the Terms of Use and Privacy Policy. Text lives in src/content.
 
 export type LegalSection = {
-  // Used as the section's anchor, for example /privacy#research-studies.
+  // Section anchor, for example /privacy#research-tracking.
   id: string
   heading: string
   body: ReactNode
@@ -25,8 +16,7 @@ export type LegalSection = {
 
 export type LegalDocument = {
   title: string
-  // Saved with each account when the user agrees, so the site knows who has
-  // agreed to which version. Change it whenever the text changes.
+  // Recorded with each account on sign-up. Same value in every language.
   version: string
   updated: string
   intro?: ReactNode
@@ -34,10 +24,14 @@ export type LegalDocument = {
 }
 
 type Props = {
-  doc: LegalDocument
+  doc: Strings<LegalDocument>
 }
 
 export function LegalPage({ doc }: Props) {
+  const { lang } = useLang()
+  const page = useStrings(doc)
+  const t = useStrings(LEGAL)
+
   return (
     <div className="account-screen about-screen legal-screen">
       <LeafDecor className="account-leaf" />
@@ -46,19 +40,17 @@ export function LegalPage({ doc }: Props) {
       <header className="about-hero">
         <img
           className="about-logo"
-          src="/brand/logo-positive-en.png"
-          alt="VeggieBook, Quick Help for Meals"
+          src={`/brand/logo-positive-${lang}.png`}
+          alt={t.logoAlt}
         />
-        <h1 className="about-title">{doc.title}</h1>
-        <p className="legal-meta">
-          Version {doc.version}, last updated {doc.updated}
-        </p>
+        <h1 className="about-title">{page.title}</h1>
+        <p className="legal-meta">{t.versionLine(page.version, page.updated)}</p>
       </header>
 
-      {doc.intro && <div className="legal-intro">{doc.intro}</div>}
+      {page.intro && <div className="legal-intro">{page.intro}</div>}
 
       <article className="account-card about-card legal-card">
-        {doc.sections.map((section, i) => (
+        {page.sections.map((section, i) => (
           <section key={section.id} id={section.id} className="legal-section">
             <h2 className="legal-heading">
               <span className="legal-number">{i + 1}.</span> {section.heading}
@@ -71,8 +63,7 @@ export function LegalPage({ doc }: Props) {
   )
 }
 
-// The contact block both documents end with. Also shown when password
-// reset is locked.
+// Contact block used by both documents and the locked password reset screen.
 export function LegalContact() {
   const t = useStrings(ABOUT)
   return (
