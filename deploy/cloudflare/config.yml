@@ -1,0 +1,12 @@
+# Cloudflare Tunnel routes. Installed on the server at /etc/cloudflared/config.yml.
+tunnel: ab703b56-6abb-404c-ba36-17a0247e00cf
+credentials-file: /home/veggiebook2/.cloudflared/ab703b56-6abb-404c-ba36-17a0247e00cf.json
+
+ingress:
+  - hostname: veggiebook2.com
+    service: http://localhost:8080
+  - hostname: www.veggiebook2.com
+    service: http://localhost:8080
+  - hostname: admin.veggiebook2.com
+    service: http://localhost:8081
+  - service: http_status:404
