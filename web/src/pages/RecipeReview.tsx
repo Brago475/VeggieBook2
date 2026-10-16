@@ -3,12 +3,9 @@ import { RecipeCard } from '../components/veggie/RecipeCard'
 import { FLOW } from '../i18n/strings/flow'
 import { useStrings } from '../i18n/useStrings'
 import type { RecipeSummary } from '../types'
+import '../styles/review.css'
 
-// The KEEP / DROP flow. One recipe at a time; kept ones become the book.
-//
-// Which recipe is showing, and what has been kept so far, live in
-// useBookFlow rather than here, so they are saved with the rest of the
-// book in progress and a refresh returns to the same recipe.
+// Keep/Drop review, one recipe at a time. Position and kept recipes live in useBookFlow.
 
 type Props = {
   recipes: RecipeSummary[]
@@ -20,10 +17,7 @@ export function RecipeReview({ recipes, index, onDecide }: Props) {
   const t = useStrings(FLOW)
   const recipe = recipes[index]
 
-  // KEEP and DROP sit at the bottom of a long recipe, so without this the
-  // next recipe opened wherever the last one was scrolled to, often at its
-  // end. A layout effect runs before the browser paints, so the new recipe
-  // is never seen at the old position, not even for a frame.
+  // Each recipe opens at the top. Runs before paint so the old position never shows.
   useLayoutEffect(() => {
     window.scrollTo(0, 0)
   }, [index])
@@ -33,9 +27,8 @@ export function RecipeReview({ recipes, index, onDecide }: Props) {
   }
 
   return (
-    <>
-      {/* Keyed by recipe so each one mounts fresh: nothing from the
-          previous card, its photo or its loaded content, carries over. */}
+    <div className="review">
+      {/* Keyed so each recipe mounts fresh. */}
       <RecipeCard
         key={recipe.id}
         recipe={recipe}
@@ -51,6 +44,6 @@ export function RecipeReview({ recipes, index, onDecide }: Props) {
           {t.drop}
         </button>
       </div>
-    </>
+    </div>
   )
 }

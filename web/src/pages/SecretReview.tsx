@@ -3,16 +3,10 @@ import { SecretCard } from '../components/secrets/SecretCard'
 import { SECRETS } from '../i18n/strings/secrets'
 import { useStrings } from '../i18n/useStrings'
 import type { CategorySecrets } from '../types'
+import '../styles/review.css'
 
-// KEEP / DROP for a Secrets Book. One secret at a time, the same as the
-// recipe review; kept ones become the book.
-//
-// Which secret is showing, and what has been kept so far, live in the
-// Secrets flow hook rather than here, the same split as RecipeReview and
-// useBookFlow.
-//
-// The buttons are the recipe review's (.decide, .decide-btn). Their words
-// come from secrets.ts, since Spanish uses the masculine form for a secret.
+// Keep/Drop review for a Secrets Book. Shares the recipe review's decide bar.
+// Button words come from secrets.ts (Spanish uses the masculine form).
 
 type Props = {
   data: CategorySecrets
@@ -24,9 +18,7 @@ export function SecretReview({ data, index, onDecide }: Props) {
   const t = useStrings(SECRETS)
   const secret = data.secrets[index]
 
-  // KEEP and DROP sit under a long secret, so without this the next one
-  // would open scrolled to wherever the last one ended. A layout effect
-  // runs before the browser paints, so the old position is never seen.
+  // Each secret opens at the top. Runs before paint so the old position never shows.
   useLayoutEffect(() => {
     window.scrollTo(0, 0)
   }, [index])
@@ -36,9 +28,8 @@ export function SecretReview({ data, index, onDecide }: Props) {
   }
 
   return (
-    <>
-      {/* Keyed by secret so each one mounts fresh, and the last one's
-          illustration never shows while the next one loads. */}
+    <div className="review">
+      {/* Keyed so each secret mounts fresh. */}
       <SecretCard
         key={secret.id}
         secret={secret}
@@ -56,6 +47,6 @@ export function SecretReview({ data, index, onDecide }: Props) {
           {t.drop}
         </button>
       </div>
-    </>
+    </div>
   )
 }

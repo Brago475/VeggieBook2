@@ -1,0 +1,19 @@
+/* Keep/Drop review screens. The screen fills the viewport so the decide bar
+   always rests at the bottom, whatever the length of the recipe or secret. */
+
+.review {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.review > :first-child {
+  margin-bottom: var(--sp-5);
+}
+
+.review > .decide {
+  margin-top: auto;
+  padding-bottom: calc(var(--sp-4) + env(safe-area-inset-bottom, 0px));
+  z-index: 5;
+}
