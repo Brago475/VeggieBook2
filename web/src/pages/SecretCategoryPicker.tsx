@@ -1,6 +1,8 @@
-import { NavBar } from '../components/NavBar'
-import { ScreenLabel } from '../components/ScreenLabel'
-import { SecretCategoryRow } from '../components/SecretCategoryRow'
+import { NavBar } from '../components/layout/NavBar'
+import { ScreenLabel } from '../components/layout/ScreenLabel'
+import { SecretCategoryRow } from '../components/secrets/SecretCategoryRow'
+import { SECRETS } from '../i18n/strings/secrets'
+import { useStrings } from '../i18n/useStrings'
 import type { SecretCategory } from '../types'
 
 // The first screen of a new Secrets Book, matching the original app:
@@ -35,13 +37,15 @@ export function SecretCategoryPicker({
   onSelect,
   onWhoSaysSo,
 }: Props) {
+  const t = useStrings(SECRETS)
+
   return (
     <>
-      <ScreenLabel>Choose the Secrets You Want</ScreenLabel>
+      <ScreenLabel>{t.chooseTitle}</ScreenLabel>
 
       {loading && (
         <div role="status" aria-busy="true">
-          <span className="visually-hidden">Loading the kinds of secrets...</span>
+          <span className="visually-hidden">{t.loadingKinds}</span>
           <ul aria-hidden="true">
             {Array.from({ length: SKELETON_ROWS }, (_, i) => (
               <li key={i}>
@@ -55,7 +59,7 @@ export function SecretCategoryPicker({
         </div>
       )}
 
-      {error && <p className="message">Could not load: {error}</p>}
+      {error && <p className="message">{t.couldNotLoad(error)}</p>}
 
       <ul>
         {categories.map((category) => (
@@ -67,9 +71,7 @@ export function SecretCategoryPicker({
 
       {/* Hidden until the list is there, so the bar never sits under an
           empty screen while the categories load. */}
-      {!loading && !error && (
-        <NavBar primaryLabel="Who Says So?" onPrimary={onWhoSaysSo} />
-      )}
+      {!loading && !error && <NavBar primaryLabel={t.whoSaysSo} onPrimary={onWhoSaysSo} />}
     </>
   )
 }

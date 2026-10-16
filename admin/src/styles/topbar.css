@@ -1,0 +1,34 @@
+/* The page's own controls in the top bar (see
+   components/layout/TopbarSlot.tsx):
+     .topbar-actions  right of the title
+     .topbar-below    a full-width row under the title
+   Both take no space on pages that don't use them. */
+
+.topbar {
+  flex-wrap: wrap;
+  row-gap: var(--sp-3);
+}
+
+.topbar-actions {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.topbar-below {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.topbar-actions:empty,
+.topbar-below:empty {
+  display: none;
+}

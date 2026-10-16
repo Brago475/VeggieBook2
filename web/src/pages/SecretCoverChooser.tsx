@@ -1,20 +1,22 @@
 import { useState } from 'react'
-import { BookCard } from '../components/BookCard'
-import { NavBar } from '../components/NavBar'
-import { SecretCoverOptions } from '../components/SecretCoverOptions'
+import { BookCard } from '../components/library/BookCard'
+import { NavBar } from '../components/layout/NavBar'
+import { SecretCoverOptions } from '../components/secrets/SecretCoverOptions'
+import { FLOW } from '../i18n/strings/flow'
+import { SECRETS } from '../i18n/strings/secrets'
+import { useStrings } from '../i18n/useStrings'
 import type { SecretCategory } from '../types'
 
-// Last screen of a Secrets Book: pick the cover, then finish the book.
+// Last screen of a Secrets Book: pick the cover, then save the book.
 // The Secrets counterpart of CoverChooser, with the same preview, the same
-// three cover options, and the same buttons, so both kinds of book end the
+// three cover options, and the same button, so both kinds of book end the
 // same way.
 //
 // The preview is the card the home screen will show: the category's
 // picture fills it, with the chosen cover as the inset.
 //
-// Signed in, SAVE BOOK saves to the account. A guest gets two choices:
-// create an account and save the book into it, or finish without saving and
-// keep the book on this page until it closes.
+// Everyone who reaches this screen is a guest or an account, and both save
+// to the server, so SAVE BOOK is the only way to finish.
 
 type Props = {
   categories: SecretCategory[]
@@ -23,11 +25,8 @@ type Props = {
   categoryImage: string
   // The first kept secret's picture, selected on arrival.
   defaultCover: string
-  signedIn: boolean
   // Throws with a message for the user if the book cannot be saved.
   onSave: (cover: string) => Promise<void>
-  onCreateAccount: (cover: string) => void
-  onFinishWithoutSaving: (cover: string) => void
 }
 
 export function SecretCoverChooser({
@@ -36,11 +35,11 @@ export function SecretCoverChooser({
   categoryName,
   categoryImage,
   defaultCover,
-  signedIn,
   onSave,
-  onCreateAccount,
-  onFinishWithoutSaving,
 }: Props) {
+  const flow = useStrings(FLOW)
+  const t = useStrings(SECRETS)
+
   const [selected, setSelected] = useState(defaultCover)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -54,9 +53,7 @@ export function SecretCoverChooser({
       await onSave(selected)
       // On success the parent moves on to the home screen.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Your book could not be saved. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : flow.couldNotSave)
       setSaving(false)
     }
   }
@@ -64,7 +61,7 @@ export function SecretCoverChooser({
   return (
     <>
       <div className="intro-text">
-        <p>Choose a cover for your {categoryName} book.</p>
+        <p>{t.chooseCover(categoryName)}</p>
       </div>
 
       <div className="cover-preview">
@@ -82,32 +79,7 @@ export function SecretCoverChooser({
 
       {error && <p className="message">{error}</p>}
 
-      {signedIn ? (
-        <NavBar primaryLabel={saving ? 'SAVING...' : 'SAVE BOOK'} onPrimary={save} />
-      ) : (
-        <>
-          <NavBar
-            primaryLabel="CREATE ACCOUNT AND SAVE"
-            onPrimary={() => {
-              if (!uploading) onCreateAccount(selected)
-            }}
-          />
-          <div className="account-page">
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => {
-                if (!uploading) onFinishWithoutSaving(selected)
-              }}
-            >
-              Finish without saving
-            </button>
-            <p className="field-hint account-center">
-              Without an account, your book stays on this page until you close it.
-            </p>
-          </div>
-        </>
-      )}
+      <NavBar primaryLabel={saving ? flow.saving : flow.saveBook} onPrimary={save} />
     </>
   )
 }

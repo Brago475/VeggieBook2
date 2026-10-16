@@ -1,0 +1,750 @@
+/* The Overview page. See pages/Overview.tsx and components/overview/.
+   Mostly neutral, with green for VeggieBooks and counts (darker green
+   means more), violet for Secrets Books, blue for this week, and orange
+   for the average line and items taken out later. Shared chart pieces are
+   in charts.css, recent activity in recent.css, the picture rings in
+   overview-rings.css, and the age columns in overview-age.css.
+
+   Fits any screen: rows of panels sit side by side when there is room and
+   stack when there isn't; the weekly bars and labels shrink with their
+   panel; the "when books are saved" grid scrolls sideways on a phone
+   instead of crushing its labels. */
+
+.overview {
+  display: flex;
+  flex-direction: column;
+}
+
+.overview .note {
+  margin: 0 0 var(--sp-4);
+}
+
+/* Live line: a green Live pill, then the full day, date, and time. */
+
+.live {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  font-size: 14px;
+  color: #52525b;
+}
+
+.live strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #14532d;
+  background: #dcf2e3;
+  border-radius: 999px;
+}
+
+.live-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  background: #15803d;
+  border-radius: 999px;
+}
+
+.live-dot::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: #15803d;
+  border-radius: 999px;
+  animation: live-pulse 2s ease-out infinite;
+}
+
+.live-note {
+  color: var(--muted);
+}
+
+.live.is-failed .live-pill {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.live.is-failed .live-dot,
+.live.is-failed .live-dot::after {
+  background: var(--warn);
+}
+
+@keyframes live-pulse {
+  from {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.8);
+  }
+}
+
+/* Top row: the four number cards and the active study card. As many per
+   row as fit at 220px or wider, so five across on a wide screen, then
+   fewer, then one per row on a phone. */
+
+.overview-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: clamp(12px, 1.2vw, 16px);
+}
+
+/* Rows of panels: wide then narrow, narrow then wide, two halves, or one
+   full row. Below 1100px every row stacks into one column. Two halves
+   stack sooner only if each half would get narrower than 360px. */
+
+.overview-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: clamp(12px, 1.2vw, 16px);
+  margin-top: clamp(16px, 1.6vw, 24px);
+}
+
+.overview-row.is-reverse {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+}
+
+.overview-row.is-even {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+}
+
+.overview-row.is-full {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.overview-row .card.panel {
+  margin-top: 0;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .overview-row,
+  .overview-row.is-reverse,
+  .overview-row.is-even {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Books per week: a scale on the left, grid lines, a dashed average line,
+   stacked bars (green VeggieBooks, violet Secrets Books), and a card with
+   the dates and split when a week is hovered. The average is explained in
+   a small key under the dates. */
+
+.weekly {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.weekly-plot {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: var(--sp-2);
+}
+
+.weekly-axis {
+  position: relative;
+}
+
+.weekly-axis span {
+  position: absolute;
+  right: 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.weekly-area {
+  position: relative;
+}
+
+.weekly-grid {
+  position: absolute;
+  right: 0;
+  left: 0;
+  border-top: 1px dashed #ececef;
+}
+
+.weekly-grid.is-base {
+  border-top: 1px solid #d4d4d8;
+}
+
+.weekly-average {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  border-top: 2px dashed #f59e0b;
+  pointer-events: none;
+}
+
+.weekly-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: clamp(4px, 1.2vw, 16px);
+}
+
+.weekly-col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  border-radius: 8px;
+  outline: none;
+  cursor: default;
+}
+
+.weekly-col:focus-visible {
+  box-shadow: inset 0 0 0 2px #15803d;
+}
+
+.weekly-total {
+  font-size: 13px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.weekly-total.has-books {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.weekly-stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 48px;
+  transform-origin: bottom;
+  animation: weekly-grow 0.7s ease-out both;
+}
+
+.weekly-veggie {
+  background: #3f9a5b;
+}
+
+.weekly-veggie.is-top,
+.weekly-secrets {
+  border-radius: 6px 6px 0 0;
+}
+
+.weekly-secrets {
+  background: #a78bfa;
+}
+
+@keyframes weekly-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* Hover card: centered over the week, kept inside the chart at the ends. */
+.weekly-tip {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #ffffff;
+  white-space: nowrap;
+  pointer-events: none;
+  background: #18181b;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  transform: translateX(-50%);
+}
+
+.weekly-tip.is-start {
+  transform: translateX(-20%);
+}
+
+.weekly-tip.is-end {
+  transform: translateX(-85%);
+}
+
+.weekly-tip strong {
+  font-size: 13px;
+}
+
+.weekly-tip span {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.weekly-labels {
+  display: flex;
+  gap: clamp(4px, 1.2vw, 16px);
+  padding-left: 36px;
+}
+
+.weekly-labels span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(10px, 0.9vw, 12px);
+  color: #52525b;
+  text-align: center;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.weekly-labels span.is-current {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+/* The key for the average line, under the dates. */
+.weekly-key {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0 0 36px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.weekly-key i {
+  width: 22px;
+  border-top: 2px dashed #f59e0b;
+}
+
+/* Totals as chips in the panel's title row */
+
+.weekly-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.weekly-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px 10px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+.weekly-chip i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.weekly-chip.is-veggie {
+  color: #14532d;
+  background: #f0faf3;
+}
+
+.weekly-chip.is-veggie i {
+  background: #3f9a5b;
+}
+
+.weekly-chip.is-secrets {
+  color: #4c1d95;
+  background: #f5f3ff;
+}
+
+.weekly-chip.is-secrets i {
+  background: #a78bfa;
+}
+
+/* Swatches used by Kept vs taken out */
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.swatch.is-veggie,
+.swatch.is-kept {
+  background: var(--bar-fill);
+}
+
+.swatch.is-secrets {
+  background: #a78bfa;
+}
+
+.swatch.is-removed {
+  background: #f5c9a6;
+}
+
+/* Active study, as a card in the top row (see charts.css for the card). */
+
+.card.stat-card.study-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.study-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+.study-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.study-body .button-secondary {
+  margin-top: auto;
+}
+
+/* When books are saved: a busiest-time line, then a grid of days by
+   3-hour blocks with the count in each cell (the darker the green, the
+   busier), and each day's total with a small bar. Scrolls sideways on a
+   phone instead of crushing its labels. */
+
+.heat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.heat-busiest {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #14532d;
+  background: #f0faf3;
+  border-radius: 12px;
+}
+
+.heat-busiest svg {
+  flex-shrink: 0;
+}
+
+.heat-scroll {
+  overflow-x: auto;
+}
+
+.heat-grid {
+  display: grid;
+  grid-template-columns: 92px repeat(8, minmax(44px, 1fr)) 70px;
+  align-items: center;
+  gap: 6px;
+  min-width: 620px;
+}
+
+.heat-row {
+  display: contents;
+}
+
+.heat-col {
+  font-size: 11px;
+  font-weight: 600;
+  color: #52525b;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.heat-col.is-total {
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.heat-day {
+  font-size: 13px;
+  font-weight: 600;
+  color: #27272a;
+}
+
+.heat-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #14532d;
+  border-radius: 8px;
+  animation: heat-in 0.4s ease-out both;
+}
+
+.heat-cell.level-4,
+.heat-cell.level-5 {
+  color: #ffffff;
+}
+
+.heat-cell.level-0,
+.heat-key.level-0 {
+  background: #f1f4f1;
+}
+
+.heat-cell.level-1,
+.heat-key.level-1 {
+  background: #dcefe2;
+}
+
+.heat-cell.level-2,
+.heat-key.level-2 {
+  background: #b9dec5;
+}
+
+.heat-cell.level-3,
+.heat-key.level-3 {
+  background: #7cc095;
+}
+
+.heat-cell.level-4,
+.heat-key.level-4 {
+  background: #3f9a5b;
+}
+
+.heat-cell.level-5,
+.heat-key.level-5 {
+  background: #1f7a43;
+}
+
+.heat-total {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.heat-total i {
+  display: inline-block;
+  height: 8px;
+  background: #3f9a5b;
+  border-radius: 999px;
+}
+
+.heat-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #52525b;
+}
+
+.heat-key {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+@keyframes heat-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Kept vs taken out */
+
+.splits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.split {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.split-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.split-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.split-bar {
+  display: flex;
+  height: 12px;
+  overflow: hidden;
+  background: var(--bar-empty);
+  border-radius: 999px;
+  transform-origin: left;
+  animation: weekly-grow-x 0.8s ease-out both;
+}
+
+.split-kept {
+  background: var(--bar-fill);
+}
+
+.split-removed {
+  background: #f5c9a6;
+}
+
+.split-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.split-counts span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@keyframes weekly-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Most chosen answers: ranked rows (TopAnswersList, not on the Overview
+   right now; kept so it can come back). */
+
+.top-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.top-answer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.top-rank {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #14532d;
+  background: #dcf2e3;
+  border-radius: 999px;
+}
+
+.top-rank.is-first {
+  color: #ffffff;
+  background: #15803d;
+}
+
+.top-answer-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.top-answer-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.top-answer-text {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-answer-pct {
+  font-size: 15px;
+  font-weight: 800;
+  color: #14532d;
+  font-variant-numeric: tabular-nums;
+}
+
+.top-answer-q {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-answer-q strong {
+  color: #3f3f46;
+}
+
+.top-answer-people {
+  font-size: 12px;
+  color: #52525b;
+  white-space: nowrap;
+}
+
+/* Phones: the number of people moves under the bar. */
+@media (max-width: 600px) {
+  .top-answer {
+    flex-wrap: wrap;
+  }
+
+  .top-answer-people {
+    flex-basis: 100%;
+    padding-left: 46px;
+  }
+}
+
+/* Reduce motion */
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot::after,
+  .weekly-stack,
+  .heat-cell,
+  .split-bar {
+    animation: none;
+  }
+}

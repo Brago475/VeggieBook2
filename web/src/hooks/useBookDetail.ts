@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useLang } from '../i18n/languageContext'
+import { BOOK } from '../i18n/strings/book'
+import { useStrings } from '../i18n/useStrings'
 import { ApiError, apiFetch } from '../utils/api'
 
 // One saved book with its recipes, for the screen that opens a book from
 // the home library.
 //
-// The recipes arrive with their titles and first photo, so the list needs
-// no further requests. Opening one recipe still loads its full content
-// through useRecipeDetail, the same way the review step does.
+// The recipes arrive with their titles (in the current language) and first
+// photo, so the list needs no further requests. Opening one recipe still
+// loads its full content through useRecipeDetail, the same way the review
+// step does. A language change reloads the titles; the old ones stay on
+// screen until the new ones arrive.
 //
 // Takes the book id, or null when no book is open. A book belonging to
 // another account answers 404, the same as one that does not exist, so
@@ -33,9 +38,12 @@ export type BookDetail = {
 }
 
 type Loaded = { id: string; book: BookDetail }
-type Failed = { id: string; message: string }
+// gone marks a 404; message is the server's own text, if it sent one.
+type Failed = { id: string; gone: boolean; message: string | null }
 
 export function useBookDetail(id: string | null) {
+  const { lang } = useLang()
+  const t = useStrings(BOOK)
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [failed, setFailed] = useState<Failed | null>(null)
 
@@ -45,26 +53,24 @@ export function useBookDetail(id: string | null) {
     let cancelled = false
     setFailed(null)
 
-    apiFetch<BookDetail>(`/books/${id}`)
+    apiFetch<BookDetail>(`/books/${id}?lang=${lang}`)
       .then((book) => {
         if (!cancelled) setLoaded({ id, book })
       })
       .catch((err) => {
         if (cancelled) return
-        const message =
-          err instanceof ApiError && err.status === 404
-            ? 'This book is no longer available.'
-            : err instanceof Error
-              ? err.message
-              : 'Could not open this book.'
-        setFailed({ id, message })
+        setFailed({
+          id,
+          gone: err instanceof ApiError && err.status === 404,
+          message: err instanceof Error ? err.message : null,
+        })
       })
 
     // Guards against a slow response for a book the user has already left.
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, lang])
 
   // Takes one recipe out of this book. Throws with a message for the user
   // if the server refuses, so the screen can show it. On success the recipe
@@ -91,7 +97,12 @@ export function useBookDetail(id: string | null) {
   // Only answers for the book currently asked for, so the previous book's
   // recipes are never shown under a new book's title.
   const book = id !== null && loaded?.id === id ? loaded.book : null
-  const error = id !== null && failed?.id === id ? failed.message : null
+  const current = id !== null && failed?.id === id ? failed : null
+  const error = current
+    ? current.gone
+      ? t.noLongerAvailable
+      : (current.message ?? t.couldNotOpen)
+    : null
   const loading = id !== null && book === null && error === null
 
   return { book, loading, error, removeRecipe }

@@ -1,0 +1,61 @@
+/* Account settings card outlines. The shimmer comes from .skeleton in
+   skeleton.css; these classes only set shapes and sizes. */
+
+.account-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.account-skeleton-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.account-skeleton-text {
+  display: block;
+  width: 90%;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.account-skeleton-text + .account-skeleton-text {
+  width: 60%;
+}
+
+.account-skeleton-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.account-skeleton-label {
+  display: block;
+  width: 96px;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.account-skeleton-input {
+  display: block;
+  width: 100%;
+  height: 46px;
+  border-radius: 12px;
+}
+
+.account-skeleton-chip {
+  display: block;
+  width: 120px;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.account-skeleton-button {
+  display: block;
+  width: 168px;
+  max-width: 100%;
+  height: 44px;
+  border-radius: 12px;
+}

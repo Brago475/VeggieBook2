@@ -1,0 +1,471 @@
+/* Admin Books page: stats, filters, cover grid, and book window. */
+
+.bk-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  /* Fill the viewport below the top bar so the counter sits at the bottom. */
+  min-height: calc(100vh - 170px);
+}
+
+/* ---- Cards ---- */
+
+.bk-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* ---- Filters ---- */
+
+.bk-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.bk-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bk-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bk-tab {
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3f3f46;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.bk-tab span {
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.bk-tab:hover {
+  background: #f4f4f5;
+}
+
+.bk-tab.is-on {
+  color: #ffffff;
+  background: #15803d;
+  border-color: #15803d;
+}
+
+.bk-tab:focus-visible,
+.bk-tile:focus-visible,
+.bf-close:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.bk-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bk-search {
+  display: flex;
+  flex: 1 1 260px;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.bk-search:focus-within,
+.bk-select:focus-within {
+  border-color: #15803d;
+}
+
+.bk-search input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.bk-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 4px 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.bk-select span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.bk-select select {
+  max-width: 220px;
+  height: 100%;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ---- Grid ---- */
+
+.bk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.bk-tile {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.bk-tile:hover {
+  border-color: #15803d;
+  box-shadow: 0 8px 20px rgba(20, 20, 15, 0.1);
+  transform: translateY(-2px);
+}
+
+.bk-tile-cover {
+  display: block;
+  height: 130px;
+  background: #e4e4e7;
+}
+
+.bk-tile-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bk-tile-img.is-placeholder,
+.bf-placeholder {
+  display: grid;
+  place-items: center;
+  background: #8cc63e;
+}
+
+.bk-tile-img.is-placeholder svg {
+  width: 48px;
+  height: 48px;
+}
+
+.bk-personal {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 12px;
+  font-weight: 800;
+  color: #71717a;
+  background: repeating-linear-gradient(45deg, #e4e4e7 0 8px, #f4f4f5 8px 16px);
+}
+
+.bk-tile-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px 14px;
+}
+
+.bk-tile-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.bk-tile-title strong {
+  font-size: 15px;
+}
+
+.bk-tile-line {
+  font-size: 12.5px;
+  color: #52525b;
+}
+
+.bk-type {
+  display: inline-flex;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.bk-type.is-secrets {
+  color: #9d174d;
+  background: #fce7f3;
+}
+
+.bk-id {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+  color: #3f3f46;
+}
+
+.bk-out {
+  font-weight: 700;
+  color: #c2410c;
+}
+
+.bk-empty {
+  padding: 24px 0;
+  text-align: center;
+}
+
+.bk-more {
+  margin-top: auto;
+  padding-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.bk-spin.is-spinning {
+  animation: bk-spin 0.9s linear infinite;
+}
+
+@keyframes bk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- The window ---- */
+
+.bw-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(24, 24, 27, 0.5);
+}
+
+.bw {
+  display: flex;
+  width: min(1000px, 100%);
+  height: min(920px, 100%);
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.bw-left {
+  flex: 0 0 480px;
+  overflow-y: auto;
+  border-right: 1px solid var(--line);
+}
+
+.bw-right {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+/* ---- About this book ---- */
+
+.bf {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 20px 22px;
+}
+
+.bf-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bf-head h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.bf-close {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-left: auto;
+  padding: 0;
+  color: #52525b;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.bf-close:hover {
+  background: #f4f4f5;
+}
+
+.bf-fact {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  font-size: 13.5px;
+  border-bottom: 1px solid #f0f0f2;
+}
+
+.bf-fact > span {
+  color: #52525b;
+}
+
+.bf-fact strong {
+  text-align: right;
+}
+
+.bf-block h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #52525b;
+  text-transform: uppercase;
+}
+
+.bf-answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bf-answers span {
+  padding: 4px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  border-radius: 999px;
+}
+
+.bf-item {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+}
+
+.bf-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.bf-actions > .st-button {
+  align-self: flex-start;
+}
+
+.bf-step {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bf-note {
+  margin: 0;
+  font-size: 12px;
+  color: #71717a;
+}
+
+/* Narrow screens: stack the book above the details panel. */
+@media (max-width: 860px) {
+  .bw-backdrop {
+    padding: 0;
+  }
+
+  .bw {
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    border-radius: 0;
+  }
+
+  .bw-left,
+  .bw-right {
+    flex: none;
+    overflow: visible;
+    border-right: none;
+  }
+
+  .bw-right {
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bk-tile,
+  .bk-tile:hover {
+    transform: none;
+    transition: none;
+  }
+
+  .bk-spin.is-spinning {
+    animation: none;
+  }
+}

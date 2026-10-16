@@ -1,0 +1,44 @@
+/* The Password recovery card on account settings (RecoveryCard.tsx).
+
+   The selectors include .account-card so they outrank the field rules in
+   account.css, which load after this file. */
+
+.account-card.recovery-card .recovery-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.account-card.recovery-card .recovery-question {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--font-label);
+  font-weight: 600;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border-radius: var(--r-md);
+}
+
+/* The PIN reads as six spaced digits. */
+.account-card.recovery-card .recovery-pin {
+  letter-spacing: 0.3em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The question drop-down, with a drawn arrow so it looks the same in every
+   browser. */
+.account-card.recovery-card .field-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 44px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%232f5d2f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+}
+
+.account-card.recovery-card .recovery-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}

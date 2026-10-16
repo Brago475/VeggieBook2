@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Controllers;
 using VeggieBook.Api.Covers;
@@ -29,6 +30,11 @@ namespace VeggieBook.Api.Books;
 // Both kinds of book are listed, opened and deleted here. A Secrets Book is
 // saved by SecretBooksController (POST /api/books/secrets), since it is
 // built differently; everything after saving is the same.
+//
+// Saving and deleting a book each write a line to the activity log
+// (Activity/ActivityLog.cs) for the admin site; the log never blocks either.
+//
+// Messages carry a code the site translates (ErrorCodes, ApiError).
 
 public record BookRecipe(int Id, int ExtraCopies);
 
@@ -43,8 +49,10 @@ public record CreateBookRequest(
 [ApiController]
 [Route("api/books")]
 [Authorize]
-public class BooksController(AccountsContext db, VeggieBookContext content)
-    : ControllerBase
+public class BooksController(
+    AccountsContext db,
+    VeggieBookContext content,
+    ILogger<BooksController> logger) : ControllerBase
 {
     // Limits on what one account can store. At 50 books with a 400 KB cover
     // each, one account holds at most about 20 MB.
@@ -198,44 +206,45 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
         var uid = CurrentUserId;
 
         if (await db.Books.CountAsync(b => b.UserId == uid) >= MaxBooksPerUser)
-            return Conflict(new
-            {
-                error = $"You can keep up to {MaxBooksPerUser} books. Delete one to make room."
-            });
+            return Conflict(new ApiError(ErrorCodes.BookLimit,
+                $"You can keep up to {MaxBooksPerUser} books. Delete one to make room.")
+            { Values = new { max = MaxBooksPerUser } }.Body());
 
         var vegetable = await content.Vegetables
             .FirstOrDefaultAsync(v => v.Code == req.VegetableCode && v.Active);
         if (vegetable is null)
-            return BadRequest(new { error = "Unknown vegetable." });
+            return BadRequest(new ApiError(ErrorCodes.UnknownVegetable, "Unknown vegetable.").Body());
 
         // Answers must be real attributes from the questions.
         var attributes = (req.Attributes ?? []).Distinct().ToArray();
         if (attributes.Length > MaxAttributes)
-            return BadRequest(new { error = "Too many answers." });
+            return BadRequest(new ApiError(ErrorCodes.TooManyAnswers, "Too many answers.").Body());
         var knownAttributes = await content.Attributes
             .CountAsync(a => attributes.Contains(a.Name));
         if (knownAttributes != attributes.Length)
-            return BadRequest(new { error = "Unknown answer." });
+            return BadRequest(new ApiError(ErrorCodes.UnknownAnswer, "Unknown answer.").Body());
 
         // Recipes must be real, active, and for this book's vegetable.
         var recipes = req.Recipes ?? [];
         if (recipes.Length > MaxRecipesPerBook)
-            return BadRequest(new { error = "Too many recipes." });
+            return BadRequest(new ApiError(ErrorCodes.TooManyRecipes, "Too many recipes.").Body());
         var recipeIds = recipes.Select(r => r.Id).Distinct().ToArray();
         if (recipeIds.Length != recipes.Length)
-            return BadRequest(new { error = "A recipe is listed twice." });
+            return BadRequest(new ApiError(ErrorCodes.RecipeTwice, "A recipe is listed twice.").Body());
         if (recipes.Any(r => r.ExtraCopies is < 0 or > MaxExtraCopies))
-            return BadRequest(new { error = "Extra copies must be between 0 and 10." });
+            return BadRequest(new ApiError(ErrorCodes.ExtraCopiesRange,
+                "Extra copies must be between 0 and 10.")
+            { Values = new { min = 0, max = MaxExtraCopies } }.Body());
         var validRecipes = await content.Recipes.CountAsync(r =>
             recipeIds.Contains(r.Id) && r.VegetableCode == vegetable.Code && r.Active);
         if (validRecipes != recipeIds.Length)
-            return BadRequest(new { error = "Unknown recipe." });
+            return BadRequest(new ApiError(ErrorCodes.UnknownRecipe, "Unknown recipe.").Body());
 
         // Exactly one cover: one from the catalog, or an upload.
         var hasPreset = !string.IsNullOrEmpty(req.CoverPath);
         var hasUpload = !string.IsNullOrEmpty(req.CoverUpload);
         if (hasPreset == hasUpload)
-            return BadRequest(new { error = "Choose one cover." });
+            return BadRequest(new ApiError(ErrorCodes.ChooseOneCover, "Choose one cover.").Body());
 
         byte[]? upload = null;
         if (hasPreset)
@@ -243,16 +252,14 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
             // Vegetable covers, shared covers, and recipe photos. See
             // Covers/CoverCatalog.cs.
             if (!await CoverCatalog.IsAllowed(content, req.CoverPath!))
-                return BadRequest(new { error = "Unknown cover." });
+                return BadRequest(new ApiError(ErrorCodes.UnknownCover, "Unknown cover.").Body());
         }
         else
         {
             upload = DecodeJpeg(req.CoverUpload!);
             if (upload is null)
-                return BadRequest(new
-                {
-                    error = "This photo could not be used. Try a different photo."
-                });
+                return BadRequest(new ApiError(ErrorCodes.PhotoUnusable,
+                    "This photo could not be used. Try a different photo.").Body());
         }
 
         var book = new Book
@@ -284,20 +291,50 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
         db.Books.Add(book);
         await db.SaveChangesAsync();
 
+        // Permanent record of the save. At matches the book's CreatedAt so the
+        // admin Activity page can pair it with the book row.
+        var saved = await ActivityLog.ForBookAsync(
+            db, logger, uid, "veggie", vegetable.Code, null, recipes.Length, ActivityLog.BookSaved);
+        if (saved is not null) saved.At = book.CreatedAt;
+        await ActivityLog.SaveAsync(db, logger, saved);
+
         return Created($"/api/books/{book.Id}", new { id = book.Id });
     }
 
     // Deletes in one statement. The database removes the book's answers,
     // recipes, and uploaded cover through ON DELETE CASCADE.
+    //
+    // Before deleting, it reads what the book was (kind, vegetable or
+    // category, how many items it kept) for the activity log line, which is
+    // saved once the delete has gone through.
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var uid = CurrentUserId;
+
+        var info = await db.Books
+            .AsNoTracking()
+            .Where(b => b.Id == id && b.UserId == uid)
+            .Select(b => new
+            {
+                b.Kind,
+                b.VegetableCode,
+                b.SecretCategoryId,
+                Items = b.Selections.Count(s => s.Kept)
+            })
+            .FirstOrDefaultAsync();
+        if (info is null) return NotFound();
+
+        var entry = await ActivityLog.ForBookAsync(
+            db, logger, uid, info.Kind, info.VegetableCode, info.SecretCategoryId, info.Items);
+
         var removed = await db.Books
             .Where(b => b.Id == id && b.UserId == uid)
             .ExecuteDeleteAsync();
+        if (removed == 0) return NotFound();
 
-        return removed == 0 ? NotFound() : NoContent();
+        await ActivityLog.SaveAsync(db, logger, entry);
+        return NoContent();
     }
 
     // Takes one recipe out of a saved book. The row is kept with Kept set to
@@ -326,10 +363,8 @@ public class BooksController(AccountsContext db, VeggieBookContext content)
         if (target is null) return NotFound();
 
         if (kept.Count == 1)
-            return Conflict(new
-            {
-                error = "A book needs at least one recipe. Delete the book instead."
-            });
+            return Conflict(new ApiError(ErrorCodes.LastRecipe,
+                "A book needs at least one recipe. Delete the book instead.").Body());
 
         target.Kept = false;
         await db.SaveChangesAsync();

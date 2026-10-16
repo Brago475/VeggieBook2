@@ -1,24 +1,69 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { apiFetch } from '../utils/api'
+import { PROFILE_CHANGED } from '../utils/profileApi'
 
-// Who is using the site: still being checked, a guest, or signed in.
+// Who is using the site, as the API sees it.
+//
+//   loading    the first check has not answered yet
+//   visitor    nobody signed in: Welcome is shown
+//   guest      a temporary guest account (see Auth/GuestAccounts.cs). Books
+//              save like an account's, and are deleted on sign out or after
+//              24 hours.
+//   signedIn   a real account, with its username and roles: ["User"] or
+//              ["User", "Admin"]
 //
 // The session itself is the HttpOnly cookie the API sets. This hook only
-// mirrors what the API says. On load it asks /api/auth/me, which answers
-// { email: null } for a visitor who is not signed in. That is not an error.
+// mirrors what the API says.
 //
-// "guest" here simply means not signed in. Whether that visitor has chosen
-// Continue as guest, or still needs the welcome screen, is App's decision.
+// A guest has no email, so each guest session gets its own random key. The
+// book list uses it to know whose books it holds, so one guest's books are
+// never shown to the next guest on the same device, not even for a moment.
+//
+// When the profile is saved (components/ProfileCard.tsx), this asks the API
+// again, so the new username shows everywhere right away.
 //
 // Every action throws an ApiError on failure, with a message written for the
 // user, so screens can catch it and display it.
 
 export type AuthState =
   | { status: 'loading' }
-  | { status: 'guest' }
-  | { status: 'signedIn'; email: string }
+  | { status: 'visitor' }
+  | { status: 'guest'; key: string }
+  | { status: 'signedIn'; email: string; displayName: string | null; roles: string[] }
 
-type MeResponse = { email: string | null }
+// Everything the Create Account form sends. displayName is the username;
+// blank means the API makes one up.
+export type RegisterForm = {
+  firstName: string
+  lastName: string
+  displayName: string
+  email: string
+  password: string
+  ageRange: string
+  pin: string
+  questionId: number
+  answer: string
+  agreeToTerms: boolean
+  keepGuestBooks: boolean
+}
+
+type MeResponse = { email: string | null; roles: string[]; displayName?: string | null }
+
+export function isAdmin(auth: AuthState): boolean {
+  return auth.status === 'signedIn' && auth.roles.includes('Admin')
+}
+
+function newGuestKey() {
+  return `guest:${crypto.randomUUID()}`
+}
+
+function fromMe(me: MeResponse): AuthState {
+  const roles = me.roles ?? []
+  if (me.email)
+    return { status: 'signedIn', email: me.email, displayName: me.displayName ?? null, roles }
+  if (roles.includes('Guest')) return { status: 'guest', key: newGuestKey() }
+  return { status: 'visitor' }
+}
 
 export function useAuth() {
   const [auth, setAuth] = useState<AuthState>({ status: 'loading' })
@@ -28,15 +73,12 @@ export function useAuth() {
 
     apiFetch<MeResponse>('/auth/me')
       .then((me) => {
-        if (cancelled) return
-        setAuth(
-          me.email ? { status: 'signedIn', email: me.email } : { status: 'guest' },
-        )
+        if (!cancelled) setAuth(fromMe(me))
       })
       .catch(() => {
         // If the API cannot be reached, the site still works for browsing.
         // Saving will show its own error.
-        if (!cancelled) setAuth({ status: 'guest' })
+        if (!cancelled) setAuth({ status: 'visitor' })
       })
 
     return () => {
@@ -44,32 +86,60 @@ export function useAuth() {
     }
   }, [])
 
-  async function register(email: string, password: string) {
+  // A saved profile: refresh the signed-in account's details. Only an
+  // account can have a profile, so a guest or visitor is left as is.
+  useEffect(() => {
+    function refresh() {
+      apiFetch<MeResponse>('/auth/me')
+        .then((me) => {
+          const next = fromMe(me)
+          if (next.status === 'signedIn') setAuth(next)
+        })
+        .catch(() => {
+          // The old username stays until the next visit. Nothing else breaks.
+        })
+    }
+
+    window.addEventListener(PROFILE_CHANGED, refresh)
+    return () => window.removeEventListener(PROFILE_CHANGED, refresh)
+  }, [])
+
+  async function startGuest() {
+    const me = await apiFetch<MeResponse>('/auth/guest', { method: 'POST' })
+    setAuth(fromMe(me))
+  }
+
+  // Creating an account signs in right away. A guest's books either move
+  // into the new account or are deleted, as the guest chose.
+  async function register(form: RegisterForm) {
     const me = await apiFetch<MeResponse>('/auth/register', {
       method: 'POST',
-      body: { email, password },
+      body: form,
     })
-    setAuth({ status: 'signedIn', email: me.email ?? email })
+    setAuth(fromMe(me))
   }
 
-  async function signIn(email: string, password: string) {
+  async function signIn(email: string, password: string, keepGuestBooks: boolean) {
     const me = await apiFetch<MeResponse>('/auth/signin', {
       method: 'POST',
-      body: { email, password },
+      body: { email, password, keepGuestBooks },
     })
-    setAuth({ status: 'signedIn', email: me.email ?? email })
+    setAuth(fromMe(me))
   }
 
+  // For a guest, this also deletes the guest account and its books.
   async function signOut() {
     await apiFetch<void>('/auth/signout', { method: 'POST' })
-    setAuth({ status: 'guest' })
+    setAuth({ status: 'visitor' })
   }
 
-  // Signs out every other device. This one stays signed in.
-  async function changePassword(currentPassword: string, newPassword: string) {
+  // The second step of changing a password. The ticket comes from proving
+  // it's you first (verifyForPasswordChange in utils/authApi.ts). Signs out
+  // every other device; this one stays signed in.
+  async function changePassword(ticket: string, newPassword: string) {
     await apiFetch<void>('/auth/password', {
       method: 'POST',
-      body: { currentPassword, newPassword },
+      body: { ticket, newPassword },
     })
   }
 
@@ -78,18 +148,19 @@ export function useAuth() {
       method: 'POST',
       body: { password },
     })
-    setAuth({ status: 'guest' })
+    setAuth({ status: 'visitor' })
   }
 
   // Called when any request comes back 401 mid-visit, for example after the
-  // password was changed on another device. The cookie is already invalid,
-  // so this only brings the page up to date.
-  function sessionEnded() {
-    setAuth({ status: 'guest' })
-  }
+  // password was changed on another device, or a guest's time ran out. The
+  // cookie is already invalid, so this only brings the page up to date.
+  const sessionEnded = useCallback(() => {
+    setAuth({ status: 'visitor' })
+  }, [])
 
   return {
     auth,
+    startGuest,
     register,
     signIn,
     signOut,

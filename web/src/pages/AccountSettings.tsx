@@ -1,22 +1,30 @@
 import { useState } from 'react'
-import { SignOutIcon, UserIcon } from '../components/AccountIcons'
-import { ChangePasswordForm } from '../components/ChangePasswordForm'
-import { DeleteAccountForm } from '../components/DeleteAccountForm'
-import { LeafDecor } from '../components/LeafDecor'
+import { SignOutIcon, UserIcon } from '../components/icons/AccountIcons'
+import { ChangePasswordForm } from '../components/account/ChangePasswordForm'
+import { DeleteAccountForm } from '../components/account/DeleteAccountForm'
+import { LeafDecor } from '../components/layout/LeafDecor'
+import { ProfileCard } from '../components/account/ProfileCard'
+import { RecoveryCard } from '../components/account/RecoveryCard'
+import { ResearchCard } from '../components/account/ResearchCard'
+import { ACCOUNT } from '../i18n/strings/account'
+import { COMMON } from '../i18n/strings/common'
+import { HOME } from '../i18n/strings/home'
+import { useStrings } from '../i18n/useStrings'
 
-// Account settings: who is signed in, change password, delete account, and
-// sign out.
+// Profile and settings: the profile (name and username), change password,
+// password recovery (PIN and security question), help with research
+// (research tracking), delete account, and sign out.
 //
-// Change password and delete account are each a card, with their own error
-// message, so a problem in one never hides another. Sign out sits below
-// them on its own: it is one button with no settings behind it.
+// Each section is a card, with its own error message, so a problem in one
+// never hides another. Sign out sits below them on its own: it is one
+// button with no settings behind it. It is also in the home screen's Menu.
 //
 // The two faint leaves in the bottom corner are decoration only.
 
 type Props = {
   email: string
   onSignOut: () => Promise<void>
-  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  onChangePassword: (ticket: string, newPassword: string) => Promise<void>
   onDeleteAccount: (password: string) => Promise<void>
 }
 
@@ -26,6 +34,10 @@ export function AccountSettings({
   onChangePassword,
   onDeleteAccount,
 }: Props) {
+  const t = useStrings(ACCOUNT)
+  const home = useStrings(HOME)
+  const common = useStrings(COMMON)
+
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,9 +49,7 @@ export function AccountSettings({
       await onSignOut()
       // On success the parent leaves this screen.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : common.somethingWrong)
       setBusy(false)
     }
   }
@@ -54,13 +64,19 @@ export function AccountSettings({
           <UserIcon />
         </span>
         <div className="account-hero-text">
-          <h1 className="account-title">Your account</h1>
+          <h1 className="account-title">{home.profile}</h1>
           <p className="account-email">{email}</p>
-          <p className="account-tagline">Manage your account and preferences.</p>
+          <p className="account-tagline">{t.tagline}</p>
         </div>
       </div>
 
+      <ProfileCard />
+
       <ChangePasswordForm email={email} onChangePassword={onChangePassword} />
+
+      <RecoveryCard />
+
+      <ResearchCard />
 
       <DeleteAccountForm onDeleteAccount={onDeleteAccount} />
 
@@ -73,9 +89,9 @@ export function AccountSettings({
         disabled={busy}
       >
         <SignOutIcon />
-        {busy ? 'Signing out...' : 'Sign out'}
+        {busy ? t.signingOut : home.signOut}
       </button>
-      <p className="account-signout-note">You'll be signed out on this device.</p>
+      <p className="account-signout-note">{t.signOutNote}</p>
 
       {error && (
         <p className="form-error" role="alert">

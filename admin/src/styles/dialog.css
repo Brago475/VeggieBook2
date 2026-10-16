@@ -1,0 +1,32 @@
+/* The confirmation box. See components/common/ConfirmDialog.tsx. */
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  background: rgba(31, 42, 31, 0.4);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  max-width: 440px;
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 18px;
+  color: var(--green-deep);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}

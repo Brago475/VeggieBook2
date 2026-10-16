@@ -1,0 +1,85 @@
+/* The language switch (LanguageSwitch.tsx): the full-width switch in the
+   home menu, or a small centered switch under Sign in on Welcome. */
+
+.lang-switch {
+  display: flex;
+  align-items: center;
+}
+
+/* In the home menu: two equal halves in a gray box. */
+.lang-switch.is-menu {
+  padding: 2px 6px 4px;
+}
+
+.lang-switch.is-menu .lang-switch-options {
+  display: flex;
+  width: 100%;
+  padding: 3px;
+  background: #e9ebe7;
+  border-radius: 10px;
+}
+
+.lang-switch.is-menu .lang-switch-btn {
+  flex: 1;
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.lang-switch.is-menu .lang-switch-btn.is-on {
+  font-weight: 800;
+  color: var(--green-deep);
+}
+
+/* Under Sign in on Welcome. */
+.lang-switch.is-inline {
+  justify-content: center;
+  gap: 10px;
+  padding: 2px 0 0;
+}
+
+.lang-switch-globe {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+}
+
+.lang-switch-options {
+  display: inline-flex;
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+}
+
+.lang-switch-btn {
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  opacity: 0.7;
+  appearance: none;
+}
+
+.lang-switch-btn:hover {
+  opacity: 1;
+}
+
+.lang-switch-btn.is-on {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+
+.lang-switch-btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

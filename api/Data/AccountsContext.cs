@@ -1,38 +1,62 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace VeggieBook.Api.Data;
 
-// Database context for user data: accounts and saved books.
+// Database context for user data: accounts, roles, saved books, research
+// IDs, studies and tracking, and the activity log.
 //
 // Separate from VeggieBookContext, which is read-only with tracking switched
 // off. Keeping writes in their own context means the content endpoints never
 // gain a write path, and user data never mixes with content queries.
 //
-// Same rules as the content context: no EF migrations, snake_case mapped
-// explicitly, and db/migrations is the source of truth for these tables.
+// Same rules as the content context: no EF migrations, snake_case names, and
+// db/migrations is the source of truth for these tables. Identity's own
+// tables are renamed below to match db/migrations/003_identity.sql.
 
 public class AccountsContext(DbContextOptions<AccountsContext> options)
-    : DbContext(options)
+    : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
-    public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<Book> Books => Set<Book>();
     public DbSet<BookCoverUpload> BookCoverUploads => Set<BookCoverUpload>();
+    public DbSet<ResearchParticipant> ResearchParticipants => Set<ResearchParticipant>();
+    public DbSet<ActivityEntry> ActivityLog => Set<ActivityEntry>();
+    public DbSet<TrackingChange> TrackingChanges => Set<TrackingChange>();
+    public DbSet<Study> Studies => Set<Study>();
+    public DbSet<StudyNotice> StudyNotices => Set<StudyNotice>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
-        b.Entity<AppUser>(e =>
+        // Identity's model first, then our names on top of it.
+        base.OnModelCreating(b);
+
+        b.Entity<AppUser>().ToTable("app_user");
+        b.Entity<AppRole>().ToTable("app_role");
+        b.Entity<IdentityUserRole<Guid>>().ToTable("app_user_role");
+        b.Entity<IdentityUserClaim<Guid>>().ToTable("app_user_claim");
+        b.Entity<IdentityUserLogin<Guid>>().ToTable("app_user_login");
+        b.Entity<IdentityUserToken<Guid>>().ToTable("app_user_token");
+        b.Entity<IdentityRoleClaim<Guid>>().ToTable("app_role_claim");
+
+        // Identity names its columns in PascalCase (NormalizedEmail). Ours
+        // are snake_case (normalized_email), so convert every Identity column.
+        Type[] identityTypes =
+        [
+            typeof(AppUser),
+            typeof(AppRole),
+            typeof(IdentityUserRole<Guid>),
+            typeof(IdentityUserClaim<Guid>),
+            typeof(IdentityUserLogin<Guid>),
+            typeof(IdentityUserToken<Guid>),
+            typeof(IdentityRoleClaim<Guid>)
+        ];
+        foreach (var type in identityTypes)
         {
-            e.ToTable("app_user");
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedNever();
-            e.Property(x => x.Email).HasColumnName("email");
-            e.Property(x => x.EmailNormalized).HasColumnName("email_normalized");
-            e.Property(x => x.PasswordHash).HasColumnName("password_hash");
-            e.Property(x => x.SecurityStamp).HasColumnName("security_stamp");
-            e.Property(x => x.FailedSignIns).HasColumnName("failed_sign_ins");
-            e.Property(x => x.LockedUntil).HasColumnName("locked_until");
-            e.Property(x => x.CreatedAt).HasColumnName("created_at");
-        });
+            var entity = b.Model.FindEntityType(type)!;
+            foreach (var property in entity.GetProperties())
+                property.SetColumnName(ToSnakeCase(property.Name));
+        }
 
         b.Entity<Book>(e =>
         {
@@ -81,5 +105,81 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.ContentType).HasColumnName("content_type");
             e.Property(x => x.Data).HasColumnName("data");
         });
+
+        // See db/migrations/006_research_participant.sql.
+        b.Entity<ResearchParticipant>(e =>
+        {
+            e.ToTable("research_participant");
+            e.HasKey(x => x.UserId);
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.ParticipantId).HasColumnName("participant_id");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        // See db/migrations/007_activity_log.sql and 010_activity_detail.sql.
+        b.Entity<ActivityEntry>(e =>
+        {
+            e.ToTable("activity_log");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.At).HasColumnName("at");
+            e.Property(x => x.Kind).HasColumnName("kind");
+            e.Property(x => x.ParticipantId).HasColumnName("participant_id");
+            e.Property(x => x.BookKind).HasColumnName("book_kind");
+            e.Property(x => x.VegetableCode).HasColumnName("vegetable_code");
+            e.Property(x => x.SecretCategoryId).HasColumnName("secret_category_id");
+            e.Property(x => x.ItemCount).HasColumnName("item_count");
+            e.Property(x => x.Detail).HasColumnName("detail");
+        });
+
+        // See db/migrations/008_studies.sql.
+        b.Entity<TrackingChange>(e =>
+        {
+            e.ToTable("research_tracking_change");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.TrackingOn).HasColumnName("tracking_on");
+            e.Property(x => x.ChangedBy).HasColumnName("changed_by");
+            e.Property(x => x.AdminId).HasColumnName("admin_id");
+            e.Property(x => x.At).HasColumnName("at");
+        });
+
+        b.Entity<Study>(e =>
+        {
+            e.ToTable("study");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.Number).HasColumnName("number");
+            e.Property(x => x.StartedAt).HasColumnName("started_at");
+            e.Property(x => x.EndedAt).HasColumnName("ended_at");
+            e.Property(x => x.StartedBy).HasColumnName("started_by");
+            e.Property(x => x.EndedBy).HasColumnName("ended_by");
+            e.Property(x => x.Name).HasColumnName("name"); // 009_study_name.sql
+        });
+
+        b.Entity<StudyNotice>(e =>
+        {
+            e.ToTable("study_notice");
+            e.HasKey(x => new { x.StudyId, x.UserId });
+            e.Property(x => x.StudyId).HasColumnName("study_id");
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.ShownAt).HasColumnName("shown_at");
+            e.Property(x => x.Answer).HasColumnName("answer");
+            e.Property(x => x.AnsweredAt).HasColumnName("answered_at");
+        });
+    }
+
+    // NormalizedUserName becomes normalized_user_name.
+    private static string ToSnakeCase(string name)
+    {
+        var sb = new System.Text.StringBuilder(name.Length + 8);
+        for (var i = 0; i < name.Length; i++)
+        {
+            var c = name[i];
+            if (char.IsUpper(c) && i > 0) sb.Append('_');
+            sb.Append(char.ToLowerInvariant(c));
+        }
+        return sb.ToString();
     }
 }

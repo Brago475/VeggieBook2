@@ -1,43 +1,44 @@
 import { useState, type FormEvent } from 'react'
-import { ArrowIcon, EyeIcon, LockIcon, MailIcon } from '../components/AuthIcons'
-import { SafeImage } from '../components/SafeImage'
-import { BackArrowIcon } from '../components/StepIcons'
-import { AUTH_PHOTO } from '../utils/authPhoto'
-import { coverSrc } from '../utils/coverSrc'
+import { ArrowIcon } from '../components/icons/AuthIcons'
+import { AuthPasswordField } from '../components/forms/AuthPasswordField'
+import { AuthShell } from '../components/auth/AuthShell'
+import { EmailField } from '../components/forms/EmailField'
+import { GuestBooksChoice } from '../components/auth/GuestBooksChoice'
+import { AUTH } from '../i18n/strings/auth'
+import { COMMON } from '../i18n/strings/common'
+import { useStrings } from '../i18n/useStrings'
 
-// Sign in and create account share this form. Only the wording, the password
-// hint, and the browser autofill hints differ.
+// Sign in. Create Account has its own page (CreateAccount.tsx), since it
+// asks for much more.
 //
-// autoComplete matters: "current-password" lets password managers fill in a
-// saved password, and "new-password" lets them suggest a strong one.
+// A guest with saved books chooses what happens to them (GuestBooksChoice).
 //
 // Errors from the API are already written for the user (see utils/api.ts),
 // so they are shown as they come.
-//
-// The masthead is hidden on this screen (see App.tsx), so the photograph
-// takes the top of the screen, the logo sits under it, and Back rides over
-// the photograph in the same white pill the header uses.
-
-export type AuthMode = 'signin' | 'register'
 
 type Props = {
-  mode: AuthMode
-  // Shown under the title, for example when a guest is saving a finished book.
-  note?: string
-  onSubmit: (email: string, password: string) => Promise<void>
-  onSwitchMode: () => void
-  // The masthead is hidden here, so back is rendered in the page instead.
+  // A guest's saved books. 0 for everyone else, which hides the choice.
+  guestBookCount: number
+  onSubmit: (email: string, password: string, keepGuestBooks: boolean) => Promise<void>
+  onForgotPassword: () => void
+  onCreateAccount: () => void
   onBack?: () => void
 }
 
-const MIN_PASSWORD = 12
-
-export function AuthForm({ mode, note, onSubmit, onSwitchMode, onBack }: Props) {
-  const register = mode === 'register'
+export function AuthForm({
+  guestBookCount,
+  onSubmit,
+  onForgotPassword,
+  onCreateAccount,
+  onBack,
+}: Props) {
+  const t = useStrings(AUTH)
+  const common = useStrings(COMMON)
+  const hasGuestBooks = guestBookCount > 0
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [keepBooks, setKeepBooks] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -45,114 +46,45 @@ export function AuthForm({ mode, note, onSubmit, onSwitchMode, onBack }: Props) 
     event.preventDefault()
     if (busy) return
 
-    // Checked here so the user hears about it right away. The API enforces
-    // the same rule either way.
-    if (register && password.length < MIN_PASSWORD) {
-      setError(`Password must be at least ${MIN_PASSWORD} characters.`)
-      return
-    }
-
     setBusy(true)
     setError(null)
     try {
-      await onSubmit(email.trim(), password)
-      // On success the parent moves on to another screen.
+      await onSubmit(email.trim(), password, hasGuestBooks && keepBooks)
+      // On success the parent moves on to the home screen.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Something went wrong. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : common.somethingWrong)
       setBusy(false)
     }
   }
 
   return (
-    <form className="auth-screen" onSubmit={submit} noValidate>
-      <div className="auth-hero">
-        {onBack && (
-          <button type="button" className="auth-back" onClick={onBack}>
-            <BackArrowIcon />
-            Back
-          </button>
-        )}
-        <SafeImage src={coverSrc(AUTH_PHOTO)} loading="eager" />
-      </div>
-
-      <div className="auth-main">
-        <img
-          className="auth-logo"
-          src="/brand/logo-positive-en.png"
-          alt="VeggieBook, Quick Help for Meals"
-        />
-
+    <AuthShell onBack={onBack}>
+      <form className="auth-form" onSubmit={submit} noValidate>
         <div className="auth-head">
-          <h1 className="auth-greeting">
-            {register ? 'Create an account' : 'Welcome back'}
-          </h1>
-          <p className="auth-sub">
-            {register
-              ? 'Your books are kept in your account, on any device.'
-              : 'Sign in to get back to the books you saved.'}
-          </p>
-          {note && <p className="auth-sub">{note}</p>}
+          <h1 className="auth-greeting">{t.welcomeBack}</h1>
+          <p className="auth-sub">{t.signInSub}</p>
         </div>
 
         <div className="auth-fields">
-          <div className="pill-field">
-            <label className="pill-label" htmlFor="auth-email">
-              Email address
-            </label>
-            <div className="pill-wrap">
-              <MailIcon />
-              <input
-                id="auth-email"
-                className="pill-input"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                autoCapitalize="none"
-                spellCheck={false}
-                maxLength={254}
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-          </div>
+          <EmailField id="auth-email" value={email} onChange={setEmail} />
 
-          <div className="pill-field">
-            <label className="pill-label" htmlFor="auth-password">
-              Password
-            </label>
-            <div className="pill-wrap">
-              <LockIcon />
-              <input
-                id="auth-password"
-                className="pill-input has-action"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete={register ? 'new-password' : 'current-password'}
-                maxLength={128}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="pill-action"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-pressed={showPassword}
-                aria-controls="auth-password"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-              >
-                <EyeIcon off={showPassword} />
-              </button>
-            </div>
-            {register && (
-              <p className="field-hint">
-                At least 12 characters. A few words together are easy to
-                remember, like "green garden table lamp".
-              </p>
-            )}
-          </div>
+          <AuthPasswordField
+            id="auth-password"
+            label={t.password}
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+          />
+
+          <p className="auth-forgot">
+            <button type="button" className="link-btn" onClick={onForgotPassword}>
+              {t.forgot}
+            </button>
+          </p>
+
+          {hasGuestBooks && (
+            <GuestBooksChoice count={guestBookCount} keep={keepBooks} onChange={setKeepBooks} />
+          )}
 
           {error && (
             <p className="form-error" role="alert">
@@ -161,20 +93,18 @@ export function AuthForm({ mode, note, onSubmit, onSwitchMode, onBack }: Props) 
           )}
 
           <button type="submit" className="auth-primary" disabled={busy}>
-            {busy ? 'Please wait...' : register ? 'Create account' : 'Sign in'}
+            {busy ? common.pleaseWait : t.signIn}
             {!busy && <ArrowIcon />}
           </button>
 
-          {/* The other door, under a thin line rather than an "or", so it
-              reads as a way out of this form, not a third choice in it. */}
           <p className="auth-switch">
-            {register ? 'Already have an account? ' : 'New here? '}
-            <button type="button" className="link-btn" onClick={onSwitchMode}>
-              {register ? 'Sign in' : 'Create an account'}
+            {t.newHere}{' '}
+            <button type="button" className="link-btn" onClick={onCreateAccount}>
+              {t.createAnAccount}
             </button>
           </p>
         </div>
-      </div>
-    </form>
+      </form>
+    </AuthShell>
   )
 }

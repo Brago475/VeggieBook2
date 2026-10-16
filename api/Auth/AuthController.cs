@@ -1,7 +1,3 @@
-using System.Net.Mail;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -11,239 +7,238 @@ using VeggieBook.Api.Data;
 
 namespace VeggieBook.Api.Auth;
 
-// Account endpoints.
+// Account endpoints, part 1: getting in and out.
 //
 //   POST /api/auth/register   create an account and sign in
 //   POST /api/auth/signin     sign in
-//   POST /api/auth/signout    sign out this device
-//   GET  /api/auth/me         who is signed in (email is null for guests)
-//   POST /api/auth/password   change password, signs out other devices
-//   POST /api/auth/delete     delete the account and everything in it
+//   POST /api/auth/signout    sign out this device (deletes a guest)
+//   GET  /api/auth/me         who is here, their roles, and their username
+//
+// Passwords: PasswordController. Forgot password: RecoveryController.
+// Deleting an account: AccountController. Guests: GuestController.
 //
 // Every endpoint takes and returns JSON only. Combined with the SameSite=Lax
-// cookie, that means another site cannot submit a form that acts on a
-// visitor's account: a cross-site form cannot send JSON, and the browser does
-// not attach the cookie to cross-site POSTs.
-
-public record CredentialsRequest(string? Email, string? Password);
-public record ChangePasswordRequest(string? CurrentPassword, string? NewPassword);
-public record DeleteAccountRequest(string? Password);
+// cookie, another site cannot submit a form that acts on a visitor's account.
+//
+// The email is not confirmed at sign-up, so a new account can sign in right
+// away. Forgot password uses the PIN and security question set here.
+//
+// A guest who signs up or signs in chooses what happens to their books
+// (KeepGuestBooks). Keep: the books move into the account right away.
+// Start fresh: the guest and its books are deleted.
+//
+// Messages carry a code the site translates (ErrorCodes, ApiError).
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(AccountsContext db, IPasswordHasher<AppUser> hasher)
-    : ControllerBase
+public class AuthController(
+    UserManager<AppUser> users,
+    SignInManager<AppUser> signIn,
+    IPasswordHasher<AppUser> hasher,
+    GuestAccounts guests,
+    AccountRecovery recovery) : ControllerBase
 {
-    private const int MinPasswordLength = 12;
-    private const int MaxPasswordLength = 128;
-    private const int MaxFailedSignIns = 5;
-    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+    private static readonly ApiError WrongCredentials =
+        new(ErrorCodes.WrongCredentials, "Email or password is incorrect.");
+    private static readonly ApiError EmailTaken = new(ErrorCodes.EmailTaken,
+        "An account with this email already exists. Sign in, or use Forgot password if you need to.");
+    private static readonly ApiError UsernameTaken = new(ErrorCodes.UsernameTakenSignUp,
+        "That username is taken. Please pick another one, or leave it blank and we'll make one for you.");
 
-    // Same message for an unknown email and a wrong password, so sign-in
-    // never reveals which emails have accounts.
-    private const string WrongCredentials = "Email or password is incorrect.";
+    // The unique index from db/migrations/005_profile.sql.
+    private const string DisplayNameIndex = "app_user_display_name_idx";
 
     // Used to spend the same time hashing when the email is unknown, so the
-    // response time does not reveal whether an account exists either.
+    // response time does not reveal whether an account exists.
     private static string? dummyHash;
 
     [HttpPost("register")]
     [EnableRateLimiting(AuthSetup.RateLimitPolicy)]
-    public async Task<IActionResult> Register([FromBody] CredentialsRequest req)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest req)
     {
-        var email = req.Email?.Trim() ?? "";
-        if (!IsValidEmail(email))
-            return BadRequest(new { error = "Enter a valid email address." });
+        var current = await users.GetUserAsync(User);
+        if (current is not null && !GuestAccounts.IsGuest(current))
+            return BadRequest(new ApiError(ErrorCodes.AlreadySignedIn, "You are already signed in.").Body());
 
-        var passwordError = CheckNewPassword(req.Password);
-        if (passwordError is not null)
-            return BadRequest(new { error = passwordError });
+        var guest = current;
+        var address = req.Email?.Trim() ?? "";
 
-        // Sign-up does say when an email is taken. Hiding it properly means
-        // emailing the address instead, which needs email verification, and
-        // that is not built yet. The rate limit keeps this from being used to
-        // check emails in bulk.
-        var normalized = email.ToLowerInvariant();
-        if (await db.Users.AnyAsync(u => u.EmailNormalized == normalized))
-            return Conflict(new { error = "An account with this email already exists." });
+        // Every field is checked, in the order the form shows them, before
+        // anything is saved.
+        var error = SignUpRules.CheckName(req.FirstName, "first name")
+            ?? SignUpRules.CheckName(req.LastName, "last name")
+            ?? (AuthHelpers.IsValidEmail(address)
+                ? null
+                : new ApiError(ErrorCodes.EmailInvalid, "Enter a valid email address."))
+            ?? AuthHelpers.CheckPasswordLength(req.Password)
+            ?? SignUpRules.CheckAgeRange(req.AgeRange)
+            ?? AccountRecovery.CheckNewPin(req.Pin)
+            ?? AccountRecovery.CheckNewAnswer(req.QuestionId, req.Answer)
+            ?? (req.AgreeToTerms == true
+                ? null
+                : new ApiError(ErrorCodes.TermsRequired,
+                    "Please agree to the Terms of Use and Privacy Policy."));
+        if (error is not null) return BadRequest(error.Body());
 
+        // The username: theirs if they chose one, otherwise a made-up one.
+        var displayName = req.DisplayName?.Trim() ?? "";
+        if (displayName.Length > 0)
+        {
+            var nameError = SignUpRules.CheckDisplayName(displayName);
+            if (nameError is not null) return BadRequest(nameError.Body());
+            if (await DisplayNameTaken(displayName))
+                return Conflict(UsernameTaken.Body());
+        }
+        else
+        {
+            displayName = await NewDisplayName();
+        }
+
+        var now = DateTime.UtcNow;
         var user = new AppUser
         {
             Id = Guid.NewGuid(),
-            Email = email,
-            EmailNormalized = normalized,
-            SecurityStamp = Guid.NewGuid(),
-            CreatedAt = DateTime.UtcNow
+            UserName = address,
+            Email = address,
+            CreatedAt = now,
+            FirstName = req.FirstName!.Trim(),
+            LastName = req.LastName!.Trim(),
+            DisplayName = displayName,
+            AgeRange = req.AgeRange,
+            TermsVersion = SignUpRules.TermsVersion,
+            TermsAcceptedAt = now
         };
-        user.PasswordHash = hasher.HashPassword(user, req.Password!);
 
-        db.Users.Add(user);
+        // The PIN and question go in with the account, in the same save.
+        recovery.SetRecovery(user, req.Pin!, req.QuestionId!.Value, req.Answer!);
+
+        IdentityResult created;
         try
         {
-            await db.SaveChangesAsync();
+            created = await users.CreateAsync(user, req.Password!);
         }
         catch (DbUpdateException ex) when (
-            ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+            ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } pg)
         {
-            // Two sign-ups with the same email at the same moment. The
-            // database's unique constraint caught the second one.
-            return Conflict(new { error = "An account with this email already exists." });
+            // Two sign-ups with the same email or username at the same
+            // moment. The database's unique index caught the second one.
+            return Conflict((pg.ConstraintName == DisplayNameIndex ? UsernameTaken : EmailTaken).Body());
         }
 
-        await StartSession(user);
-        return Ok(new { email = user.Email });
+        if (!created.Succeeded)
+        {
+            if (created.Errors.Any(e => e.Code is "DuplicateEmail" or "DuplicateUserName"))
+                return Conflict(EmailTaken.Body());
+            return BadRequest(AuthHelpers.IdentityError(created).Body());
+        }
+
+        var role = await users.AddToRoleAsync(user, Roles.User);
+        if (!role.Succeeded)
+            throw new InvalidOperationException(
+                "Could not give the new account the User role. Has migration 003 run?");
+
+        if (guest is not null)
+        {
+            if (req.KeepGuestBooks == true) await guests.MoveBooksAsync(guest.Id, user.Id);
+            else await guests.DeleteAsync(guest.Id);
+        }
+
+        // Signing in replaces a guest's session with the new account's.
+        await signIn.SignInAsync(user, isPersistent: true);
+        return Ok(await AuthHelpers.MeFor(users, user));
     }
 
     [HttpPost("signin")]
     [EnableRateLimiting(AuthSetup.RateLimitPolicy)]
     public async Task<IActionResult> Login([FromBody] CredentialsRequest req)
     {
-        var normalized = req.Email?.Trim().ToLowerInvariant() ?? "";
+        var address = req.Email?.Trim() ?? "";
         var password = req.Password ?? "";
 
-        if (normalized.Length == 0 || password.Length == 0
-            || password.Length > MaxPasswordLength)
-            return Unauthorized(new { error = WrongCredentials });
+        if (address.Length == 0 || password.Length == 0
+            || password.Length > AuthSetup.MaxPasswordLength)
+            return Unauthorized(WrongCredentials.Body());
 
-        var user = await db.Users.FirstOrDefaultAsync(u => u.EmailNormalized == normalized);
-        if (user is null)
+        // A guest signing in to a real account. Read before signing in,
+        // because signing in replaces the session.
+        var current = await users.GetUserAsync(User);
+        var guest = current is not null && GuestAccounts.IsGuest(current) ? current : null;
+
+        var user = await users.FindByEmailAsync(address);
+        if (user is null || GuestAccounts.IsGuest(user))
         {
             dummyHash ??= hasher.HashPassword(new AppUser(), "timing-equalizer");
             hasher.VerifyHashedPassword(new AppUser(), dummyHash, password);
-            return Unauthorized(new { error = WrongCredentials });
+            return Unauthorized(WrongCredentials.Body());
         }
 
         // A locked account is refused before the password is checked, so a
         // lockout never confirms whether a guess was right.
-        if (user.LockedUntil > DateTime.UtcNow)
-            return StatusCode(StatusCodes.Status429TooManyRequests,
-                new { error = "Too many failed attempts. Try again in 15 minutes." });
+        if (await users.IsLockedOutAsync(user))
+            return TooManyAttempts();
 
-        var result = hasher.VerifyHashedPassword(user, user.PasswordHash, password);
-        if (result == PasswordVerificationResult.Failed)
+        var result = await signIn.PasswordSignInAsync(
+            user, password, isPersistent: true, lockoutOnFailure: true);
+
+        if (result.IsLockedOut) return TooManyAttempts();
+        if (!result.Succeeded) return Unauthorized(WrongCredentials.Body());
+
+        // Signed in. The password proved who they are, so a guest's books
+        // can move right away.
+        if (guest is not null)
         {
-            user.FailedSignIns++;
-            if (user.FailedSignIns >= MaxFailedSignIns)
-            {
-                user.LockedUntil = DateTime.UtcNow.Add(LockoutDuration);
-                user.FailedSignIns = 0;
-            }
-            await db.SaveChangesAsync();
-            return Unauthorized(new { error = WrongCredentials });
+            if (req.KeepGuestBooks == true) await guests.MoveBooksAsync(guest.Id, user.Id);
+            else await guests.DeleteAsync(guest.Id);
         }
 
-        user.FailedSignIns = 0;
-        user.LockedUntil = null;
-
-        // The hasher reports when a stored hash uses older settings. The
-        // password is known at this moment, so upgrade the hash in place.
-        if (result == PasswordVerificationResult.SuccessRehashNeeded)
-            user.PasswordHash = hasher.HashPassword(user, password);
-
-        await db.SaveChangesAsync();
-        await StartSession(user);
-        return Ok(new { email = user.Email });
+        return Ok(await AuthHelpers.MeFor(users, user));
     }
 
+    // Signing out a guest deletes the guest and everything in it.
     [HttpPost("signout")]
     public async Task<IActionResult> Logout()
     {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        var current = await users.GetUserAsync(User);
+        await signIn.SignOutAsync();
+
+        if (current is not null && GuestAccounts.IsGuest(current))
+            await guests.DeleteAsync(current.Id);
+
         return NoContent();
     }
 
-    // Called when the site loads. Guests get 200 with a null email rather
-    // than a 401, so a normal guest visit does not log an error.
+    // Called when the site loads. Visitors get 200 with no email and no
+    // roles rather than a 401, so a normal visit does not log an error.
     [HttpGet("me")]
     public async Task<IActionResult> Me()
     {
-        var user = await CurrentUser();
-        return Ok(new { email = user?.Email });
+        var user = await users.GetUserAsync(User);
+        return Ok(user is null
+            ? new MeResponse(null, [])
+            : await AuthHelpers.MeFor(users, user));
     }
 
-    [HttpPost("password")]
-    [Authorize]
-    [EnableRateLimiting(AuthSetup.RateLimitPolicy)]
-    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
+    // Ignores capitals, the same way the unique index does.
+    private Task<bool> DisplayNameTaken(string name)
     {
-        var user = await CurrentUser();
-        if (user is null) return Unauthorized();
-
-        if (!PasswordMatches(user, req.CurrentPassword))
-            return BadRequest(new { error = "Current password is incorrect." });
-
-        var passwordError = CheckNewPassword(req.NewPassword);
-        if (passwordError is not null)
-            return BadRequest(new { error = passwordError });
-
-        user.PasswordHash = hasher.HashPassword(user, req.NewPassword!);
-
-        // A new stamp invalidates every existing session. This device gets a
-        // fresh cookie with the new stamp, so only the others are signed out.
-        user.SecurityStamp = Guid.NewGuid();
-        await db.SaveChangesAsync();
-        await StartSession(user);
-        return NoContent();
+        var lower = name.ToLowerInvariant();
+        return users.Users.AnyAsync(u => u.DisplayName != null && u.DisplayName.ToLower() == lower);
     }
 
-    // Asks for the password again so a device left signed in cannot be used
-    // to delete someone's account. Saved books and uploaded covers will
-    // reference app_user with ON DELETE CASCADE, so they are removed by the
-    // same statement. Other devices are signed out on their next request,
-    // because the account their cookie points to no longer exists.
-    [HttpPost("delete")]
-    [Authorize]
-    [EnableRateLimiting(AuthSetup.RateLimitPolicy)]
-    public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest req)
+    // A few tries at a free made-up name. A clash is very unlikely, and the
+    // unique index catches the rare one that slips through.
+    private async Task<string> NewDisplayName()
     {
-        var user = await CurrentUser();
-        if (user is null) return Unauthorized();
-
-        if (!PasswordMatches(user, req.Password))
-            return BadRequest(new { error = "Password is incorrect." });
-
-        db.Users.Remove(user);
-        await db.SaveChangesAsync();
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return NoContent();
+        for (var i = 0; i < 10; i++)
+        {
+            var name = SignUpRules.GenerateDisplayName();
+            if (!await DisplayNameTaken(name)) return name;
+        }
+        return $"cook_{Guid.NewGuid():N}"[..SignUpRules.MaxDisplayNameLength];
     }
 
-    private async Task<AppUser?> CurrentUser()
-    {
-        var id = AuthSetup.UserId(User);
-        return id is null
-            ? null
-            : await db.Users.FirstOrDefaultAsync(u => u.Id == id.Value);
-    }
-
-    private Task StartSession(AppUser user) =>
-        HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            AuthSetup.CreatePrincipal(user),
-            new AuthenticationProperties { IsPersistent = true });
-
-    private bool PasswordMatches(AppUser user, string? password) =>
-        !string.IsNullOrEmpty(password)
-        && password.Length <= MaxPasswordLength
-        && hasher.VerifyHashedPassword(user, user.PasswordHash, password)
-            != PasswordVerificationResult.Failed;
-
-    // Length is the rule that matters. No forced symbols or capitals, in
-    // line with current NIST guidance. The upper limit stops someone sending
-    // a huge password to make the server hash megabytes of input.
-    private static string? CheckNewPassword(string? password)
-    {
-        if (string.IsNullOrEmpty(password) || password.Length < MinPasswordLength)
-            return $"Password must be at least {MinPasswordLength} characters.";
-        if (password.Length > MaxPasswordLength)
-            return $"Password must be at most {MaxPasswordLength} characters.";
-        return null;
-    }
-
-    // MailAddress also accepts forms like "Name <a@b.com>". Requiring the
-    // parsed address to equal the input rules those out.
-    private static bool IsValidEmail(string email) =>
-        email.Length is > 0 and <= 254
-        && MailAddress.TryCreate(email, out var parsed)
-        && parsed.Address == email;
+    private ObjectResult TooManyAttempts() =>
+        StatusCode(StatusCodes.Status429TooManyRequests,
+            new ApiError(ErrorCodes.TooManyAttempts,
+                "Too many failed attempts. Try again in 15 minutes.").Body());
 }

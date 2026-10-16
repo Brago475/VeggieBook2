@@ -1,0 +1,156 @@
+/* Recent activity on the Overview page.
+   See components/overview/RecentActivity.tsx.
+
+   Each line: a round icon (green VeggieBook, violet Secrets Book, blue new
+   account, orange book deleted, red account deleted), the title, the
+   research ID and detail under it, and the date and time on the right.
+
+   Fits any screen: long titles and details are cut with "..." and the time
+   moves under the text on a phone. */
+
+.recent {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: 0 calc(var(--sp-2) * -1);
+  padding: 10px var(--sp-2);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.recent-item:last-child {
+  border-bottom: none;
+}
+
+/* A line that appeared on this refresh: slides in at the top with a soft
+   green highlight that fades out. */
+.recent-item.is-new {
+  animation: recent-new 2.6s ease-out;
+}
+
+@keyframes recent-new {
+  0% {
+    opacity: 0;
+    background: var(--vb-tint);
+    transform: translateY(-8px);
+  }
+  15% {
+    opacity: 1;
+    background: var(--vb-tint);
+    transform: none;
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.recent-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+}
+
+.recent-icon.is-saved {
+  color: #14532d;
+  background: #dcf2e3;
+}
+
+.recent-icon.is-secrets {
+  color: #4c1d95;
+  background: #ede9fe;
+}
+
+.recent-icon.is-joined {
+  color: #1d4ed8;
+  background: #e0ecff;
+}
+
+.recent-icon.is-book-deleted {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.recent-icon.is-account-deleted {
+  color: var(--root);
+  background: var(--root-tint);
+}
+
+.recent-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.recent-title {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  font-size: 12px;
+  color: #52525b;
+}
+
+.recent-detail-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.id-chip {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--subtle);
+  border-radius: var(--r-sm);
+}
+
+.recent-time {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Phones: the time moves under the text. */
+@media (max-width: 600px) {
+  .recent-item {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .recent-time {
+    grid-column: 2;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-item.is-new {
+    animation: none;
+    background: var(--vb-tint);
+  }
+}

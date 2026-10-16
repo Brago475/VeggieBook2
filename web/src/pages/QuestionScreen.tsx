@@ -1,8 +1,13 @@
-import { ChoiceRow } from '../components/ChoiceRow'
-import { NavBar } from '../components/NavBar'
-import { QuestionHero } from '../components/QuestionHero'
+import { ChoiceRow } from '../components/veggie/ChoiceRow'
+import { NavBar } from '../components/layout/NavBar'
+import { QuestionHero } from '../components/veggie/QuestionHero'
+import { FLOW } from '../i18n/strings/flow'
+import { useStrings } from '../i18n/useStrings'
 import type { Question, Vegetable } from '../types'
 
+// One question of the VeggieBook flow. The question and its choices come
+// from the API in the site language.
+//
 // Question text contains %s where the vegetable name belongs. The original
 // app wrote it lowercase mid-sentence ("recipes for zucchini that use..")
 // rather than title case, so fillName lowercases it.
@@ -26,6 +31,8 @@ export function QuestionScreen({
   onToggle,
   onNext,
 }: Props) {
+  const t = useStrings(FLOW)
+
   return (
     <>
       <QuestionHero vegetable={vegetable} />
@@ -51,10 +58,7 @@ export function QuestionScreen({
         </ul>
       </div>
 
-      <NavBar
-                primaryLabel="NEXT"
-        onPrimary={onNext}
-      />
+      <NavBar primaryLabel={t.next} onPrimary={onNext} />
     </>
   )
 }

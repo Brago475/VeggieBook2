@@ -11,7 +11,9 @@
 //   /book/{id}/cover              changing a saved book's cover
 //   /account                      account settings
 //   /about                        about VeggieBook, open to everyone
+//   /terms, /privacy              Terms of Use and Privacy Policy, open to everyone
 //   /signin, /register            sign in, create account
+//   /forgot-password              forgot password (PIN, then security question)
 //
 // Anything else is treated as home, and the address is corrected to /.
 
@@ -21,8 +23,11 @@ export type Route =
   | { view: 'secrets' }
   | { view: 'account' }
   | { view: 'about' }
+  | { view: 'terms' }
+  | { view: 'privacy' }
   | { view: 'signin' }
   | { view: 'register' }
+  | { view: 'forgotPassword' }
   | {
       view: 'book'
       bookId: string
@@ -56,10 +61,16 @@ export function parseRoute(path: string): Route {
         return { view: 'account' }
       case 'about':
         return { view: 'about' }
+      case 'terms':
+        return { view: 'terms' }
+      case 'privacy':
+        return { view: 'privacy' }
       case 'signin':
         return { view: 'signin' }
       case 'register':
         return { view: 'register' }
+      case 'forgot-password':
+        return { view: 'forgotPassword' }
     }
   }
 
@@ -90,10 +101,16 @@ export function routePath(route: Route): string {
       return '/account'
     case 'about':
       return '/about'
+    case 'terms':
+      return '/terms'
+    case 'privacy':
+      return '/privacy'
     case 'signin':
       return '/signin'
     case 'register':
       return '/register'
+    case 'forgotPassword':
+      return '/forgot-password'
     case 'book':
       if (route.cover) return `/book/${route.bookId}/cover`
       if (route.recipeId !== null) return `/book/${route.bookId}/recipe/${route.recipeId}`

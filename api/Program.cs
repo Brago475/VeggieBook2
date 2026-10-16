@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Admin;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 
@@ -19,13 +20,17 @@ builder.Services.AddDbContext<VeggieBookContext>(options =>
            // lives in AccountsContext below, so this context never writes.
            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
-// User data: accounts now, saved books next. Same database, separate
+// User data: accounts, roles, and saved books. Same database, separate
 // context. Tracking stays on because this context writes.
 builder.Services.AddDbContext<AccountsContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Session cookies, password hashing, and rate limits. See Auth/AuthSetup.cs.
+// Accounts, sessions, roles, recovery, and rate limits. See Auth/AuthSetup.cs.
+// The site sends no email for now; it is on the backlog.
 builder.Services.AddVeggieBookAuth(builder.Configuration, builder.Environment);
+
+// The root admin's email, from Admin__RootEmail. See Admin/AdminRules.cs.
+AdminRules.RequireRootEmail(builder.Configuration);
 
 // Only needed while the front end runs on the Vite dev server on a different
 // origin. In production both are served from veggiebook2.com through nginx,

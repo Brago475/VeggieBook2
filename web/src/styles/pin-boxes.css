@@ -1,0 +1,86 @@
+/* The six PIN squares (PinBoxes.tsx). Imported by the component, so they
+   look the same on the account screens and the sign-in screens. */
+
+.pin-boxes-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pin-boxes {
+  position: relative;
+  flex: 1 1 auto;
+  max-width: 360px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  cursor: text;
+}
+
+/* The real input: covers the squares, takes every tap and key, and is
+   invisible. 16px keeps iPhones from zooming in on it. */
+.pin-boxes-input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  font-size: 16px;
+  color: transparent;
+  caret-color: transparent;
+  background: transparent;
+  border: 0;
+  opacity: 0;
+}
+
+.pin-box {
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text, #1f2d1f);
+  background: var(--surface, #fff);
+  border: 1.5px solid var(--line-strong, rgba(31, 45, 31, 0.25));
+  border-radius: 12px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.pin-box.is-filled {
+  border-color: var(--green-dark, #4f7a2a);
+}
+
+/* The next square to fill, while the PIN box has focus. */
+.pin-box.is-active {
+  border-color: var(--green-deep, #2f5d2f);
+  box-shadow: 0 0 0 3px rgba(47, 93, 47, 0.18);
+}
+
+.pin-boxes-toggle {
+  flex: none;
+  padding: 8px 4px;
+  font: inherit;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: var(--text, #1f2d1f);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+@media (max-width: 380px) {
+  .pin-boxes {
+    gap: 6px;
+  }
+
+  .pin-box {
+    min-height: 46px;
+    font-size: 20px;
+  }
+}

@@ -1,37 +1,30 @@
 import { useState } from 'react'
-import { BookCard } from '../components/BookCard'
-import { CoverOptions } from '../components/CoverOptions'
-import { NavBar } from '../components/NavBar'
+import { BookCard } from '../components/library/BookCard'
+import { CoverOptions } from '../components/veggie/CoverOptions'
+import { NavBar } from '../components/layout/NavBar'
+import { FLOW } from '../i18n/strings/flow'
+import { useStrings } from '../i18n/useStrings'
 import type { Vegetable } from '../types'
 
-// Last screen of a VeggieBook: pick the cover, then finish the book.
+// Last screen of a VeggieBook: pick the cover, then save the book.
 //
 // The preview is the same card the home screen shows, so users see their
 // book exactly as it will look: the vegetable's photo, with the chosen cover
 // as the inset.
 //
-// Signed in, SAVE BOOK saves to the account. A guest gets two choices:
-// create an account and save the book into it, or finish without saving and
-// keep the book on this page until it closes.
+// Everyone who reaches this screen is a guest or an account, and both save
+// to the server, so SAVE BOOK is the only way to finish. A guest's book is
+// kept until they sign out, or for up to 24 hours.
 
 type Props = {
   vegetable: Vegetable
   vegetables: Vegetable[]
-  signedIn: boolean
   // Throws with a message for the user if the book cannot be saved.
   onSave: (cover: string) => Promise<void>
-  onCreateAccount: (cover: string) => void
-  onFinishWithoutSaving: (cover: string) => void
 }
 
-export function CoverChooser({
-  vegetable,
-  vegetables,
-  signedIn,
-  onSave,
-  onCreateAccount,
-  onFinishWithoutSaving,
-}: Props) {
+export function CoverChooser({ vegetable, vegetables, onSave }: Props) {
+  const t = useStrings(FLOW)
   const defaultCover = `cover/${vegetable.shortCode}.jpg`
 
   const [selected, setSelected] = useState(defaultCover)
@@ -47,9 +40,7 @@ export function CoverChooser({
       await onSave(selected)
       // On success the parent moves on to the home screen.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Your book could not be saved. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : t.couldNotSave)
       setSaving(false)
     }
   }
@@ -57,7 +48,7 @@ export function CoverChooser({
   return (
     <>
       <div className="intro-text">
-        <p>Choose a cover for your {vegetable.name} VeggieBook.</p>
+        <p>{t.chooseCover(vegetable.name)}</p>
       </div>
 
       <div className="cover-preview">
@@ -75,32 +66,7 @@ export function CoverChooser({
 
       {error && <p className="message">{error}</p>}
 
-      {signedIn ? (
-        <NavBar primaryLabel={saving ? 'SAVING...' : 'SAVE BOOK'} onPrimary={save} />
-      ) : (
-        <>
-          <NavBar
-            primaryLabel="CREATE ACCOUNT AND SAVE"
-            onPrimary={() => {
-              if (!uploading) onCreateAccount(selected)
-            }}
-          />
-          <div className="account-page">
-            <button
-              type="button"
-              className="link-btn"
-              onClick={() => {
-                if (!uploading) onFinishWithoutSaving(selected)
-              }}
-            >
-              Finish without saving
-            </button>
-            <p className="field-hint account-center">
-              Without an account, your book stays on this page until you close it.
-            </p>
-          </div>
-        </>
-      )}
+      <NavBar primaryLabel={saving ? t.saving : t.saveBook} onPrimary={save} />
     </>
   )
 }

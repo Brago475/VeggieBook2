@@ -19,10 +19,16 @@ import { ApiError, apiFetch } from '../utils/api'
 //
 // Both kinds of book are listed, deleted, and given a new cover the same
 // way. Only saving differs: a VeggieBook posts to /books, a Secrets Book to
-// /books/secrets.
+// /books/secrets. Every save records the language the site was in, for the
+// research data.
 
 type Loaded = { owner: string; books: BookSummary[] }
 type LoadError = { owner: string; message: string }
+
+// The page language, kept on <html lang> by LanguageProvider.
+function pageLang(): 'en' | 'es' {
+  return document.documentElement.lang === 'es' ? 'es' : 'en'
+}
 
 export function useBooks(email: string | null, onSessionEnded: () => void) {
   const [loaded, setLoaded] = useState<Loaded | null>(null)
@@ -104,11 +110,11 @@ export function useBooks(email: string | null, onSessionEnded: () => void) {
   }
 
   function saveBook(book: NewBook): Promise<string> {
-    return post('/books', book)
+    return post('/books', { ...book, lang: pageLang() })
   }
 
   function saveSecretsBook(book: NewSecretsBook): Promise<string> {
-    return post('/books/secrets', book)
+    return post('/books/secrets', { ...book, lang: pageLang() })
   }
 
   // Gives a saved book a new cover, of either kind, and refreshes the list

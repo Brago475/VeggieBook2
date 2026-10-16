@@ -1,5 +1,8 @@
-import { RecipeSkeleton } from '../components/RecipeSkeleton'
+import { RecipeSkeleton } from '../components/veggie/RecipeSkeleton'
 import type { BookFlowState } from '../hooks/useBookFlow'
+import { useHeld } from '../hooks/useHeld'
+import { FLOW } from '../i18n/strings/flow'
+import { useStrings } from '../i18n/useStrings'
 import type { Question, Vegetable } from '../types'
 import { CoverChooser } from './CoverChooser'
 import { ExtraCopies } from './ExtraCopies'
@@ -17,23 +20,14 @@ type Props = {
   vegetables: Vegetable[]
   questions: Question[]
   loading: boolean
-  signedIn: boolean
   onSave: (cover: string) => Promise<void>
-  onCreateAccount: (cover: string) => void
-  onFinishWithoutSaving: (cover: string) => void
 }
 
-export function BookFlow({
-  flow,
-  vegetables,
-  questions,
-  loading,
-  signedIn,
-  onSave,
-  onCreateAccount,
-  onFinishWithoutSaving,
-}: Props) {
+export function BookFlow({ flow, vegetables, questions, loading, onSave }: Props) {
+  const t = useStrings(FLOW)
   const { step, vegetable, match } = flow
+  // The review skeleton, held long enough to be seen.
+  const matching = useHeld(step === 'review' && match.running)
 
   if (step === 'pick') {
     return (
@@ -68,13 +62,9 @@ export function BookFlow({
       <>
         {/* The recipes are usually ready by the time the transition screen
             is passed; if not, the shape of the first one holds its place. */}
-        {match.running && <RecipeSkeleton />}
-        {match.error && (
-          <p className="message">
-            We could not find recipes right now. Please go back and try again.
-          </p>
-        )}
-        {match.result && (
+        {matching && <RecipeSkeleton />}
+        {!matching && match.error && <p className="message">{t.noRecipes}</p>}
+        {!matching && match.result && (
           <RecipeReview
             recipes={match.result.recipes}
             index={flow.reviewIndex}
@@ -96,14 +86,5 @@ export function BookFlow({
     )
   }
 
-  return (
-    <CoverChooser
-      vegetable={vegetable}
-      vegetables={vegetables}
-      signedIn={signedIn}
-      onSave={onSave}
-      onCreateAccount={onCreateAccount}
-      onFinishWithoutSaving={onFinishWithoutSaving}
-    />
-  )
+  return <CoverChooser vegetable={vegetable} vegetables={vegetables} onSave={onSave} />
 }

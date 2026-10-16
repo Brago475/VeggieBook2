@@ -1,5 +1,7 @@
 import { useLayoutEffect } from 'react'
-import { RecipeCard } from '../components/RecipeCard'
+import { RecipeCard } from '../components/veggie/RecipeCard'
+import { FLOW } from '../i18n/strings/flow'
+import { useStrings } from '../i18n/useStrings'
 import type { RecipeSummary } from '../types'
 
 // The KEEP / DROP flow. One recipe at a time; kept ones become the book.
@@ -15,6 +17,7 @@ type Props = {
 }
 
 export function RecipeReview({ recipes, index, onDecide }: Props) {
+  const t = useStrings(FLOW)
   const recipe = recipes[index]
 
   // KEEP and DROP sit at the bottom of a long recipe, so without this the
@@ -26,7 +29,7 @@ export function RecipeReview({ recipes, index, onDecide }: Props) {
   }, [index])
 
   if (!recipe) {
-    return <p className="message">No recipes matched your choices.</p>
+    return <p className="message">{t.noMatches}</p>
   }
 
   return (
@@ -42,10 +45,10 @@ export function RecipeReview({ recipes, index, onDecide }: Props) {
 
       <div className="decide">
         <button type="button" className="decide-btn" onClick={() => onDecide(true)}>
-          KEEP
+          {t.keep}
         </button>
         <button type="button" className="decide-btn" onClick={() => onDecide(false)}>
-          DROP
+          {t.drop}
         </button>
       </div>
     </>

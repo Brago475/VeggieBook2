@@ -76,12 +76,17 @@ services:
       # Session cookie encryption keys, kept in the api-keys volume below.
       # The API refuses to start in production without this.
       DataProtection__KeysPath: /keys
+      # The site's photos, read when building book PDFs.
+      Images__Path: /srv/images
     ports:
       # Localhost only. nginx reaches it by service name over the internal
       # network; this binding exists for debugging from the server shell.
       - "127.0.0.1:5000:8080"
     volumes:
       - api-keys:/keys
+      # Read only: the API puts recipe and secret photos into book PDFs but
+      # never changes them.
+      - ./images:/srv/images:ro
     depends_on:
       db:
         condition: service_healthy

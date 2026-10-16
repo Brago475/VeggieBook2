@@ -1,0 +1,491 @@
+/* All Data: the current look. Loaded last, so it wins over the earlier
+   All Data styles. Same four colors as alldata-colors.css:
+     green VeggieBooks, kept, picked   violet Secrets Books
+     blue  people                      orange taken out */
+
+/* ---- Top bar: downloads and Refresh (right of the title) ---- */
+
+.ad-downloads {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+}
+
+.ad-downloads-label {
+  margin-right: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.ad-dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #18181b;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ad-dl:hover {
+  border-color: #16a34a;
+  background: #e3f6e9;
+  color: #18181b;
+}
+
+.ad-dl.is-main {
+  border-color: #15803d;
+  background: #15803d;
+  color: #fff;
+}
+
+.ad-dl.is-main:hover {
+  background: #166534;
+  color: #fff;
+}
+
+.ad-refresh {
+  margin-left: 8px;
+}
+
+/* ---- Top bar: filter row (under the title) ---- */
+
+.topbar-below .ad-toolbar {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-below .ad-search {
+  flex: 1 1 240px;
+  height: 44px;
+}
+
+.topbar-below .ad-select,
+.topbar-below .ad-toolbar .filter {
+  height: 44px;
+  border-radius: 8px;
+}
+
+.topbar-below .ad-toolbar .filters {
+  display: contents;
+}
+
+/* The shared filters have their own Clear button; this page uses its own,
+   which also clears search and book type. */
+.topbar-below .ad-toolbar .filter-reset {
+  display: none;
+}
+
+.ad-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  margin-left: auto;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #18181b;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ad-clear:hover:not(:disabled) {
+  border-color: #16a34a;
+  background: #e3f6e9;
+}
+
+.ad-clear:disabled {
+  color: #a1a1aa;
+  cursor: default;
+}
+
+/* ---- File tabs ---- */
+
+.ad-tabs {
+  gap: 32px;
+}
+
+.ad-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 4px 14px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #52525b;
+}
+
+.ad-tab svg {
+  color: #71717a;
+}
+
+.ad-tab.is-active {
+  color: #15803d;
+  box-shadow: inset 0 -3px 0 #15803d;
+}
+
+.ad-tab.is-active svg {
+  color: #15803d;
+}
+
+.ad-tab-note {
+  font-size: 14px;
+  font-weight: 400;
+  color: #71717a;
+}
+
+/* ---- Cards ---- */
+
+.ad-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+}
+
+.ad-card-icon {
+  display: inline-flex;
+  flex: 0 0 56px;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+}
+
+.ad-card.is-green .ad-card-icon {
+  background: #e3f6e9;
+  color: #15803d;
+}
+
+.ad-card.is-violet .ad-card-icon {
+  background: #f0e9fe;
+  color: #6d28d9;
+}
+
+.ad-card.is-blue .ad-card-icon {
+  background: #e6eefd;
+  color: #1d4ed8;
+}
+
+.ad-card.is-orange .ad-card-icon {
+  background: #ffeedf;
+  color: #c2410c;
+}
+
+.ad-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ad-card-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #18181b;
+}
+
+.ad-card-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ad-card-value {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #18181b;
+}
+
+.ad-card-value.is-warn {
+  color: #c2410c;
+}
+
+.ad-card-note {
+  font-size: 13px;
+  font-weight: 600;
+  color: #71717a;
+}
+
+/* ---- Table cards ---- */
+
+.ad-table-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+}
+
+.ad-card-head-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.ad-card-head-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.ad-head-label {
+  font-size: 14px;
+  color: #71717a;
+}
+
+.ad-count {
+  font-size: 14px;
+  color: #52525b;
+}
+
+.ad-items-bar-buttons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* The switch: the chosen option is filled green. */
+.ad-card-head-left .segmented {
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+}
+
+.ad-card-head-left .segmented-option {
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  color: #18181b;
+}
+
+.ad-card-head-left .segmented-option:hover {
+  border-color: #16a34a;
+}
+
+.ad-card-head-left .segmented-option.is-active {
+  border-color: #15803d;
+  background: #15803d;
+  color: #fff;
+  box-shadow: none;
+}
+
+.ad-head-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #18181b;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ad-head-btn:hover,
+.ad-head-btn.is-pressed {
+  border-color: #16a34a;
+  background: #e3f6e9;
+}
+
+.ad-head-btn.is-on {
+  border-color: #15803d;
+  background: #e3f6e9;
+  color: #166534;
+}
+
+.ad-table-card .ad-scroll {
+  margin: 0 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.ad-table th {
+  padding: 12px 14px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  background: #fafafa;
+}
+
+.ad-table td {
+  padding: 14px;
+}
+
+/* The chosen row: green, with a green bar on its left edge. */
+.ad-table tbody tr.is-selected td {
+  background: #e3f6e9;
+}
+
+.ad-table tbody tr.is-selected td:first-child {
+  box-shadow: inset 4px 0 0 #15803d, inset -1px 0 0 var(--line);
+}
+
+.ad-pager {
+  padding: 16px 20px;
+  border-top: 0;
+}
+
+.ad-page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #18181b;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ad-page-btn:hover:not(:disabled) {
+  border-color: #16a34a;
+  background: #e3f6e9;
+}
+
+.ad-page-btn:disabled {
+  color: #a1a1aa;
+  cursor: default;
+}
+
+/* ---- Side panel ---- */
+
+.ad-panel {
+  flex-basis: 380px;
+  border-radius: 12px;
+  overflow-x: hidden;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+}
+
+.ad-panel-head {
+  padding: 18px 20px;
+  background: #f0f9f3;
+  border-bottom: 1px solid #d9efe0;
+}
+
+.ad-panel-head.is-violet {
+  background: #f7f3fe;
+  border-bottom-color: #e8defc;
+}
+
+.ad-panel-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ad-panel-id-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #52525b;
+}
+
+.ad-panel-id .ad-id {
+  background: #fff;
+  border: 1px solid var(--line);
+}
+
+.ad-panel-title strong {
+  font-size: 20px;
+}
+
+.ad-panel-cal {
+  color: #15803d;
+}
+
+.ad-panel-head.is-violet .ad-panel-cal {
+  color: #6d28d9;
+}
+
+.ad-panel-when .ad-date {
+  color: #18181b;
+}
+
+.ad-panel-bookno {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.ad-panel-tabs {
+  padding: 8px 20px 0;
+}
+
+.ad-panel-section {
+  padding: 14px 20px 18px;
+}
+
+/* Recipe rows with pictures */
+
+.ad-thumb-list {
+  gap: 4px;
+}
+
+.ad-thumb-row {
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+}
+
+.ad-thumb-row:hover,
+.ad-thumb-row:focus-visible {
+  border-color: #d9efe0;
+  background: #f0f9f3;
+}
+
+.ad-thumb-row .ad-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+}
+
+.ad-thumb-name {
+  font-size: 14px;
+  white-space: normal;
+}
+
+/* Hover card: a bigger picture */
+
+.ad-preview {
+  border-radius: 14px;
+}
+
+.ad-preview-img {
+  height: 230px;
+}

@@ -1,0 +1,161 @@
+/* Shared pieces used on every admin screen: page, cards, fields, buttons,
+   and messages. Screen-specific styles live in their own files. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--page);
+  -webkit-font-smoothing: antialiased;
+}
+
+.admin-loading {
+  padding: var(--sp-6);
+  text-align: center;
+  color: var(--muted);
+}
+
+.page-title {
+  margin: 0 0 var(--sp-4);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.section-title {
+  margin: 0 0 var(--sp-3);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.card {
+  padding: var(--sp-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.muted {
+  margin: 0;
+  color: var(--muted);
+}
+
+.small {
+  font-size: 13px;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--warn);
+  background: var(--warn-tint);
+  border-radius: var(--r-md);
+}
+
+.note {
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--warn);
+  background: var(--warn-tint);
+  border-radius: var(--r-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field input {
+  padding: var(--sp-3);
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.field input:focus {
+  outline: 2px solid var(--green-light);
+  outline-offset: 1px;
+}
+
+.button-primary,
+.button-secondary,
+.button-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 10px var(--sp-4);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.button-primary {
+  color: #fff;
+  background: var(--green);
+  border: 1px solid var(--green);
+}
+
+.button-primary:hover {
+  background: var(--green-hover);
+}
+
+.button-secondary {
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.button-secondary:hover {
+  background: var(--subtle);
+}
+
+.button-danger {
+  color: #fff;
+  background: var(--warn);
+  border: 1px solid var(--warn);
+}
+
+.button-primary:disabled,
+.button-secondary:disabled,
+.button-danger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.link-button {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--green);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.link-button:hover {
+  text-decoration: underline;
+}

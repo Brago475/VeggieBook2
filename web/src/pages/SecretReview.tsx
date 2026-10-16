@@ -1,5 +1,7 @@
 import { useLayoutEffect } from 'react'
-import { SecretCard } from '../components/SecretCard'
+import { SecretCard } from '../components/secrets/SecretCard'
+import { SECRETS } from '../i18n/strings/secrets'
+import { useStrings } from '../i18n/useStrings'
 import type { CategorySecrets } from '../types'
 
 // KEEP / DROP for a Secrets Book. One secret at a time, the same as the
@@ -9,8 +11,8 @@ import type { CategorySecrets } from '../types'
 // Secrets flow hook rather than here, the same split as RecipeReview and
 // useBookFlow.
 //
-// The buttons are the recipe review's (.decide, .decide-btn), so both
-// kinds of book are made the same way.
+// The buttons are the recipe review's (.decide, .decide-btn). Their words
+// come from secrets.ts, since Spanish uses the masculine form for a secret.
 
 type Props = {
   data: CategorySecrets
@@ -19,6 +21,7 @@ type Props = {
 }
 
 export function SecretReview({ data, index, onDecide }: Props) {
+  const t = useStrings(SECRETS)
   const secret = data.secrets[index]
 
   // KEEP and DROP sit under a long secret, so without this the next one
@@ -29,7 +32,7 @@ export function SecretReview({ data, index, onDecide }: Props) {
   }, [index])
 
   if (!secret) {
-    return <p className="message">There are no secrets in this category yet.</p>
+    return <p className="message">{t.noSecrets}</p>
   }
 
   return (
@@ -47,10 +50,10 @@ export function SecretReview({ data, index, onDecide }: Props) {
 
       <div className="decide">
         <button type="button" className="decide-btn" onClick={() => onDecide(true)}>
-          KEEP
+          {t.keep}
         </button>
         <button type="button" className="decide-btn" onClick={() => onDecide(false)}>
-          DROP
+          {t.drop}
         </button>
       </div>
     </>

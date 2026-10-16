@@ -1,0 +1,220 @@
+/* The Analytics screen. The shared blocks (panels, tabs, number cards,
+   grids, bars, tables) are in panels.css; this file only has what is
+   specific to Analytics. */
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+
+.page-head .page-title {
+  margin: 0;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.tab-content {
+  margin-top: var(--sp-5);
+}
+
+/* Picture cards */
+
+.picture-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.picture-img {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--subtle);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.picture-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.picture-title {
+  margin: var(--sp-1) 0 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picture-code {
+  margin-right: var(--sp-2);
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.picture-value {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin: 0;
+}
+
+.picture-value strong {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
+.picture-value span {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.picture-warn {
+  margin: 0;
+  font-size: 13px;
+  color: var(--warn);
+}
+
+/* Kept and taken out */
+
+.split-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.split-row {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.split-label {
+  font-weight: 600;
+}
+
+.split-counts {
+  font-size: 14px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.warn-text {
+  color: var(--warn);
+}
+
+@media (max-width: 560px) {
+  .split-row {
+    grid-template-columns: 1fr;
+    gap: var(--sp-2);
+  }
+}
+
+/* Question explorer */
+
+.explorer {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: var(--sp-5);
+}
+
+.q-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 520px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.q-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 10px var(--sp-3);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  color: var(--ink);
+  background: none;
+  border: none;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.q-item:hover {
+  background: var(--subtle);
+}
+
+.q-item.is-active {
+  font-weight: 600;
+  color: var(--green);
+  background: var(--green-tint);
+}
+
+.q-num {
+  flex-shrink: 0;
+  width: 20px;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.q-item.is-active .q-num {
+  color: var(--green);
+}
+
+.q-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.q-detail {
+  min-width: 0;
+}
+
+.q-title {
+  margin: 0 0 var(--sp-4);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+@media (max-width: 860px) {
+  .explorer {
+    grid-template-columns: 1fr;
+  }
+
+  .q-list {
+    max-height: 260px;
+  }
+}
+
+/* Method */
+
+.method {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding-left: var(--sp-5);
+  line-height: 1.5;
+}

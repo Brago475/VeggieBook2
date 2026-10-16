@@ -1,5 +1,7 @@
-import { NavBar } from '../components/NavBar'
-import { SafeImage } from '../components/SafeImage'
+import { NavBar } from '../components/layout/NavBar'
+import { SafeImage } from '../components/common/SafeImage'
+import { FLOW } from '../i18n/strings/flow'
+import { useStrings } from '../i18n/useStrings'
 import type { RecipeSummary } from '../types'
 
 // After the review, users mark any kept recipes they want an extra printed
@@ -21,16 +23,14 @@ type Props = {
 }
 
 export function ExtraCopies({ recipes, selected, onToggle, onNext }: Props) {
+  const t = useStrings(FLOW)
   const chosen = new Set(selected)
 
   return (
     <>
       <div className="intro-text">
-        <p>
-          You can print an EXTRA COPY of any recipe to give to family or
-          friends.
-        </p>
-        <p>Just touch a recipe for an EXTRA COPY.</p>
+        <p>{t.extraIntro}</p>
+        <p>{t.extraTouch}</p>
       </div>
 
       <ul className="copy-grid">
@@ -58,7 +58,7 @@ export function ExtraCopies({ recipes, selected, onToggle, onNext }: Props) {
         ))}
       </ul>
 
-      <NavBar primaryLabel="NEXT" onPrimary={onNext} />
+      <NavBar primaryLabel={t.next} onPrimary={onNext} />
     </>
   )
 }

@@ -1,7 +1,10 @@
-import { NavBar } from '../components/NavBar'
-import { RecipeSkeleton } from '../components/RecipeSkeleton'
-import { ScreenLabel } from '../components/ScreenLabel'
+import { NavBar } from '../components/layout/NavBar'
+import { RecipeSkeleton } from '../components/veggie/RecipeSkeleton'
+import { ScreenLabel } from '../components/layout/ScreenLabel'
+import { useHeld } from '../hooks/useHeld'
 import type { SecretsFlowState } from '../hooks/useSecretsFlow'
+import { SECRETS } from '../i18n/strings/secrets'
+import { useStrings } from '../i18n/useStrings'
 import type { SecretCategory } from '../types'
 import { SecretCategoryPicker } from './SecretCategoryPicker'
 import { SecretCoverChooser } from './SecretCoverChooser'
@@ -17,21 +20,15 @@ import { WhoSaysSo } from './WhoSaysSo'
 // The categories are loaded once by App and passed in, since the home
 // screen uses them too, to name and picture saved Secrets Books.
 //
-// Every bottom button is NavBar, the same bar Phase 1 uses, so both kinds
-// of book have one button layout.
-//
-// What happens to a finished book (saved to the account, or kept on the
-// page for a guest) is decided by App, the same as for a VeggieBook.
+// Every bottom button is NavBar, so both kinds of book have one button
+// layout. A finished book is saved for a guest and an account alike.
 
 type Props = {
   flow: SecretsFlowState
   categories: SecretCategory[]
   categoriesLoading: boolean
   categoriesError: string | null
-  signedIn: boolean
   onSave: (cover: string) => Promise<void>
-  onCreateAccount: (cover: string) => void
-  onFinishWithoutSaving: (cover: string) => void
 }
 
 export function SecretsFlow({
@@ -39,12 +36,12 @@ export function SecretsFlow({
   categories,
   categoriesLoading,
   categoriesError,
-  signedIn,
   onSave,
-  onCreateAccount,
-  onFinishWithoutSaving,
 }: Props) {
+  const t = useStrings(SECRETS)
   const { step, category, secrets } = flow
+  // The review skeleton, held long enough to be seen.
+  const loadingSecrets = useHeld(step === 'review' && secrets.loading)
 
   if (step === 'pick') {
     return (
@@ -72,14 +69,9 @@ export function SecretsFlow({
         {/* The secrets are usually ready by the time the transition is
             passed; if not, the recipe skeleton, the same shape, holds the
             place. */}
-        {secrets.loading && <RecipeSkeleton />}
-        {secrets.error && (
-          <p className="message">
-            We could not load these secrets right now. Please go back and try
-            again.
-          </p>
-        )}
-        {secrets.data && (
+        {loadingSecrets && <RecipeSkeleton />}
+        {!loadingSecrets && secrets.error && <p className="message">{t.loadError}</p>}
+        {!loadingSecrets && secrets.data && (
           <SecretReview
             data={secrets.data}
             index={flow.reviewIndex}
@@ -93,15 +85,12 @@ export function SecretsFlow({
   if (step === 'none') {
     return (
       <>
-        <ScreenLabel>No Secrets Kept</ScreenLabel>
-        <p className="message">
-          You did not keep any {category.name}. A Secrets Book needs at least
-          one secret.
-        </p>
+        <ScreenLabel>{t.noneKept}</ScreenLabel>
+        <p className="message">{t.noneText(category.name)}</p>
         <NavBar
-          secondaryLabel="CHOOSE ANOTHER"
+          secondaryLabel={t.chooseAnother}
           onSecondary={flow.chooseAnother}
-          primaryLabel="REVIEW AGAIN"
+          primaryLabel={t.reviewAgain}
           onPrimary={flow.reviewAgain}
         />
       </>
@@ -120,17 +109,13 @@ export function SecretsFlow({
   }
 
   // Every secret has a picture in the original data, so this should never
-  // show. If one ever does not, the user is told rather than stuck on a
-  // screen with nothing to choose.
+  // show. If one ever does not, the user is told rather than stuck.
   if (!flow.defaultCover) {
     return (
       <>
-        <ScreenLabel>Choose a Cover</ScreenLabel>
-        <p className="message">
-          Your secrets have no pictures to use as a cover. Please choose a
-          different kind of secret.
-        </p>
-        <NavBar primaryLabel="CHOOSE ANOTHER" onPrimary={flow.chooseAnother} />
+        <ScreenLabel>{t.chooseCoverLabel}</ScreenLabel>
+        <p className="message">{t.noPictures}</p>
+        <NavBar primaryLabel={t.chooseAnother} onPrimary={flow.chooseAnother} />
       </>
     )
   }
@@ -142,10 +127,7 @@ export function SecretsFlow({
       categoryName={category.name}
       categoryImage={category.image}
       defaultCover={flow.defaultCover}
-      signedIn={signedIn}
       onSave={onSave}
-      onCreateAccount={onCreateAccount}
-      onFinishWithoutSaving={onFinishWithoutSaving}
     />
   )
 }

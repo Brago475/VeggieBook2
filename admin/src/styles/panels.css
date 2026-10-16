@@ -1,0 +1,296 @@
+/* The shared building blocks: panels, tabs, number cards, card grids,
+   bars, tables, and status pills. Every admin screen uses these, so they
+   all look the same. See components/common/.
+
+   Mostly neutral. Soft color shows up only in number card icons (one tint
+   per card), green bars, and status text.
+
+   Panels and number cards are written as .card.panel and .card.number-card
+   so they always beat the plain .card padding in base.css, whatever order
+   the style files load in.
+
+   Fits any screen: card grids fit as many cards per row as there is room
+   for (never a fixed count), and sizes and spacing scale with the window,
+   so nothing is laid out for one monitor size. */
+
+/* Panel: a white box with a plain heading. The heading's line runs the
+   full width of the box. */
+
+.card.panel {
+  margin-top: var(--sp-5);
+  padding: 0;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) clamp(14px, 1.6vw, 24px);
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.panel-body {
+  padding: clamp(14px, 1.6vw, 24px);
+}
+
+/* Section: a plain heading over a grid of cards, with no box around it. */
+
+.section {
+  margin-top: var(--sp-6);
+}
+
+.section:first-child {
+  margin-top: 0;
+}
+
+/* Card grids: as many cards per row as fit. cols-4, cols-3, and cols-2
+   set the smallest a card may get, so a wide screen shows 4, 3, or 2 per
+   row and smaller screens show fewer, down to one on a phone. */
+
+.card-grid {
+  display: grid;
+  gap: clamp(12px, 1.2vw, 16px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card-grid.cols-4 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+}
+
+.card-grid.cols-3 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.card-grid.cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+}
+
+/* Number card: a header strip with a tinted icon and the label, a line
+   the full width of the card, then the number in large dark type. */
+
+.card.number-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.number-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.number-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+  background: var(--subtle);
+  border-radius: var(--r-md);
+}
+
+.number-icon.is-green {
+  color: var(--tone-green);
+  background: var(--tone-green-bg);
+}
+
+.number-icon.is-blue {
+  color: var(--tone-blue);
+  background: var(--tone-blue-bg);
+}
+
+.number-icon.is-amber {
+  color: var(--tone-amber);
+  background: var(--tone-amber-bg);
+}
+
+.number-icon.is-violet {
+  color: var(--tone-violet);
+  background: var(--tone-violet-bg);
+}
+
+.number-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.number-value {
+  padding: var(--sp-4);
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.number-value.is-warn {
+  color: var(--warn);
+}
+
+/* Bar: thin, green, same height everywhere. */
+
+.bar {
+  display: flex;
+  height: 6px;
+  overflow: hidden;
+  background: var(--bar-empty);
+  border-radius: 999px;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--bar-fill);
+  border-radius: 999px;
+}
+
+.bar-fill.is-warn {
+  background: var(--warn);
+}
+
+/* Tabs: plain text, dark underline on the chosen one. */
+
+.tabs {
+  display: flex;
+  gap: var(--sp-5);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  flex-shrink: 0;
+  margin-bottom: -1px;
+  padding: var(--sp-3) 0;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tab.is-active {
+  color: var(--ink);
+  border-bottom-color: var(--vb);
+}
+
+.tab:focus {
+  outline: none;
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--vb);
+  outline-offset: 2px;
+}
+
+/* Table: one style everywhere. Uppercase gray headers, roomy rows. */
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table th,
+.data-table td {
+  padding: 14px var(--sp-4);
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.data-table th {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  background: var(--surface);
+}
+
+.data-table tbody tr:hover td {
+  background: #fafafa;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.data-table .strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.data-table .bar-col {
+  width: 25%;
+  min-width: 120px;
+}
+
+/* Status: small colored text for a row's state. */
+
+.status {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status.is-ok {
+  color: var(--ok);
+}
+
+.status.is-warn {
+  color: var(--warn);
+}
+
+.status.is-off {
+  color: var(--muted);
+}
+
+/* Small screens: tabs scroll sideways instead of squeezing, and table
+   cells get a little less padding. */
+
+@media (max-width: 600px) {
+  .tabs {
+    gap: var(--sp-4);
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px var(--sp-3);
+  }
+}

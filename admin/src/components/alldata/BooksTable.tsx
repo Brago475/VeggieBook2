@@ -1,0 +1,196 @@
+import { useState, type ReactNode } from 'react'
+import type { SheetRow } from '../../types/research'
+import type { DisplayColumn } from '../../utils/allDataColumns'
+import { groupLabels } from '../../utils/allDataColumns'
+import { bookKey, bookSubject, isSecrets, shortDate, shortDay, shortTime } from '../../utils/allDataFormat'
+import { shortAnswer } from '../../utils/answerNames'
+import { AllDataIcon } from './AllDataIcons'
+
+// File 1 on screen: one row per book, in a card. `head` (the Answers as
+// switch and Columns) sits at the top of the card, with the row count on
+// the right. A header row names each group (Person, Book, Answers,
+// Recipes and secrets); the research ID stays fixed on the left while
+// scrolling sideways. Click a row to open it in the side panel.
+//
+// The parent gives this a new key when the rows change, so paging starts
+// over on page 1.
+
+const PAGE_SIZE = 25
+const MAX_CHIPS = 2
+
+type Props = {
+  rows: SheetRow[]
+  columns: DisplayColumn[]
+  selected: string | null
+  onSelect: (key: string) => void
+  head: ReactNode
+}
+
+// The top header row. The research ID gets its own cell, fixed on the left
+// with the column under it; every other group is one wide cell whose label
+// slides along while scrolling sideways, so it is always readable.
+function groupSpans(columns: DisplayColumn[]) {
+  const spans: { group: DisplayColumn['group']; span: number; sticky: boolean; label: boolean }[] = []
+  columns.forEach((c, i) => {
+    const last = spans[spans.length - 1]
+    if (i > 0 && last && last.group === c.group && !last.sticky) {
+      last.span += 1
+      return
+    }
+    const sameGroupBefore = last !== undefined && last.group === c.group
+    spans.push({ group: c.group, span: 1, sticky: c.kind === 'id', label: !sameGroupBefore })
+  })
+  return spans
+}
+
+function Cell({ row, column }: { row: SheetRow; column: DisplayColumn }) {
+  const value = row[column.key]
+
+  switch (column.kind) {
+    case 'id':
+      return <span className="ad-id">{String(value ?? '')}</span>
+    case 'date':
+      return <span className="ad-date">{shortDate(value)}</span>
+    case 'time':
+      return <span className="ad-time">{shortTime(value)}</span>
+    case 'day':
+      return <>{shortDay(value)}</>
+    case 'subject':
+      return <span className={isSecrets(row) ? 'ad-badge is-violet' : 'ad-badge is-green'}>{bookSubject(row)}</span>
+    case 'chips': {
+      if (isSecrets(row)) return <span className="ad-faint">n/a</span>
+      const picked = (column.question?.choices ?? [])
+        .filter((c) => row[c.key] === 1)
+        .map((c) => shortAnswer(c.text))
+      if (picked.length === 0) return <span className="ad-faint">None</span>
+      return (
+        <span className="ad-chips">
+          {picked.slice(0, MAX_CHIPS).map((p) => (
+            <span key={p} className="ad-chip">
+              {p}
+            </span>
+          ))}
+          {picked.length > MAX_CHIPS && <span className="ad-more-count">+{picked.length - MAX_CHIPS}</span>}
+        </span>
+      )
+    }
+    case 'bin':
+      if (value === null || value === undefined) return null
+      return <span className={value === 1 ? 'ad-bin is-on' : 'ad-bin'}>{String(value)}</span>
+    case 'num': {
+      if (value === null || value === undefined) return <span className="ad-faint">-</span>
+      const out = (column.key === 'recipes_removed' || column.key === 'secrets_removed') && Number(value) > 0
+      const kept = (column.key === 'recipes_kept' || column.key === 'secrets_kept') && Number(value) > 0
+      const zero = Number(value) === 0
+      return (
+        <span className={out ? 'ad-out' : kept ? 'ad-kept' : zero ? 'ad-faint' : 'strong'}>{String(value)}</span>
+      )
+    }
+    default:
+      if (column.key === 'book_type') {
+        return <span className={isSecrets(row) ? 'ad-type is-violet' : 'ad-type is-green'}>{String(value ?? '')}</span>
+      }
+      if (column.key === 'age_range' && (value === null || value === undefined)) {
+        return <span className="ad-faint">Not given</span>
+      }
+      return <>{value === null || value === undefined ? '' : String(value)}</>
+  }
+}
+
+function alignClass(column: DisplayColumn) {
+  return column.kind === 'num' || column.kind === 'bin' ? 'num' : undefined
+}
+
+export function BooksTable({ rows, columns, selected, onSelect, head }: Props) {
+  const [page, setPage] = useState(0)
+
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE))
+  const start = page * PAGE_SIZE
+  const shown = rows.slice(start, start + PAGE_SIZE)
+
+  return (
+    <div className="ad-table-card">
+      <div className="ad-card-head-row">
+        <div className="ad-card-head-left">{head}</div>
+        <span className="ad-count">
+          {rows.length === 0 ? 'No books' : `Books ${start + 1} to ${start + shown.length} of ${rows.length}`}
+        </span>
+      </div>
+
+      {rows.length === 0 && <p className="muted ad-empty">No books match these filters.</p>}
+
+      {rows.length > 0 && (
+        <div className="ad-scroll">
+          <table className="ad-table">
+            <thead>
+              <tr className="ad-group-row">
+                {groupSpans(columns).map((g, i) => (
+                  <th
+                    key={`${g.group}-${i}`}
+                    colSpan={g.span}
+                    className={`ad-group is-${g.group}${g.sticky ? ' is-sticky' : ''}`}
+                  >
+                    {g.label && <span className="ad-group-label">{groupLabels[g.group]}</span>}
+                  </th>
+                ))}
+              </tr>
+              <tr>
+                {columns.map((c) => (
+                  <th
+                    key={c.key}
+                    title={c.title}
+                    className={[alignClass(c), c.kind === 'id' ? 'is-sticky' : '', c.group === 'answers' ? 'is-answer' : '']
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    {c.small && <span className="ad-th-small">{c.small}</span>}
+                    {c.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {shown.map((row) => {
+                const key = bookKey(row)
+                const isSelected = key === selected
+                return (
+                  <tr
+                    key={key}
+                    className={isSelected ? 'is-selected' : undefined}
+                    onClick={() => onSelect(key)}
+                    aria-selected={isSelected}
+                  >
+                    {columns.map((c) => (
+                      <td key={c.key} className={[alignClass(c), c.kind === 'id' ? 'is-sticky' : ''].filter(Boolean).join(' ')}>
+                        <Cell row={row} column={c} />
+                      </td>
+                    ))}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="ad-pager">
+        <span className="muted small">Click a row to see its answers and recipes on the right.</span>
+        <div className="ad-pager-buttons">
+          <button type="button" className="ad-page-btn" onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
+            <AllDataIcon name="left" size={16} />
+            Previous
+          </button>
+          <button
+            type="button"
+            className="ad-page-btn"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={page >= pages - 1}
+          >
+            Next
+            <AllDataIcon name="right" size={16} />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,335 @@
+/* Content page. See pages/Content.tsx and components/content/.
+   Neutral cards, green for recipes and kept, violet for secrets, orange
+   only for taken out and retired. */
+
+.ct-page {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 1.6vw, 24px);
+}
+
+.ct-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: clamp(12px, 1.2vw, 16px);
+}
+
+.ct-readonly {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #52525b;
+  background: #f4f4f5;
+  border-radius: 999px;
+}
+
+/* Filter card */
+
+.ct-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.ct-tabs {
+  display: flex;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ct-tab {
+  margin-bottom: -1px;
+  padding: 10px 2px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+}
+
+.ct-tab span {
+  margin-left: 4px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.ct-tab.is-on {
+  font-weight: 800;
+  color: var(--ink);
+  border-bottom-color: #15803d;
+}
+
+.ct-tab:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 2px;
+}
+
+.ct-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.ct-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #52525b;
+}
+
+.ct-field.is-wide {
+  flex: 1 1 260px;
+}
+
+.ct-field select,
+.ct-field input {
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: 10px;
+}
+
+.ct-field select {
+  min-width: 200px;
+}
+
+/* Grid and tiles */
+
+.ct-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 16px;
+}
+
+.ct-tile {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  font: inherit;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.ct-tile:hover {
+  border-color: #a7d7b8;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.ct-tile:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 2px;
+}
+
+.ct-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: #f4f4f5;
+}
+
+.ct-media .ct-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ct-media.is-art .ct-img {
+  box-sizing: border-box;
+  padding: 8px;
+  object-fit: contain;
+}
+
+.ct-noimg {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ct-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+}
+
+.ct-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ct-tag {
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #14532d;
+  background: #f0faf3;
+  border-radius: 999px;
+}
+
+.ct-tag.is-secret {
+  color: #4c1d95;
+  background: #f5f3ff;
+}
+
+.ct-tag.is-retired {
+  color: #9a3412;
+  background: #ffedd5;
+}
+
+.ct-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.ct-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ct-counts {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-top: 1px solid #f4f4f5;
+}
+
+.ct-kept {
+  color: #14532d;
+}
+
+.ct-out {
+  color: #c2410c;
+}
+
+.ct-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Opened window, right side */
+
+.bf.ct-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+.ct-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.ct-facts dt {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.ct-facts dd {
+  margin: 4px 0 0;
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.ct-usage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.ct-usage-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ct-usage-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.ct-bar {
+  display: flex;
+  height: 10px;
+  overflow: hidden;
+  background: #f4f4f5;
+  border-radius: 999px;
+}
+
+.ct-bar-kept {
+  background: #3f9a5b;
+}
+
+.ct-bar-out {
+  background: #f5c9a6;
+}
+
+.ct-usage-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ct-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.ct-nav .st-button {
+  flex: 1;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-tile {
+    transition: none;
+  }
+}

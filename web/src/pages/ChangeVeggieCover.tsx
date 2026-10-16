@@ -1,14 +1,18 @@
 import { useState } from 'react'
-import { BookCard } from '../components/BookCard'
-import { BookSkeleton } from '../components/BookSkeleton'
-import { CoverOptions } from '../components/CoverOptions'
-import { NavBar } from '../components/NavBar'
+import { BookCard } from '../components/library/BookCard'
+import { BookSkeleton } from '../components/library/BookSkeleton'
+import { CoverOptions } from '../components/veggie/CoverOptions'
+import { NavBar } from '../components/layout/NavBar'
 import { useBookDetail, type BookDetail } from '../hooks/useBookDetail'
+import { useHeld } from '../hooks/useHeld'
+import { BOOK } from '../i18n/strings/book'
+import { FLOW } from '../i18n/strings/flow'
+import { useStrings } from '../i18n/useStrings'
 import type { Vegetable } from '../types'
 
 // Changing a saved VeggieBook's cover, as the original app allowed. The
-// same cover screen as the last step of making a book (CoverChooser):
-// a live preview, then the three ways to set a cover. It starts on the
+// same cover screen as the last step of making a book (CoverChooser): a
+// live preview, then the three ways to set a cover. It starts on the
 // book's current cover.
 //
 // SAVE COVER saves and returns to the book. CANCEL returns without a
@@ -24,20 +28,20 @@ type Props = {
 }
 
 export function ChangeVeggieCover({ bookId, vegetables, onSave, onCancel }: Props) {
+  const t = useStrings(BOOK)
   const { book, loading, error } = useBookDetail(bookId)
   const vegetable = vegetables.find((v) => v.code === book?.vegetableCode)
+  const waiting = useHeld(loading || (book !== null && !vegetable && vegetables.length === 0))
 
-  if (loading || (book && !vegetable && vegetables.length === 0)) return <BookSkeleton />
+  if (waiting) return <BookSkeleton />
 
   if (error || !book || !vegetable) {
     return (
       <div className="book-view">
-        <p className="message book-view-message">
-          {error ?? 'Could not open this book.'}
-        </p>
+        <p className="message book-view-message">{error ?? t.couldNotOpen}</p>
         <div className="book-view-back">
           <button type="button" className="link-btn" onClick={onCancel}>
-            Back to the book
+            {t.backToBook}
           </button>
         </div>
       </div>
@@ -60,6 +64,8 @@ type EditorProps = {
 }
 
 function CoverEditor({ book, vegetable, vegetables, onSave, onCancel }: EditorProps) {
+  const t = useStrings(BOOK)
+  const flow = useStrings(FLOW)
   const defaultCover = `cover/${vegetable.shortCode}.jpg`
 
   const [selected, setSelected] = useState(book.cover || defaultCover)
@@ -79,9 +85,7 @@ function CoverEditor({ book, vegetable, vegetables, onSave, onCancel }: EditorPr
       await onSave(selected)
       // On success the parent returns to the book.
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'The cover could not be saved. Please try again.',
-      )
+      setError(err instanceof Error ? err.message : t.coverNotSaved)
       setSaving(false)
     }
   }
@@ -89,7 +93,7 @@ function CoverEditor({ book, vegetable, vegetables, onSave, onCancel }: EditorPr
   return (
     <>
       <div className="intro-text">
-        <p>Choose a new cover for your {vegetable.name} VeggieBook.</p>
+        <p>{t.newCoverVeggie(vegetable.name)}</p>
       </div>
 
       <div className="cover-preview">
@@ -108,9 +112,9 @@ function CoverEditor({ book, vegetable, vegetables, onSave, onCancel }: EditorPr
       {error && <p className="message">{error}</p>}
 
       <NavBar
-        secondaryLabel="CANCEL"
+        secondaryLabel={t.cancel}
         onSecondary={onCancel}
-        primaryLabel={saving ? 'SAVING...' : 'SAVE COVER'}
+        primaryLabel={saving ? flow.saving : t.saveCover}
         onPrimary={save}
       />
     </>

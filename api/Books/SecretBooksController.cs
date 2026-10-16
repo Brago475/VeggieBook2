@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Controllers;
 using VeggieBook.Api.Data;
@@ -34,6 +35,9 @@ namespace VeggieBook.Api.Books;
 // 404. Nothing the client sends is trusted.
 //
 // Only kept secrets are stored, the same as kept recipes in a VeggieBook.
+// Saving writes a line to the activity log (Activity/ActivityLog.cs).
+//
+// Messages carry a code the site translates (ErrorCodes, ApiError).
 
 public record BookSecret(int Id, int ExtraCopies);
 
@@ -47,8 +51,10 @@ public record CreateSecretsBookRequest(
 [ApiController]
 [Route("api/books")]
 [Authorize]
-public class SecretBooksController(AccountsContext db, VeggieBookContext content)
-    : ControllerBase
+public class SecretBooksController(
+    AccountsContext db,
+    VeggieBookContext content,
+    ILogger<SecretBooksController> logger) : ControllerBase
 {
     // The same limits as BooksController, so both kinds of book count
     // toward one total per account and take the same size of photo.
@@ -72,40 +78,42 @@ public class SecretBooksController(AccountsContext db, VeggieBookContext content
         var uid = CurrentUserId;
 
         if (await db.Books.CountAsync(b => b.UserId == uid) >= MaxBooksPerUser)
-            return Conflict(new
-            {
-                error = $"You can keep up to {MaxBooksPerUser} books. Delete one to make room."
-            });
+            return Conflict(new ApiError(ErrorCodes.BookLimit,
+                $"You can keep up to {MaxBooksPerUser} books. Delete one to make room.")
+            { Values = new { max = MaxBooksPerUser } }.Body());
 
         var category = await content.SecretCategories
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == req.CategoryId);
         if (category is null)
-            return BadRequest(new { error = "Unknown kind of secret." });
+            return BadRequest(new ApiError(ErrorCodes.UnknownCategory, "Unknown kind of secret.").Body());
 
         // Secrets must be real, active, and in this book's category.
         var secrets = req.Secrets ?? [];
         if (secrets.Length == 0)
-            return BadRequest(new { error = "A Secrets Book needs at least one secret." });
+            return BadRequest(new ApiError(ErrorCodes.SecretsRequired,
+                "A Secrets Book needs at least one secret.").Body());
         if (secrets.Length > MaxSecretsPerBook)
-            return BadRequest(new { error = "Too many secrets." });
+            return BadRequest(new ApiError(ErrorCodes.TooManySecrets, "Too many secrets.").Body());
 
         var secretIds = secrets.Select(s => s.Id).Distinct().ToArray();
         if (secretIds.Length != secrets.Length)
-            return BadRequest(new { error = "A secret is listed twice." });
+            return BadRequest(new ApiError(ErrorCodes.SecretTwice, "A secret is listed twice.").Body());
         if (secrets.Any(s => s.ExtraCopies is < 0 or > MaxExtraCopies))
-            return BadRequest(new { error = "Extra copies must be between 0 and 10." });
+            return BadRequest(new ApiError(ErrorCodes.ExtraCopiesRange,
+                "Extra copies must be between 0 and 10.")
+            { Values = new { min = 0, max = MaxExtraCopies } }.Body());
 
         var validSecrets = await content.Secrets.CountAsync(s =>
             secretIds.Contains(s.Id) && s.CategoryId == category.Id && s.Active);
         if (validSecrets != secretIds.Length)
-            return BadRequest(new { error = "Unknown secret." });
+            return BadRequest(new ApiError(ErrorCodes.UnknownSecret, "Unknown secret.").Body());
 
         // Exactly one cover: a secret's picture, or an upload.
         var hasPreset = !string.IsNullOrEmpty(req.CoverPath);
         var hasUpload = !string.IsNullOrEmpty(req.CoverUpload);
         if (hasPreset == hasUpload)
-            return BadRequest(new { error = "Choose one cover." });
+            return BadRequest(new ApiError(ErrorCodes.ChooseOneCover, "Choose one cover.").Body());
 
         byte[]? upload = null;
         if (hasPreset)
@@ -116,16 +124,14 @@ public class SecretBooksController(AccountsContext db, VeggieBookContext content
             var known = await content.Secrets.AnyAsync(s =>
                 s.Active && (s.ImagePathEn == path || s.ImagePathEs == path));
             if (!known)
-                return BadRequest(new { error = "Unknown cover." });
+                return BadRequest(new ApiError(ErrorCodes.UnknownCover, "Unknown cover.").Body());
         }
         else
         {
             upload = DecodeJpeg(req.CoverUpload!);
             if (upload is null)
-                return BadRequest(new
-                {
-                    error = "This photo could not be used. Try a different photo."
-                });
+                return BadRequest(new ApiError(ErrorCodes.PhotoUnusable,
+                    "This photo could not be used. Try a different photo.").Body());
         }
 
         var book = new Book
@@ -154,6 +160,13 @@ public class SecretBooksController(AccountsContext db, VeggieBookContext content
 
         db.Books.Add(book);
         await db.SaveChangesAsync();
+
+        // Permanent record of the save. At matches the book's CreatedAt so the
+        // admin Activity page can pair it with the book row.
+        var saved = await ActivityLog.ForBookAsync(
+            db, logger, uid, "secrets", null, category.Id, secrets.Length, ActivityLog.BookSaved);
+        if (saved is not null) saved.At = book.CreatedAt;
+        await ActivityLog.SaveAsync(db, logger, saved);
 
         return Created($"/api/books/{book.Id}", new { id = book.Id });
     }
@@ -223,10 +236,8 @@ public class SecretBooksController(AccountsContext db, VeggieBookContext content
         if (target is null) return NotFound();
 
         if (kept.Count == 1)
-            return Conflict(new
-            {
-                error = "A book needs at least one secret. Delete the book instead."
-            });
+            return Conflict(new ApiError(ErrorCodes.LastSecret,
+                "A book needs at least one secret. Delete the book instead.").Body());
 
         target.Kept = false;
         await db.SaveChangesAsync();
