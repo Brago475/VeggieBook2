@@ -27,11 +27,11 @@ export type Tracking =
 export type StudyNotice = { show: false } | { show: true; studyNumber: number }
 
 export function getTracking() {
-  return apiFetch<Tracking>('/me/tracking')
+  return apiFetch<Tracking>('/me/research')
 }
 
 export function setTracking(on: boolean) {
-  return apiFetch<Tracking>('/me/tracking', { method: 'PUT', body: { on } })
+  return apiFetch<Tracking>('/me/research', { method: 'PUT', body: { on } })
 }
 
 export function getStudyNotice() {

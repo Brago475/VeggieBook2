@@ -22,17 +22,17 @@ type Props = {
 
 export function AllDataCards({ cards }: Props) {
   return (
-    <div className="ad-cards">
+    <div className="vbd-cards">
       {cards.map((c) => (
-        <div key={c.label} className={`ad-card is-${c.tone}`}>
-          <span className="ad-card-icon">
+        <div key={c.label} className={`vbd-card is-${c.tone}`}>
+          <span className="vbd-card-icon">
             <AllDataIcon name={c.icon} size={22} />
           </span>
-          <div className="ad-card-text">
-            <span className="ad-card-label">{c.label}</span>
-            <span className="ad-card-line">
-              <span className={c.warn ? 'ad-card-value is-warn' : 'ad-card-value'}>{c.value}</span>
-              {c.note && <span className="ad-card-note">{c.note}</span>}
+          <div className="vbd-card-text">
+            <span className="vbd-card-label">{c.label}</span>
+            <span className="vbd-card-line">
+              <span className={c.warn ? 'vbd-card-value is-warn' : 'vbd-card-value'}>{c.value}</span>
+              {c.note && <span className="vbd-card-note">{c.note}</span>}
             </span>
           </div>
         </div>

@@ -36,12 +36,12 @@ export function DownloadMenu({ filters, itemAnswers, study = null }: Props) {
   if (study !== null) extra.study = String(study)
 
   return (
-    <div className="ad-downloads" role="group" aria-label="Download all data">
-      <span className="ad-downloads-label">Download all</span>
+    <div className="vbd-downloads" role="group" aria-label="Download all data">
+      <span className="vbd-downloads-label">Download all</span>
       {formats.map((f, i) => (
         <a
           key={f.format}
-          className={i === 0 ? 'ad-dl is-main' : 'ad-dl'}
+          className={i === 0 ? 'vbd-dl is-main' : 'vbd-dl'}
           href={allDataDownload('export', filters, { format: f.format, ...extra })}
           title={f.title}
           download

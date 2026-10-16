@@ -37,7 +37,7 @@ export function Analytics() {
 
   useEffect(() => {
     let cancelled = false
-    api<AnalyticsData>('/admin/analytics')
+    api<AnalyticsData>('/admin/insights')
       .then((d) => {
         if (cancelled) return
         setData(d)

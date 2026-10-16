@@ -57,13 +57,13 @@ export function ItemThumb({ row }: { row: SheetRow }) {
 
   if (!path || broken) {
     return (
-      <span className={secret ? 'ad-thumb is-empty is-violet' : 'ad-thumb is-empty'} aria-hidden="true">
+      <span className={secret ? 'vbd-thumb is-empty is-violet' : 'vbd-thumb is-empty'} aria-hidden="true">
         {String(row.item_title ?? '?').charAt(0)}
       </span>
     )
   }
 
-  return <img className="ad-thumb" src={imageUrl(path)} alt="" loading="lazy" onError={() => setBroken(true)} />
+  return <img className="vbd-thumb" src={imageUrl(path)} alt="" loading="lazy" onError={() => setBroken(true)} />
 }
 
 export function ItemPreviewCard({ preview }: { preview: Preview | null }) {
@@ -90,35 +90,35 @@ export function ItemPreviewCard({ preview }: { preview: Preview | null }) {
   top = Math.max(GAP, Math.min(top, window.innerHeight - CARD_HEIGHT - GAP))
 
   return (
-    <div className="ad-preview" role="tooltip" style={{ left, top, width }}>
+    <div className="vbd-preview" role="tooltip" style={{ left, top, width }}>
       {path ? (
-        <img className="ad-preview-img" src={imageUrl(path)} alt="" />
+        <img className="vbd-preview-img" src={imageUrl(path)} alt="" />
       ) : (
-        <div className="ad-preview-img is-empty">No picture</div>
+        <div className="vbd-preview-img is-empty">No picture</div>
       )}
-      <div className="ad-preview-body">
-        <div className="ad-preview-tags">
-          {row.item_code && <span className="ad-code">{String(row.item_code)}</span>}
-          <span className={secret ? 'ad-type is-violet' : 'ad-type is-green'}>{String(row.item_type ?? '')}</span>
-          <span className={out ? 'ad-pill is-out' : 'ad-pill is-kept'}>{out ? 'Taken out later' : 'Kept'}</span>
+      <div className="vbd-preview-body">
+        <div className="vbd-preview-tags">
+          {row.item_code && <span className="vbd-code">{String(row.item_code)}</span>}
+          <span className={secret ? 'vbd-type is-violet' : 'vbd-type is-green'}>{String(row.item_type ?? '')}</span>
+          <span className={out ? 'vbd-pill is-out' : 'vbd-pill is-kept'}>{out ? 'Taken out later' : 'Kept'}</span>
         </div>
-        <strong className="ad-preview-title">{String(row.item_title ?? '')}</strong>
-        <dl className="ad-preview-facts">
+        <strong className="vbd-preview-title">{String(row.item_title ?? '')}</strong>
+        <dl className="vbd-preview-facts">
           <dt>Book</dt>
           <dd>
             {bookTitle(row)}, book {String(row.book_no)}
           </dd>
           <dt>Saved</dt>
           <dd>
-            <span className="ad-date">
+            <span className="vbd-date">
               {String(row.day ?? '').slice(0, 3)} {shortDate(row.date)}
             </span>{' '}
-            <span className="ad-time">{shortTime(row.time)}</span>
+            <span className="vbd-time">{shortTime(row.time)}</span>
           </dd>
           {out && (
             <>
               <dt>Taken out</dt>
-              <dd className="ad-faint">Time not recorded yet</dd>
+              <dd className="vbd-faint">Time not recorded yet</dd>
             </>
           )}
           {copies > 0 && (

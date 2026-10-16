@@ -164,11 +164,11 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
   const refreshing = loading && books !== null
 
   return (
-    <div className="ad-page">
+    <div className="vbd-page">
       <TopbarActions>
         <DownloadMenu filters={filters} itemAnswers={itemAnswers} study={study} />
-        <button type="button" className="ad-dl ad-refresh" onClick={() => setVersion((v) => v + 1)}>
-          <AllDataIcon name="refresh" size={17} className={refreshing ? 'ad-refresh-icon is-spinning' : 'ad-refresh-icon'} />
+        <button type="button" className="vbd-dl vbd-refresh" onClick={() => setVersion((v) => v + 1)}>
+          <AllDataIcon name="refresh" size={17} className={refreshing ? 'vbd-refresh-icon is-spinning' : 'vbd-refresh-icon'} />
           {refreshing ? 'Updating...' : 'Refresh'}
         </button>
       </TopbarActions>
@@ -190,19 +190,19 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
 
       <StudyView study={study} onStudy={setStudy} books={bookRows.length} />
 
-      <div className="ad-tabs" role="tablist" aria-label="File">
+      <div className="vbd-tabs" role="tablist" aria-label="File">
         {fileTabs.map((t) => (
           <button
             key={t.id}
             type="button"
             role="tab"
             aria-selected={t.id === file}
-            className={t.id === file ? 'ad-tab is-active' : 'ad-tab'}
+            className={t.id === file ? 'vbd-tab is-active' : 'vbd-tab'}
             onClick={() => setFile(t.id)}
           >
             <AllDataIcon name={t.icon} size={20} />
             {t.label}
-            <span className="ad-tab-note">
+            <span className="vbd-tab-note">
               one row per {t.id === 'books' ? 'book' : 'recipe'} ({tabCounts[t.id]})
             </span>
           </button>
@@ -222,7 +222,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
         <>
           {columnsOpen && <ColumnToggles shown={groups} onChange={setGroups} />}
 
-          <div className={selectedBook ? 'ad-split has-panel' : 'ad-split'}>
+          <div className={selectedBook ? 'vbd-split has-panel' : 'vbd-split'}>
             <BooksTable
               key={`${books.generatedAt}-${bookType}-${search}`}
               rows={bookRows}
@@ -231,7 +231,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
               onSelect={openBook}
               head={
                 <>
-                  <span className="ad-head-label">Answers as</span>
+                  <span className="vbd-head-label">Answers as</span>
                   <Segmented
                     label="Answers as"
                     value={answersView}
@@ -243,7 +243,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
                   />
                   <button
                     type="button"
-                    className={columnsOpen ? 'ad-head-btn is-pressed' : 'ad-head-btn'}
+                    className={columnsOpen ? 'vbd-head-btn is-pressed' : 'vbd-head-btn'}
                     aria-expanded={columnsOpen}
                     onClick={() => setColumnsOpen((o) => !o)}
                   >
@@ -275,7 +275,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
           showAnswers={itemAnswers}
           head={
             <>
-              <span className="ad-head-label">Status</span>
+              <span className="vbd-head-label">Status</span>
               <Segmented
                 label="Status"
                 value={status}
@@ -289,7 +289,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
               <button
                 type="button"
                 aria-pressed={itemAnswers}
-                className={itemAnswers ? 'ad-head-btn is-on' : 'ad-head-btn'}
+                className={itemAnswers ? 'vbd-head-btn is-on' : 'vbd-head-btn'}
                 onClick={() => setItemAnswers((a) => !a)}
               >
                 <span aria-hidden="true">{itemAnswers ? '✓' : '+'}</span>

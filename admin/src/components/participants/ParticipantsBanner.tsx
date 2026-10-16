@@ -16,34 +16,34 @@ export function ParticipantsBanner({ data, onOpenStudies }: Props) {
   const share = counts.all === 0 ? 0 : Math.round((counts.on / counts.all) * 100)
 
   return (
-    <section className="pt-banner">
-      <div className="pt-banner-study">
+    <section className="pt-summary">
+      <div className="pt-summary-study">
         <span className={study ? 'st-badge is-running' : 'st-badge'}>
           <StudyIcon name="flask" size={22} />
         </span>
-        <div className="pt-banner-title">
+        <div className="pt-summary-title">
           {study ? (
             <>
-              <span className="pt-banner-name">
+              <span className="pt-summary-name">
                 <strong>{studyTitle(study)}</strong>
                 <span className="st-pill is-running">
                   <i />
                   Running
                 </span>
               </span>
-              <span className="pt-banner-when">Started {fullDate(study.startedAt)}</span>
+              <span className="pt-summary-when">Started {fullDate(study.startedAt)}</span>
             </>
           ) : (
             <>
               <strong>No study running</strong>
-              <span className="pt-banner-when">Tracked books still count in All Data.</span>
+              <span className="pt-summary-when">Tracked books still count in All Data.</span>
             </>
           )}
         </div>
       </div>
 
-      <div className="pt-banner-share">
-        <span className="pt-banner-big">
+      <div className="pt-summary-share">
+        <span className="pt-summary-big">
           <strong>
             {counts.on.toLocaleString()} of {counts.all.toLocaleString()}
           </strong>{' '}
@@ -52,10 +52,10 @@ export function ParticipantsBanner({ data, onOpenStudies }: Props) {
         <span className="pt-bar" aria-hidden="true">
           <span style={{ width: `${share}%` }} />
         </span>
-        <span className="pt-banner-pct">{share}%</span>
+        <span className="pt-summary-pct">{share}%</span>
       </div>
 
-      <ul className="pt-banner-counts">
+      <ul className="pt-summary-counts">
         <li className="is-on">
           <i aria-hidden="true" />
           Tracking on <strong>{counts.on.toLocaleString()}</strong>
@@ -70,7 +70,7 @@ export function ParticipantsBanner({ data, onOpenStudies }: Props) {
         </li>
       </ul>
 
-      <button type="button" className="st-button pt-banner-link" onClick={onOpenStudies}>
+      <button type="button" className="st-button pt-summary-link" onClick={onOpenStudies}>
         Manage in Studies
       </button>
     </section>

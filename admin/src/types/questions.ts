@@ -1,4 +1,4 @@
-// Response shape of GET /api/admin/question-analytics
+// Response shape of GET /api/admin/question-insights
 // (api/Admin/AdminQuestionAnalyticsController.cs).
 
 export type QaChoice = { attribute: string; text: string }

@@ -1,4 +1,4 @@
-// Shape of GET /api/admin/analytics (api/Admin/AdminAnalyticsController.cs).
+// Shape of GET /api/admin/insights (api/Admin/AdminAnalyticsController.cs).
 // If that response changes, change this to match.
 
 export type DescriptiveRow = {

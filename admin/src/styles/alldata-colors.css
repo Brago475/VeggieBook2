@@ -5,7 +5,7 @@
      orange  taken out later
    Everything else stays black, gray, and white. */
 
-.ad-page {
+.vbd-page {
   --ad-green: #15803d;
   --ad-green-tint: #e3f6e9;
   --ad-violet: #6d28d9;
@@ -21,153 +21,153 @@
 
 /* ---- Cards ---- */
 
-.ad-card {
+.vbd-card {
   border-color: var(--ad-line);
 }
 
-.ad-card-label {
+.vbd-card-label {
   font-weight: 600;
   color: var(--ad-text);
 }
 
-.ad-card-value {
+.vbd-card-value {
   font-size: 30px;
   font-weight: 600;
 }
 
-.ad-card-note {
+.vbd-card-note {
   font-weight: 600;
 }
 
-.ad-card.is-green .ad-card-mark {
+.vbd-card.is-green .vbd-card-mark {
   background: var(--ad-green-tint);
   color: var(--ad-green);
 }
 
-.ad-card.is-violet .ad-card-mark {
+.vbd-card.is-violet .vbd-card-mark {
   background: var(--ad-violet-tint);
   color: var(--ad-violet);
 }
 
-.ad-card.is-blue .ad-card-mark {
+.vbd-card.is-blue .vbd-card-mark {
   background: var(--ad-blue-tint);
   color: var(--ad-blue);
 }
 
-.ad-card.is-orange .ad-card-mark {
+.vbd-card.is-orange .vbd-card-mark {
   background: var(--ad-orange-tint);
   color: var(--ad-orange);
 }
 
-.ad-card-value.is-warn {
+.vbd-card-value.is-warn {
   color: var(--ad-orange);
 }
 
 /* ---- Refresh ---- */
 
-.ad-refresh {
+.vbd-refresh {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
-.ad-refresh-icon.is-spinning {
-  animation: ad-spin 0.9s linear infinite;
+.vbd-refresh-icon.is-spinning {
+  animation: vbd-spin 0.9s linear infinite;
 }
 
-@keyframes ad-spin {
+@keyframes vbd-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ad-refresh-icon.is-spinning {
+  .vbd-refresh-icon.is-spinning {
     animation: none;
   }
 }
 
 /* ---- Tabs ---- */
 
-.ad-tab {
+.vbd-tab {
   font-size: 15px;
   color: var(--ad-soft);
 }
 
-.ad-tab.is-active {
+.vbd-tab.is-active {
   color: var(--ad-text);
   box-shadow: inset 0 -3px 0 var(--ad-green);
 }
 
 /* ---- Tables: stronger text and headers ---- */
 
-.ad-table {
+.vbd-table {
   font-size: 14px;
   color: var(--ad-text);
 }
 
-.ad-table th {
+.vbd-table th {
   font-weight: 700;
   color: var(--ad-soft);
   background: #fafafa;
 }
 
-.ad-table td {
+.vbd-table td {
   border-bottom-color: var(--ad-line);
 }
 
-.ad-group-row th {
+.vbd-group-row th {
   color: var(--ad-text);
 }
 
-.ad-group-row th.is-book {
+.vbd-group-row th.is-book {
   background: var(--ad-blue-tint);
   color: var(--ad-blue);
 }
 
-.ad-group-row th.is-answers {
+.vbd-group-row th.is-answers {
   background: var(--ad-green-tint);
   color: var(--ad-green);
 }
 
-.ad-group-row th.is-items {
+.vbd-group-row th.is-items {
   background: #f4f4f5;
 }
 
 /* The research ID's own header cell: the label sits at its normal place. */
-.ad-group-row th.is-sticky .ad-group-label {
+.vbd-group-row th.is-sticky .vbd-group-label {
   position: static;
 }
 
-.ad-table th.is-answer {
+.vbd-table th.is-answer {
   color: var(--ad-green);
 }
 
-.ad-table tbody tr:hover td {
+.vbd-table tbody tr:hover td {
   background: #f7f7f8;
 }
 
-.ad-table tbody tr.is-selected td {
+.vbd-table tbody tr.is-selected td {
   background: var(--ad-green-tint);
 }
 
-.ad-table tbody tr.is-selected td.is-sticky {
+.vbd-table tbody tr.is-selected td.is-sticky {
   box-shadow: inset 3px 0 0 var(--ad-green), inset -1px 0 0 var(--ad-line);
 }
 
 /* ---- Values ---- */
 
-.ad-date {
+.vbd-date {
   font-weight: 700;
   color: var(--ad-blue);
 }
 
-.ad-time {
+.vbd-time {
   color: var(--ad-soft);
   font-weight: 500;
 }
 
-.ad-badge {
+.vbd-badge {
   display: inline-block;
   padding: 3px 10px;
   border-radius: 999px;
@@ -175,77 +175,77 @@
   font-weight: 700;
 }
 
-.ad-badge.is-green {
+.vbd-badge.is-green {
   background: var(--ad-green-tint);
   color: var(--ad-green);
 }
 
-.ad-badge.is-violet {
+.vbd-badge.is-violet {
   background: var(--ad-violet-tint);
   color: var(--ad-violet);
 }
 
-.ad-type {
+.vbd-type {
   font-weight: 600;
 }
 
-.ad-type.is-green {
+.vbd-type.is-green {
   color: var(--ad-green);
 }
 
-.ad-type.is-violet {
+.vbd-type.is-violet {
   color: var(--ad-violet);
 }
 
-.ad-kept {
+.vbd-kept {
   font-weight: 700;
   color: var(--ad-green);
 }
 
-.ad-out {
+.vbd-out {
   color: var(--ad-orange);
   font-weight: 700;
 }
 
-.ad-chip {
+.vbd-chip {
   background: var(--ad-green-tint);
   color: #14532d;
   font-weight: 600;
 }
 
-.ad-bin.is-on {
+.vbd-bin.is-on {
   background: var(--ad-green-tint);
   color: var(--ad-green);
 }
 
-.ad-pill {
+.vbd-pill {
   font-size: 12.5px;
   font-weight: 700;
 }
 
-.ad-pill.is-kept {
+.vbd-pill.is-kept {
   background: var(--ad-green-tint);
   color: var(--ad-green);
 }
 
-.ad-pill.is-out {
+.vbd-pill.is-out {
   background: var(--ad-orange-tint);
   color: var(--ad-orange);
 }
 
 /* ---- Recipes and secrets table ---- */
 
-.ad-book-row td {
+.vbd-book-row td {
   background: #f1f1f3;
   border-top: 1px solid #d4d4d8;
   border-bottom: 1px solid #d4d4d8;
 }
 
-.ad-book-bar strong {
+.vbd-book-bar strong {
   font-size: 15px;
 }
 
-.ad-book-when {
+.vbd-book-when {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -254,36 +254,36 @@
   font-weight: 600;
 }
 
-.ad-dot {
+.vbd-dot {
   width: 4px;
   height: 4px;
   border-radius: 999px;
   background: #a1a1aa;
 }
 
-.ad-items-table tbody tr.ad-item-row:hover td {
+.vbd-items-table tbody tr.vbd-item-row:hover td {
   background: #fafafa;
 }
 
-.ad-item-title {
+.vbd-item-title {
   color: var(--ad-text);
 }
 
-.ad-item-title.is-out {
+.vbd-item-title.is-out {
   color: var(--ad-orange);
 }
 
 /* ---- Side panel ---- */
 
-.ad-panel {
+.vbd-panel {
   border-color: var(--ad-line);
 }
 
-.ad-panel-title strong {
+.vbd-panel-title strong {
   font-size: 17px;
 }
 
-.ad-panel-when {
+.vbd-panel-when {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -291,7 +291,7 @@
   font-size: 13px;
 }
 
-.ad-panel-bookno {
+.vbd-panel-bookno {
   font-weight: 600;
   color: var(--ad-soft);
   background: #f4f4f5;
@@ -299,14 +299,14 @@
   padding: 1px 6px;
 }
 
-.ad-panel-tabs {
+.vbd-panel-tabs {
   display: flex;
   gap: 4px;
   padding: 8px 12px 0;
   border-bottom: 1px solid var(--ad-line);
 }
 
-.ad-panel-tab {
+.vbd-panel-tab {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -320,16 +320,16 @@
   cursor: pointer;
 }
 
-.ad-panel-tab:hover {
+.vbd-panel-tab:hover {
   color: var(--ad-text);
 }
 
-.ad-panel-tab.is-active {
+.vbd-panel-tab.is-active {
   color: var(--ad-text);
   box-shadow: inset 0 -3px 0 var(--ad-green);
 }
 
-.ad-panel-tab-count {
+.vbd-panel-tab-count {
   min-width: 22px;
   padding: 1px 7px;
   border-radius: 999px;
@@ -338,60 +338,60 @@
   text-align: center;
 }
 
-.ad-panel-tab.is-active .ad-panel-tab-count {
+.vbd-panel-tab.is-active .vbd-panel-tab-count {
   background: var(--ad-green-tint);
   color: var(--ad-green);
 }
 
-.ad-panel-hint {
+.vbd-panel-hint {
   font-size: 12.5px;
   color: var(--ad-soft);
 }
 
-.ad-q-no {
+.vbd-q-no {
   background: var(--ad-green-tint);
   color: var(--ad-green);
 }
 
-.ad-q-name {
+.vbd-q-name {
   color: var(--ad-text);
 }
 
-.ad-q-count {
+.vbd-q-count {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--ad-green);
 }
 
-.ad-question-text {
+.vbd-question-text {
   font-size: 13.5px;
   color: var(--ad-text);
 }
 
-.ad-choice {
+.vbd-choice {
   color: #8b8b93;
 }
 
-.ad-choice.is-on {
+.vbd-choice.is-on {
   color: var(--ad-text);
 }
 
-.ad-choice.is-on .ad-check {
+.vbd-choice.is-on .vbd-check {
   border-color: var(--ad-green);
   background: var(--ad-green);
 }
 
-.ad-list-head {
+.vbd-list-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.ad-list-gap {
+.vbd-list-gap {
   margin-top: 10px;
 }
 
-.ad-item-list {
+.vbd-item-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -399,7 +399,7 @@
   flex-direction: column;
 }
 
-.ad-item-list li {
+.vbd-item-list li {
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -408,25 +408,25 @@
   font-size: 13.5px;
 }
 
-.ad-item-list li:last-child {
+.vbd-item-list li:last-child {
   border-bottom: 0;
 }
 
-.ad-item-list .ad-code {
+.vbd-item-list .vbd-code {
   flex: 0 0 56px;
 }
 
-.ad-item-name {
+.vbd-item-name {
   flex: 1 1 auto;
   font-weight: 600;
   color: var(--ad-text);
 }
 
-.ad-item-list.is-out .ad-item-name {
+.vbd-item-list.is-out .vbd-item-name {
   color: var(--ad-orange);
 }
 
-.ad-copies {
+.vbd-copies {
   font-size: 12px;
   font-weight: 700;
   color: var(--ad-blue);

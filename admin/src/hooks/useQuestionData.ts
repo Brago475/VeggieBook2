@@ -15,7 +15,7 @@ export function useQuestionData(study: number | null) {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const path = study === null ? '/admin/question-analytics' : `/admin/question-analytics?study=${study}`
+      const path = study === null ? '/admin/question-insights' : `/admin/question-insights?study=${study}`
       setLoaded({ study, data: await api<QaData>(path) })
       setError(null)
     } catch (err) {

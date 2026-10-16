@@ -11,38 +11,38 @@
 
 /* ---- Cards: as many per row as fit, never squeezed ---- */
 
-.ad-cards {
+.vbd-cards {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
 }
 
-.ad-card-value {
+.vbd-card-value {
   font-size: clamp(22px, 2vw, 30px);
 }
 
-.ad-card-text {
+.vbd-card-text {
   min-width: 0;
 }
 
-.ad-card-value,
-.ad-card-label {
+.vbd-card-value,
+.vbd-card-label {
   overflow-wrap: anywhere;
 }
 
 /* ---- Table and side panel ---- */
 
-.ad-split > .ad-table-card {
+.vbd-split > .vbd-table-card {
   flex: 1 1 0;
   min-width: 0;
 }
 
-.ad-panel {
+.vbd-panel {
   flex: 0 0 clamp(320px, 26vw, 440px);
   width: clamp(320px, 26vw, 440px);
 }
 
 /* ---- Top bar ---- */
 
-.topbar-below .ad-search {
+.topbar-below .vbd-search {
   flex: 1 1 260px;
   min-width: 200px;
 }
@@ -54,12 +54,12 @@
 /* ---- Medium: the side panel moves under the table ---- */
 
 @media (max-width: 1280px) {
-  .ad-split {
+  .vbd-split {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .ad-panel {
+  .vbd-panel {
     position: static;
     flex: none;
     width: 100%;
@@ -70,7 +70,7 @@
 /* ---- Small: filters stack, labels shorten ---- */
 
 @media (max-width: 900px) {
-  .ad-downloads-label {
+  .vbd-downloads-label {
     display: none;
   }
 
@@ -79,39 +79,39 @@
     justify-content: flex-start;
   }
 
-  .topbar-below .ad-search {
+  .topbar-below .vbd-search {
     flex-basis: 100%;
   }
 
-  .topbar-below .ad-select,
-  .topbar-below .ad-toolbar .filter {
+  .topbar-below .vbd-select,
+  .topbar-below .vbd-toolbar .filter {
     flex: 1 1 calc(50% - 10px);
     min-width: 0;
   }
 
-  .topbar-below .ad-toolbar .filter input,
-  .topbar-below .ad-toolbar .filter select,
-  .topbar-below .ad-select select {
+  .topbar-below .vbd-toolbar .filter input,
+  .topbar-below .vbd-toolbar .filter select,
+  .topbar-below .vbd-select select {
     min-width: 0;
     width: 100%;
   }
 
-  .ad-clear {
+  .vbd-clear {
     flex: 1 1 100%;
     justify-content: center;
     margin-left: 0;
   }
 
-  .ad-tabs {
+  .vbd-tabs {
     gap: 20px;
     overflow-x: auto;
   }
 
-  .ad-tab {
+  .vbd-tab {
     white-space: nowrap;
   }
 
-  .ad-tab-note {
+  .vbd-tab-note {
     display: none;
   }
 }
@@ -119,74 +119,74 @@
 /* ---- Phone: one column, less padding ---- */
 
 @media (max-width: 600px) {
-  .ad-page {
+  .vbd-page {
     gap: 14px;
   }
 
-  .ad-dl {
+  .vbd-dl {
     flex: 1 1 auto;
     justify-content: center;
     padding: 0 12px;
   }
 
-  .ad-downloads {
+  .vbd-downloads {
     flex: 1 1 100%;
     flex-wrap: wrap;
   }
 
-  .topbar-below .ad-select,
-  .topbar-below .ad-toolbar .filter {
+  .topbar-below .vbd-select,
+  .topbar-below .vbd-toolbar .filter {
     flex-basis: 100%;
   }
 
-  .ad-card {
+  .vbd-card {
     padding: 14px;
     gap: 12px;
   }
 
-  .ad-card-icon {
+  .vbd-card-icon {
     flex-basis: 44px;
     width: 44px;
     height: 44px;
   }
 
-  .ad-card-head-row {
+  .vbd-card-head-row {
     padding: 12px;
   }
 
-  .ad-card-head-left {
+  .vbd-card-head-left {
     width: 100%;
   }
 
-  .ad-card-head-left .segmented {
+  .vbd-card-head-left .segmented {
     flex-wrap: wrap;
   }
 
-  .ad-table-card .ad-scroll {
+  .vbd-table-card .vbd-scroll {
     margin: 0 12px;
   }
 
-  .ad-pager {
+  .vbd-pager {
     flex-direction: column;
     align-items: stretch;
     padding: 12px;
   }
 
-  .ad-pager-buttons {
+  .vbd-pager-buttons {
     justify-content: space-between;
   }
 
-  .ad-panel-head,
-  .ad-panel-section {
+  .vbd-panel-head,
+  .vbd-panel-section {
     padding-left: 14px;
     padding-right: 14px;
   }
 
-  .ad-panel-tabs {
+  .vbd-panel-tabs {
     padding: 8px 14px 0;
   }
 
-  .ad-items-bar-buttons {
+  .vbd-items-bar-buttons {
     flex-wrap: wrap;
     gap: 10px;
   }

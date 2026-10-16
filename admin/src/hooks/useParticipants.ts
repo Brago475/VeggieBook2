@@ -34,7 +34,7 @@ export function useParticipants() {
   const setTracking = useCallback(
     async (researchId: string, on: boolean): Promise<string | null> => {
       try {
-        const path = `/admin/participants/${encodeURIComponent(researchId)}/${on ? 'tracking-on' : 'tracking-off'}`
+        const path = `/admin/participants/${encodeURIComponent(researchId)}/${on ? 'research-on' : 'research-off'}`
         await api(path, { method: 'POST' })
         await load()
         return null

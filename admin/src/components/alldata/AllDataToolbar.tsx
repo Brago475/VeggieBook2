@@ -34,8 +34,8 @@ export function AllDataToolbar({
   canClear,
 }: Props) {
   return (
-    <div className="ad-toolbar">
-      <label className="ad-search">
+    <div className="vbd-toolbar">
+      <label className="vbd-search">
         <AllDataIcon name="search" size={16} />
         <input
           type="search"
@@ -46,7 +46,7 @@ export function AllDataToolbar({
         />
       </label>
 
-      <label className="ad-select">
+      <label className="vbd-select">
         <span>Book type</span>
         <select value={bookType} onChange={(e) => onBookType(e.target.value as BookTypeFilter)}>
           <option value="">All</option>
@@ -57,7 +57,7 @@ export function AllDataToolbar({
 
       <ResearchFilters sheet="responses" filters={filters} options={options} onChange={onFilters} />
 
-      <button type="button" className="ad-clear" onClick={onClear} disabled={!canClear}>
+      <button type="button" className="vbd-clear" onClick={onClear} disabled={!canClear}>
         <AllDataIcon name="filter" size={16} />
         Clear filters
       </button>

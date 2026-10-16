@@ -8,7 +8,7 @@ import { TableSkeleton } from './TableSkeleton'
 export function AllDataSkeleton() {
   return (
     <div role="status" aria-busy="true" aria-label="Loading data">
-      <div className="ad-split has-panel" aria-hidden="true">
+      <div className="vbd-split has-panel" aria-hidden="true">
         <TableSkeleton rows={10} cols={6} />
 
         <div className="card sk-block">

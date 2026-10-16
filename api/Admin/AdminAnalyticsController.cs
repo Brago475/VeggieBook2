@@ -9,7 +9,7 @@ namespace VeggieBook.Api.Admin;
 
 // Totals and charts for the admin site's Analytics screen.
 //
-//   GET /api/admin/analytics
+//   GET /api/admin/insights
 //
 // Admins only (Roles.AdminPolicy). Built only from data the app already
 // keeps to work: accounts and their saved books. Nothing new is recorded.
@@ -31,7 +31,7 @@ namespace VeggieBook.Api.Admin;
 // thousands, move the counting into SQL.
 
 [ApiController]
-[Route("api/admin/analytics")]
+[Route("api/admin/insights")]
 [Authorize(Policy = Roles.AdminPolicy)]
 public class AdminAnalyticsController(AccountsContext db, VeggieBookContext content)
     : ControllerBase

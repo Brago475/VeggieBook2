@@ -2,7 +2,7 @@
    top bar: one line of slightly smaller controls on the right that wraps
    onto a second line when the screen is narrower. */
 
-.topbar-actions .ad-toolbar {
+.topbar-actions .vbd-toolbar {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -11,29 +11,29 @@
   gap: 8px;
 }
 
-.topbar-actions .ad-toolbar .filters {
+.topbar-actions .vbd-toolbar .filters {
   gap: 8px;
 }
 
-.topbar-actions .ad-search,
-.topbar-actions .ad-select,
-.topbar-actions .ad-toolbar .filter,
-.topbar-actions .ad-toolbar .filter-reset,
-.topbar-actions .ad-download-all,
-.topbar-actions .ad-downloads .ad-download {
+.topbar-actions .vbd-search,
+.topbar-actions .vbd-select,
+.topbar-actions .vbd-toolbar .filter,
+.topbar-actions .vbd-toolbar .filter-reset,
+.topbar-actions .vbd-download-all,
+.topbar-actions .vbd-downloads .vbd-download {
   height: 36px;
   font-size: 13.5px;
 }
 
-.topbar-actions .ad-search {
+.topbar-actions .vbd-search {
   flex: 0 1 220px;
 }
 
-.topbar-actions .ad-toolbar-actions {
+.topbar-actions .vbd-toolbar-actions {
   margin-left: 0;
 }
 
-.topbar-actions .ad-downloads {
+.topbar-actions .vbd-downloads {
   gap: 6px;
   padding-left: 8px;
   border-left: 1px solid var(--line);

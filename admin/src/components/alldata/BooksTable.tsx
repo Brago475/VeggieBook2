@@ -48,50 +48,50 @@ function Cell({ row, column }: { row: SheetRow; column: DisplayColumn }) {
 
   switch (column.kind) {
     case 'id':
-      return <span className="ad-id">{String(value ?? '')}</span>
+      return <span className="vbd-id">{String(value ?? '')}</span>
     case 'date':
-      return <span className="ad-date">{shortDate(value)}</span>
+      return <span className="vbd-date">{shortDate(value)}</span>
     case 'time':
-      return <span className="ad-time">{shortTime(value)}</span>
+      return <span className="vbd-time">{shortTime(value)}</span>
     case 'day':
       return <>{shortDay(value)}</>
     case 'subject':
-      return <span className={isSecrets(row) ? 'ad-badge is-violet' : 'ad-badge is-green'}>{bookSubject(row)}</span>
+      return <span className={isSecrets(row) ? 'vbd-badge is-violet' : 'vbd-badge is-green'}>{bookSubject(row)}</span>
     case 'chips': {
-      if (isSecrets(row)) return <span className="ad-faint">n/a</span>
+      if (isSecrets(row)) return <span className="vbd-faint">n/a</span>
       const picked = (column.question?.choices ?? [])
         .filter((c) => row[c.key] === 1)
         .map((c) => shortAnswer(c.text))
-      if (picked.length === 0) return <span className="ad-faint">None</span>
+      if (picked.length === 0) return <span className="vbd-faint">None</span>
       return (
-        <span className="ad-chips">
+        <span className="vbd-chips">
           {picked.slice(0, MAX_CHIPS).map((p) => (
-            <span key={p} className="ad-chip">
+            <span key={p} className="vbd-chip">
               {p}
             </span>
           ))}
-          {picked.length > MAX_CHIPS && <span className="ad-more-count">+{picked.length - MAX_CHIPS}</span>}
+          {picked.length > MAX_CHIPS && <span className="vbd-more-count">+{picked.length - MAX_CHIPS}</span>}
         </span>
       )
     }
     case 'bin':
       if (value === null || value === undefined) return null
-      return <span className={value === 1 ? 'ad-bin is-on' : 'ad-bin'}>{String(value)}</span>
+      return <span className={value === 1 ? 'vbd-bin is-on' : 'vbd-bin'}>{String(value)}</span>
     case 'num': {
-      if (value === null || value === undefined) return <span className="ad-faint">-</span>
+      if (value === null || value === undefined) return <span className="vbd-faint">-</span>
       const out = (column.key === 'recipes_removed' || column.key === 'secrets_removed') && Number(value) > 0
       const kept = (column.key === 'recipes_kept' || column.key === 'secrets_kept') && Number(value) > 0
       const zero = Number(value) === 0
       return (
-        <span className={out ? 'ad-out' : kept ? 'ad-kept' : zero ? 'ad-faint' : 'strong'}>{String(value)}</span>
+        <span className={out ? 'vbd-out' : kept ? 'vbd-kept' : zero ? 'vbd-faint' : 'strong'}>{String(value)}</span>
       )
     }
     default:
       if (column.key === 'book_type') {
-        return <span className={isSecrets(row) ? 'ad-type is-violet' : 'ad-type is-green'}>{String(value ?? '')}</span>
+        return <span className={isSecrets(row) ? 'vbd-type is-violet' : 'vbd-type is-green'}>{String(value ?? '')}</span>
       }
       if (column.key === 'age_range' && (value === null || value === undefined)) {
-        return <span className="ad-faint">Not given</span>
+        return <span className="vbd-faint">Not given</span>
       }
       return <>{value === null || value === undefined ? '' : String(value)}</>
   }
@@ -109,28 +109,28 @@ export function BooksTable({ rows, columns, selected, onSelect, head }: Props) {
   const shown = rows.slice(start, start + PAGE_SIZE)
 
   return (
-    <div className="ad-table-card">
-      <div className="ad-card-head-row">
-        <div className="ad-card-head-left">{head}</div>
-        <span className="ad-count">
+    <div className="vbd-table-card">
+      <div className="vbd-card-head-row">
+        <div className="vbd-card-head-left">{head}</div>
+        <span className="vbd-count">
           {rows.length === 0 ? 'No books' : `Books ${start + 1} to ${start + shown.length} of ${rows.length}`}
         </span>
       </div>
 
-      {rows.length === 0 && <p className="muted ad-empty">No books match these filters.</p>}
+      {rows.length === 0 && <p className="muted vbd-empty">No books match these filters.</p>}
 
       {rows.length > 0 && (
-        <div className="ad-scroll">
-          <table className="ad-table">
+        <div className="vbd-scroll">
+          <table className="vbd-table">
             <thead>
-              <tr className="ad-group-row">
+              <tr className="vbd-group-row">
                 {groupSpans(columns).map((g, i) => (
                   <th
                     key={`${g.group}-${i}`}
                     colSpan={g.span}
-                    className={`ad-group is-${g.group}${g.sticky ? ' is-sticky' : ''}`}
+                    className={`vbd-group is-${g.group}${g.sticky ? ' is-sticky' : ''}`}
                   >
-                    {g.label && <span className="ad-group-label">{groupLabels[g.group]}</span>}
+                    {g.label && <span className="vbd-group-label">{groupLabels[g.group]}</span>}
                   </th>
                 ))}
               </tr>
@@ -143,7 +143,7 @@ export function BooksTable({ rows, columns, selected, onSelect, head }: Props) {
                       .filter(Boolean)
                       .join(' ')}
                   >
-                    {c.small && <span className="ad-th-small">{c.small}</span>}
+                    {c.small && <span className="vbd-th-small">{c.small}</span>}
                     {c.label}
                   </th>
                 ))}
@@ -173,16 +173,16 @@ export function BooksTable({ rows, columns, selected, onSelect, head }: Props) {
         </div>
       )}
 
-      <div className="ad-pager">
+      <div className="vbd-pager">
         <span className="muted small">Click a row to see its answers and recipes on the right.</span>
-        <div className="ad-pager-buttons">
-          <button type="button" className="ad-page-btn" onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
+        <div className="vbd-pager-buttons">
+          <button type="button" className="vbd-page-btn" onClick={() => setPage((p) => p - 1)} disabled={page === 0}>
             <AllDataIcon name="left" size={16} />
             Previous
           </button>
           <button
             type="button"
-            className="ad-page-btn"
+            className="vbd-page-btn"
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= pages - 1}
           >

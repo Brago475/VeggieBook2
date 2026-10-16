@@ -12,7 +12,7 @@ namespace VeggieBook.Api.Admin;
 /// <summary>
 /// Data for the admin Question Analytics page.
 ///
-///   GET /api/admin/question-analytics?study={number}
+///   GET /api/admin/question-insights?study={number}
 ///
 /// Returns one anonymous row per tracked book plus the question, vegetable,
 /// category, recipe, and secret lookups. All aggregation (filters, answer
@@ -23,7 +23,7 @@ namespace VeggieBook.Api.Admin;
 /// research ID, so no identifier leaves this endpoint.
 /// </summary>
 [ApiController]
-[Route("api/admin/question-analytics")]
+[Route("api/admin/question-insights")]
 [Authorize(Policy = Roles.AdminPolicy)]
 public class AdminQuestionAnalyticsController(AccountsContext db, VeggieBookContext content) : ControllerBase
 {

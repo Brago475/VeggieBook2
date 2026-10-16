@@ -44,29 +44,29 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
   ]
 
   return (
-    <aside className="ad-panel" aria-label="Book details">
-      <div className={secrets ? 'ad-panel-head is-violet' : 'ad-panel-head'}>
-        <div className="ad-panel-title">
-          <span className="ad-panel-id">
-            <span className="ad-panel-id-label">Research ID:</span>
-            <span className="ad-id">{String(book.participant_id)}</span>
+    <aside className="vbd-panel" aria-label="Book details">
+      <div className={secrets ? 'vbd-panel-head is-violet' : 'vbd-panel-head'}>
+        <div className="vbd-panel-title">
+          <span className="vbd-panel-id">
+            <span className="vbd-panel-id-label">Research ID:</span>
+            <span className="vbd-id">{String(book.participant_id)}</span>
           </span>
           <strong>{bookTitle(book)}</strong>
-          <span className="ad-panel-when">
-            <AllDataIcon name="calendar" size={16} className="ad-panel-cal" />
-            <span className="ad-date">
+          <span className="vbd-panel-when">
+            <AllDataIcon name="calendar" size={16} className="vbd-panel-cal" />
+            <span className="vbd-date">
               {String(book.day ?? '')}, {shortDate(book.date)}
             </span>
-            <span className="ad-time">{shortTime(book.time)}</span>
-            <span className="ad-panel-bookno">Book {String(book.book_no)}</span>
+            <span className="vbd-time">{shortTime(book.time)}</span>
+            <span className="vbd-panel-bookno">Book {String(book.book_no)}</span>
           </span>
         </div>
-        <button type="button" className="ad-panel-close" aria-label="Close" onClick={onClose}>
+        <button type="button" className="vbd-panel-close" aria-label="Close" onClick={onClose}>
           <AllDataIcon name="close" size={18} />
         </button>
       </div>
 
-      <div className="ad-panel-tabs" role="tablist" aria-label="Book details">
+      <div className="vbd-panel-tabs" role="tablist" aria-label="Book details">
         {tabs
           .filter((t) => !t.hidden)
           .map((t) => (
@@ -75,39 +75,39 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
               type="button"
               role="tab"
               aria-selected={tab === t.id}
-              className={tab === t.id ? 'ad-panel-tab is-active' : 'ad-panel-tab'}
+              className={tab === t.id ? 'vbd-panel-tab is-active' : 'vbd-panel-tab'}
               onClick={() => setTab(t.id)}
             >
               {t.label}
-              <span className="ad-panel-tab-count">{t.count}</span>
+              <span className="vbd-panel-tab-count">{t.count}</span>
             </button>
           ))}
       </div>
 
       {tab === 'questions' && !secrets && (
-        <div className="ad-panel-section">
-          <span className="ad-panel-hint">Checked answers are the ones this person picked.</span>
+        <div className="vbd-panel-section">
+          <span className="vbd-panel-hint">Checked answers are the ones this person picked.</span>
           {questions.map((q) => {
             const count = q.choices.filter((c) => book[c.key] === 1).length
             return (
-              <div key={q.no} className="ad-question">
-                <div className="ad-question-head">
-                  <span className="ad-question-tag">
-                    <span className="ad-q-no">Q{q.no}</span>
-                    <span className="ad-q-name">{questionName(q.no)}</span>
+              <div key={q.no} className="vbd-question">
+                <div className="vbd-question-head">
+                  <span className="vbd-question-tag">
+                    <span className="vbd-q-no">Q{q.no}</span>
+                    <span className="vbd-q-name">{questionName(q.no)}</span>
                   </span>
-                  <span className="ad-q-count">
+                  <span className="vbd-q-count">
                     {count} of {q.choices.length}
                   </span>
                 </div>
-                <p className="ad-question-text">{withVegetable(q.label, vegetable)}</p>
-                <p className="ad-question-hint">{questionHint(q.no)}</p>
-                <ul className="ad-choices">
+                <p className="vbd-question-text">{withVegetable(q.label, vegetable)}</p>
+                <p className="vbd-question-hint">{questionHint(q.no)}</p>
+                <ul className="vbd-choices">
                   {q.choices.map((c) => {
                     const on = book[c.key] === 1
                     return (
-                      <li key={c.key} className={on ? 'ad-choice is-on' : 'ad-choice'}>
-                        <span className="ad-check" aria-hidden="true">
+                      <li key={c.key} className={on ? 'vbd-choice is-on' : 'vbd-choice'}>
+                        <span className="vbd-check" aria-hidden="true">
                           {on ? '✓' : ''}
                         </span>
                         <span>{withVegetable(c.text, vegetable)}</span>
@@ -123,35 +123,35 @@ export function BookPanel({ book, items, questions, onClose }: Props) {
       )}
 
       {tab === 'items' && (
-        <div className="ad-panel-section">
-          <span className="ad-panel-hint">Hover a {secrets ? 'secret' : 'recipe'} to see its picture and details.</span>
+        <div className="vbd-panel-section">
+          <span className="vbd-panel-hint">Hover a {secrets ? 'secret' : 'recipe'} to see its picture and details.</span>
           {[
             { label: 'KEPT', list: kept, out: false },
             { label: 'TAKEN OUT LATER', list: out, out: true },
           ].map((group) => (
-            <div key={group.label} className="ad-item-group">
-              <div className="ad-list-head">
-                <span className="ad-panel-label">{group.label}</span>
-                <span className={group.out ? (group.list.length > 0 ? 'ad-pill is-out' : 'ad-pill') : 'ad-pill is-kept'}>
+            <div key={group.label} className="vbd-item-group">
+              <div className="vbd-list-head">
+                <span className="vbd-panel-label">{group.label}</span>
+                <span className={group.out ? (group.list.length > 0 ? 'vbd-pill is-out' : 'vbd-pill') : 'vbd-pill is-kept'}>
                   {group.list.length}
                 </span>
               </div>
-              {group.list.length === 0 && <p className="ad-faint small">None</p>}
-              <ul className="ad-thumb-list">
+              {group.list.length === 0 && <p className="vbd-faint small">None</p>}
+              <ul className="vbd-thumb-list">
                 {group.list.map((r, i) => (
                   <li
                     key={`${r.item_code}-${r.item_title}-${i}`}
-                    className={group.out ? 'ad-thumb-row is-out' : 'ad-thumb-row'}
+                    className={group.out ? 'vbd-thumb-row is-out' : 'vbd-thumb-row'}
                     tabIndex={0}
                     {...handlers(r)}
                   >
                     <ItemThumb row={r} />
-                    <span className="ad-thumb-text">
-                      <span className="ad-thumb-name">{String(r.item_title ?? '')}</span>
-                      <span className="ad-thumb-meta">
+                    <span className="vbd-thumb-text">
+                      <span className="vbd-thumb-name">{String(r.item_title ?? '')}</span>
+                      <span className="vbd-thumb-meta">
                         {r.item_code ? String(r.item_code) : String(r.item_type ?? '')}
                         {Number(r.extra_copies ?? 0) > 0 && (
-                          <span className="ad-copies"> +{String(r.extra_copies)} copies</span>
+                          <span className="vbd-copies"> +{String(r.extra_copies)} copies</span>
                         )}
                       </span>
                     </span>

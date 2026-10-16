@@ -11,10 +11,10 @@ namespace VeggieBook.Api.Research;
 // notice. Signed-in real accounts only (Roles.MemberPolicy); guests are never
 // tracked.
 //
-//   GET  /api/me/tracking        the person's tracking: on or off, who
+//   GET  /api/me/research        the person's tracking: on or off, who
 //                                turned it off, and their research ID
 //                                (shown only while tracking is on)
-//   PUT  /api/me/tracking        { on: true | false } from the Settings switch
+//   PUT  /api/me/research        { on: true | false } from the Settings switch
 //   GET  /api/me/study-notice    whether to show the study notice right now
 //   POST /api/me/study-notice    { answer: "joined" | "stayed_out" }
 //
@@ -41,7 +41,7 @@ public class TrackingController(AccountsContext db, UserManager<AppUser> users) 
     public record TrackingRequest(bool On);
     public record NoticeRequest(string Answer);
 
-    [HttpGet("tracking")]
+    [HttpGet("research")]
     public async Task<IActionResult> Get()
     {
         var userId = CurrentUserId();
@@ -56,7 +56,7 @@ public class TrackingController(AccountsContext db, UserManager<AppUser> users) 
         return Ok(await ShapeAsync(userId.Value, state));
     }
 
-    [HttpPut("tracking")]
+    [HttpPut("research")]
     public async Task<IActionResult> Set([FromBody] TrackingRequest request)
     {
         var userId = CurrentUserId();

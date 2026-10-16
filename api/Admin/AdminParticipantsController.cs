@@ -16,10 +16,10 @@ namespace VeggieBook.Api.Admin;
 //        research ID, age range, date joined, tracking status, every
 //        tracking change (oldest first), the notice (for the running
 //        study), and a short count of their books
-//   POST /api/admin/participants/{researchId}/tracking-off
+//   POST /api/admin/participants/{researchId}/research-off
 //        an admin turns this person's tracking off, even if they have it
 //        on. They are not sent the notice afterward.
-//   POST /api/admin/participants/{researchId}/tracking-on
+//   POST /api/admin/participants/{researchId}/research-on
 //        undoes an admin's turn-off. Refused if the person turned it off
 //        themselves: only they can turn it back on, in Settings.
 //
@@ -95,7 +95,7 @@ public class AdminParticipantsController(AccountsContext db, UserManager<AppUser
         });
     }
 
-    [HttpPost("{researchId}/tracking-off")]
+    [HttpPost("{researchId}/research-off")]
     public async Task<IActionResult> TrackingOff(string researchId)
     {
         var userId = await FindAsync(researchId);
@@ -105,7 +105,7 @@ public class AdminParticipantsController(AccountsContext db, UserManager<AppUser
         return Ok(new { status = StatusOf(state) });
     }
 
-    [HttpPost("{researchId}/tracking-on")]
+    [HttpPost("{researchId}/research-on")]
     public async Task<IActionResult> TrackingOn(string researchId)
     {
         var userId = await FindAsync(researchId);

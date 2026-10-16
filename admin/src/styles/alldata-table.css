@@ -2,17 +2,17 @@
    the group labels in the top row can slide just past it while scrolling
    sideways and stay readable. */
 
-.ad-table th.is-sticky,
-.ad-table td.is-sticky {
+.vbd-table th.is-sticky,
+.vbd-table td.is-sticky {
   min-width: 172px;
   box-sizing: border-box;
 }
 
-.ad-group-row th.is-sticky {
+.vbd-group-row th.is-sticky {
   background: #f4f4f5;
 }
 
-.ad-group-label {
+.vbd-group-label {
   position: sticky;
   left: 184px;
   display: inline-block;
