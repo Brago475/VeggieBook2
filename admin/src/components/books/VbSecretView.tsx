@@ -14,7 +14,7 @@ import { SafeImg } from './SafeImg'
 type Props = {
   categoryId: number
   secretId: number
-  position: string // "Secret 3 of 9", or "Taken out later"
+  position: string // "Secret 3 of 9", or "Taken out"
   out: boolean
 }
 

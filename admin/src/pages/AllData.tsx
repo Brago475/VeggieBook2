@@ -155,7 +155,7 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
           return [
             { label: 'Recipes and secrets', value: String(itemRows.length), icon: 'list', note: `in ${bookRows.length} books`, tone: 'blue' },
             { label: 'Still kept', value: String(kept), icon: 'check', note: pct(kept), tone: 'green' },
-            { label: 'Taken out later', value: String(out), icon: 'out', note: pct(out), tone: 'orange', warn: out > 0 },
+            { label: 'Taken out', value: String(out), icon: 'out', note: pct(out), tone: 'orange', warn: out > 0 },
             { label: 'Different recipes and secrets', value: String(different), icon: 'layers', tone: 'violet' },
           ]
         })()

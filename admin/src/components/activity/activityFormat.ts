@@ -2,11 +2,21 @@ import type { ActivityEvent, ActivityType } from '../../types/activity'
 
 // Filter groups, day grouping, and CSV rows for the Activity page.
 
-export type ActivityGroup = 'all' | 'saved' | 'joined' | 'book_deleted' | 'account_deleted' | 'tracking' | 'studies' | 'notice'
+export type ActivityGroup =
+  | 'all'
+  | 'saved'
+  | 'taken_out'
+  | 'joined'
+  | 'book_deleted'
+  | 'account_deleted'
+  | 'tracking'
+  | 'studies'
+  | 'notice'
 
 export const groups: { id: ActivityGroup; label: string; types: ActivityType[] }[] = [
   { id: 'all', label: 'All', types: [] },
   { id: 'saved', label: 'Books saved', types: ['book_saved'] },
+  { id: 'taken_out', label: 'Taken out', types: ['item_removed'] },
   { id: 'joined', label: 'Joined', types: ['joined'] },
   { id: 'book_deleted', label: 'Books deleted', types: ['book_deleted'] },
   { id: 'account_deleted', label: 'Accounts deleted', types: ['account_deleted'] },

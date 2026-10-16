@@ -94,6 +94,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.ContentType).HasColumnName("content_type");
             e.Property(x => x.ContentId).HasColumnName("content_id");
             e.Property(x => x.Kept).HasColumnName("kept");
+            e.Property(x => x.DroppedInReview).HasColumnName("dropped_in_review"); // 013
             e.Property(x => x.ExtraCopies).HasColumnName("extra_copies");
         });
 
@@ -116,7 +117,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
 
-        // See db/migrations/007_activity_log.sql and 010_activity_detail.sql.
+        // See db/migrations/007_activity_log.sql, 010_activity_detail.sql and 013_review_drops.sql.
         b.Entity<ActivityEntry>(e =>
         {
             e.ToTable("activity_log");
@@ -129,6 +130,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.VegetableCode).HasColumnName("vegetable_code");
             e.Property(x => x.SecretCategoryId).HasColumnName("secret_category_id");
             e.Property(x => x.ItemCount).HasColumnName("item_count");
+            e.Property(x => x.TakenOutCount).HasColumnName("taken_out_count");
             e.Property(x => x.Detail).HasColumnName("detail");
         });
 

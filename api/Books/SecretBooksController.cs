@@ -11,42 +11,30 @@ namespace VeggieBook.Api.Books;
 // Secrets Books: saving one, opening one, and taking a secret out.
 //
 //   POST   /api/books/secrets                    save a finished Secrets Book
-//   GET    /api/books/{id}/secrets               one Secrets Book: its
-//                                                category, cover, and kept
-//                                                secrets
+//   GET    /api/books/{id}/secrets               one Secrets Book: category, cover, kept secrets
 //   DELETE /api/books/{id}/secrets/{secretId}    take one secret out
 //
 // Listing, deleting a whole book, and serving an uploaded cover go through
-// BooksController, which works for both kinds. The secrets' content (text
-// and pictures) is not sent here: it is the same for everyone, so the
-// viewer loads it from /api/secret-categories/{id}/secrets and this sends
-// only which secrets the book keeps.
+// BooksController. The viewer loads secret text and pictures from
+// /api/secret-categories/{id}/secrets; this sends only which secrets are kept.
 //
-// The cover is exactly one of:
-//   coverPath    any active secret's picture, from any category, as the
-//                cover browser offers them (GET /api/secret-categories/
-//                {id}/covers)
-//   coverUpload  the user's own photo, as a JPEG data URL. Stored in
-//                book_cover_upload and served only to the owner, the same
-//                as a VeggieBook's upload.
+// The cover is exactly one of: coverPath (any active secret's picture) or
+// coverUpload (a JPEG data URL, stored privately).
 //
-// Same rules as BooksController: a signed-in account only, every query
-// filters by that account, and a book belonging to someone else answers
-// 404. Nothing the client sends is trusted.
-//
-// Only kept secrets are stored, the same as kept recipes in a VeggieBook.
-// Saving writes a line to the activity log (Activity/ActivityLog.cs).
-//
-// Messages carry a code the site translates (ErrorCodes, ApiError).
+// Same rules as BooksController: signed-in only, every query filters by the
+// account, nothing the client sends is trusted. Saving and taking a secret
+// out each write an activity log line.
 
 public record BookSecret(int Id, int ExtraCopies);
 
+// Dropped: secrets dropped during Keep/Drop, recorded for research only.
 public record CreateSecretsBookRequest(
     int? CategoryId,
     BookSecret[]? Secrets,
     string? CoverPath,
     string? CoverUpload,
-    string? Lang);
+    string? Lang,
+    int[]? Dropped);
 
 [ApiController]
 [Route("api/books")]
@@ -56,8 +44,7 @@ public class SecretBooksController(
     VeggieBookContext content,
     ILogger<SecretBooksController> logger) : ControllerBase
 {
-    // The same limits as BooksController, so both kinds of book count
-    // toward one total per account and take the same size of photo.
+    // Same limits as BooksController; both kinds count toward one total.
     private const int MaxBooksPerUser = 50;
     private const int MaxSecretsPerBook = 100;
     private const int MaxExtraCopies = 10;
@@ -69,8 +56,6 @@ public class SecretBooksController(
         AuthSetup.UserId(User)
         ?? throw new InvalidOperationException("Signed-in user has no id.");
 
-    // Base64 makes a 400 KB photo about 550 KB of JSON, which fits both this
-    // limit and nginx's default 1 MB request limit.
     [HttpPost("secrets")]
     [RequestSizeLimit(1_000_000)]
     public async Task<IActionResult> Create([FromBody] CreateSecretsBookRequest req)
@@ -88,7 +73,7 @@ public class SecretBooksController(
         if (category is null)
             return BadRequest(new ApiError(ErrorCodes.UnknownCategory, "Unknown kind of secret.").Body());
 
-        // Secrets must be real, active, and in this book's category.
+        // Kept secrets must be real, active, and in this book's category.
         var secrets = req.Secrets ?? [];
         if (secrets.Length == 0)
             return BadRequest(new ApiError(ErrorCodes.SecretsRequired,
@@ -109,6 +94,20 @@ public class SecretBooksController(
         if (validSecrets != secretIds.Length)
             return BadRequest(new ApiError(ErrorCodes.UnknownSecret, "Unknown secret.").Body());
 
+        // Dropped secrets are research data only: anything invalid is ignored.
+        var droppedIds = (req.Dropped ?? [])
+            .Distinct()
+            .Where(id => !secretIds.Contains(id))
+            .Take(MaxSecretsPerBook)
+            .ToArray();
+        if (droppedIds.Length > 0)
+        {
+            droppedIds = await content.Secrets
+                .Where(s => droppedIds.Contains(s.Id) && s.CategoryId == category.Id && s.Active)
+                .Select(s => s.Id)
+                .ToArrayAsync();
+        }
+
         // Exactly one cover: a secret's picture, or an upload.
         var hasPreset = !string.IsNullOrEmpty(req.CoverPath);
         var hasUpload = !string.IsNullOrEmpty(req.CoverUpload);
@@ -118,8 +117,7 @@ public class SecretBooksController(
         byte[]? upload = null;
         if (hasPreset)
         {
-            // Any active secret's picture, in either language, since the
-            // browser shows the Spanish picture for a Spanish book.
+            // Either language's picture, since a Spanish book shows the Spanish one.
             var path = req.CoverPath!;
             var known = await content.Secrets.AnyAsync(s =>
                 s.Active && (s.ImagePathEn == path || s.ImagePathEs == path));
@@ -152,6 +150,13 @@ public class SecretBooksController(
                     Kept = true,
                     ExtraCopies = s.ExtraCopies
                 })
+                .Concat(droppedIds.Select(id => new BookSelection
+                {
+                    ContentType = "secret",
+                    ContentId = id,
+                    Kept = false,
+                    DroppedInReview = true
+                }))
                 .ToList(),
             CoverUpload = upload is null
                 ? null
@@ -161,19 +166,17 @@ public class SecretBooksController(
         db.Books.Add(book);
         await db.SaveChangesAsync();
 
-        // Permanent record of the save. At matches the book's CreatedAt so the
-        // admin Activity page can pair it with the book row.
+        // At matches the book's CreatedAt so the Activity page can pair the line with the book.
         var saved = await ActivityLog.ForBookAsync(
-            db, logger, uid, "secrets", null, category.Id, secrets.Length, ActivityLog.BookSaved);
+            db, logger, uid, "secrets", null, category.Id, secrets.Length,
+            ActivityLog.BookSaved, droppedIds.Length);
         if (saved is not null) saved.At = book.CreatedAt;
         await ActivityLog.SaveAsync(db, logger, saved);
 
         return Created($"/api/books/{book.Id}", new { id = book.Id });
     }
 
-    // One Secrets Book, for the screen that opens it from the home library.
-    // Only which secrets it keeps, in the order they were kept; the viewer
-    // gets their text and pictures from the category's content.
+    // One Secrets Book: which secrets it keeps, in the order they were kept.
     [HttpGet("{id:guid}/secrets")]
     public async Task<IActionResult> Get(Guid id)
     {
@@ -203,21 +206,14 @@ public class SecretBooksController(
             id = book.Id,
             kind = "secrets",
             secretCategoryId = book.SecretCategoryId,
-            // The same rule as BooksController: an upload is served through
-            // the API so only the owner can see it.
             cover = book.HasUpload ? $"/api/books/{book.Id}/cover" : book.CoverPath ?? "",
             createdAt = book.CreatedAt,
             secrets = book.Secrets
         });
     }
 
-    // Takes one secret out of a saved book, the same way BooksController
-    // takes out a recipe: the row is kept with Kept set to false rather than
-    // deleted, so the study data still shows the secret was in the book and
-    // was taken out later. Every screen and count reads only kept secrets.
-    //
-    // The last secret cannot be taken out. A book with none has nothing to
-    // open, and deleting the book is the way to clear it.
+    // Takes one secret out of a saved book, the same way as a recipe. The last
+    // secret cannot be taken out; deleting the book clears it.
     [HttpDelete("{id:guid}/secrets/{secretId:int}")]
     public async Task<IActionResult> RemoveSecret(Guid id, int secretId)
     {
@@ -242,16 +238,14 @@ public class SecretBooksController(
         target.Kept = false;
         await db.SaveChangesAsync();
 
+        var entry = await ActivityLog.ForBookAsync(
+            db, logger, uid, "secrets", null, book.SecretCategoryId, 1, ActivityLog.ItemRemoved);
+        await ActivityLog.SaveAsync(db, logger, entry);
+
         return NoContent();
     }
 
-    // The same check as BooksController.DecodeJpeg, copied rather than
-    // shared so the VeggieBook save stays exactly as it was. If one changes,
-    // change the other to match.
-    //
-    // Accepts only a JPEG data URL, as produced by the site's resizer. The
-    // bytes must start with the JPEG signature, so a renamed file of another
-    // type is refused even if it claims to be a JPEG.
+    // Same check as BooksController.DecodeJpeg. If one changes, change both.
     private static byte[]? DecodeJpeg(string dataUrl)
     {
         if (!dataUrl.StartsWith(JpegDataUrl, StringComparison.Ordinal)) return null;

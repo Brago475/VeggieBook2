@@ -5,20 +5,19 @@ namespace VeggieBook.Api.Research.AllData;
 // The two All Data files, built as Sheets so the page and every download
 // show exactly the same data.
 //
-//   Books                one row per saved book. Every answer choice is
-//                        its own 0/1 column (q1_1, q1_2...): 1 = picked,
-//                        0 = not picked, empty for Secrets Books, which have
-//                        no questions. This is the shape SPSS wants.
+//   Books                one row per saved book. Every answer choice is its
+//                        own 0/1 column (q1_1, q1_2...): 1 = picked, 0 = not
+//                        picked, empty for Secrets Books. The shape SPSS wants.
 //
-//   Recipes and secrets  one row per recipe or secret in a saved book, with
-//                        its status and its picture's file path. With
-//                        answers = true, the book's 0/1 answer columns are
-//                        repeated on every row, so the file works by itself
-//                        without merging.
+//   Recipes and secrets  one row per recipe or secret shown while making a
+//                        saved book, with its status (Kept, Taken out while
+//                        making, Taken out later) and picture path. With
+//                        answers = true, the book's 0/1 answer columns repeat
+//                        on every row so the file works by itself.
 //
-// Both files share participant_id and book_no, which link them.
-//
-// With a study, both files hold only that study's books (AllDataStudy.cs).
+// Both files share participant_id and book_no, which link them. "Taken out"
+// counts include both kinds of take-out. With a study, both files hold only
+// that study's books (AllDataStudy.cs).
 
 public static class AllDataSheets
 {
@@ -40,9 +39,9 @@ public static class AllDataSheets
         [
             new("answers", "Answers picked (count)", "number"),
             new("recipes_kept", "Recipes kept", "number"),
-            new("recipes_removed", "Recipes taken out later", "number"),
+            new("recipes_removed", "Recipes taken out", "number"),
             new("secrets_kept", "Secrets kept", "number"),
-            new("secrets_removed", "Secrets taken out later", "number"),
+            new("secrets_removed", "Secrets taken out", "number"),
             new("extra_copies", "Extra copies", "number")
         ]);
 
@@ -82,7 +81,7 @@ public static class AllDataSheets
             new("item_type", "Item type", "text", ["Recipe", "Secret"]),
             new("item_code", "Item code", "text"),
             new("item_title", "Item", "text"),
-            new("status", "Status", "text", ["Kept", "Taken out later"]),
+            new("status", "Status", "text", ResearchSheets.Statuses),
             new("extra_copies", "Extra copies", "number"),
             new("item_image", "Picture file (under /images)", "text")
         ]);
@@ -101,7 +100,7 @@ public static class AllDataSheets
                     row["item_type"] = x.Item.Type == "secret" ? "Secret" : "Recipe";
                     row["item_code"] = x.Info.Code;
                     row["item_title"] = x.Info.Title;
-                    row["status"] = x.Item.Kept ? "Kept" : "Taken out later";
+                    row["status"] = ResearchSheets.StatusOf(x.Item.Kept, x.Item.Dropped);
                     row["extra_copies"] = x.Item.Kept ? x.Item.ExtraCopies : 0;
                     row["item_image"] = x.Info.Image;
                     AddAnswers(row, b, questions);
@@ -135,8 +134,7 @@ public static class AllDataSheets
         new("cover", "Cover", "text", ["Built-in", "Personal"])
     ];
 
-    // One 0/1 column per answer choice, labeled with the full question and
-    // the full answer.
+    // One 0/1 column per answer choice, labeled with the full question and answer.
     private static IEnumerable<SheetColumn> AnswerColumns(List<AllDataQuestion> questions) =>
         questions.SelectMany(q => q.Choices.Select(x => new SheetColumn(
             x.Key,

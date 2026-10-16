@@ -5,22 +5,18 @@ using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Admin;
 
-// The Recent activity list on the admin Overview, newest first, by research
-// ID only. Four kinds of line:
+// The Recent activity list on the admin Overview, newest first, by research ID only:
 //
 //   book             a book saved          (from book_session)
 //   joined           a new account         (from app_user)
 //   book_deleted     a book deleted        (from activity_log)
-//   account_deleted  an account deleted    (from activity_log), by its owner
-//                    or removed by an admin
+//   account_deleted  an account deleted    (from activity_log)
 //
-// Deletions come from the activity log (db/migrations/007_activity_log.sql).
-// If that table doesn't exist yet, the list simply has no deletions.
+// Only book_deleted and account_deleted lines are read from the log; saves
+// come from the book table so they are never listed twice.
 //
-// People who opted out are not tracked (Research/ResearchScope.cs): books
-// saved while their tracking was off are not listed, and while it is off
-// their joins and deleted books are not listed either. A deleted account
-// has no tracking left to check, so it is always listed.
+// People who opted out are not tracked (Research/ResearchScope.cs). A deleted
+// account has no tracking left to check, so it is always listed.
 
 public static class OverviewRecent
 {
@@ -53,7 +49,8 @@ public static class OverviewRecent
                     b.VegetableCode,
                     b.SecretCategoryId,
                     b.CreatedAt,
-                    Kept = b.Selections.Count(s => s.Kept)
+                    KeptAtSave = b.Selections.Count(s => !s.DroppedInReview),
+                    Dropped = b.Selections.Count(s => s.DroppedInReview)
                 })
                 .ToListAsync())
             .Where(b => scope.CountsBook(b.UserId, b.CreatedAt))
@@ -72,6 +69,7 @@ public static class OverviewRecent
         {
             logged = await db.ActivityLog
                 .AsNoTracking()
+                .Where(a => a.Kind == ActivityLog.BookDeleted || a.Kind == ActivityLog.AccountDeleted)
                 .OrderByDescending(a => a.At)
                 .Take(read)
                 .ToListAsync();
@@ -82,8 +80,7 @@ public static class OverviewRecent
             logged = [];
         }
 
-        // A deleted book counts only while its owner's tracking is on. A
-        // deleted account no longer has an owner to check.
+        // A deleted book counts only while its owner's tracking is on.
         bool Shows(ActivityEntry a) =>
             a.Kind == ActivityLog.AccountDeleted
             || string.IsNullOrEmpty(a.ParticipantId)
@@ -105,7 +102,7 @@ public static class OverviewRecent
                 "book",
                 ids.GetValueOrDefault(b.UserId, ""),
                 BookTitle("Saved", Name(b.Kind, b.VegetableCode, b.SecretCategoryId), b.Kind),
-                Items(b.Kept, b.Kind) + " kept",
+                Items(b.KeptAtSave, b.Kind) + " kept" + (b.Dropped > 0 ? $", {b.Dropped} taken out" : ""),
                 b.CreatedAt))
             .Concat(joined.Select(u => new Line(
                 "joined",
@@ -137,9 +134,7 @@ public static class OverviewRecent
         return lines;
     }
 
-    // "Saved a Cabbage VeggieBook", "Deleted a Breakfast Secrets Book". A
-    // category that already ends in "Secrets" (such as "Shopping Secrets")
-    // becomes "Saved a Shopping Secrets Book" instead of repeating the word.
+    // "Saved a Cabbage VeggieBook", "Saved a Shopping Secrets Book".
     private static string BookTitle(string verb, string name, string kind)
     {
         var type = kind == "secrets" ? "Secrets Book" : "VeggieBook";

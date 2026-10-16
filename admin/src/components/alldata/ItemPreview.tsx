@@ -100,7 +100,7 @@ export function ItemPreviewCard({ preview }: { preview: Preview | null }) {
         <div className="vbd-preview-tags">
           {row.item_code && <span className="vbd-code">{String(row.item_code)}</span>}
           <span className={secret ? 'vbd-type is-violet' : 'vbd-type is-green'}>{String(row.item_type ?? '')}</span>
-          <span className={out ? 'vbd-pill is-out' : 'vbd-pill is-kept'}>{out ? 'Taken out later' : 'Kept'}</span>
+          <span className={out ? 'vbd-pill is-out' : 'vbd-pill is-kept'}>{out ? 'Taken out' : 'Kept'}</span>
         </div>
         <strong className="vbd-preview-title">{String(row.item_title ?? '')}</strong>
         <dl className="vbd-preview-facts">

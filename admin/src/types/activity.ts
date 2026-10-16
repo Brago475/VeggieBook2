@@ -4,6 +4,7 @@ export type ActivityType =
   | 'book_saved'
   | 'joined'
   | 'book_deleted'
+  | 'item_removed'
   | 'account_deleted'
   | 'tracking_on'
   | 'tracking_off'

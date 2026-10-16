@@ -72,7 +72,7 @@ export function BookWindow({ bookKey, onClose, onOpenData, onPrev, onNext }: Pro
   const out = item !== null && ready !== null && ready.removedItems.includes(item)
   const index = item !== null && ready !== null ? ready.keptItems.indexOf(item) : -1
   const noun = item?.type === 'secret' ? 'Secret' : 'Recipe'
-  const position = out ? 'Taken out later' : `${noun} ${index + 1} of ${ready?.keptItems.length ?? 0}`
+  const position = out ? 'Taken out' : `${noun} ${index + 1} of ${ready?.keptItems.length ?? 0}`
 
   return (
     <div className="bw-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>

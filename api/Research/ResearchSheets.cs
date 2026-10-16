@@ -9,24 +9,16 @@ namespace VeggieBook.Api.Research;
 //
 //   Participants  one row per person
 //   Responses     one row per saved book
-//   Items         one row per recipe or secret in a saved book
+//   Items         one row per recipe or secret shown while making a saved book
 //
-// Who is included: real accounts that are not admins. Guests are temporary
-// and admin books are tests, so both are left out. Books saved while the
-// person's tracking was off are left out too, and the Participants sheet
-// lists only people with tracking on now or with tracked books
-// (ResearchScope.cs).
+// Who is included: real accounts that are not admins. Books saved while the
+// person's tracking was off are left out (ResearchScope.cs).
 //
-// What "taken out later" means: a recipe or secret removed from a saved
-// book (Kept = false). Recipes skipped during the review, before saving,
-// are not stored, so they can't appear here.
+// "Taken out" counts both items dropped while making the book and items
+// taken out of the saved book later. The Items sheet's status tells them apart.
 //
-// Dates and times are shown in Eastern time (Kean is in New Jersey). If the
-// server can't find that time zone, they fall back to UTC and the column
-// labels say so.
-//
-// Hidden questions are left out: the original app set them itself and
-// never showed them, so no one answers them.
+// Dates and times are Eastern, or UTC if the server can't find that zone.
+// Hidden questions are left out: no one answers them.
 
 public static class ResearchSheets
 {
@@ -49,7 +41,7 @@ public static class ResearchSheets
 
     private record Person(Guid UserId, string ParticipantId, DateTime CreatedAt, string? AgeRange);
 
-    private record Item(string Type, int Id, bool Kept, int ExtraCopies);
+    private record Item(string Type, int Id, bool Kept, bool Dropped, int ExtraCopies);
 
     private record BookRow(
         Person Person,
@@ -72,10 +64,15 @@ public static class ResearchSheets
 
     private record QuestionInfo(string Label, List<(string Attribute, string Text)> Choices);
 
+    // Status of one item, shared with the All Data sheets.
+    public static string StatusOf(bool kept, bool dropped) =>
+        kept ? "Kept" : dropped ? "Taken out while making" : "Taken out later";
+
+    public static readonly List<string> Statuses = ["Kept", "Taken out while making", "Taken out later"];
+
     // ---- Loading ----
 
-    // Real, non-admin accounts with their research IDs, giving IDs to any
-    // that don't have one yet.
+    // Real, non-admin accounts with their research IDs.
     private static async Task<Dictionary<Guid, Person>> LoadPeopleAsync(AccountsContext db)
     {
         var ids = await ParticipantIds.EnsureAsync(db);
@@ -104,8 +101,7 @@ public static class ResearchSheets
     }
 
     // Every book of these people, numbered per person by date before any
-    // filter (so a person's 3rd book is always "3"), then filtered: books
-    // saved while tracking was off first, then the page's filters.
+    // filter, then filtered by tracking and the page's filters.
     private static async Task<List<BookRow>> LoadBooksAsync(
         AccountsContext db,
         Dictionary<Guid, Person> people,
@@ -129,7 +125,7 @@ public static class ResearchSheets
                 b.CreatedAt,
                 Attributes = b.Attributes.Select(a => a.Attribute).ToList(),
                 Selections = b.Selections
-                    .Select(s => new { s.ContentType, s.ContentId, s.Kept, s.ExtraCopies })
+                    .Select(s => new { s.ContentType, s.ContentId, s.Kept, s.DroppedInReview, s.ExtraCopies })
                     .ToList()
             })
             .ToListAsync();
@@ -153,7 +149,7 @@ public static class ResearchSheets
                         b.HasUpload,
                         b.Attributes,
                         b.Selections
-                            .Select(s => new Item(s.ContentType, s.ContentId, s.Kept, s.ExtraCopies))
+                            .Select(s => new Item(s.ContentType, s.ContentId, s.Kept, s.DroppedInReview, s.ExtraCopies))
                             .ToList()))))
             .Where(x => scope.CountsBook(x.UserId, x.SavedAt))
             .Select(x => x.Book)
@@ -287,15 +283,14 @@ public static class ResearchSheets
             new("veggie_books", "VeggieBooks", "number"),
             new("secrets_books", "Secrets Books", "number"),
             new("recipes_kept", "Recipes kept", "number"),
-            new("recipes_removed", "Recipes taken out later", "number"),
+            new("recipes_removed", "Recipes taken out", "number"),
             new("secrets_kept", "Secrets kept", "number"),
-            new("secrets_removed", "Secrets taken out later", "number"),
+            new("secrets_removed", "Secrets taken out", "number"),
             new("first_book_date", $"First book ({Local.Name})", "date"),
             new("last_book_date", $"Latest book ({Local.Name})", "date")
         };
 
-        // Someone with tracking off now is listed only for the books they
-        // saved while it was on.
+        // Someone with tracking off now is listed only for books saved while it was on.
         var rows = people.Values
             .Where(p => scope.CountsPerson(p.UserId) || books[p.UserId].Any())
             .Where(p => filter.AgeRange is null || p.AgeRange == filter.AgeRange)
@@ -351,14 +346,14 @@ public static class ResearchSheets
         [
             new("answers", "Answers picked", "number"),
             new("recipes_kept", "Recipes kept", "number"),
-            new("recipes_removed", "Recipes taken out later", "number"),
+            new("recipes_removed", "Recipes taken out", "number"),
             new("secrets_kept", "Secrets kept", "number"),
-            new("secrets_removed", "Secrets taken out later", "number"),
+            new("secrets_removed", "Secrets taken out", "number"),
             new("extra_copies", "Extra copies", "number"),
             new("recipes_kept_list", "Recipes kept (list)", "text"),
-            new("recipes_removed_list", "Recipes taken out later (list)", "text"),
+            new("recipes_removed_list", "Recipes taken out (list)", "text"),
             new("secrets_kept_list", "Secrets kept (list)", "text"),
-            new("secrets_removed_list", "Secrets taken out later (list)", "text")
+            new("secrets_removed_list", "Secrets taken out (list)", "text")
         ]);
 
         var rows = books
@@ -366,9 +361,8 @@ public static class ResearchSheets
             {
                 var row = BookCells(b, c);
 
-                // One column per question: the answers picked, in the order
-                // the question lists them. Empty for Secrets Books, which
-                // have no questions.
+                // One column per question: the answers picked, in question order.
+                // Empty for Secrets Books, which have no questions.
                 for (var i = 0; i < questions.Count; i++)
                 {
                     var picked = questions[i].Choices
@@ -395,7 +389,7 @@ public static class ResearchSheets
         return new Sheet("responses", "Responses", DateTime.UtcNow, columns, rows);
     }
 
-    // ---- Items: one row per recipe or secret in a saved book ----
+    // ---- Items: one row per recipe or secret shown while making a saved book ----
 
     public static async Task<Sheet> ItemsAsync(
         AccountsContext db,
@@ -411,7 +405,7 @@ public static class ResearchSheets
         [
             new("item_type", "Item type", "text", ["Recipe", "Secret"]),
             new("item_title", "Item", "text"),
-            new("status", "Status", "text", ["Kept", "Taken out later"]),
+            new("status", "Status", "text", Statuses),
             new("extra_copies", "Extra copies", "number")
         ]);
 
@@ -424,7 +418,7 @@ public static class ResearchSheets
                     var row = BookCells(b, c);
                     row["item_type"] = i.Type == "secret" ? "Secret" : "Recipe";
                     row["item_title"] = ItemName(i, c);
-                    row["status"] = i.Kept ? "Kept" : "Taken out later";
+                    row["status"] = StatusOf(i.Kept, i.Dropped);
                     row["extra_copies"] = i.Kept ? i.ExtraCopies : 0;
                     return row;
                 }))

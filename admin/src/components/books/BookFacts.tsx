@@ -60,7 +60,7 @@ export function BookFacts({ detail, item, onClose, onOpenData, onPrev, onNext }:
           {plural(keptItems.length, itemNoun(book.kind, 1), itemNoun(book.kind, 2))}
           {extraCopies > 0 && `, ${plural(extraCopies, 'extra copy', 'extra copies')}`}
         </Fact>
-        <Fact label="Taken out later">
+        <Fact label="Taken out">
           <span className={removedItems.length > 0 ? 'bk-out' : undefined}>
             {plural(removedItems.length, itemNoun(book.kind, 1), itemNoun(book.kind, 2))}
           </span>
@@ -89,7 +89,7 @@ export function BookFacts({ detail, item, onClose, onOpenData, onPrev, onNext }:
           <strong>This {item.type === 'secret' ? 'secret' : 'recipe'}:</strong>{' '}
           {item.code ? `${item.code}. ` : ''}
           {removedItems.includes(item)
-            ? 'Taken out of the book after it was saved.'
+            ? 'Taken out, while making the book or after it was saved.'
             : item.extraCopies > 0
               ? `Kept, with ${plural(item.extraCopies, 'extra copy', 'extra copies')}.`
               : 'Kept.'}

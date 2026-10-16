@@ -5,22 +5,22 @@ using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Activity;
 
-// Writes the activity log (db/migrations/007_activity_log.sql,
-// 010_activity_detail.sql): books saved and deleted, accounts deleted, and
-// studies renamed or deleted. Entries are permanent and back the admin
-// Activity page.
+// Writes the activity log (db/migrations/007, 010 and 013): books saved and
+// deleted, items taken out of saved books, accounts deleted, and studies
+// renamed or deleted. Entries are permanent and back the admin Activity page.
 //
 // Participant lines are prepared while the account still exists (null for
 // guests and admins), then stored with SaveAsync. Logging never blocks the
 // main action; failures go to the server log.
 //
 // An account deleted from the admin site is an account_deleted line with
-// Detail set to RemovedByAdmin, so no new kind is needed in the database.
+// Detail set to RemovedByAdmin.
 
 public static class ActivityLog
 {
     public const string BookSaved = "book_saved";
     public const string BookDeleted = "book_deleted";
+    public const string ItemRemoved = "item_removed";
     public const string AccountDeleted = "account_deleted";
     public const string StudyRenamed = "study_renamed";
     public const string StudyDeleted = "study_deleted";
@@ -28,6 +28,10 @@ public static class ActivityLog
     /// <summary>Detail on an account_deleted line when an admin removed the account.</summary>
     public const string RemovedByAdmin = "removed_by_admin";
 
+    /// <summary>
+    /// A book line. itemCount is the items kept (or taken out, for item_removed);
+    /// takenOut is the items dropped while making the book, for book_saved.
+    /// </summary>
     public static async Task<ActivityEntry?> ForBookAsync(
         AccountsContext db,
         ILogger logger,
@@ -36,7 +40,8 @@ public static class ActivityLog
         string? vegetableCode,
         int? secretCategoryId,
         int itemCount,
-        string kind = BookDeleted)
+        string kind = BookDeleted,
+        int? takenOut = null)
     {
         try
         {
@@ -48,7 +53,8 @@ public static class ActivityLog
                 BookKind = bookKind,
                 VegetableCode = vegetableCode,
                 SecretCategoryId = secretCategoryId,
-                ItemCount = itemCount
+                ItemCount = itemCount,
+                TakenOutCount = takenOut
             };
         }
         catch (Exception ex)

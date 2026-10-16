@@ -15,12 +15,9 @@ namespace VeggieBook.Api.Research.AllData;
 // Same rules as ResearchSheets.cs: guests and admins are left out, rows are
 // keyed by the anonymous research ID, and no email or name is read.
 //
-// Only books saved while the person's tracking was on are kept, always.
-// Books saved while tracking was off never appear here or in any download.
-// See Research/TrackingHistory.cs.
-//
-// With a study (AllDataStudy.cs), only books saved while that study ran are
-// kept as well.
+// Only books saved while the person's tracking was on are kept
+// (Research/TrackingHistory.cs). With a study (AllDataStudy.cs), only books
+// saved while that study ran are kept as well.
 //
 // Dates and times are Eastern, or UTC if the server can't find that zone.
 
@@ -35,7 +32,8 @@ public record AllDataQuestion(int No, string Label, IReadOnlyList<AllDataChoice>
 
 internal record AdPerson(Guid UserId, string ParticipantId, DateTime CreatedAt, string? AgeRange);
 
-internal record AdItem(string Type, int Id, bool Kept, int ExtraCopies);
+// Dropped: taken out while making the book (Kept is false).
+internal record AdItem(string Type, int Id, bool Kept, bool Dropped, int ExtraCopies);
 
 internal record AdBook(
     AdPerson Person,
@@ -181,7 +179,7 @@ internal static class AllDataSource
                 b.CreatedAt,
                 Attributes = b.Attributes.Select(a => a.Attribute).ToList(),
                 Selections = b.Selections
-                    .Select(s => new { s.ContentType, s.ContentId, s.Kept, s.ExtraCopies })
+                    .Select(s => new { s.ContentType, s.ContentId, s.Kept, s.DroppedInReview, s.ExtraCopies })
                     .ToList()
             })
             .ToListAsync();
@@ -205,7 +203,7 @@ internal static class AllDataSource
                         b.HasUpload,
                         b.Attributes.ToHashSet(),
                         b.Selections
-                            .Select(s => new AdItem(s.ContentType, s.ContentId, s.Kept, s.ExtraCopies))
+                            .Select(s => new AdItem(s.ContentType, s.ContentId, s.Kept, s.DroppedInReview, s.ExtraCopies))
                             .ToList()))));
 
         var recipes = (filter.Recipes ?? []).ToHashSet();

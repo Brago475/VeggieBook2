@@ -11,8 +11,7 @@ namespace VeggieBook.Api.Books;
 
 // Saved books. Every endpoint requires a signed-in account, and every query
 // filters by that account, so one user can never see or change another's
-// books. A book that belongs to someone else answers 404, not 403, so the
-// API never confirms that it exists.
+// books. A book that belongs to someone else answers 404, not 403.
 //
 //   GET    /api/books                        this account's books, newest first
 //   GET    /api/books/{id}                   one book in full, with recipe titles
@@ -21,30 +20,28 @@ namespace VeggieBook.Api.Books;
 //   DELETE /api/books/{id}/recipes/{recipe}  take one recipe out of a book
 //   GET    /api/books/{id}/cover             the book's uploaded cover photo
 //
-// Guests never call these. A guest's book lives only in the open page and is
-// gone when it closes.
-//
 // Nothing the client sends is trusted: the vegetable, every answer, every
 // recipe, and the cover are checked against the database before saving.
 //
-// Both kinds of book are listed, opened and deleted here. A Secrets Book is
-// saved by SecretBooksController (POST /api/books/secrets), since it is
-// built differently; everything after saving is the same.
+// A Secrets Book is saved by SecretBooksController; listing, opening and
+// deleting work the same for both kinds.
 //
-// Saving and deleting a book each write a line to the activity log
-// (Activity/ActivityLog.cs) for the admin site; the log never blocks either.
+// Saving, deleting and taking a recipe out each write an activity log line
+// (Activity/ActivityLog.cs); the log never blocks the action.
 //
 // Messages carry a code the site translates (ErrorCodes, ApiError).
 
 public record BookRecipe(int Id, int ExtraCopies);
 
+// Dropped: recipes dropped during Keep/Drop, recorded for research only.
 public record CreateBookRequest(
     string? VegetableCode,
     string[]? Attributes,
     BookRecipe[]? Recipes,
     string? CoverPath,
     string? CoverUpload,
-    string? Lang);
+    string? Lang,
+    int[]? Dropped);
 
 [ApiController]
 [Route("api/books")]
@@ -54,8 +51,7 @@ public class BooksController(
     VeggieBookContext content,
     ILogger<BooksController> logger) : ControllerBase
 {
-    // Limits on what one account can store. At 50 books with a 400 KB cover
-    // each, one account holds at most about 20 MB.
+    // At 50 books with a 400 KB cover each, one account holds at most about 20 MB.
     private const int MaxBooksPerUser = 50;
     private const int MaxRecipesPerBook = 100;
     private const int MaxAttributes = 50;
@@ -85,9 +81,7 @@ public class BooksController(
                 b.SecretCategoryId,
                 b.CoverPath,
                 HasUpload = b.CoverUpload != null,
-                // What the book holds: kept recipes in a VeggieBook, kept
-                // secrets in a Secrets Book. A book only ever holds one
-                // kind, so counting both gives the right number for each.
+                // Kept recipes in a VeggieBook, kept secrets in a Secrets Book.
                 RecipeCount = b.Selections.Count(s =>
                     s.Kept && (s.ContentType == "recipe" || s.ContentType == "secret")),
                 b.CreatedAt
@@ -106,10 +100,7 @@ public class BooksController(
         }));
     }
 
-    // One book with its recipes, for the screen that opens a saved book.
-    // The recipes carry their titles and first photo so the list can be
-    // shown without a request per recipe; full content still comes from
-    // /api/recipes/{id} when one is opened.
+    // One book with its kept recipes, their titles and first photo.
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, [FromQuery] string? lang)
     {
@@ -137,9 +128,7 @@ public class BooksController(
 
         if (book is null) return NotFound();
 
-        // Titles and cover photos come from the content database, a separate
-        // context, so this is a second query rather than a join. One query
-        // for the whole book, not one per recipe.
+        // Titles and photos come from the content database: one query for the whole book.
         var ids = book.Recipes.Select(r => r.id).ToArray();
         var spanish = Lang.IsSpanish(lang);
 
@@ -151,11 +140,6 @@ public class BooksController(
                 r.Id,
                 r.DisplayCode,
                 Title = spanish ? r.TitleEs : r.TitleEn,
-                // The first photo, for the thumbnail beside the title. Every
-                // referenced photo is on disk since the original img/ folder
-                // was restored from the owner's archive on 2026-09-18, so no
-                // path prefix is filtered here. Null only if a recipe has no
-                // photo row at all, which the viewer handles.
                 Photo = content.RecipePhotos
                     .Where(p => p.RecipeId == r.Id)
                     .OrderBy(p => p.Position)
@@ -166,9 +150,8 @@ public class BooksController(
 
         var byId = details.ToDictionary(t => t.Id);
 
-        // Recipe order, matching the rest of the app: coded recipes first in
-        // code order, then the uncoded ones by id. A recipe since removed
-        // from the content database is skipped rather than listed blank.
+        // Coded recipes first in code order, then uncoded by id. A recipe since
+        // removed from the content database is skipped.
         var recipes = book.Recipes
             .Where(r => byId.ContainsKey(r.id))
             .Select(r => new
@@ -197,8 +180,7 @@ public class BooksController(
         });
     }
 
-    // Base64 makes a 400 KB photo about 550 KB of JSON, which fits both this
-    // limit and nginx's default 1 MB request limit.
+    // Base64 makes a 400 KB photo about 550 KB of JSON, within this limit and nginx's 1 MB.
     [HttpPost]
     [RequestSizeLimit(1_000_000)]
     public async Task<IActionResult> Create([FromBody] CreateBookRequest req)
@@ -224,7 +206,7 @@ public class BooksController(
         if (knownAttributes != attributes.Length)
             return BadRequest(new ApiError(ErrorCodes.UnknownAnswer, "Unknown answer.").Body());
 
-        // Recipes must be real, active, and for this book's vegetable.
+        // Kept recipes must be real, active, and for this book's vegetable.
         var recipes = req.Recipes ?? [];
         if (recipes.Length > MaxRecipesPerBook)
             return BadRequest(new ApiError(ErrorCodes.TooManyRecipes, "Too many recipes.").Body());
@@ -240,6 +222,21 @@ public class BooksController(
         if (validRecipes != recipeIds.Length)
             return BadRequest(new ApiError(ErrorCodes.UnknownRecipe, "Unknown recipe.").Body());
 
+        // Dropped recipes are research data only: anything invalid is ignored
+        // rather than blocking the save.
+        var droppedIds = (req.Dropped ?? [])
+            .Distinct()
+            .Where(id => !recipeIds.Contains(id))
+            .Take(MaxRecipesPerBook)
+            .ToArray();
+        if (droppedIds.Length > 0)
+        {
+            droppedIds = await content.Recipes
+                .Where(r => droppedIds.Contains(r.Id) && r.VegetableCode == vegetable.Code && r.Active)
+                .Select(r => r.Id)
+                .ToArrayAsync();
+        }
+
         // Exactly one cover: one from the catalog, or an upload.
         var hasPreset = !string.IsNullOrEmpty(req.CoverPath);
         var hasUpload = !string.IsNullOrEmpty(req.CoverUpload);
@@ -249,8 +246,6 @@ public class BooksController(
         byte[]? upload = null;
         if (hasPreset)
         {
-            // Vegetable covers, shared covers, and recipe photos. See
-            // Covers/CoverCatalog.cs.
             if (!await CoverCatalog.IsAllowed(content, req.CoverPath!))
                 return BadRequest(new ApiError(ErrorCodes.UnknownCover, "Unknown cover.").Body());
         }
@@ -282,6 +277,13 @@ public class BooksController(
                     Kept = true,
                     ExtraCopies = r.ExtraCopies
                 })
+                .Concat(droppedIds.Select(id => new BookSelection
+                {
+                    ContentType = "recipe",
+                    ContentId = id,
+                    Kept = false,
+                    DroppedInReview = true
+                }))
                 .ToList(),
             CoverUpload = upload is null
                 ? null
@@ -291,22 +293,18 @@ public class BooksController(
         db.Books.Add(book);
         await db.SaveChangesAsync();
 
-        // Permanent record of the save. At matches the book's CreatedAt so the
-        // admin Activity page can pair it with the book row.
+        // At matches the book's CreatedAt so the Activity page can pair the line with the book.
         var saved = await ActivityLog.ForBookAsync(
-            db, logger, uid, "veggie", vegetable.Code, null, recipes.Length, ActivityLog.BookSaved);
+            db, logger, uid, "veggie", vegetable.Code, null, recipes.Length,
+            ActivityLog.BookSaved, droppedIds.Length);
         if (saved is not null) saved.At = book.CreatedAt;
         await ActivityLog.SaveAsync(db, logger, saved);
 
         return Created($"/api/books/{book.Id}", new { id = book.Id });
     }
 
-    // Deletes in one statement. The database removes the book's answers,
-    // recipes, and uploaded cover through ON DELETE CASCADE.
-    //
-    // Before deleting, it reads what the book was (kind, vegetable or
-    // category, how many items it kept) for the activity log line, which is
-    // saved once the delete has gone through.
+    // Deletes in one statement; the database cascades to answers, items and cover.
+    // The activity line is prepared first and saved once the delete succeeds.
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
@@ -337,14 +335,9 @@ public class BooksController(
         return NoContent();
     }
 
-    // Takes one recipe out of a saved book. The row is kept with Kept set to
-    // false rather than deleted: the same flag DROP stands for in the review
-    // step, so the study data still shows the recipe was in the book and was
-    // taken out later. Every screen and count reads only kept recipes, so to
-    // the user it is gone.
-    //
-    // The last recipe cannot be taken out. A book with none has nothing to
-    // open, and deleting the book is the way to clear it.
+    // Takes one recipe out of a saved book. The row stays with Kept = false so
+    // research data shows it was taken out later. The last recipe cannot be
+    // taken out; deleting the book clears it.
     [HttpDelete("{id:guid}/recipes/{recipeId:int}")]
     public async Task<IActionResult> RemoveRecipe(Guid id, int recipeId)
     {
@@ -369,6 +362,10 @@ public class BooksController(
         target.Kept = false;
         await db.SaveChangesAsync();
 
+        var entry = await ActivityLog.ForBookAsync(
+            db, logger, uid, "veggie", book.VegetableCode, null, 1, ActivityLog.ItemRemoved);
+        await ActivityLog.SaveAsync(db, logger, entry);
+
         return NoContent();
     }
 
@@ -386,23 +383,17 @@ public class BooksController(
 
         if (data is null) return NotFound();
 
-        // no-store keeps a personal photo out of a shared computer's browser
-        // cache, and guarantees Cloudflare never caches it for anyone else.
-        // nosniff stops a browser from treating the bytes as anything but an
-        // image.
+        // Personal photo: never cached, never treated as anything but an image.
         Response.Headers["Cache-Control"] = "no-store";
         Response.Headers["X-Content-Type-Options"] = "nosniff";
         return File(data, "image/jpeg");
     }
 
-    // Uploaded covers are served through the API so only the owner can see
-    // them. Catalog covers are public files under /images.
+    // Uploads are served through the API so only the owner can see them.
     private static string CoverUrl(Guid id, string? coverPath, bool hasUpload) =>
         hasUpload ? $"/api/books/{id}/cover" : coverPath ?? "";
 
-    // Accepts only a JPEG data URL, as produced by the site's resizer. The
-    // bytes must start with the JPEG signature, so a renamed file of another
-    // type is refused even if it claims to be a JPEG.
+    // Accepts only a JPEG data URL whose bytes start with the JPEG signature.
     private static byte[]? DecodeJpeg(string dataUrl)
     {
         if (!dataUrl.StartsWith(JpegDataUrl, StringComparison.Ordinal)) return null;

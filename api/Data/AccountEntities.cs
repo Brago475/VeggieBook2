@@ -97,15 +97,19 @@ public class BookAttribute
     public string Attribute { get; set; } = "";
 }
 
-// One piece of content in the book. Only kept recipes and kept secrets are
-// stored for now. The table can also hold dropped ones (Kept = false) or
-// tips, if the study decides it wants those recorded.
+// One recipe or secret shown while making the book. See
+// db/migrations/013_review_drops.sql.
+//   Kept                       in the book
+//   not Kept, DroppedInReview  dropped during Keep/Drop
+//   not Kept, not dropped      taken out of the saved book later
+// Users only ever see kept items.
 public class BookSelection
 {
     public Guid SessionId { get; set; }
     public string ContentType { get; set; } = "recipe";
     public int ContentId { get; set; }
     public bool Kept { get; set; }
+    public bool DroppedInReview { get; set; }
     public int ExtraCopies { get; set; }
 }
 

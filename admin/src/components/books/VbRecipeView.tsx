@@ -13,7 +13,7 @@ import { SafeImg } from './SafeImg'
 
 type Props = {
   id: number
-  position: string // "Recipe 3 of 14", or "Taken out later"
+  position: string // "Recipe 3 of 14", or "Taken out"
   out: boolean
 }
 

@@ -7,10 +7,7 @@ import {
 } from '../utils/secretsFlowStorage'
 import { useCategorySecrets } from './useSecrets'
 
-// The steps of making one Secrets Book, from choosing a category to
-// choosing its cover. The Secrets counterpart of useBookFlow, and simpler:
-// a Secrets Book has no questions. The user picks a category and keeps or
-// drops each of its secrets, as in the original app.
+// The steps of making one Secrets Book, the Secrets counterpart of useBookFlow:
 //
 //   pick        choose one of the five categories
 //   who         Who Says So?, a side trip from pick; back returns there
@@ -18,17 +15,11 @@ import { useCategorySecrets } from './useSecrets'
 //   review      KEEP / DROP, one secret at a time
 //   none        every secret was dropped: review again, or pick another
 //   copies      extra printed copies
-//   cover       the book's cover: the first kept secret's picture, any
-//               secret's picture from any category, or an upload
+//   cover       the first kept secret's picture, any secret's picture, or an upload
 //
-// The category's secrets start loading the moment it is picked, so they
-// are usually ready by the time NEXT is pressed on the transition, the
-// same as the VeggieBook flow's recipe match.
-//
-// For a signed-in user (owner is their email) the book in progress is kept
-// in the tab's storage after every change and restored on load, so a
-// refresh picks up where they were, the same as useBookFlow. For a guest
-// (owner is null) nothing is kept.
+// The category's secrets start loading as soon as it is picked. For a
+// signed-in user the book in progress is kept in the tab's storage; for a
+// guest nothing is kept.
 
 export type SecretsStep =
   | 'pick'
@@ -41,8 +32,7 @@ export type SecretsStep =
 
 export type SecretsFlowState = ReturnType<typeof useSecretsFlow>
 
-// Ids for a guest's books, which exist only on this page. The same as
-// useBookFlow's.
+// Ids for a guest's books, which exist only on this page.
 function newId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
@@ -53,8 +43,7 @@ function newId(): string {
 export function useSecretsFlow(owner: string | null) {
   const [step, setStep] = useState<SecretsStep>('pick')
   const [category, setCategory] = useState<SecretCategory | null>(null)
-  // Loads the chosen category's secrets; nothing while none is chosen.
-  // After a refresh this loads them again for the restored category.
+  // The chosen category's secrets; reloaded for a restored category after a refresh.
   const secrets = useCategorySecrets(category?.id ?? null)
 
   // Where the user is in KEEP / DROP, and what they have kept so far.
@@ -65,13 +54,7 @@ export function useSecretsFlow(owner: string | null) {
   // Secrets checked for an extra printed copy.
   const [extraCopies, setExtraCopies] = useState<number[]>([])
 
-  // Restore a saved book once, when the signed-in user is known. A layout
-  // effect, so the restored step is drawn in the first frame and the
-  // category picker never flashes up before it.
-  //
-  // Only into an empty flow: a guest who has just created an account to
-  // save their finished book already has a book here, and it must not be
-  // replaced by an older one from storage.
+  // Restore a saved book once, when the signed-in user is known, and only into an empty flow.
   const restoredFor = useRef<string | null>(null)
   useLayoutEffect(() => {
     if (!owner || restoredFor.current === owner) return
@@ -91,8 +74,7 @@ export function useSecretsFlow(owner: string | null) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [owner])
 
-  // Save after every change, for a signed-in user only. An empty flow
-  // (no category chosen yet) clears what was saved.
+  // Save after every change, for a signed-in user only. An empty flow clears what was saved.
   useEffect(() => {
     if (!owner) return
     if (!category) {
@@ -120,8 +102,7 @@ export function useSecretsFlow(owner: string | null) {
     setExtraCopies([])
   }
 
-  // Clears everything for a new Secrets Book, and whatever was saved for
-  // the last one. Also called once a book is saved, and on sign out.
+  // Clears everything for a new Secrets Book. Also called after saving and on sign out.
   function start() {
     clearReview()
     setCategory(null)
@@ -129,9 +110,7 @@ export function useSecretsFlow(owner: string | null) {
     clearSavedSecretsFlow()
   }
 
-  // Choosing a category starts its review over, and shows the transition
-  // while its secrets load. Choosing a different one after backing out
-  // never carries the last one's choices over.
+  // Choosing a category starts its review over and shows the transition while it loads.
   function chooseCategory(next: SecretCategory) {
     clearReview()
     setCategory(next)
@@ -148,8 +127,7 @@ export function useSecretsFlow(owner: string | null) {
     setStep('review')
   }
 
-  // KEEP or DROP on the current secret. Both move on; they differ only in
-  // whether the secret is recorded. After the last one, the kept secrets
+  // KEEP or DROP on the current secret. After the last one, the kept secrets
   // become the book, or, if none was kept, the none step offers a way on.
   function decide(keep: boolean) {
     const list = secrets.data?.secrets ?? []
@@ -192,10 +170,7 @@ export function useSecretsFlow(owner: string | null) {
     setStep('cover')
   }
 
-  // What the back button does on the current step. Matches the VeggieBook
-  // flow: review, copies, and cover have none, because going back would
-  // lose the choices made there. On the first step, back leaves the flow;
-  // every step before the review goes back to the picker.
+  // Back button per step, matching the VeggieBook flow.
   function backAction(leave: () => void): (() => void) | undefined {
     if (step === 'pick') return leave
     if (step === 'who' || step === 'transition' || step === 'none') {
@@ -204,15 +179,19 @@ export function useSecretsFlow(owner: string | null) {
     return undefined
   }
 
-  // The finished book in the shape POST /api/books/secrets expects. An
-  // upload is a data URL; anything else is a secret's picture, the same
-  // test the VeggieBook flow uses.
+  // The finished book in the shape POST /api/books/secrets expects. Dropped
+  // secrets are the ones shown in the review but not kept, recorded for research.
   function buildBook(cover: string): NewSecretsBook | null {
     if (!category || kept.length === 0) return null
     const copies = new Set(extraCopies)
+    const keptIds = new Set(kept.map((s) => s.id))
+    const dropped = (secrets.data?.secrets ?? [])
+      .map((s) => s.id)
+      .filter((id) => !keptIds.has(id))
     return {
       categoryId: category.id,
       secrets: kept.map((s) => ({ id: s.id, extraCopies: copies.has(s.id) ? 1 : 0 })),
+      dropped,
       ...(cover.startsWith('data:') ? { coverUpload: cover } : { coverPath: cover }),
     }
   }

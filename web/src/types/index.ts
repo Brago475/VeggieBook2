@@ -58,6 +58,7 @@ export type NewBook = {
   vegetableCode: string
   attributes: string[]
   recipes: { id: number; extraCopies: number }[]
+  dropped?: number[]
   coverPath?: string
   coverUpload?: string
   lang?: 'en' | 'es'
@@ -70,6 +71,7 @@ export type NewBook = {
 export type NewSecretsBook = {
   categoryId: number
   secrets: { id: number; extraCopies: number }[]
+  dropped?: number[]
   coverPath?: string
   coverUpload?: string
   lang?: 'en' | 'es'

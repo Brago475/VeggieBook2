@@ -4,15 +4,13 @@ import { clearSavedFlow, loadSavedFlow, saveFlow } from '../utils/flowStorage'
 import { useMatch } from './useMatch'
 
 // The steps of making one VeggieBook, from choosing a vegetable to choosing
-// its cover. Holds everything the user picks along the way, so App only
-// decides what happens once the book is finished: saved to an account, or
-// kept on the page for a guest.
+// its cover. Holds everything picked along the way, so App only decides what
+// happens once the book is finished: saved to an account, or kept on the page
+// for a guest.
 //
-// Everything lives here, including the place in the KEEP / DROP review and
-// the extra-copy checkmarks, so the whole book in progress can be saved in
-// one piece. For a signed-in user (owner is their email) it is kept in the
-// tab's storage after every change and restored on load, so a refresh
-// picks up where they were. For a guest (owner is null) nothing is kept.
+// For a signed-in user (owner is their email) the book in progress is kept in
+// the tab's storage after every change and restored on load. For a guest
+// (owner is null) nothing is kept.
 
 export type FlowStep = 'pick' | 'quiz' | 'transition' | 'review' | 'copies' | 'cover'
 
@@ -40,13 +38,8 @@ export function useBookFlow(questionCount: number, owner: string | null) {
   // Recipes checked for an extra printed copy.
   const [extraCopies, setExtraCopies] = useState<number[]>([])
 
-  // Restore a saved book once, when the signed-in user is known. A layout
-  // effect, so the restored step is drawn in the first frame and the
-  // vegetable picker never flashes up before it.
-  //
-  // Only into an empty flow: a guest who has just created an account to
-  // save their finished book already has a book here, and it must not be
-  // replaced by an older one from storage.
+  // Restore a saved book once, when the signed-in user is known, and only into
+  // an empty flow. A layout effect so the picker never flashes first.
   const restoredFor = useRef<string | null>(null)
   useLayoutEffect(() => {
     if (!owner || restoredFor.current === owner) return
@@ -75,8 +68,7 @@ export function useBookFlow(questionCount: number, owner: string | null) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [owner])
 
-  // Save after every change, for a signed-in user only. An empty flow
-  // (nothing chosen yet) clears what was saved.
+  // Save after every change, for a signed-in user only. An empty flow clears what was saved.
   useEffect(() => {
     if (!owner) return
     if (!vegetable) {
@@ -108,9 +100,7 @@ export function useBookFlow(questionCount: number, owner: string | null) {
     extraCopies,
   ])
 
-  // Everything belonging to one book's answers. Used when starting a new
-  // book and again whenever a vegetable is chosen, since choosing one
-  // begins that book's questions from scratch.
+  // Everything belonging to one book's answers.
   function clearAnswers() {
     match.reset()
     setQuestionIndex(0)
@@ -121,8 +111,7 @@ export function useBookFlow(questionCount: number, owner: string | null) {
     setExtraCopies([])
   }
 
-  // Clears everything for a new book, and whatever was saved for the last
-  // one. Also called once a book is saved, and on sign out.
+  // Clears everything for a new book. Also called after saving and on sign out.
   function start() {
     clearAnswers()
     setStep('pick')
@@ -130,9 +119,7 @@ export function useBookFlow(questionCount: number, owner: string | null) {
     clearSavedFlow()
   }
 
-  // Choosing a vegetable starts that book's questions over. Without the
-  // clear, backing out to the pick screen and choosing a different
-  // vegetable carried the previous answers into the new book.
+  // Choosing a vegetable starts that book's questions over.
   function chooseVegetable(veg: Vegetable) {
     clearAnswers()
     setVegetable(veg)
@@ -148,8 +135,7 @@ export function useBookFlow(questionCount: number, owner: string | null) {
     })
   }
 
-  // The match runs when leaving the last question, so the results are
-  // already in flight while the user reads the transition screen.
+  // The match runs when leaving the last question, so results load during the transition.
   function nextQuestion() {
     if (questionIndex < questionCount - 1) {
       setQuestionIndex(questionIndex + 1)
@@ -165,8 +151,7 @@ export function useBookFlow(questionCount: number, owner: string | null) {
     setStep('review')
   }
 
-  // KEEP or DROP on the current recipe. Both move on; they differ only in
-  // whether the recipe is recorded. After the last recipe, the kept ones
+  // KEEP or DROP on the current recipe. After the last one, the kept recipes
   // become the book and the extra-copies step follows.
   function decide(keep: boolean) {
     const recipes = match.result?.recipes ?? []
@@ -195,9 +180,7 @@ export function useBookFlow(questionCount: number, owner: string | null) {
     setStep('cover')
   }
 
-  // What the back button does on the current step. Review, copies, and
-  // cover have none, because going back would lose the choices made there.
-  // On the first step, back leaves the flow.
+  // Back button per step. Review, copies, and cover have none; on the first step, back leaves.
   function backAction(leave: () => void): (() => void) | undefined {
     if (step === 'pick') return leave
     if (step === 'quiz') {
@@ -214,14 +197,20 @@ export function useBookFlow(questionCount: number, owner: string | null) {
     return undefined
   }
 
-  // The finished book in the shape POST /api/books expects.
+  // The finished book in the shape POST /api/books expects. Dropped recipes
+  // are the ones shown in the review but not kept, recorded for research.
   function buildBook(cover: string): NewBook | null {
     if (!vegetable) return null
     const copies = new Set(extraCopies)
+    const keptIds = new Set(kept.map((r) => r.id))
+    const dropped = (match.result?.recipes ?? [])
+      .map((r) => r.id)
+      .filter((id) => !keptIds.has(id))
     return {
       vegetableCode: vegetable.code,
       attributes: [...picked],
       recipes: kept.map((r) => ({ id: r.id, extraCopies: copies.has(r.id) ? 1 : 0 })),
+      dropped,
       ...(cover.startsWith('data:') ? { coverUpload: cover } : { coverPath: cover }),
     }
   }

@@ -88,7 +88,7 @@ export function VbBookList({ detail, onOpen }: Props) {
 
       {removedItems.length > 0 && (
         <>
-          <p className="vb-out-head">Taken out later ({removedItems.length})</p>
+          <p className="vb-out-head">Taken out ({removedItems.length})</p>
           <ul className="vb-rows">{removedItems.map((item) => row(item, true))}</ul>
         </>
       )}

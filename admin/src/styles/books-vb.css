@@ -363,7 +363,7 @@
   transform: translateX(3px);
 }
 
-/* Taken out later: still listed for the research team, faded and
+/* Taken out: still listed for the research team, faded and
    crossed out so it never reads as part of the book. */
 .vb-out-head {
   margin: 8px 16px 0;

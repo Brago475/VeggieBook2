@@ -14,20 +14,14 @@ namespace VeggieBook.Api.Admin;
 ///
 ///   GET /api/admin/activity?study={number}
 ///
-/// Event types: book_saved, joined, book_deleted, account_deleted,
-/// tracking_on, tracking_off, study_started, study_ended, study_renamed,
-/// study_deleted, notice_joined, notice_declined. Nothing is pruned; every
-/// source table is permanent.
+/// Event types: book_saved, joined, book_deleted, item_removed,
+/// account_deleted, tracking_on, tracking_off, study_started, study_ended,
+/// study_renamed, study_deleted, notice_joined, notice_declined.
 ///
-/// Each participant event is shown only if tracking was on at the moment it
-/// happened (ResearchScope.CountsBook): later tracking changes never hide or
-/// reveal past events. Saves come from the book table, plus book_saved log
-/// lines for books deleted since (matched on research ID and saved time).
-/// Admin and guest accounts never appear. study limits events to that
-/// study's window.
-///
-/// An account_deleted event reads "Account removed by an admin" when the root
-/// admin deleted it from Settings, and "Deleted their account" otherwise.
+/// Participant events show only if tracking was on when they happened
+/// (ResearchScope.CountsBook). Saves come from the book table, plus book_saved
+/// log lines for books deleted since. A save line shows what was kept and
+/// taken out at the moment of saving; later take-outs are their own lines.
 /// </summary>
 [ApiController]
 [Route("api/admin/activity")]
@@ -57,7 +51,7 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
 
         var events = new List<Event>();
 
-        // Saved books still in the database.
+        // Saved books still in the database. Kept at save includes items taken out later.
         var books = (await db.Books
                 .AsNoTracking()
                 .Where(b => people.Any(u => u.Id == b.UserId))
@@ -68,7 +62,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                     b.VegetableCode,
                     b.SecretCategoryId,
                     b.CreatedAt,
-                    Kept = b.Selections.Count(s => s.Kept)
+                    KeptAtSave = b.Selections.Count(s => !s.DroppedInReview),
+                    Dropped = b.Selections.Count(s => s.DroppedInReview)
                 })
                 .ToListAsync())
             .Where(b => scope.CountsBook(b.UserId, b.CreatedAt))
@@ -82,7 +77,7 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             "book_saved",
             ids.GetValueOrDefault(b.UserId),
             BookTitle("Saved", Name(b.Kind, b.VegetableCode, b.SecretCategoryId), b.Kind),
-            Items(b.Kept, b.Kind) + " kept",
+            SaveDetail(b.KeptAtSave, b.Dropped, b.Kind),
             b.CreatedAt)));
 
         // New participants, by tracking state at the moment they joined.
@@ -95,7 +90,7 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             string.IsNullOrEmpty(u.AgeRange) ? "No age range given" : $"Age {u.AgeRange}",
             u.CreatedAt)));
 
-        // Activity log: deletions, admin study actions, and saves of books deleted since.
+        // Activity log: deletions, take-outs, admin study actions, and saves of books deleted since.
         var logged = await db.ActivityLog.AsNoTracking().ToListAsync();
 
         bool OwnerTracked(ActivityEntry a, DateTime at) =>
@@ -127,10 +122,17 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                 events.Add(new Event("book_deleted", a.ParticipantId, BookTitle("Deleted", name, kind),
                     a.ItemCount is int n ? "Had " + Items(n, kind) : "Book removed", a.At));
             }
+            else if (a.Kind == ActivityLog.ItemRemoved && OwnerTracked(a, a.At))
+            {
+                events.Add(new Event("item_removed", a.ParticipantId,
+                    BookTitle($"Took {Items(a.ItemCount ?? 1, kind)} out of", name, kind),
+                    "From a saved book", a.At));
+            }
             else if (a.Kind == ActivityLog.BookSaved && !existing.Contains((a.ParticipantId, a.At)) && OwnerTracked(a, a.At))
             {
                 events.Add(new Event("book_saved", a.ParticipantId, BookTitle("Saved", name, kind),
-                    (a.ItemCount is int n ? Items(n, kind) + " kept" : "Book saved") + ", deleted later", a.At));
+                    (a.ItemCount is int n ? SaveDetail(n, a.TakenOutCount ?? 0, kind) : "Book saved") + ", deleted later",
+                    a.At));
             }
         }
 
@@ -186,6 +188,10 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
         Response.Headers.CacheControl = "no-store";
         return Ok(new { events = result });
     }
+
+    // "6 recipes kept, 4 taken out", or "6 recipes kept" when nothing was dropped.
+    private static string SaveDetail(int kept, int takenOut, string kind) =>
+        Items(kept, kind) + " kept" + (takenOut > 0 ? $", {takenOut} taken out" : "");
 
     private static string BookTitle(string verb, string name, string kind)
     {

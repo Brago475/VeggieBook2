@@ -147,7 +147,7 @@ export function Books({ onOpenPersonData }: Props) {
           <StatCard
             index={3}
             icon="trash"
-            label="Taken out later"
+            label="Taken out"
             value={data.counts.takenOut}
             chip={`${percent(data.counts.takenOut, totals.items)} of items`}
             chipUp

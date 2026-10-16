@@ -106,7 +106,7 @@ export function ContentWindow({ item, onClose, onPrev, onNext }: Props) {
                 <strong className="ct-kept">{item.kept.toLocaleString()}</strong>
               </div>
               <div className="ct-usage-line">
-                <span>Taken out later</span>
+                <span>Taken out</span>
                 <strong className="ct-out">{item.takenOut.toLocaleString()}</strong>
               </div>
               <div className="ct-bar" aria-hidden="true">
