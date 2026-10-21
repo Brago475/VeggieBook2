@@ -30,8 +30,9 @@ internal sealed record BookPrint(
     List<string> Attributes,
     List<BookPrintItem> Items);
 
-// A picture ready for MigraDoc: a file path or base64 source, and width over height.
-internal sealed record Picture(string Source, double Ratio);
+// A picture ready for MigraDoc: a file path or base64 source, width over height,
+// and its natural size in points (used for cropping).
+internal sealed record Picture(string Source, double Ratio, double PointWidth = 0, double PointHeight = 0);
 
 internal static class BookPdf
 {
@@ -39,13 +40,20 @@ internal static class BookPdf
     public static readonly Color Muted = new(107, 112, 105);
     public static readonly Color Green = new(45, 90, 21);
     public static readonly Color Fill = new(244, 246, 241);
-    public static readonly Color Line = new(229, 231, 227);
+    public static readonly Color Line = new(216, 219, 212);
 
     public const string FooterText = "VeggieBook2, Kean University";
 
     // US Letter portrait is 21.59 cm wide; 1.9 cm margins on each side.
     public const double UsableWidth = 17.79;
     private const double SideMargin = 1.9;
+
+    // Recipe photo frame, in cm. Every photo is cropped to exactly PhotoWidth by PhotoHeight.
+    public const double FrameHeight = 8.5;
+    public const double PhotoWidth = 12.5;
+    public const double PhotoHeight = 8.3;
+
+    private static readonly Regex BoldMarks = new(@"\*\*(.+?)\*\*", RegexOptions.Compiled);
 
     private static readonly TimeZoneInfo Eastern = FindEastern();
 
@@ -136,19 +144,27 @@ internal static class BookPdf
         return p;
     }
 
-    // A shaded box the full width of the page, returned as its one cell.
+    // An outlined box the full width of the page with a green left edge, returned as its one cell.
+    // A table row is never split, so the box always stays whole on one page.
     public static Cell Box(Section section)
     {
         var table = section.AddTable();
-        table.Borders.Visible = false;
         table.LeftPadding = Unit.FromCentimeter(0.4);
         table.RightPadding = Unit.FromCentimeter(0.4);
         table.TopPadding = Unit.FromCentimeter(0.3);
         table.BottomPadding = Unit.FromCentimeter(0.3);
         table.AddColumn(Unit.FromCentimeter(UsableWidth));
-        var row = table.AddRow();
-        row.Shading.Color = Fill;
-        return row.Cells[0];
+
+        var cell = table.AddRow().Cells[0];
+        cell.Borders.Top.Width = 0.75;
+        cell.Borders.Top.Color = Line;
+        cell.Borders.Right.Width = 0.75;
+        cell.Borders.Right.Color = Line;
+        cell.Borders.Bottom.Width = 0.75;
+        cell.Borders.Bottom.Color = Line;
+        cell.Borders.Left.Width = 2.5;
+        cell.Borders.Left.Color = Green;
+        return cell;
     }
 
     public static void Picture(Section section, Picture? picture, double maxWidth, double maxHeight)
@@ -161,13 +177,57 @@ internal static class BookPdf
         Place(p, picture, maxWidth, maxHeight);
     }
 
+    // The recipe photo frame: same height on every page, photo centered and cropped to fill PhotoWidth by PhotoHeight.
+    // With no photo the frame stays empty, so the page below keeps its position.
+    public static void PhotoFrame(Section section, Picture? picture)
+    {
+        var table = section.AddTable();
+        table.LeftPadding = Unit.FromPoint(0);
+        table.RightPadding = Unit.FromPoint(0);
+        table.TopPadding = Unit.FromPoint(0);
+        table.BottomPadding = Unit.FromPoint(0);
+        table.AddColumn(Unit.FromCentimeter(UsableWidth));
+
+        var row = table.AddRow();
+        row.Height = Unit.FromCentimeter(FrameHeight);
+        row.HeightRule = RowHeightRule.Exactly;
+        row.VerticalAlignment = VerticalAlignment.Center;
+        if (picture is null) return;
+
+        var p = row.Cells[0].AddParagraph();
+        p.Format.Alignment = ParagraphAlignment.Center;
+        Fill(p, picture, PhotoWidth, PhotoHeight);
+    }
+
+    // A blank gap of a set height.
+    public static void Spacer(Section section, double cm)
+    {
+        var p = section.AddParagraph();
+        p.Format.Font.Size = 1;
+        p.Format.LineSpacingRule = LineSpacingRule.Exactly;
+        p.Format.LineSpacing = Unit.FromCentimeter(cm);
+    }
+
+    // Adds text to a paragraph, printing **marked** parts in bold without the asterisks.
+    public static void AddRich(Paragraph p, string text)
+    {
+        var at = 0;
+        foreach (Match m in BoldMarks.Matches(text))
+        {
+            if (m.Index > at) p.AddText(text[at..m.Index].Replace("**", ""));
+            p.AddFormattedText(m.Groups[1].Value, TextFormat.Bold);
+            at = m.Index + m.Length;
+        }
+        if (at < text.Length) p.AddText(text[at..].Replace("**", ""));
+    }
+
     public static Picture? FromFile(string? path)
     {
         if (path is null || !File.Exists(path)) return null;
         try
         {
             using var image = XImage.FromFile(path);
-            return new Picture(path, Ratio(image));
+            return new Picture(path, Ratio(image), image.PointWidth, image.PointHeight);
         }
         catch (Exception)
         {
@@ -182,7 +242,7 @@ internal static class BookPdf
         {
             using var stream = new MemoryStream(bytes);
             using var image = XImage.FromStream(stream);
-            return new Picture("base64:" + Convert.ToBase64String(bytes), Ratio(image));
+            return new Picture("base64:" + Convert.ToBase64String(bytes), Ratio(image), image.PointWidth, image.PointHeight);
         }
         catch (Exception)
         {
@@ -202,11 +262,41 @@ internal static class BookPdf
         image.Width = Unit.FromCentimeter(width);
     }
 
-    public static byte[] Render(Document doc, bool spanish)
+    // Fills exactly width by height (cm), cropping the picture's edges evenly to keep its shape.
+    private static void Fill(Paragraph p, Picture picture, double width, double height)
+    {
+        if (picture.PointWidth <= 0 || picture.PointHeight <= 0)
+        {
+            Place(p, picture, width, height);
+            return;
+        }
+
+        var image = p.AddImage(picture.Source);
+        image.LockAspectRatio = false;
+        image.Width = Unit.FromCentimeter(width);
+        image.Height = Unit.FromCentimeter(height);
+
+        var frame = width / height;
+        if (picture.Ratio > frame)
+        {
+            var side = (picture.PointWidth - picture.PointHeight * frame) / 2;
+            image.PictureFormat.CropLeft = Unit.FromPoint(side);
+            image.PictureFormat.CropRight = Unit.FromPoint(side);
+        }
+        else
+        {
+            var edge = (picture.PointHeight - picture.PointWidth / frame) / 2;
+            image.PictureFormat.CropTop = Unit.FromPoint(edge);
+            image.PictureFormat.CropBottom = Unit.FromPoint(edge);
+        }
+    }
+
+    // hasCover leaves the watermark off page 1.
+    public static byte[] Render(Document doc, bool spanish, bool hasCover = false)
     {
         var renderer = new PdfDocumentRenderer { Document = doc };
         renderer.RenderDocument();
-        PdfWatermark.Apply(renderer.PdfDocument, BookImages.Logo(spanish));
+        PdfWatermark.Apply(renderer.PdfDocument, BookImages.Logo(spanish), skipFirst: hasCover);
 
         using var stream = new MemoryStream();
         renderer.PdfDocument.Save(stream, false);

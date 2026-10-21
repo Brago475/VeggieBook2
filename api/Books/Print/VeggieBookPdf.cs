@@ -1,5 +1,7 @@
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using MigraDoc.DocumentObjectModel;
+using MigraDoc.DocumentObjectModel.Tables;
 using VeggieBook.Api.Data;
 
 namespace VeggieBook.Api.Books.Print;
@@ -11,9 +13,19 @@ namespace VeggieBook.Api.Books.Print;
 //   extra copies       just the recipes picked for extra copies, each
 //                      printed as many times as picked, with no cover
 // Recipes run in the same order as the book viewer.
+// Every recipe page uses the same fixed header, photo frame and facts row;
+// only the content below the facts row changes length.
 
 internal static class VeggieBookPdf
 {
+    // Header area in cm: room for a two-line title and the story line.
+    private const double HeaderHeight = 2.28;
+    private const double CodeWidth = 2.4;
+    private const double TitleSize = 18;
+    private const double ListIndent = 0.55;
+
+    private static readonly Regex PrepShot = new(@"prep\d*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private sealed record RecipePage(
         int Id,
         string? Code,
@@ -68,15 +80,15 @@ internal static class VeggieBookPdf
                     .Select(x => es ? x.TextEs : x.TextEn).ToList(),
                 Notes = r.Notes.OrderBy(x => x.Position)
                     .Select(x => es ? x.TextEs : x.TextEn).ToList(),
-                Photo = r.Photos.OrderBy(p => p.Position)
-                    .Select(p => p.ImagePath).FirstOrDefault()
+                Photos = r.Photos.OrderBy(p => p.Position)
+                    .Select(p => p.ImagePath).ToList()
             })
             .ToListAsync();
 
         var recipes = rows
             .Select(r => new RecipePage(
                 r.Id, r.DisplayCode, r.Title, r.Story ?? "", r.Prep, r.Cook, r.Serves,
-                r.Ahead, r.Frozen, r.Leftovers, r.Ingredients, r.Steps, r.Notes, r.Photo))
+                r.Ahead, r.Frozen, r.Leftovers, r.Ingredients, r.Steps, r.Notes, FinishedPhoto(r.Photos)))
             .OrderBy(r => r.Code == null)
             .ThenBy(r => r.Code)
             .ThenBy(r => r.Id)
@@ -150,73 +162,103 @@ internal static class VeggieBookPdf
             AddTips(section, tips, string.Format(words.TipsFor, name), imagesRoot);
         }
 
-        return new BookPdfFile(BookPdf.Render(doc, es), BookPdf.FileName("VeggieBook", name));
+        return new BookPdfFile(BookPdf.Render(doc, es, hasCover: true), BookPdf.FileName("VeggieBook", name));
+    }
+
+    // The finished dish: the last photo not named as a prep shot, else the last photo.
+    private static string? FinishedPhoto(List<string> photos)
+    {
+        if (photos.Count == 0) return null;
+        var finished = photos.LastOrDefault(p => !PrepShot.IsMatch(p));
+        return finished ?? photos[^1];
     }
 
     private static void AddRecipe(Section section, RecipePage r, BookWords words, string imagesRoot)
     {
-        var head = section.AddParagraph();
-        head.Format.AddTabStop(Unit.FromCentimeter(BookPdf.UsableWidth), TabAlignment.Right);
-        head.Format.SpaceAfter = Unit.FromPoint(4);
-        head.Format.KeepWithNext = true;
-        var title = head.AddFormattedText(BookPdf.Clean(r.Title));
-        title.Size = 20;
-        title.Bold = true;
-        if (!string.IsNullOrEmpty(r.Code))
-        {
-            head.AddTab();
-            var code = head.AddFormattedText(r.Code);
-            code.Size = 9;
-            code.Bold = true;
-            code.Color = BookPdf.Muted;
-        }
-
-        var story = BookPdf.Clean(r.Story);
-        if (story.Length > 0)
-        {
-            var p = section.AddParagraph(story);
-            p.Format.Font.Color = BookPdf.Muted;
-            p.Format.SpaceAfter = Unit.FromPoint(6);
-        }
-
-        BookPdf.Picture(section, BookPdf.FromFile(BookImages.Find(imagesRoot, r.Photo)), BookPdf.UsableWidth, 8.5);
+        AddHeader(section, r);
+        BookPdf.PhotoFrame(section, BookPdf.FromFile(BookImages.Find(imagesRoot, r.Photo)));
+        BookPdf.Spacer(section, 0.35);
 
         AddFacts(section, words, r);
-
-        AddList(section, words.Ingredients, r.Ingredients.Select(BookPdf.Clean).Select(x => "• " + x));
-        AddList(section, words.Directions, r.Steps.Select(BookPdf.Clean).Select((x, i) => $"{i + 1}. {x}"));
+        AddIngredients(section, words.Ingredients, r.Ingredients);
+        AddSteps(section, words.Directions, r.Steps);
 
         var good = r.Notes.Select(BookPdf.Clean).Where(x => x.Length > 0).ToList();
         AddLabeled(good, words.MadeAhead, r.Ahead);
         AddLabeled(good, words.Frozen, r.Frozen);
         AddLabeled(good, words.Leftovers, r.Leftovers);
-        if (good.Count > 0)
+        if (good.Count == 0) return;
+
+        BookPdf.Spacer(section, 0.35);
+        var cell = BookPdf.Box(section);
+        var h = cell.AddParagraph(words.GoodToKnow);
+        h.Format.Font.Bold = true;
+        h.Format.Font.Color = BookPdf.Green;
+        h.Format.SpaceAfter = Unit.FromPoint(3);
+        foreach (var line in good)
         {
-            section.AddParagraph().Format.SpaceAfter = Unit.FromPoint(4);
-            var cell = BookPdf.Box(section);
-            var h = cell.AddParagraph(words.GoodToKnow);
-            h.Format.Font.Bold = true;
-            h.Format.Font.Color = BookPdf.Green;
-            h.Format.SpaceAfter = Unit.FromPoint(3);
-            foreach (var line in good)
-            {
-                var p = cell.AddParagraph(line);
-                p.Format.Font.Size = 10;
-                p.Format.SpaceAfter = Unit.FromPoint(2);
-            }
+            var p = cell.AddParagraph();
+            p.Format.Font.Size = 10;
+            p.Format.SpaceAfter = Unit.FromPoint(2);
+            BookPdf.AddRich(p, line);
         }
     }
 
-    // Prep, cook, and serves as three shaded boxes in a row.
+    // Fixed-height header: title (up to two lines) with the story line under it, code at the top right.
+    private static void AddHeader(Section section, RecipePage r)
+    {
+        var table = section.AddTable();
+        table.LeftPadding = Unit.FromPoint(0);
+        table.RightPadding = Unit.FromPoint(0);
+        table.TopPadding = Unit.FromPoint(0);
+        table.BottomPadding = Unit.FromPoint(0);
+        table.AddColumn(Unit.FromCentimeter(BookPdf.UsableWidth - CodeWidth));
+        table.AddColumn(Unit.FromCentimeter(CodeWidth));
+
+        var row = table.AddRow();
+        row.Height = Unit.FromCentimeter(HeaderHeight);
+        row.HeightRule = RowHeightRule.Exactly;
+        row.VerticalAlignment = VerticalAlignment.Top;
+
+        var main = row.Cells[0];
+        var title = main.AddParagraph(BookPdf.Clean(r.Title));
+        title.Format.Font.Size = TitleSize;
+        title.Format.Font.Bold = true;
+        title.Format.LineSpacingRule = LineSpacingRule.Exactly;
+        title.Format.LineSpacing = Unit.FromPoint(22);
+
+        var story = BookPdf.Clean(r.Story);
+        if (story.Length > 0)
+        {
+            var p = main.AddParagraph();
+            p.Format.Font.Size = 10;
+            p.Format.Font.Color = BookPdf.Muted;
+            p.Format.SpaceBefore = Unit.FromPoint(2);
+            BookPdf.AddRich(p, story);
+        }
+
+        if (!string.IsNullOrEmpty(r.Code))
+        {
+            var c = row.Cells[1].AddParagraph(r.Code);
+            c.Format.Alignment = ParagraphAlignment.Right;
+            c.Format.SpaceBefore = Unit.FromPoint(6);
+            c.Format.Font.Size = 9;
+            c.Format.Font.Bold = true;
+            c.Format.Font.Color = BookPdf.Muted;
+        }
+    }
+
+    // Prep, cook, and serves as one outlined row split in three.
     private static void AddFacts(Section section, BookWords words, RecipePage r)
     {
         var facts = new[] { (words.Prep, r.Prep), (words.Cook, r.Cook), (words.Serves, r.Serves) };
         if (facts.All(f => string.IsNullOrWhiteSpace(f.Item2))) return;
 
         var table = section.AddTable();
-        table.Borders.Color = Colors.White;
-        table.Borders.Width = 4;
+        table.Borders.Width = 0.75;
+        table.Borders.Color = BookPdf.Line;
         table.LeftPadding = Unit.FromCentimeter(0.3);
+        table.RightPadding = Unit.FromCentimeter(0.3);
         table.TopPadding = Unit.FromCentimeter(0.2);
         table.BottomPadding = Unit.FromCentimeter(0.2);
         foreach (var _ in facts) table.AddColumn(Unit.FromCentimeter(BookPdf.UsableWidth / facts.Length));
@@ -225,7 +267,6 @@ internal static class VeggieBookPdf
         for (var i = 0; i < facts.Length; i++)
         {
             var cell = row.Cells[i];
-            cell.Shading.Color = BookPdf.Fill;
             var label = cell.AddParagraph(facts[i].Item1);
             label.Format.Font.Size = 8;
             label.Format.Font.Bold = true;
@@ -236,22 +277,67 @@ internal static class VeggieBookPdf
         }
     }
 
-    private static void AddList(Section section, string heading, IEnumerable<string> lines)
+    private static void AddIngredients(Section section, string heading, List<string> lines)
     {
-        var items = lines.Where(x => x.Length > 3).ToList();
+        var items = lines.Select(BookPdf.Clean).Where(x => x.Length > 0).ToList();
         if (items.Count == 0) return;
 
-        var h = BookPdf.Heading(section, heading, 14, green: true);
-        h.Format.SpaceBefore = Unit.FromPoint(12);
-        h.Format.SpaceAfter = Unit.FromPoint(4);
+        ListHeading(section, heading);
         foreach (var line in items)
         {
-            var p = section.AddParagraph(line);
-            p.Format.SpaceAfter = Unit.FromPoint(3);
-            p.Format.LeftIndent = Unit.FromCentimeter(0.4);
-            p.Format.FirstLineIndent = Unit.FromCentimeter(-0.4);
+            var p = section.AddParagraph();
+            p.Format.SpaceAfter = Unit.FromPoint(2);
+
+            if (IsSubheading(line))
+            {
+                p.Format.SpaceBefore = Unit.FromPoint(3);
+                p.Format.Font.Bold = true;
+                p.Format.KeepWithNext = true;
+                BookPdf.AddRich(p, line);
+                continue;
+            }
+
+            Hang(p);
+            p.AddText("•");
+            p.AddTab();
+            BookPdf.AddRich(p, line);
         }
     }
+
+    private static void AddSteps(Section section, string heading, List<string> lines)
+    {
+        var items = lines.Select(BookPdf.Clean).Where(x => x.Length > 0).ToList();
+        if (items.Count == 0) return;
+
+        ListHeading(section, heading);
+        for (var i = 0; i < items.Count; i++)
+        {
+            var p = section.AddParagraph();
+            p.Format.SpaceAfter = Unit.FromPoint(2);
+            Hang(p);
+            p.AddText($"{i + 1}.");
+            p.AddTab();
+            BookPdf.AddRich(p, items[i]);
+        }
+    }
+
+    private static void ListHeading(Section section, string text)
+    {
+        var h = BookPdf.Heading(section, text, 14, green: true);
+        h.Format.SpaceBefore = Unit.FromPoint(9);
+        h.Format.SpaceAfter = Unit.FromPoint(4);
+    }
+
+    // Marker at the margin, text on a tab stop, wrapped lines aligned under the text.
+    private static void Hang(Paragraph p)
+    {
+        p.Format.LeftIndent = Unit.FromCentimeter(ListIndent);
+        p.Format.FirstLineIndent = Unit.FromCentimeter(-ListIndent);
+        p.Format.AddTabStop(Unit.FromCentimeter(ListIndent));
+    }
+
+    // Short lines ending in a colon, such as "Dressing:", label a group of ingredients.
+    private static bool IsSubheading(string line) => line.EndsWith(':') && line.Length <= 40;
 
     private static void AddLabeled(List<string> lines, string label, string value)
     {
@@ -275,8 +361,9 @@ internal static class VeggieBookPdf
                 var text = BookPdf.Clean(part.Text);
                 if (text.Length > 0)
                 {
-                    var p = section.AddParagraph(text);
+                    var p = section.AddParagraph();
                     p.Format.SpaceAfter = Unit.FromPoint(4);
+                    BookPdf.AddRich(p, text);
                 }
                 BookPdf.Picture(section, BookPdf.FromFile(BookImages.Find(imagesRoot, part.Image)), 8, 6);
             }
