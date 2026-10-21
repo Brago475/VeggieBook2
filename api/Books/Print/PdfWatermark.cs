@@ -5,7 +5,7 @@ namespace VeggieBook.Api.Books.Print;
 
 // The faint, tilted VeggieBook logo behind every page of a book PDF.
 // Drawn underneath the page content at the same spot on every page, below
-// the recipe photo frame, then covered with nearly opaque white so it stays
+// the recipe photo, then covered with nearly opaque white so it stays
 // light in color and in black and white.
 
 internal static class PdfWatermark
@@ -33,8 +33,8 @@ internal static class PdfWatermark
         for (var i = skipFirst ? 1 : 0; i < pdf.PageCount; i++)
         {
             var page = pdf.Pages[i];
-            double pageWidth = page.Width;
-            double pageHeight = page.Height;
+            var pageWidth = page.Width.Point;
+            var pageHeight = page.Height.Point;
             var width = pageWidth * WidthShare;
             var height = width * ratio;
 
