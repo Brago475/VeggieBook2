@@ -90,7 +90,7 @@ internal static class Shapes
 
         var inner = new XRect(frame.X + 4, frame.Y + 4, frame.Width - 8, frame.Height - 8);
         var clip = new XGraphicsPath();
-        clip.AddRoundedRectangle(inner, new XSize(12, 12));
+        clip.AddRoundedRectangle(inner.X, inner.Y, inner.Width, inner.Height, 12, 12);
 
         var state = g.Save();
         g.IntersectClip(clip);
