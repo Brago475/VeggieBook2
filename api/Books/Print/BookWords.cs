@@ -16,6 +16,8 @@ internal sealed class BookWords
     public required string TipsFor { get; init; }
     public required string WhyItWorks { get; init; }
     public required string LearnMore { get; init; }
+    public required string InThisBook { get; init; }
+    public required string Continued { get; init; }
     public required string Page { get; init; }
     public required string Of { get; init; }
     public required string RecipeOne { get; init; }
@@ -39,6 +41,8 @@ internal sealed class BookWords
         TipsFor = "Tips for {0}",
         WhyItWorks = "Why it works",
         LearnMore = "Learn more",
+        InThisBook = "In this book",
+        Continued = "{0} (continued)",
         Page = "Page",
         Of = "of",
         RecipeOne = "1 recipe",
@@ -67,6 +71,8 @@ internal sealed class BookWords
         TipsFor = "Consejos para {0}",
         WhyItWorks = "Por qué funciona",
         LearnMore = "Más información",
+        InThisBook = "En este libro",
+        Continued = "{0} (continuación)",
         Page = "Página",
         Of = "de",
         RecipeOne = "1 receta",
@@ -95,5 +101,12 @@ internal sealed class BookWords
         return Spanish
             ? $"creado el {d.Day} de {month} de {d.Year}"
             : $"made {month} {d.Day}, {d.Year}";
+    }
+
+    // MadeOn starting with a capital letter, for a label on its own.
+    public string MadeOnLabel(DateTime utc)
+    {
+        var text = MadeOn(utc);
+        return char.ToUpperInvariant(text[0]) + text[1..];
     }
 }

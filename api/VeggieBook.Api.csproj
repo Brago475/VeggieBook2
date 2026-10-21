@@ -20,6 +20,11 @@
          MigraDoc is also used for the book PDFs. -->
     <PackageReference Include="ClosedXML" Version="0.105.1" />
     <PackageReference Include="PDFsharp-MigraDoc" Version="6.2.4" />
+
+    <!-- Photo cropping for book PDFs. MIT licensed. The NoDependencies
+         native build needs no extra system packages in the container. -->
+    <PackageReference Include="SkiaSharp" Version="3.116.1" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
   </ItemGroup>
 
   <!-- Logos printed in book PDFs, shipped with the API. -->
