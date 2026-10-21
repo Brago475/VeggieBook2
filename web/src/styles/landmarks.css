@@ -1,0 +1,14 @@
+/* The <main> landmark around each screen's content (see App.tsx).
+   display: contents gives it no box of its own, so the screens inside stay
+   direct flex children of .app and the layout is unchanged. */
+.app-main {
+  display: contents;
+}
+
+/* The off-white screens fill the rest of the window below the masthead,
+   so no strip of white shows under a short page. */
+.app-main > .library,
+.app-main > .book-view,
+.app-main > .account-screen {
+  flex: 1 0 auto;
+}

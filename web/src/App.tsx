@@ -43,6 +43,7 @@ import { routePath } from './utils/routes'
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
+import './styles/landmarks.css'
 import './styles/skeleton.css'
 import './styles/masthead.css'
 import './styles/book-card.css'
@@ -381,173 +382,177 @@ export default function App() {
             />
           )}
 
-          {error && <p className="message">Could not load: {error}</p>}
+          {/* The main landmark for screen readers. It has no box of its own
+              (styles/landmarks.css), so the layout is unchanged. */}
+          <main className="app-main">
+            {error && <p className="message">Could not load: {error}</p>}
 
-          {showWelcome && (
-            <Welcome
-              onCreateAccount={() => navigate('/register')}
-              onSignIn={() => navigate('/signin')}
-              onGuest={account.startGuest}
-            />
-          )}
+            {showWelcome && (
+              <Welcome
+                onCreateAccount={() => navigate('/register')}
+                onSignIn={() => navigate('/signin')}
+                onGuest={account.startGuest}
+              />
+            )}
 
-          {showSaved && savedBook && (
-            <BookSaved
-              bookId={savedBook.id}
-              title={
-                savedBook.kind === 'secrets'
-                  ? (savedCategory?.name ?? bookWords.secretsFallback)
-                  : (savedVegetable?.name ?? bookWords.veggieLabel)
-              }
-              background={
-                savedBook.kind === 'secrets'
-                  ? (savedCategory?.image ?? null)
-                  : savedVegetable
-                    ? `cover/${savedVegetable.shortCode}.jpg`
-                    : null
-              }
-              cover={savedBook.cover}
-              label={savedBook.kind === 'secrets' ? bookWords.secretsLabel : bookWords.veggieLabel}
-              count={savedBook.recipeCount}
-              countNoun={savedBook.kind === 'secrets' ? 'secret' : 'recipe'}
-              onDone={() => setJustSaved(null)}
-            />
-          )}
+            {showSaved && savedBook && (
+              <BookSaved
+                bookId={savedBook.id}
+                title={
+                  savedBook.kind === 'secrets'
+                    ? (savedCategory?.name ?? bookWords.secretsFallback)
+                    : (savedVegetable?.name ?? bookWords.veggieLabel)
+                }
+                background={
+                  savedBook.kind === 'secrets'
+                    ? (savedCategory?.image ?? null)
+                    : savedVegetable
+                      ? `cover/${savedVegetable.shortCode}.jpg`
+                      : null
+                }
+                cover={savedBook.cover}
+                label={savedBook.kind === 'secrets' ? bookWords.secretsLabel : bookWords.veggieLabel}
+                count={savedBook.recipeCount}
+                countNoun={savedBook.kind === 'secrets' ? 'secret' : 'recipe'}
+                onDone={() => setJustSaved(null)}
+              />
+            )}
 
-          {current === 'home' && !showWelcome && !showSaved && (
-            <HomeLibrary
-              email={email}
-              displayName={displayName}
-              books={booksLoading ? [] : library.books}
-              vegetables={vegetables}
-              secretCategories={secretCategories.categories}
-              loading={booksLoading}
-              error={library.error}
-              onCreateVeggie={startBook}
-              onCreateSecrets={startSecrets}
-              onAccount={() => navigate('/account')}
-              onRegister={() => navigate('/register')}
-              onSignIn={() => navigate('/signin')}
-              onSignOut={signOut}
-              onAbout={() => navigate('/about')}
-              onDeleteBook={deleteBook}
-              onViewBook={viewBook}
-            />
-          )}
+            {current === 'home' && !showWelcome && !showSaved && (
+              <HomeLibrary
+                email={email}
+                displayName={displayName}
+                books={booksLoading ? [] : library.books}
+                vegetables={vegetables}
+                secretCategories={secretCategories.categories}
+                loading={booksLoading}
+                error={library.error}
+                onCreateVeggie={startBook}
+                onCreateSecrets={startSecrets}
+                onAccount={() => navigate('/account')}
+                onRegister={() => navigate('/register')}
+                onSignIn={() => navigate('/signin')}
+                onSignOut={signOut}
+                onAbout={() => navigate('/about')}
+                onDeleteBook={deleteBook}
+                onViewBook={viewBook}
+              />
+            )}
 
-          {current === 'signin' && (
-            <AuthForm
-              guestBookCount={isGuest ? library.books.length : 0}
-              onSubmit={submitSignIn}
-              onForgotPassword={() => navigate('/forgot-password')}
-              onCreateAccount={() => navigate('/register', { replace: true })}
-              onBack={backAction()}
-            />
-          )}
+            {current === 'signin' && (
+              <AuthForm
+                guestBookCount={isGuest ? library.books.length : 0}
+                onSubmit={submitSignIn}
+                onForgotPassword={() => navigate('/forgot-password')}
+                onCreateAccount={() => navigate('/register', { replace: true })}
+                onBack={backAction()}
+              />
+            )}
 
-          {current === 'register' && (
-            <CreateAccount
-              guestBookCount={isGuest ? library.books.length : 0}
-              onSubmit={submitRegister}
-              onSignIn={() => navigate('/signin', { replace: true })}
-              onBack={backAction()}
-            />
-          )}
+            {current === 'register' && (
+              <CreateAccount
+                guestBookCount={isGuest ? library.books.length : 0}
+                onSubmit={submitRegister}
+                onSignIn={() => navigate('/signin', { replace: true })}
+                onBack={backAction()}
+              />
+            )}
 
-          {current === 'forgotPassword' && (
-            <ForgotPassword
-              onBack={backAction()}
-              onSignIn={() => navigate('/signin', { replace: true })}
-            />
-          )}
+            {current === 'forgotPassword' && (
+              <ForgotPassword
+                onBack={backAction()}
+                onSignIn={() => navigate('/signin', { replace: true })}
+              />
+            )}
 
-          {current === 'account' && email && (
-            <AccountSettings
-              email={email}
-              onSignOut={signOut}
-              onChangePassword={account.changePassword}
-              onDeleteAccount={deleteAccount}
-            />
-          )}
+            {current === 'account' && email && (
+              <AccountSettings
+                email={email}
+                onSignOut={signOut}
+                onChangePassword={account.changePassword}
+                onDeleteAccount={deleteAccount}
+              />
+            )}
 
-          {/* Open to everyone: a visitor, a guest, or an account. */}
-          {current === 'about' && <About />}
-          {current === 'terms' && <LegalPage doc={TERMS} />}
-          {current === 'privacy' && <LegalPage doc={PRIVACY} />}
+            {/* Open to everyone: a visitor, a guest, or an account. */}
+            {current === 'about' && <About />}
+            {current === 'terms' && <LegalPage doc={TERMS} />}
+            {current === 'privacy' && <LegalPage doc={PRIVACY} />}
 
-          {current === 'flow' && (
-            <BookFlow
-              flow={flow}
-              vegetables={vegetables}
-              questions={questions}
-              loading={loading}
-              onSave={saveBook}
-            />
-          )}
+            {current === 'flow' && (
+              <BookFlow
+                flow={flow}
+                vegetables={vegetables}
+                questions={questions}
+                loading={loading}
+                onSave={saveBook}
+              />
+            )}
 
-          {current === 'secrets' && (
-            <SecretsFlow
-              flow={secrets}
-              categories={secretCategories.categories}
-              categoriesLoading={secretCategories.loading}
-              categoriesError={secretCategories.error}
-              onSave={saveSecrets}
-            />
-          )}
+            {current === 'secrets' && (
+              <SecretsFlow
+                flow={secrets}
+                categories={secretCategories.categories}
+                categoriesLoading={secretCategories.loading}
+                categoriesError={secretCategories.error}
+                onSave={saveSecrets}
+              />
+            )}
 
-          {/* A saved book: the skeleton until its kind is known, then the
-              screen for that kind, either its viewer or its change-cover
-              screen. */}
-          {showBook && openBookKind === null && <BookSkeleton />}
+            {/* A saved book: the skeleton until its kind is known, then the
+                screen for that kind, either its viewer or its change-cover
+                screen. */}
+            {showBook && openBookKind === null && <BookSkeleton />}
 
-          {showBook && openBookKind === 'veggie' && editingCover && (
-            <ChangeVeggieCover
-              bookId={openBook}
-              vegetables={vegetables}
-              onSave={saveCover}
-              onCancel={leaveCover}
-            />
-          )}
+            {showBook && openBookKind === 'veggie' && editingCover && (
+              <ChangeVeggieCover
+                bookId={openBook}
+                vegetables={vegetables}
+                onSave={saveCover}
+                onCancel={leaveCover}
+              />
+            )}
 
-          {showBook && openBookKind === 'secrets' && editingCover && (
-            <ChangeSecretCover
-              bookId={openBook}
-              categories={secretCategories.categories}
-              onSave={saveCover}
-              onCancel={leaveCover}
-            />
-          )}
+            {showBook && openBookKind === 'secrets' && editingCover && (
+              <ChangeSecretCover
+                bookId={openBook}
+                categories={secretCategories.categories}
+                onSave={saveCover}
+                onCancel={leaveCover}
+              />
+            )}
 
-          {showBook && openBookKind === 'veggie' && !editingCover && (
-            <BookViewer
-              bookId={openBook}
-              vegetables={vegetables}
-              openRecipe={openRecipe}
-              onOpenRecipe={openRecipeInBook}
-              onClose={goHome}
-              onChangeCover={changeCover}
-              onDelete={async (id) => {
-                await deleteBook(id)
-                finishToHome()
-              }}
-              onChanged={library.reload}
-            />
-          )}
+            {showBook && openBookKind === 'veggie' && !editingCover && (
+              <BookViewer
+                bookId={openBook}
+                vegetables={vegetables}
+                openRecipe={openRecipe}
+                onOpenRecipe={openRecipeInBook}
+                onClose={goHome}
+                onChangeCover={changeCover}
+                onDelete={async (id) => {
+                  await deleteBook(id)
+                  finishToHome()
+                }}
+                onChanged={library.reload}
+              />
+            )}
 
-          {showBook && openBookKind === 'secrets' && !editingCover && (
-            <SecretBookViewer
-              bookId={openBook}
-              openSecret={openSecret}
-              onOpenSecret={openSecretInBook}
-              onClose={goHome}
-              onChangeCover={changeCover}
-              onDelete={async (id) => {
-                await deleteBook(id)
-                finishToHome()
-              }}
-              onChanged={library.reload}
-            />
-          )}
+            {showBook && openBookKind === 'secrets' && !editingCover && (
+              <SecretBookViewer
+                bookId={openBook}
+                openSecret={openSecret}
+                onOpenSecret={openSecretInBook}
+                onClose={goHome}
+                onChangeCover={changeCover}
+                onDelete={async (id) => {
+                  await deleteBook(id)
+                  finishToHome()
+                }}
+                onChanged={library.reload}
+              />
+            )}
+          </main>
 
           {/* Each footer link is left out on its own page. */}
           {showFooter && (

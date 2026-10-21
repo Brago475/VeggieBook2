@@ -1,0 +1,6 @@
+# VeggieBook2: search engines may index the public pages.
+# The API only serves data to the app, so it is left out.
+
+User-agent: *
+Allow: /
+Disallow: /api/
