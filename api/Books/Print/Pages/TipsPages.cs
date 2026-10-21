@@ -2,11 +2,11 @@ using PdfSharp.Drawing;
 
 namespace VeggieBook.Api.Books.Print.Pages;
 
-// One tip section: a heading and its paragraphs and pictures, in order.
-// ImagePath is a checked file path or null.
-internal sealed record TipBlock(string Text, string? ImagePath);
+// One tip section for printing: a heading and its paragraphs and pictures,
+// in order. ImagePath is a checked file path or null.
+internal sealed record PrintTipBlock(string Text, string? ImagePath);
 
-internal sealed record TipSection(string Heading, List<TipBlock> Blocks);
+internal sealed record PrintTipSection(string Heading, List<PrintTipBlock> Blocks);
 
 // The vegetable's tips after the recipes, flowing across as many pages as
 // needed. Pictures keep their own shape in a rounded frame.
@@ -20,7 +20,7 @@ internal static class TipsPages
     private const double Bottom = PageStyle.FooterTop - 12;
 
     // Draws the tips from a new page and returns that page's number.
-    public static int Draw(PdfPages pages, string title, List<TipSection> sections)
+    public static int Draw(PdfPages pages, string title, List<PrintTipSection> sections)
     {
         var g = pages.NewPage();
         var firstPage = pages.PageNumber;

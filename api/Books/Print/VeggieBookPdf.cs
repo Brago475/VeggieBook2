@@ -115,9 +115,9 @@ internal static class VeggieBookPdf
             })
             .ToListAsync();
         var tips = tipRows
-            .Select(t => new TipSection(
+            .Select(t => new PrintTipSection(
                 BookPdf.Clean(t.Heading),
-                t.Parts.Select(p => new TipBlock(BookPdf.Clean(p.Text), BookImages.Find(imagesRoot, p.ImagePath))).ToList()))
+                t.Parts.Select(p => new PrintTipBlock(BookPdf.Clean(p.Text), BookImages.Find(imagesRoot, p.ImagePath))).ToList()))
             .ToList();
 
         using var pages = new PdfPages($"VeggieBook: {name}");
