@@ -62,10 +62,23 @@ internal sealed class PdfPages : IDisposable
         }
 
         PdfWatermark.Apply(doc, BookImages.Logo(spanish), skipFirst: hasCover);
+        OpenFitToWidth();
 
         using var stream = new MemoryStream();
         doc.Save(stream, false);
         return stream.ToArray();
+    }
+
+    // Asks viewers to open at page 1, fit to the page width, pages scrolling one after another.
+    private void OpenFitToWidth()
+    {
+        if (doc.PageCount == 0) return;
+        doc.PageLayout = PdfPageLayout.OneColumn;
+        doc.PageMode = PdfPageMode.UseNone;
+
+        var first = doc.Pages[0];
+        var openAction = new PdfArray(doc, first.Reference!, new PdfName("/FitH"), new PdfReal(first.Height.Point));
+        doc.Internals.Catalog.Elements["/OpenAction"] = openAction;
     }
 
     public void Dispose()
