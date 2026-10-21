@@ -43,3 +43,4 @@ npm-debug.log*
 # --- Local working folders ---
 _source/
 _out/
+images/_sized/
