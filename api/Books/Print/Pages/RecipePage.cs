@@ -18,20 +18,30 @@ internal sealed record RecipeSheet(
     List<string> Notes,
     string? PhotoPath);
 
-// Draws one recipe. Title, photo, facts bar and Good to know sit at the same
-// place on every page; Ingredients and Directions fill the space between and
-// continue on a new page when a recipe is too long. Good to know is pinned
-// above the footer of the recipe's last page.
+// Draws one recipe. The title, code and Good to know (pinned above the
+// footer) never move. A recipe is fitted onto one page: when Ingredients and
+// Directions do not fit, the text gets slightly smaller and then the photo
+// shorter. Only a recipe too long even then continues on a new page.
 internal static class RecipePage
 {
+    // Text size, line height and photo height, tried in order until the recipe fits.
+    private sealed record Fit(double Size, double Line, double PhotoHeight);
+
+    private static readonly Fit[] Fits =
+    [
+        new(10.5, 13.5, 190),
+        new(10, 12.75, 190),
+        new(9.5, 12, 190),
+        new(9.5, 12, 150),
+        new(9, 11.25, 120)
+    ];
+
     private const double TitleSize = 24;
     private const double TitleMinSize = 16;
     private const double PhotoTop = 100;
     private const double PhotoWidth = 495;
-    private const double PhotoHeight = 190;
-    private const double FactsTop = 300;
     private const double FactsHeight = 44;
-    private const double FlowTop = 354;
+    private const double SectionGap = 10;
     private const double CardGap = 10;
     private const double GoodGap = 8;
 
@@ -41,32 +51,38 @@ internal static class RecipePage
     private const double StepX = PageStyle.Left + 44;
     private const double StepWidth = PageStyle.ContentWidth - 44 - 14;
 
+    private static double FactsTop(Fit fit) => PhotoTop + fit.PhotoHeight + SectionGap;
+
+    private static double FlowTop(Fit fit) => FactsTop(fit) + FactsHeight + SectionGap;
+
     // Draws the recipe from a new page and returns that page's number.
     public static int Draw(PdfPages pages, RecipeSheet r, BookWords words)
     {
         var g = pages.NewPage();
         var firstPage = pages.PageNumber;
 
-        DrawHeader(g, r);
-        var photo = pages.Keep(PhotoCrop.Fill(r.PhotoPath, null, PhotoWidth - 8, PhotoHeight - 8));
-        Shapes.Photo(g, photo, new XRect((PageStyle.PageWidth - PhotoWidth) / 2, PhotoTop, PhotoWidth, PhotoHeight));
-        DrawFacts(g, r, words);
+        var ingredients = r.Ingredients.Where(x => x.Length > 0).ToList();
+        var steps = r.Steps.Where(x => x.Length > 0).ToList();
 
         var good = GoodItems(r, words);
         var goodHeight = GoodHeight(g, good, r.Notes);
         var limit = PageStyle.FooterTop - GoodGap - goodHeight - CardGap;
 
-        var ingredients = r.Ingredients.Where(x => x.Length > 0).ToList();
-        var steps = r.Steps.Where(x => x.Length > 0).ToList();
+        var fit = Choose(g, ingredients, steps, limit);
 
-        var y = FlowTop;
+        DrawHeader(g, r);
+        var photo = pages.Keep(PhotoCrop.Fill(r.PhotoPath, null, PhotoWidth - 8, fit.PhotoHeight - 8));
+        Shapes.Photo(g, photo, new XRect((PageStyle.PageWidth - PhotoWidth) / 2, PhotoTop, PhotoWidth, fit.PhotoHeight));
+        DrawFacts(g, r, words, FactsTop(fit));
+
+        var y = FlowTop(fit);
         y = Card(pages, ref g, words.Ingredients, words, ingredients.Count,
-            (gfx, i) => IngredientHeight(gfx, ingredients[i]),
-            (gfx, i, top) => DrawIngredient(gfx, ingredients[i], top),
+            (gfx, i) => IngredientHeight(gfx, ingredients[i], fit),
+            (gfx, i, top) => DrawIngredient(gfx, ingredients[i], top, fit),
             PageStyle.CardFill, y, limit);
         Card(pages, ref g, words.Directions, words, steps.Count,
-            (gfx, i) => StepHeight(gfx, steps[i]),
-            (gfx, i, top) => DrawStep(gfx, i, steps[i], top),
+            (gfx, i) => StepHeight(gfx, steps[i], fit),
+            (gfx, i, top) => DrawStep(gfx, i, steps[i], top, fit),
             XColors.White, y, limit);
 
         if (goodHeight > 0)
@@ -74,6 +90,22 @@ internal static class RecipePage
 
         return firstPage;
     }
+
+    // The first fit whose Ingredients and Directions end above limit, else the smallest.
+    private static Fit Choose(XGraphics g, List<string> ingredients, List<string> steps, double limit)
+    {
+        foreach (var fit in Fits)
+        {
+            var needed = CardHeight(ingredients.Sum(x => IngredientHeight(g, x, fit)), ingredients.Count)
+                + (ingredients.Count > 0 && steps.Count > 0 ? CardGap : 0)
+                + CardHeight(steps.Sum(x => StepHeight(g, x, fit)), steps.Count);
+            if (FlowTop(fit) + needed <= limit) return fit;
+        }
+        return Fits[^1];
+    }
+
+    private static double CardHeight(double rows, int count) =>
+        count == 0 ? 0 : Shapes.CardContentTop + rows + Shapes.CardPaddingBottom;
 
     private static void DrawHeader(XGraphics g, RecipeSheet r)
     {
@@ -92,10 +124,10 @@ internal static class RecipePage
             Shapes.Pill(g, r.Code, 9, PageStyle.Right - Shapes.PillWidth(g, r.Code, 9), PageStyle.Top + 4);
     }
 
-    private static void DrawFacts(XGraphics g, RecipeSheet r, BookWords words)
+    private static void DrawFacts(XGraphics g, RecipeSheet r, BookWords words, double top)
     {
         g.DrawRoundedRectangle(new XSolidBrush(PageStyle.Facts),
-            new XRect(PageStyle.Left, FactsTop, PageStyle.ContentWidth, FactsHeight), new XSize(15, 15));
+            new XRect(PageStyle.Left, top, PageStyle.ContentWidth, FactsHeight), new XSize(15, 15));
 
         var facts = new[]
         {
@@ -104,14 +136,14 @@ internal static class RecipePage
             (FactIcon.Utensils, words.Serves, r.Serves)
         };
         var columnWidth = PageStyle.ContentWidth / facts.Length;
-        var cy = FactsTop + FactsHeight / 2;
+        var cy = top + FactsHeight / 2;
         var divider = new XPen(PageStyle.Divider, 0.75);
 
         for (var i = 0; i < facts.Length; i++)
         {
             var (icon, label, value) = facts[i];
             var x = PageStyle.Left + i * columnWidth;
-            if (i > 0) g.DrawLine(divider, x, FactsTop + 9, x, FactsTop + FactsHeight - 9);
+            if (i > 0) g.DrawLine(divider, x, top + 9, x, top + FactsHeight - 9);
 
             var cx = x + 27;
             Shapes.IconCircle(g, icon, cx, cy, 13);
@@ -191,45 +223,46 @@ internal static class RecipePage
     // Short lines ending in a colon, such as "Dressing:", label a group of ingredients.
     private static bool IsSubheading(string line) => line.EndsWith(':') && line.Length <= 40;
 
-    private static double IngredientHeight(XGraphics g, string line) =>
+    private static double IngredientHeight(XGraphics g, string line, Fit fit) =>
         IsSubheading(line)
-            ? TextLayout.Height(g, line, PageStyle.BodySize, PageStyle.BodyLine, IngredientWidth, true) + 3
-            : TextLayout.Height(g, line, PageStyle.BodySize, PageStyle.BodyLine, IngredientWidth) + 1;
+            ? TextLayout.Height(g, line, fit.Size, fit.Line, IngredientWidth, true) + 3
+            : TextLayout.Height(g, line, fit.Size, fit.Line, IngredientWidth) + 1;
 
-    private static void DrawIngredient(XGraphics g, string line, double top)
+    private static void DrawIngredient(XGraphics g, string line, double top, Fit fit)
     {
         if (IsSubheading(line))
         {
-            TextLayout.Draw(g, line, PageStyle.BodySize, PageStyle.BodyLine, BulletX, top + 3,
+            TextLayout.Draw(g, line, fit.Size, fit.Line, BulletX, top + 3,
                 IngredientWidth, PageStyle.Text, bold: true);
             return;
         }
 
-        var cy = top + PageStyle.BodyLine / 2;
+        var cy = top + fit.Line / 2;
         g.DrawEllipse(new XSolidBrush(PageStyle.Leaf), BulletX - 2.6, cy - 2.6, 5.2, 5.2);
-        TextLayout.Draw(g, line, PageStyle.BodySize, PageStyle.BodyLine, IngredientX, top,
-            IngredientWidth, PageStyle.Text);
+        TextLayout.Draw(g, line, fit.Size, fit.Line, IngredientX, top, IngredientWidth, PageStyle.Text);
     }
 
-    private static double StepHeight(XGraphics g, string step) =>
-        Math.Max(17, TextLayout.Height(g, step, PageStyle.BodySize, PageStyle.BodyLine, StepWidth) + 4);
+    private static double StepHeight(XGraphics g, string step, Fit fit) =>
+        Math.Max(fit.Line + 3.5, TextLayout.Height(g, step, fit.Size, fit.Line, StepWidth) + 4);
 
-    private static void DrawStep(XGraphics g, int index, string step, double top)
+    private static void DrawStep(XGraphics g, int index, string step, double top, Fit fit)
     {
-        var height = StepHeight(g, step);
+        var height = StepHeight(g, step, fit);
         if (index % 2 == 0)
         {
             g.DrawRoundedRectangle(new XSolidBrush(PageStyle.Stripe),
                 new XRect(PageStyle.Left + 10, top, PageStyle.ContentWidth - 18, height), new XSize(6, 6));
         }
 
+        var radius = Math.Min(8, fit.Line * 0.6);
         var cx = PageStyle.Left + 26;
-        var cy = top + 2 + PageStyle.BodyLine / 2;
-        g.DrawEllipse(new XSolidBrush(PageStyle.Step), cx - 8, cy - 8, 16, 16);
-        TextLayout.DrawCentered(g, (index + 1).ToString(), 8.5, cx, cy - 8.5 * 1.17 / 2, XColors.White, bold: true);
+        var cy = top + 2 + fit.Line / 2;
+        g.DrawEllipse(new XSolidBrush(PageStyle.Step), cx - radius, cy - radius, radius * 2, radius * 2);
+        var numberSize = radius + 0.5;
+        TextLayout.DrawCentered(g, (index + 1).ToString(), numberSize, cx, cy - numberSize * 1.17 / 2,
+            XColors.White, bold: true);
 
-        TextLayout.Draw(g, step, PageStyle.BodySize, PageStyle.BodyLine, StepX, top + 2,
-            StepWidth, PageStyle.Text);
+        TextLayout.Draw(g, step, fit.Size, fit.Line, StepX, top + 2, StepWidth, PageStyle.Text);
     }
 
     private static List<(string Label, string Value)> GoodItems(RecipeSheet r, BookWords words) =>
