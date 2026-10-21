@@ -1,30 +1,29 @@
 import { useState } from 'react'
 import { useLang } from '../../i18n/languageContext'
+import { AUTO_SIZES, isSizable, sizedSrcSet, useImageManifest } from '../../utils/imageSizes'
 
 // An image that degrades instead of breaking.
 //
-// Three sources, tried in order:
+// Sources, tried in order:
 //
-//   src         the photo we want
-//   the logo    from /brand, in the site language, as Masthead uses
-//   the drawing inline SVG, below
+//   sized copies  smaller WebP copies of src, when the manifest lists them
+//   src           the original photo
+//   fallbackSrc   an optional second guess, unused today
+//   the logo      from /brand, in the site language, as Masthead uses
+//   the drawing   inline SVG, below
 //
-// The first two are fetched files and can fail. The drawing cannot, because
-// it is never requested. Without a guaranteed end, a typo in the brand path
-// gives a broken-image icon, which is the thing this component exists to
-// prevent.
+// The drawing is never requested, so it cannot fail. Without a guaranteed
+// end, a typo in the brand path gives a broken-image icon, which is the
+// thing this component exists to prevent.
 //
 // The mark rather than a stand-in photograph: a dimmed vegetable photo reads
 // as a bad photo, while the logo reads as "no photo here."
 //
-// fallbackSrc is still available for callers that have a better second guess
-// than the logo, but nothing passes it today.
-//
 // Empty or null sources are dropped from the chain rather than attempted,
 // since an empty src makes the browser request the page itself.
 //
-// onError advances one step and warns once, naming the path, so a broken
-// image shows up in DevTools without the user being shown anything.
+// /images photos wait for the copy manifest before loading, so the original
+// is not downloaded first and then replaced by a copy.
 
 const DRAWING_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
   <rect width="120" height="120" fill="#8cc63e"/>
@@ -47,6 +46,11 @@ type Props = {
   loading?: 'lazy' | 'eager'
 }
 
+type Source = {
+  src: string
+  srcSet?: string
+}
+
 // How far down the chain this image has fallen, and for which chain. A
 // failure only counts for the chain it happened on.
 type Fallback = {
@@ -63,13 +67,20 @@ export function SafeImage({
   loading = 'lazy',
 }: Props) {
   const { lang: siteLang } = useLang()
+  const manifest = useImageManifest()
   const logo = `/brand/logo-negative-${lang ?? siteLang}.png`
 
-  const chain = [src, fallbackSrc]
-    .filter((s): s is string => Boolean(s))
-    .concat(logo, DRAWING)
+  const waiting = manifest === null && isSizable(src)
+  const srcSet = src ? sizedSrcSet(src, manifest) : undefined
 
-  const chainKey = chain.join('|')
+  const chain: Source[] = []
+  if (src && srcSet) chain.push({ src, srcSet })
+  for (const s of [src, fallbackSrc]) {
+    if (s) chain.push({ src: s })
+  }
+  chain.push({ src: logo }, { src: DRAWING })
+
+  const chainKey = chain.map((s) => s.srcSet ?? s.src).join('|')
 
   const [fallback, setFallback] = useState<Fallback>({ chainKey, step: 0 })
 
@@ -82,9 +93,13 @@ export function SafeImage({
   const atEnd = index >= chain.length - 1
   const current = chain[index]
 
+  if (waiting) {
+    return <img className={className} alt={alt} loading={loading} />
+  }
+
   // The last two are marks, not photographs, so they are contained on the
   // brand green rather than cropped to fill.
-  const onPlaceholder = current === logo || current === DRAWING
+  const onPlaceholder = current.src === logo || current.src === DRAWING
 
   const classes = [className, onPlaceholder ? 'is-placeholder' : null]
     .filter(Boolean)
@@ -92,13 +107,16 @@ export function SafeImage({
 
   return (
     <img
+      key={current.srcSet ? 'sized' : 'plain'}
       className={classes || undefined}
-      src={current}
       alt={alt}
       loading={loading}
+      sizes={current.srcSet ? AUTO_SIZES : undefined}
+      srcSet={current.srcSet}
+      src={current.src}
       onError={() => {
         if (atEnd) return
-        console.warn('SafeImage: could not load', chain[index])
+        console.warn('SafeImage: could not load', current.srcSet ?? current.src)
         setFallback({ chainKey, step: index + 1 })
       }}
     />

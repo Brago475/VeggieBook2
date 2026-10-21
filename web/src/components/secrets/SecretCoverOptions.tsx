@@ -6,6 +6,7 @@ import { useStrings } from '../../i18n/useStrings'
 import type { SecretCategory } from '../../types'
 import { coverSrc } from '../../utils/coverSrc'
 import { resizeImage } from '../../utils/resizeImage'
+import { SizedImg } from '../common/SizedImg'
 import '../../styles/covers.css'
 
 // The three ways to set a Secrets Book's cover, the same three as a
@@ -190,12 +191,7 @@ export function SecretCoverOptions({
                       aria-label={t.pictureLabel(browsingName, i + 1)}
                       onClick={() => onSelect(image)}
                     >
-                      <img
-                        src={coverSrc(image)}
-                        alt=""
-                        loading="lazy"
-                        onError={() => hide(image)}
-                      />
+                      <SizedImg src={coverSrc(image)} onFail={() => hide(image)} />
                     </button>
                   </li>
                 ))}
