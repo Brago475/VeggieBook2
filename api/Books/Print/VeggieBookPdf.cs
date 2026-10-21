@@ -114,10 +114,15 @@ internal static class VeggieBookPdf
                     .ToList()
             })
             .ToListAsync();
+
+        // Some tips share one picture in the original content; each prints only once per book.
+        var shownPictures = new HashSet<string>(StringComparer.Ordinal);
         var tips = tipRows
             .Select(t => new PrintTipSection(
                 BookPdf.Clean(t.Heading),
-                t.Parts.Select(p => new PrintTipBlock(BookPdf.Clean(p.Text), BookImages.Find(imagesRoot, p.ImagePath))).ToList()))
+                t.Parts.Select(p => new PrintTipBlock(
+                    BookPdf.Clean(p.Text),
+                    FirstUse(shownPictures, BookImages.Find(imagesRoot, p.ImagePath)))).ToList()))
             .ToList();
 
         using var pages = new PdfPages($"VeggieBook: {name}");
@@ -151,4 +156,8 @@ internal static class VeggieBookPdf
         if (photos.Count == 0) return null;
         return photos.LastOrDefault(p => !PrepShot.IsMatch(p)) ?? photos[^1];
     }
+
+    // The picture the first time it appears in the book, null after that.
+    private static string? FirstUse(HashSet<string> shown, string? path) =>
+        path is not null && shown.Add(path) ? path : null;
 }
