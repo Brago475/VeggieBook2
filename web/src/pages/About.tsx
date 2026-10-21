@@ -23,7 +23,7 @@ import { useStrings } from '../i18n/useStrings'
 // is also required by the CC BY-SA 4.0 license on the original images.
 //
 // The words are in strings/about.ts. Paper titles stay in English, as
-// published.
+// published. References follow APA style.
 //
 // Open to everyone, signed in or not. Read only. Back returns home.
 
@@ -32,10 +32,15 @@ type Paper = {
   year: number
   title: string
   journal: string
+  volume: number
+  // Left out for journals that number by volume only.
+  issue?: number
+  pages: string
   doi: string
 }
 
-// Only papers whose DOI was checked against the paper itself.
+// Authors, volume, issue, pages, and DOI checked against each paper's
+// journal or Crossref record.
 const PAPERS: Paper[] = [
   {
     authors: 'Clarke, P., Evans, S. H., & Neffa-Creech, D.',
@@ -43,6 +48,9 @@ const PAPERS: Paper[] = [
     title:
       'Mobile app increases vegetable-based preparations by low-income household cooks: a randomized controlled trial',
     journal: 'Public Health Nutrition',
+    volume: 22,
+    issue: 4,
+    pages: '714–725',
     doi: '10.1017/S1368980018003117',
   },
   {
@@ -51,6 +59,8 @@ const PAPERS: Paper[] = [
     title:
       'Resolving design issues in developing a nutrition app: a case study using formative research',
     journal: 'Evaluation and Program Planning',
+    volume: 72,
+    pages: '97–105',
     doi: '10.1016/j.evalprogplan.2018.10.010',
   },
   {
@@ -59,6 +69,9 @@ const PAPERS: Paper[] = [
     title:
       'Indigenous message tailoring increases consumption of fresh vegetables by clients of community pantries',
     journal: 'Health Communication',
+    volume: 26,
+    issue: 6,
+    pages: '571–582',
     doi: '10.1080/10410236.2011.558337',
   },
   {
@@ -67,9 +80,16 @@ const PAPERS: Paper[] = [
     title:
       'Information design to promote better nutrition among pantry clients: four methods of formative evaluation',
     journal: 'Public Health Nutrition',
+    volume: 13,
+    issue: 3,
+    pages: '430–437',
     doi: '10.1017/S1368980009990851',
   },
 ]
+
+// The study behind the household result in "Where it came from".
+const STUDY = PAPERS[0]
+const STUDY_CITE = 'Clarke et al., 2019'
 
 const OPEN_SOURCE_URL = 'https://github.com/VeggieBookOpenSource'
 const GPL_URL = 'https://www.gnu.org/licenses/gpl-3.0.html'
@@ -118,6 +138,16 @@ function Paragraphs({ lines }: { lines: string[] }) {
   )
 }
 
+// Journal, volume, issue, and pages in APA form: Journal, 22(4), 714–725.
+function Source({ paper }: { paper: Paper }) {
+  return (
+    <span className="about-paper-journal">
+      <em>{paper.journal}</em>, <em>{paper.volume}</em>
+      {paper.issue !== undefined && `(${paper.issue})`}, {paper.pages}.
+    </span>
+  )
+}
+
 export function About() {
   const { lang } = useLang()
   const t = useStrings(ABOUT)
@@ -140,6 +170,11 @@ export function About() {
 
       <AboutCard icon={<SchoolIcon />} title={t.originTitle}>
         <Paragraphs lines={t.origin} />
+        <p>
+          {t.originStudy} (
+          <OutLink href={`https://doi.org/${STUDY.doi}`}>{STUDY_CITE}</OutLink>
+          ). {t.originToolkit}
+        </p>
       </AboutCard>
 
       <AboutCard icon={<AwardIcon />} title={t.fundingTitle}>
@@ -166,7 +201,7 @@ export function About() {
                 {paper.authors} ({paper.year}).
               </span>{' '}
               <OutLink href={`https://doi.org/${paper.doi}`}>{paper.title}</OutLink>{' '}
-              <span className="about-paper-journal">{paper.journal}.</span>
+              <Source paper={paper} />
             </li>
           ))}
         </ul>

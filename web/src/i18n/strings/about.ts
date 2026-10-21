@@ -11,8 +11,11 @@ const en = {
   origin: [
     'VeggieBook was created by Dr. Peter Clarke and Dr. Susan H. Evans at the Annenberg School for Communication and Journalism, University of Southern California.',
     'It was shaped by years of research with families who use community food pantries. Professional chefs contributed recipes, and families tested the recipes and Secrets before they were added.',
-    'In a study with nearly 300 households, cooks who used VeggieBook prepared 38% more vegetable dishes than cooks who did not. VeggieBook is listed in the USDA SNAP-Ed Toolkit.',
   ],
+  // The last paragraph, printed as: originStudy (citation). originToolkit
+  originStudy:
+    'In a study with nearly 300 households, cooks who used VeggieBook prepared 38% more vegetable dishes than cooks who did not',
+  originToolkit: 'VeggieBook is listed in the USDA SNAP-Ed Toolkit.',
 
   fundingTitle: 'Funding',
   funding: [
@@ -53,8 +56,10 @@ const es: typeof en = {
   origin: [
     'VeggieBook fue creado por el Dr. Peter Clarke y la Dra. Susan H. Evans en la Escuela de Comunicación y Periodismo Annenberg de la Universidad del Sur de California.',
     'Se desarrolló a partir de años de investigación con familias que usan bancos de alimentos comunitarios. Chefs profesionales aportaron recetas, y las familias probaron las recetas y los Secretos antes de agregarlos.',
-    'En un estudio con casi 300 hogares, quienes usaron VeggieBook prepararon un 38% más de platos con verduras que quienes no lo usaron. VeggieBook aparece en el SNAP-Ed Toolkit del USDA.',
   ],
+  originStudy:
+    'En un estudio con casi 300 hogares, quienes usaron VeggieBook prepararon un 38% más de platos con verduras que quienes no lo usaron',
+  originToolkit: 'VeggieBook aparece en el SNAP-Ed Toolkit del USDA.',
 
   fundingTitle: 'Financiamiento',
   funding: [
