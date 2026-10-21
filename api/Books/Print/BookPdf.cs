@@ -196,7 +196,7 @@ internal static class BookPdf
 
         var p = row.Cells[0].AddParagraph();
         p.Format.Alignment = ParagraphAlignment.Center;
-        Fill(p, picture, PhotoWidth, PhotoHeight);
+        FillFrame(p, picture, PhotoWidth, PhotoHeight);
     }
 
     // A blank gap of a set height.
@@ -263,7 +263,7 @@ internal static class BookPdf
     }
 
     // Fills exactly width by height (cm), cropping the picture's edges evenly to keep its shape.
-    private static void Fill(Paragraph p, Picture picture, double width, double height)
+    private static void FillFrame(Paragraph p, Picture picture, double width, double height)
     {
         if (picture.PointWidth <= 0 || picture.PointHeight <= 0)
         {
