@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { apiFetch } from '../utils/api'
+import { apiFetch, SESSION_ENDED } from '../utils/api'
 import { PROFILE_CHANGED } from '../utils/profileApi'
 
 // Who is using the site, as the API sees it.
@@ -154,9 +154,20 @@ export function useAuth() {
   // Called when any request comes back 401 mid-visit, for example after the
   // password was changed on another device, or a guest's time ran out. The
   // cookie is already invalid, so this only brings the page up to date.
+  // Only a guest or an account can lose a session; a visitor is left as is.
   const sessionEnded = useCallback(() => {
-    setAuth({ status: 'visitor' })
+    setAuth((current) =>
+      current.status === 'signedIn' || current.status === 'guest'
+        ? { status: 'visitor' }
+        : current,
+    )
   }, [])
+
+  // Any screen's request can report the end of the session (utils/api.ts).
+  useEffect(() => {
+    window.addEventListener(SESSION_ENDED, sessionEnded)
+    return () => window.removeEventListener(SESSION_ENDED, sessionEnded)
+  }, [sessionEnded])
 
   return {
     auth,
