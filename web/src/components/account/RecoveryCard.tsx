@@ -203,7 +203,7 @@ export function RecoveryCard() {
               </option>
               {questions.map((q) => (
                 <option key={q.id} value={String(q.id)}>
-                  {q.text}
+                  {questionText(lang, q.id, q.text)}
                 </option>
               ))}
             </select>

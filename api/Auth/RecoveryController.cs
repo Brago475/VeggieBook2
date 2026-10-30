@@ -8,7 +8,7 @@ namespace VeggieBook.Api.Auth;
 
 // Forgot password, without email.
 //
-//   GET  /api/auth/recovery/questions   the list of security questions
+//   GET  /api/auth/recovery/questions   the questions offered for new picks
 //   POST /api/auth/recovery/question    the question for an email
 //   POST /api/auth/recovery/pin         email + PIN, gives a reset ticket
 //   POST /api/auth/recovery/answer      email + answer, gives a reset ticket
@@ -50,7 +50,7 @@ public class RecoveryController(
         new(ErrorCodes.CurrentPasswordIncorrect, "Current password is incorrect.");
 
     [HttpGet("questions")]
-    public IActionResult Questions() => Ok(RecoveryQuestions.All);
+    public IActionResult Questions() => Ok(RecoveryQuestions.Active);
 
     [HttpPost("question")]
     public async Task<IActionResult> Question([FromBody] EmailRequest req)

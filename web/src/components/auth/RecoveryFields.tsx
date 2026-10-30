@@ -1,4 +1,6 @@
+import { useLang } from '../../i18n/languageContext'
 import { AUTH } from '../../i18n/strings/auth'
+import { questionText } from '../../i18n/strings/questions'
 import { useStrings } from '../../i18n/useStrings'
 import type { RecoveryQuestion } from '../../utils/authApi'
 import { MAX_ANSWER, type RecoveryValue } from '../../utils/recoveryRules'
@@ -17,6 +19,7 @@ type Props = {
 }
 
 export function RecoveryFields({ idPrefix, value, onChange, questions }: Props) {
+  const { lang } = useLang()
   const t = useStrings(AUTH)
 
   function set<K extends keyof RecoveryValue>(key: K, next: RecoveryValue[K]) {
@@ -44,7 +47,10 @@ export function RecoveryFields({ idPrefix, value, onChange, questions }: Props) 
         value={value.questionId}
         onChange={(v) => set('questionId', v)}
         placeholder={questions.length ? t.chooseQuestion : t.loadingQuestions}
-        options={questions.map((q) => ({ value: String(q.id), label: q.text }))}
+        options={questions.map((q) => ({
+          value: String(q.id),
+          label: questionText(lang, q.id, q.text),
+        }))}
       />
       <TextPillField
         id={`${idPrefix}-answer`}

@@ -43,9 +43,10 @@ public class AccountRecovery(IPasswordHasher<AppUser> hasher)
     }
 
     // Checks a new question and answer when they are being set.
+    // Retired questions can't be picked; accounts that already have one keep it.
     public static ApiError? CheckNewAnswer(int? questionId, string? answer)
     {
-        if (!RecoveryQuestions.Exists(questionId))
+        if (!RecoveryQuestions.IsSelectable(questionId))
             return new(ErrorCodes.QuestionRequired, "Please choose a security question.");
         if (answer is not null && answer.Length > MaxAnswerLength * 2)
             return AnswerTooLong();
