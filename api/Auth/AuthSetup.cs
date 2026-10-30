@@ -112,10 +112,14 @@ public static class AuthSetup
 
             // This is an API, so answer with status codes instead of
             // redirecting to a login page. Only these two events are replaced;
-            // Identity's session check stays in place.
+            // Identity's session check stays in place. The one exception is a
+            // Print link, which opens in its own tab and goes to the site home.
             o.Events.OnRedirectToLogin = ctx =>
             {
-                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                if (IsPrintLink(ctx.Request))
+                    ctx.Response.Redirect("/");
+                else
+                    ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return Task.CompletedTask;
             };
             o.Events.OnRedirectToAccessDenied = ctx =>
@@ -187,4 +191,11 @@ public static class AuthSetup
         Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
             ? id
             : null;
+
+    // A PDF opened by Print (web/src/utils/bookPdf.ts). Downloads carry
+    // download=1 and keep the plain 401, so no HTML page is saved as a file.
+    private static bool IsPrintLink(HttpRequest request) =>
+        HttpMethods.IsGet(request.Method)
+        && request.Path.Value?.EndsWith("/pdf", StringComparison.OrdinalIgnoreCase) == true
+        && !request.Query.ContainsKey("download");
 }
