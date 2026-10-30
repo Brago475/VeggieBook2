@@ -1,6 +1,7 @@
 import { SECRETS } from '../../i18n/strings/secrets'
 import { useStrings } from '../../i18n/useStrings'
 import type { Secret } from '../../types'
+import { safeWebUrl } from '../../utils/safeUrl'
 import { RichText } from '../common/RichText'
 import { SafeImage } from '../common/SafeImage'
 
@@ -20,6 +21,8 @@ import { SafeImage } from '../common/SafeImage'
 //
 // The illustrations have words drawn into them, so they are shown whole,
 // never cropped.
+//
+// Links open only when they are http or https; anything else shows as text.
 
 type Props = {
   secret: Secret
@@ -86,11 +89,19 @@ export function SecretCard({
                   <a href={planner} target="_blank" rel="noopener noreferrer">{t.planner}</a>
                 </li>
               )}
-              {secret.links.map((link) => (
-                <li key={link.url}>
-                  <a href={link.url} target="_blank" rel="noopener noreferrer">{link.label || link.url}</a>
-                </li>
-              ))}
+              {secret.links.map((link) => {
+                const href = safeWebUrl(link.url)
+                const text = link.label || link.url
+                return (
+                  <li key={link.url}>
+                    {href ? (
+                      <a href={href} target="_blank" rel="noopener noreferrer">{text}</a>
+                    ) : (
+                      text
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           </div>
         </section>
