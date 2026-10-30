@@ -6,6 +6,7 @@ using VeggieBook.Api.Auth;
 using VeggieBook.Api.Controllers;
 using VeggieBook.Api.Covers;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.Recipes;
 
 namespace VeggieBook.Api.Books;
 
@@ -100,7 +101,7 @@ public class BooksController(
         }));
     }
 
-    // One book with its kept recipes, their titles and first photo.
+    // One book with its kept recipes, their titles and finished-dish photo.
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, [FromQuery] string? lang)
     {
@@ -140,11 +141,10 @@ public class BooksController(
                 r.Id,
                 r.DisplayCode,
                 Title = spanish ? r.TitleEs : r.TitleEn,
-                Photo = content.RecipePhotos
-                    .Where(p => p.RecipeId == r.Id)
+                Photos = r.Photos
                     .OrderBy(p => p.Position)
                     .Select(p => p.ImagePath)
-                    .FirstOrDefault()
+                    .ToList()
             })
             .ToListAsync();
 
@@ -160,7 +160,7 @@ public class BooksController(
                 extraCopies = r.extraCopies,
                 displayCode = byId[r.id].DisplayCode,
                 title = byId[r.id].Title,
-                photo = byId[r.id].Photo
+                photo = RecipePhotos.Finished(byId[r.id].Photos)
             })
             .OrderBy(r => r.displayCode == null)
             .ThenBy(r => r.displayCode)

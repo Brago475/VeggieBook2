@@ -1,7 +1,7 @@
-using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Books.Print.Pages;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.Recipes;
 
 namespace VeggieBook.Api.Books.Print;
 
@@ -16,8 +16,6 @@ namespace VeggieBook.Api.Books.Print;
 
 internal static class VeggieBookPdf
 {
-    private static readonly Regex PrepShot = new(@"prep\d*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
     // Null when the book has no such recipe, or no extra copies.
     public static async Task<BookPdfFile?> BuildAsync(
         VeggieBookContext content, BookPrint book, bool es, string imagesRoot,
@@ -72,7 +70,7 @@ internal static class VeggieBookPdf
                 CleanAll(r.Ingredients),
                 CleanAll(r.Steps),
                 CleanAll(r.Notes),
-                BookImages.Find(imagesRoot, FinishedPhoto(r.Photos)))))
+                BookImages.Find(imagesRoot, RecipePhotos.Finished(r.Photos)))))
             .ToList();
         if (recipes.Count == 0) return null;
 
@@ -149,13 +147,6 @@ internal static class VeggieBookPdf
 
     private static List<string> CleanAll(List<string> lines) =>
         lines.Select(BookPdf.Clean).Where(x => x.Length > 0).ToList();
-
-    // The finished dish: the last photo not named as a prep shot, else the last photo.
-    private static string? FinishedPhoto(List<string> photos)
-    {
-        if (photos.Count == 0) return null;
-        return photos.LastOrDefault(p => !PrepShot.IsMatch(p)) ?? photos[^1];
-    }
 
     // The picture the first time it appears in the book, null after that.
     private static string? FirstUse(HashSet<string> shown, string? path) =>
