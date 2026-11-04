@@ -27,8 +27,12 @@ public static class AuthHelpers
         && !email.EndsWith("@" + GuestEmailDomain, StringComparison.OrdinalIgnoreCase);
 
     // The full password rule, checked before any hashing. The maximum length
-    // stops anyone from making the server hash megabytes. Identity checks the
-    // same rule again (see AuthSetup), so nothing gets past both.
+    // stops anyone from making the server hash megabytes.
+    //
+    // Letters in any language count as uppercase or lowercase (Ñ, é); a
+    // special character is anything that is not a letter or a digit. The site
+    // checks the same rule (web/src/utils/passwordRule.ts). Identity checks
+    // only the length (see AuthSetup), since its letter checks are A-Z only.
     //
     // The name is from when only the length was checked. It stays so the
     // code that already calls it keeps working.

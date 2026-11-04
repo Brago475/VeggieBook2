@@ -61,14 +61,16 @@ public static class AuthSetup
                 // email for now, so the address is never confirmed.
                 o.SignIn.RequireConfirmedEmail = false;
 
-                // At least 8 characters with an uppercase letter, a lowercase
-                // letter, and a special character. AuthHelpers checks the
-                // same rule first, with one clear message.
+                // The full rule (uppercase, lowercase, and a special
+                // character, in any language) is AuthHelpers.CheckPasswordLength,
+                // which runs before every password is set. Identity's own
+                // letter checks are A-Z only and would reject letters such as
+                // Ñ, so Identity checks the length only.
                 o.Password.RequiredLength = MinPasswordLength;
                 o.Password.RequireDigit = false;
-                o.Password.RequireLowercase = true;
-                o.Password.RequireUppercase = true;
-                o.Password.RequireNonAlphanumeric = true;
+                o.Password.RequireLowercase = false;
+                o.Password.RequireUppercase = false;
+                o.Password.RequireNonAlphanumeric = false;
                 o.Password.RequiredUniqueChars = 1;
 
                 // Five wrong passwords lock sign-in for 15 minutes.
