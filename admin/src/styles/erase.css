@@ -1,0 +1,150 @@
+/* Erase a participant (components/settings/EraseSection.tsx). Neutral like
+   the rest of Settings; orange only on the warning screens. */
+
+.er-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 20px 20px;
+}
+
+.er-find {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.er-id-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+  max-width: 220px;
+}
+
+.er-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.er-facts div {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.er-facts dt {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.er-facts dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  color: #111827;
+}
+
+.er-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.er-option {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  font: inherit;
+  color: #374151;
+}
+
+.er-option:hover {
+  border-color: #9ca3af;
+}
+
+.er-option.is-on {
+  border-color: #111827;
+  box-shadow: 0 0 0 1px #111827;
+}
+
+.er-option:focus-visible {
+  outline: 2px solid #111827;
+  outline-offset: 2px;
+}
+
+.er-option-title {
+  font-weight: 700;
+  color: #111827;
+}
+
+.er-option-line {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.er-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.er-warning {
+  border: 1px solid #fdba74;
+  background: #fff7ed;
+  border-radius: 10px;
+  padding: 16px;
+  color: #7c2d12;
+}
+
+.er-warning p {
+  margin: 8px 0 14px;
+  line-height: 1.5;
+}
+
+.er-warning-step {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #c2410c;
+}
+
+.er-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.er-confirm-title {
+  margin: 0;
+  font-weight: 700;
+  color: #111827;
+}
+
+.er-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.er-check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+  color: #374151;
+}
+
+.er-done p {
+  margin: 0 0 12px;
+  color: #111827;
+}

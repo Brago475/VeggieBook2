@@ -2,15 +2,17 @@ import { useEffect, useState, type MouseEvent } from 'react'
 import type { SiteSettingsInfo } from '../../types/settings'
 import { BlockSkeleton } from '../skeletons/BlockSkeleton'
 import { AdminsSection } from './AdminsSection'
+import { EraseSection } from './EraseSection'
 import { GuestsSection } from './GuestsSection'
 import { IdentitySection } from './IdentitySection'
 import { ResearchSection } from './ResearchSection'
 import { SystemSection } from './SystemSection'
 import { YourAccountSection } from './YourAccountSection'
 
-// Settings, Site settings tab. Admins and Identity records render for the
-// root admin only, and their routes refuse everyone else. The side list
-// marks the section in view, like the main sidebar marks the open page.
+// Settings, Site settings tab. Admins, Identity records and Erase a
+// participant render for the root admin only, and their routes refuse
+// everyone else. The side list marks the section in view, like the main
+// sidebar marks the open page.
 
 type Props = {
   info: SiteSettingsInfo | null
@@ -26,6 +28,7 @@ type Section = { id: string; label: string }
 const rootSections: Section[] = [
   { id: 'admins', label: 'Admins' },
   { id: 'identity', label: 'Identity records' },
+  { id: 'erase', label: 'Erase a participant' },
 ]
 
 const allSections: Section[] = [
@@ -96,6 +99,7 @@ export function SiteSettingsTab({ info, ready, isRoot, email, onChanged, onSignO
       <div className="se-sections">
         {isRoot && <AdminsSection />}
         {isRoot && <IdentitySection />}
+        {isRoot && <EraseSection />}
 
         {!ready || !info ? (
           <>
