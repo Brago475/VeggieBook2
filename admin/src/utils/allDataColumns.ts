@@ -48,6 +48,15 @@ const items: DisplayColumn[] = [
   { key: 'secrets_kept', group: 'items', label: 'Secrets kept', title: 'Secrets kept', kind: 'num' },
   { key: 'secrets_removed', group: 'items', label: 'Secrets out', title: 'Secrets taken out later', kind: 'num' },
   { key: 'extra_copies', group: 'items', label: 'Extra copies', title: 'Extra copies', kind: 'num' },
+  { key: 'times_printed', group: 'items', label: 'Printed', title: 'Times the whole book was printed', kind: 'num' },
+  { key: 'times_downloaded', group: 'items', label: 'Downloaded', title: 'Times the whole book was downloaded', kind: 'num' },
+  {
+    key: 'single_pages',
+    group: 'items',
+    label: 'Single pages',
+    title: 'Times single pages were printed or downloaded (one recipe, one secret, or extra copies)',
+    kind: 'num',
+  },
 ]
 
 function answerColumns(questions: AllDataQuestion[], view: AnswersView): DisplayColumn[] {

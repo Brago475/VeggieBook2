@@ -1,7 +1,7 @@
 namespace VeggieBook.Api.Data;
 
-// One line of the activity log (db/migrations/007, 010, 013 and 015). Lines
-// are permanent: nothing edits or deletes them.
+// One line of the activity log (db/migrations/007, 010, 013, 015 and 016).
+// Lines are permanent: nothing edits or deletes them.
 //
 // Participant events carry a research ID; admin study actions leave it empty
 // and store the study number in ItemCount and a readable summary in Detail.
@@ -21,6 +21,9 @@ public class ActivityEntry
     public string? BookKind { get; set; }
     public string? VegetableCode { get; set; }
     public int? SecretCategoryId { get; set; }
+
+    // Print and download lines: the saved book they are about.
+    public Guid? BookId { get; set; }
 
     // Items kept for book lines, items taken out for item_removed, pages for
     // print and download lines, the study number for study lines.

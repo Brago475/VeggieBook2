@@ -130,7 +130,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
 
-        // See db/migrations/007, 010, 013 and 015.
+        // See db/migrations/007, 010, 013, 015 and 016.
         b.Entity<ActivityEntry>(e =>
         {
             e.ToTable("activity_log");
@@ -142,6 +142,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.BookKind).HasColumnName("book_kind");
             e.Property(x => x.VegetableCode).HasColumnName("vegetable_code");
             e.Property(x => x.SecretCategoryId).HasColumnName("secret_category_id");
+            e.Property(x => x.BookId).HasColumnName("book_id");         // 016
             e.Property(x => x.ItemCount).HasColumnName("item_count");
             e.Property(x => x.TakenOutCount).HasColumnName("taken_out_count");
             e.Property(x => x.ContentId).HasColumnName("content_id");   // 015

@@ -46,6 +46,8 @@ export function Overview({ onOpen }: Props) {
   const booksThisWeek = lastOf(booksWeekly)
   const joinedLastWeek = data.joinedWeekly[data.joinedWeekly.length - 2] ?? 0
   const answersThisWeek = lastOf(data.answersWeekly)
+  const pdfTotal = data.printed + data.downloaded
+  const pdfThisWeek = lastOf(data.pdfWeekly)
 
   // Running participant total at the end of each week.
   const before = data.participants - sum(data.joinedWeekly)
@@ -106,7 +108,17 @@ export function Overview({ onOpen }: Props) {
           chipUp={answersThisWeek > 0}
           spark={data.answersWeekly}
         />
-        <StudyCard index={4} onOpen={() => onOpen('studies')} />
+        <StatCard
+          index={4}
+          icon="book"
+          label="Printed and downloaded"
+          value={pdfTotal}
+          note={`${plural(data.printed, 'print', 'prints')} and ${plural(data.downloaded, 'download', 'downloads')}`}
+          chip={`${pdfThisWeek} this week`}
+          chipUp={pdfThisWeek > 0}
+          spark={data.pdfWeekly}
+        />
+        <StudyCard index={5} onOpen={() => onOpen('studies')} />
       </div>
 
       <div className="overview-row">

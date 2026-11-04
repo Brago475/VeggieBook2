@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 
@@ -8,7 +9,8 @@ namespace VeggieBook.Api.Research.AllData;
 // Loads everything the All Data page needs, in one place:
 //
 //   people     real, non-admin accounts with their research IDs
-//   books      every saved book, numbered per person (1 = first book)
+//   books      every saved book, numbered per person (1 = first book), with
+//              how often it was printed or downloaded
 //   content    vegetable, category, recipe, and secret names and pictures
 //   questions  the visible profiling questions and their answer choices
 //
@@ -18,7 +20,8 @@ namespace VeggieBook.Api.Research.AllData;
 //
 // Only books saved while the person's tracking was on are kept
 // (Research/TrackingHistory.cs). With a study (AllDataStudy.cs), only books
-// saved while that study ran are kept as well.
+// saved while that study ran are kept as well. Prints and downloads count
+// only while tracking was on, and with a study, only during it.
 //
 // Dates and times are Eastern, or UTC if the server can't find that zone.
 
@@ -36,6 +39,13 @@ internal record AdPerson(Guid UserId, string ParticipantId, DateTime CreatedAt, 
 // Dropped: taken out while making the book (Kept is false).
 internal record AdItem(string Type, int Id, bool Kept, bool Dropped, int ExtraCopies);
 
+// Times the whole book was printed or downloaded, and times single pages
+// (one recipe, one secret, or extra copies) were printed or downloaded.
+internal record AdPrints(int Printed, int Downloaded, int SinglePages)
+{
+    public static readonly AdPrints None = new(0, 0, 0);
+}
+
 internal record AdBook(
     AdPerson Person,
     int BookNo,
@@ -47,7 +57,8 @@ internal record AdBook(
     string? CoverPath,
     bool HasUpload,
     HashSet<string> Attributes,
-    List<AdItem> Items);
+    List<AdItem> Items,
+    AdPrints Prints);
 
 // A recipe or secret: its code (BR-201 or #5832), its title, and its
 // picture (a path under /images, such as recipe/BR-201/photo1.jpg).
@@ -172,6 +183,7 @@ internal static class AllDataSource
             .Where(b => userIds.Contains(b.UserId))
             .Select(b => new
             {
+                b.Id,
                 b.UserId,
                 b.Kind,
                 b.Language,
@@ -186,6 +198,8 @@ internal static class AllDataSource
                     .ToList()
             })
             .ToListAsync();
+
+        var prints = await LoadPrintsAsync(db, raw.ToDictionary(b => b.Id, b => b.UserId), history, study);
 
         var numbered = raw
             .GroupBy(b => b.UserId)
@@ -207,7 +221,8 @@ internal static class AllDataSource
                         b.Attributes.ToHashSet(),
                         b.Selections
                             .Select(s => new AdItem(s.ContentType, s.ContentId, s.Kept, s.DroppedInReview, s.ExtraCopies))
-                            .ToList()))));
+                            .ToList(),
+                        prints.GetValueOrDefault(b.Id, AdPrints.None)))));
 
         var recipes = (filter.Recipes ?? []).ToHashSet();
         var secrets = (filter.Secrets ?? []).ToHashSet();
@@ -229,6 +244,40 @@ internal static class AllDataSource
             .OrderBy(b => b.Person.ParticipantId)
             .ThenBy(b => b.Local)
             .ToList();
+    }
+
+    // Print and download counts per book, from activity lines that name the
+    // book. A line counts only if the owner's tracking was on at that moment,
+    // and with a study, only if it happened during the study.
+    private static async Task<Dictionary<Guid, AdPrints>> LoadPrintsAsync(
+        AccountsContext db,
+        Dictionary<Guid, Guid> ownerOf,
+        TrackingHistory history,
+        StudyWindow? study)
+    {
+        if (ownerOf.Count == 0) return [];
+
+        var bookIds = ownerOf.Keys.Select(id => (Guid?)id).ToList();
+
+        var lines = await db.ActivityLog
+            .AsNoTracking()
+            .Where(a => (a.Kind == ActivityLog.BookPrinted || a.Kind == ActivityLog.BookDownloaded)
+                     && a.BookId != null
+                     && bookIds.Contains(a.BookId))
+            .Select(a => new { BookId = a.BookId!.Value, a.Kind, a.Detail, a.At })
+            .ToListAsync();
+
+        return lines
+            .Where(a => history.At(ownerOf[a.BookId], a.At).On)
+            .Where(a => study is null
+                     || (a.At >= study.StartedAt && (study.EndedAt is null || a.At <= study.EndedAt)))
+            .GroupBy(a => a.BookId)
+            .ToDictionary(
+                g => g.Key,
+                g => new AdPrints(
+                    g.Count(a => a.Kind == ActivityLog.BookPrinted && a.Detail == ActivityLog.ScopeBook),
+                    g.Count(a => a.Kind == ActivityLog.BookDownloaded && a.Detail == ActivityLog.ScopeBook),
+                    g.Count(a => a.Detail != ActivityLog.ScopeBook)));
     }
 
     // Names, titles, and pictures from the content database, in English.
