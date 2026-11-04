@@ -1,15 +1,11 @@
-import { useId, useRef, useState } from 'react'
+import { useId, useRef, useState, type KeyboardEvent } from 'react'
 import { AUTH } from '../../i18n/strings/auth'
 import { useStrings } from '../../i18n/useStrings'
 import '../../styles/pin-boxes.css'
 
-// A 6-digit PIN shown as six small squares.
-//
-// Under the squares sits one real input, invisible but covering them, so
-// typing, Backspace, pasting a whole PIN, phone number pads, and screen
-// readers all work like a normal box. The squares only draw what is in it:
-// a dot per digit (or the digit, after Show), and an outline on the next
-// square to fill.
+// Six-square PIN input. One invisible input covers the squares and handles
+// typing, pasting, number pads, and screen readers; the squares only display it.
+// The caret is kept at the end so Backspace always removes the last digit.
 
 type Props = {
   id?: string
@@ -30,6 +26,27 @@ export function PinBoxes({ id, value, onChange, describedBy, autoFocus }: Props)
   const digits = value.split('')
   const next = Math.min(value.length, 5)
 
+  function caretToEnd() {
+    const el = inputRef.current
+    if (!el) return
+    const end = el.value.length
+    if (el.selectionStart !== end || el.selectionEnd !== end) {
+      el.setSelectionRange(end, end)
+    }
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      e.preventDefault()
+      if (value) onChange(value.slice(0, -1))
+    }
+  }
+
+  function clear() {
+    onChange('')
+    inputRef.current?.focus()
+  }
+
   return (
     <div className="pin-boxes-row">
       <div className="pin-boxes" onClick={() => inputRef.current?.focus()}>
@@ -44,7 +61,13 @@ export function PinBoxes({ id, value, onChange, describedBy, autoFocus }: Props)
           maxLength={6}
           value={value}
           onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          onFocus={() => setFocused(true)}
+          onKeyDown={handleKeyDown}
+          onClick={caretToEnd}
+          onSelect={caretToEnd}
+          onFocus={() => {
+            setFocused(true)
+            requestAnimationFrame(caretToEnd)
+          }}
           onBlur={() => setFocused(false)}
           aria-describedby={describedBy}
           autoFocus={autoFocus}
@@ -63,15 +86,26 @@ export function PinBoxes({ id, value, onChange, describedBy, autoFocus }: Props)
           </span>
         ))}
       </div>
-      <button
-        type="button"
-        className="pin-boxes-toggle"
-        onClick={() => setShown((s) => !s)}
-        aria-pressed={shown}
-        aria-controls={inputId}
-      >
-        {shown ? t.pinHide : t.pinShow}
-      </button>
+      <div className="pin-boxes-actions">
+        <button
+          type="button"
+          className="pin-boxes-toggle"
+          onClick={() => setShown((s) => !s)}
+          aria-pressed={shown}
+          aria-controls={inputId}
+        >
+          {shown ? t.pinHide : t.pinShow}
+        </button>
+        <button
+          type="button"
+          className="pin-boxes-toggle"
+          onClick={clear}
+          disabled={value.length === 0}
+          aria-controls={inputId}
+        >
+          {t.pinClear}
+        </button>
+      </div>
     </div>
   )
 }

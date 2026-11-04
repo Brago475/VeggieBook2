@@ -12,7 +12,8 @@ namespace VeggieBook.Api.Research;
 //   Items         one row per recipe or secret shown while making a saved book
 //
 // Who is included: real accounts that are not admins. Books saved while the
-// person's tracking was off are left out (ResearchScope.cs).
+// person's tracking was off are left out (ResearchScope.cs). Deleted accounts
+// and books are included (Research/KeepOnDelete.cs).
 //
 // "Taken out" counts both items dropped while making the book and items
 // taken out of the saved book later. The Items sheet's status tells them apart.
@@ -72,7 +73,7 @@ public static class ResearchSheets
 
     // ---- Loading ----
 
-    // Real, non-admin accounts with their research IDs.
+    // Real, non-admin accounts with their research IDs, deleted ones included.
     private static async Task<Dictionary<Guid, Person>> LoadPeopleAsync(AccountsContext db)
     {
         var ids = await ParticipantIds.EnsureAsync(db);
@@ -83,6 +84,7 @@ public static class ResearchSheets
             .FirstAsync();
 
         var users = await db.Users
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(u => u.GuestExpiresAt == null
                      && !db.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId))
@@ -100,8 +102,8 @@ public static class ResearchSheets
                     string.IsNullOrEmpty(u.AgeRange) ? null : u.AgeRange));
     }
 
-    // Every book of these people, numbered per person by date before any
-    // filter, then filtered by tracking and the page's filters.
+    // Every book of these people, deleted ones included, numbered per person
+    // by date before any filter, then filtered by tracking and the page's filters.
     private static async Task<List<BookRow>> LoadBooksAsync(
         AccountsContext db,
         Dictionary<Guid, Person> people,
@@ -111,6 +113,7 @@ public static class ResearchSheets
         var userIds = people.Keys.ToList();
 
         var raw = await db.Books
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(b => userIds.Contains(b.UserId))
             .Select(b => new
@@ -121,7 +124,7 @@ public static class ResearchSheets
                 b.VegetableCode,
                 b.SecretCategoryId,
                 b.CoverPath,
-                HasUpload = b.CoverUpload != null,
+                HasUpload = b.CoverUpload != null || b.HadUpload,
                 b.CreatedAt,
                 Attributes = b.Attributes.Select(a => a.Attribute).ToList(),
                 Selections = b.Selections

@@ -1,7 +1,7 @@
 namespace VeggieBook.Api.Data;
 
-// One line of the activity log (db/migrations/007, 010 and 013). Lines are
-// permanent.
+// One line of the activity log (db/migrations/007, 010, 013 and 015). Lines
+// are permanent: nothing edits or deletes them.
 //
 // Participant events carry a research ID; admin study actions leave it empty
 // and store the study number in ItemCount and a readable summary in Detail.
@@ -11,7 +11,8 @@ public class ActivityEntry
     public long Id { get; set; }
     public DateTime At { get; set; }
 
-    // book_saved, book_deleted, item_removed, account_deleted, study_renamed, study_deleted
+    // book_saved, book_deleted, item_removed, book_printed, book_downloaded,
+    // account_deleted, study_renamed, study_deleted
     public string Kind { get; set; } = "";
 
     public string ParticipantId { get; set; } = "";
@@ -21,13 +22,17 @@ public class ActivityEntry
     public string? VegetableCode { get; set; }
     public int? SecretCategoryId { get; set; }
 
-    // Items kept for book lines, items taken out for item_removed, the study
-    // number for study lines.
+    // Items kept for book lines, items taken out for item_removed, pages for
+    // print and download lines, the study number for study lines.
     public int? ItemCount { get; set; }
 
     // book_saved only: items dropped while making the book.
     public int? TakenOutCount { get; set; }
 
-    // Readable summary for study lines.
+    // Print and download lines: the recipe or secret, when one item was used.
+    public int? ContentId { get; set; }
+
+    // Study lines: a readable summary. Print and download lines: what was
+    // used (book, extras, recipe, secret).
     public string? Detail { get; set; }
 }

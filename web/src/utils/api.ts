@@ -16,6 +16,12 @@ import {
 // English is shown. apiFetch throws an ApiError with the message, the HTTP
 // status, and the status code, so a screen can show the message as is, or
 // react to the code.
+//
+// A 401 outside /auth/ means the session ended mid-visit. apiFetch then
+// fires SESSION_ENDED once so useAuth can sign the page out, whichever
+// screen made the request.
+
+export const SESSION_ENDED = 'veggiebook:session-ended'
 
 export class ApiError extends Error {
   status: number
@@ -81,10 +87,17 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
   }
 
   if (!res.ok) {
+    if (res.status === 401) reportSessionEnded(path)
     throw new ApiError(res.status, message(res.status, data), statusCode(data))
   }
 
   return data as T
+}
+
+// Sign-in screens answer 401 for a wrong password, so they are left out.
+export function reportSessionEnded(path: string) {
+  if (path.startsWith('/auth/')) return
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(SESSION_ENDED))
 }
 
 // The message to show for a failed response, in the page language.

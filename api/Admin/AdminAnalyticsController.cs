@@ -15,9 +15,9 @@ namespace VeggieBook.Api.Admin;
 // keeps to work: accounts and their saved books. Nothing new is recorded.
 //
 // Who counts: real accounts that are not admins, the same people as the
-// Overview and the research sheets. Guests are left out, since they are
-// deleted within a day and would make the numbers move for no reason, and
-// admin books are tests.
+// Overview and the research sheets, deleted accounts and books included.
+// Guests are left out, since they are deleted within a day and would make
+// the numbers move for no reason, and admin books are tests.
 //
 // Tracking: a book counts only if it was saved while the person's tracking
 // was on, and an account counts only while its tracking is on now
@@ -55,6 +55,7 @@ public class AdminAnalyticsController(AccountsContext db, VeggieBookContext cont
             .ToList();
 
         var books = (await db.Books
+                .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Where(b => people.Any(u => u.Id == b.UserId))
                 .Select(b => new
@@ -65,7 +66,7 @@ public class AdminAnalyticsController(AccountsContext db, VeggieBookContext cont
                     b.VegetableCode,
                     b.SecretCategoryId,
                     b.CoverPath,
-                    HasUpload = b.CoverUpload != null,
+                    HasUpload = b.CoverUpload != null || b.HadUpload,
                     b.CreatedAt,
                     Attributes = b.Attributes.Select(a => a.Attribute).ToList(),
                     Selections = b.Selections

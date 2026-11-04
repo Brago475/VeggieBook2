@@ -13,10 +13,12 @@ namespace VeggieBook.Api.Admin;
 //   account_deleted  an account deleted    (from activity_log)
 //
 // Only book_deleted and account_deleted lines are read from the log; saves
-// come from the book table so they are never listed twice.
+// come from the book table, deleted books included, so they are never
+// listed twice. The full history, prints and downloads included, is on the
+// Activity page.
 //
-// People who opted out are not tracked (Research/ResearchScope.cs). A deleted
-// account has no tracking left to check, so it is always listed.
+// People who opted out are not tracked (Research/ResearchScope.cs).
+// Account deletions are always listed.
 
 public static class OverviewRecent
 {
@@ -49,6 +51,8 @@ public static class OverviewRecent
                     b.VegetableCode,
                     b.SecretCategoryId,
                     b.CreatedAt,
+                    b.DropsRecorded,
+                    Deleted = b.DeletedAt != null,
                     KeptAtSave = b.Selections.Count(s => !s.DroppedInReview),
                     Dropped = b.Selections.Count(s => s.DroppedInReview)
                 })
@@ -93,16 +97,19 @@ public static class OverviewRecent
 
         Line AccountLine(ActivityEntry a) => ActivityLog.IsRemovedByAdmin(a)
             ? new Line("account_deleted", a.ParticipantId, "Account removed by an admin",
-                "Admin action, all books removed", a.At)
+                "Admin action, research data kept", a.At)
             : new Line("account_deleted", a.ParticipantId, "Deleted their account",
-                "Account and all books removed", a.At);
+                "Account removed, research data kept", a.At);
 
         var lines = saved
             .Select(b => new Line(
                 "book",
                 ids.GetValueOrDefault(b.UserId, ""),
                 BookTitle("Saved", Name(b.Kind, b.VegetableCode, b.SecretCategoryId), b.Kind),
-                Items(b.KeptAtSave, b.Kind) + " kept" + (b.Dropped > 0 ? $", {b.Dropped} taken out" : ""),
+                Items(b.KeptAtSave, b.Kind) + " kept"
+                    + (!b.DropsRecorded ? ", taken out while making: -"
+                        : b.Dropped > 0 ? $", {b.Dropped} taken out" : "")
+                    + (b.Deleted ? ", deleted later" : ""),
                 b.CreatedAt))
             .Concat(joined.Select(u => new Line(
                 "joined",

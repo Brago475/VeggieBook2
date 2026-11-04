@@ -10,6 +10,7 @@ import { useAuth, type RegisterForm } from './hooks/useAuth'
 import { useBookFlow } from './hooks/useBookFlow'
 import { useBooks } from './hooks/useBooks'
 import { SKELETON_MIN_MS, useHeld } from './hooks/useHeld'
+import { useNewVersion } from './hooks/useNewVersion'
 import { useRoute } from './hooks/useRoute'
 import { useSecretCategories } from './hooks/useSecrets'
 import { useSecretsFlow } from './hooks/useSecretsFlow'
@@ -82,6 +83,9 @@ import './styles/responsive.css'
 // Right after a book is saved, home shows the saved screen (pages/
 // BookSaved.tsx) until Skip. It is held here, not in the address, so a
 // refresh lands on the library and a book can never be saved twice.
+//
+// After a deploy, the page reloads itself on the next move to a screen
+// where nothing is lost (hooks/useNewVersion.ts).
 
 type JustSaved = { id: string; kind: 'veggie' | 'secrets' }
 
@@ -354,6 +358,14 @@ export default function App() {
   }
 
   const showBook = current === 'book' && openBook !== null
+
+  // Screens where a reload after a deploy loses nothing: never while a book
+  // is being made, on the saved screen, or on a form.
+  const reloadSafe =
+    status !== 'loading' &&
+    !showSaved &&
+    (current === 'home' || current === 'account' || readingPage || (showBook && !editingCover))
+  useNewVersion(path, reloadSafe)
 
   // The footer shows on the main screens: Welcome, home, account, the
   // reading pages, and reading a saved book. It stays off while a book is

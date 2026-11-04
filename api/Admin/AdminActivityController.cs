@@ -14,14 +14,17 @@ namespace VeggieBook.Api.Admin;
 ///
 ///   GET /api/admin/activity?study={number}
 ///
-/// Event types: book_saved, joined, book_deleted, item_removed,
-/// account_deleted, tracking_on, tracking_off, study_started, study_ended,
-/// study_renamed, study_deleted, notice_joined, notice_declined.
+/// Event types: book_saved, joined, book_deleted, item_removed, book_printed,
+/// book_downloaded, account_deleted, tracking_on, tracking_off,
+/// study_started, study_ended, study_renamed, study_deleted, notice_joined,
+/// notice_declined.
 ///
 /// Participant events show only if tracking was on when they happened
-/// (ResearchScope.CountsBook). Saves come from the book table, plus book_saved
-/// log lines for books deleted since. A save line shows what was kept and
-/// taken out at the moment of saving; later take-outs are their own lines.
+/// (ResearchScope.CountsBook). Saves come from the book table, deleted books
+/// and accounts included, plus book_saved log lines for books erased before
+/// deleted books were kept. A save line shows what was kept and taken out at
+/// the moment of saving ("-" when drops were not recorded yet); later
+/// take-outs are their own lines.
 /// </summary>
 [ApiController]
 [Route("api/admin/activity")]
@@ -45,14 +48,27 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
         var vegetableNames = await content.Vegetables.AsNoTracking().ToDictionaryAsync(v => v.Code, v => v.NameEn);
         var categoryNames = await content.SecretCategories.AsNoTracking().ToDictionaryAsync(c => c.Id, c => c.NameEn);
 
+        var recipeNames = (await content.Recipes
+                .AsNoTracking()
+                .Select(r => new { r.Id, r.DisplayCode, r.TitleEn })
+                .ToListAsync())
+            .ToDictionary(r => r.Id, r => r.DisplayCode is null ? r.TitleEn : $"{r.DisplayCode} {r.TitleEn}");
+
+        var secretNames = (await content.Secrets
+                .AsNoTracking()
+                .Select(s => new { s.Id, s.DisplayNumber, s.HeadlineEn })
+                .ToListAsync())
+            .ToDictionary(s => s.Id, s => $"#{s.DisplayNumber} {s.HeadlineEn}");
+
         string Name(string kind, string? vegetableCode, int? categoryId) => kind == "secrets"
             ? (categoryId is int id ? categoryNames.GetValueOrDefault(id, "") : "")
             : (vegetableCode is string code ? vegetableNames.GetValueOrDefault(code, code) : "");
 
         var events = new List<Event>();
 
-        // Saved books still in the database. Kept at save includes items taken out later.
+        // Every saved book, deleted ones included. Kept at save includes items taken out later.
         var books = (await db.Books
+                .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Where(b => people.Any(u => u.Id == b.UserId))
                 .Select(b => new
@@ -62,6 +78,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                     b.VegetableCode,
                     b.SecretCategoryId,
                     b.CreatedAt,
+                    b.DropsRecorded,
+                    Deleted = b.DeletedAt != null,
                     KeptAtSave = b.Selections.Count(s => !s.DroppedInReview),
                     Dropped = b.Selections.Count(s => s.DroppedInReview)
                 })
@@ -77,7 +95,7 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             "book_saved",
             ids.GetValueOrDefault(b.UserId),
             BookTitle("Saved", Name(b.Kind, b.VegetableCode, b.SecretCategoryId), b.Kind),
-            SaveDetail(b.KeptAtSave, b.Dropped, b.Kind),
+            SaveDetail(b.KeptAtSave, b.DropsRecorded ? b.Dropped : null, b.Kind) + (b.Deleted ? ", deleted later" : ""),
             b.CreatedAt)));
 
         // New participants, by tracking state at the moment they joined.
@@ -90,7 +108,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             string.IsNullOrEmpty(u.AgeRange) ? "No age range given" : $"Age {u.AgeRange}",
             u.CreatedAt)));
 
-        // Activity log: deletions, take-outs, admin study actions, and saves of books deleted since.
+        // Activity log: deletions, take-outs, prints, downloads, admin study
+        // actions, and saves of erased books.
         var logged = await db.ActivityLog.AsNoTracking().ToListAsync();
 
         bool OwnerTracked(ActivityEntry a, DateTime at) =>
@@ -113,9 +132,9 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             {
                 events.Add(ActivityLog.IsRemovedByAdmin(a)
                     ? new Event("account_deleted", a.ParticipantId, "Account removed by an admin",
-                        "Admin action, all books removed", a.At)
+                        "Admin action, research data kept", a.At)
                     : new Event("account_deleted", a.ParticipantId, "Deleted their account",
-                        "Account and all books removed", a.At));
+                        "Account removed, research data kept", a.At));
             }
             else if (a.Kind == ActivityLog.BookDeleted && OwnerTracked(a, a.At))
             {
@@ -128,10 +147,28 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                     BookTitle($"Took {Items(a.ItemCount ?? 1, kind)} out of", name, kind),
                     "From a saved book", a.At));
             }
+            else if ((a.Kind == ActivityLog.BookPrinted || a.Kind == ActivityLog.BookDownloaded)
+                     && OwnerTracked(a, a.At))
+            {
+                var verb = a.Kind == ActivityLog.BookPrinted ? "Printed" : "Downloaded";
+                var book = BookName(name, kind);
+                var (title, detail) = a.Detail switch
+                {
+                    ActivityLog.ScopeRecipe => ($"{verb} a recipe from {book}",
+                        a.ContentId is int r ? recipeNames.GetValueOrDefault(r, $"Recipe {r}") : "One recipe"),
+                    ActivityLog.ScopeSecret => ($"{verb} a secret from {book}",
+                        a.ContentId is int s ? secretNames.GetValueOrDefault(s, $"Secret {s}") : "One secret"),
+                    ActivityLog.ScopeExtras => ($"{verb} extra copies from {book}",
+                        a.ItemCount is int c ? (c == 1 ? "1 extra copy" : $"{c} extra copies") : "Extra copies"),
+                    _ => ($"{verb} {book}",
+                        a.ItemCount is int n ? "Whole book, " + Items(n, kind) : "Whole book")
+                };
+                events.Add(new Event(a.Kind, a.ParticipantId, title, detail, a.At));
+            }
             else if (a.Kind == ActivityLog.BookSaved && !existing.Contains((a.ParticipantId, a.At)) && OwnerTracked(a, a.At))
             {
                 events.Add(new Event("book_saved", a.ParticipantId, BookTitle("Saved", name, kind),
-                    (a.ItemCount is int n ? SaveDetail(n, a.TakenOutCount ?? 0, kind) : "Book saved") + ", deleted later",
+                    (a.ItemCount is int n ? SaveDetail(n, a.TakenOutCount, kind) : "Book saved") + ", deleted later",
                     a.At));
             }
         }
@@ -189,18 +226,27 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
         return Ok(new { events = result });
     }
 
-    // "6 recipes kept, 4 taken out", or "6 recipes kept" when nothing was dropped.
-    private static string SaveDetail(int kept, int takenOut, string kind) =>
-        Items(kept, kind) + " kept" + (takenOut > 0 ? $", {takenOut} taken out" : "");
+    // "6 recipes kept, 4 taken out", "6 recipes kept" when nothing was dropped,
+    // or "6 recipes kept, taken out while making: -" when drops were not recorded.
+    private static string SaveDetail(int kept, int? takenOut, string kind) =>
+        Items(kept, kind) + " kept" + takenOut switch
+        {
+            null => ", taken out while making: -",
+            > 0 => $", {takenOut} taken out",
+            _ => ""
+        };
 
-    private static string BookTitle(string verb, string name, string kind)
+    // "a Cabbage VeggieBook", "a Shopping Secrets Book".
+    private static string BookName(string name, string kind)
     {
         var type = kind == "secrets" ? "Secrets Book" : "VeggieBook";
-        if (string.IsNullOrWhiteSpace(name)) return $"{verb} a {type}";
+        if (string.IsNullOrWhiteSpace(name)) return $"a {type}";
         if (kind == "secrets" && name.EndsWith("Secrets", StringComparison.OrdinalIgnoreCase))
-            return $"{verb} a {name} Book";
-        return $"{verb} a {name} {type}";
+            return $"a {name} Book";
+        return $"a {name} {type}";
     }
+
+    private static string BookTitle(string verb, string name, string kind) => $"{verb} {BookName(name, kind)}";
 
     private static string Items(int n, string kind)
     {

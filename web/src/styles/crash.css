@@ -1,0 +1,73 @@
+/* The crash screen (CrashScreen.tsx). Imported by the component so it works
+   even when the screen that failed never loaded its own styles. */
+
+.crash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: var(--bg, #f6f5ef);
+}
+
+.crash-logo {
+  width: 180px;
+  max-width: 60%;
+  height: auto;
+}
+
+.crash-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px 24px;
+  text-align: center;
+  background: var(--surface, #fff);
+  border: 1px solid var(--line, rgba(31, 45, 31, 0.12));
+  border-radius: 16px;
+}
+
+.crash-title {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--green-deep, #2f5d2f);
+}
+
+.crash-text {
+  margin: 0 0 24px;
+  line-height: 1.5;
+  color: var(--text, #1f2d1f);
+}
+
+.crash-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.crash-primary {
+  width: 100%;
+  padding: 14px 20px;
+  font: inherit;
+  font-weight: 700;
+  color: #fff;
+  background: var(--green-deep, #2f5d2f);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.crash-link {
+  padding: 8px 4px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text, #1f2d1f);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

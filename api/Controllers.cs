@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.Recipes;
 
 namespace VeggieBook.Api.Controllers;
 
@@ -141,7 +142,7 @@ public class MatchController(VeggieBookContext db) : ControllerBase
 
         var es = Lang.IsSpanish(req.Lang);
 
-        var recipes = await db.Recipes
+        var rows = await db.Recipes
             .Where(r => r.VegetableCode == req.Vegetable && r.Active)
             .Where(r => !r.Attributes.Any(a => !selected.Contains(a.Attribute)))
             // Codeless recipes sort last rather than mixing into the
@@ -157,8 +158,8 @@ public class MatchController(VeggieBookContext db) : ControllerBase
                 timeToPrepare = es ? r.TimeToPrepareEs : r.TimeToPrepareEn,
                 timeToCook = es ? r.TimeToCookEs : r.TimeToCookEn,
                 servings = es ? r.ServingsEs : r.ServingsEn,
-                photo = r.Photos.OrderBy(p => p.Position)
-                                .Select(p => p.ImagePath).FirstOrDefault(),
+                photos = r.Photos.OrderBy(p => p.Position)
+                                 .Select(p => p.ImagePath).ToList(),
                 badges = r.Annotations
                     .Where(a => selected.Contains(a.DisplayedIf))
                     .Select(a => new
@@ -169,6 +170,19 @@ public class MatchController(VeggieBookContext db) : ControllerBase
                     .ToList()
             })
             .ToListAsync();
+
+        // Each card shows the finished dish.
+        var recipes = rows.Select(r => new
+        {
+            r.id,
+            r.code,
+            r.title,
+            r.timeToPrepare,
+            r.timeToCook,
+            r.servings,
+            photo = RecipePhotos.Finished(r.photos),
+            r.badges
+        }).ToList();
 
         var tips = await db.Tips
             .Where(t => t.VegetableCode == req.Vegetable)
@@ -240,6 +254,9 @@ public class RecipesController(VeggieBookContext db) : ControllerBase
             })
             .FirstOrDefaultAsync();
 
-        return recipe is null ? NotFound() : Ok(recipe);
+        if (recipe is null) return NotFound();
+
+        // The finished dish shows first.
+        return Ok(recipe with { photos = RecipePhotos.FinishedFirst(recipe.photos) });
     }
 }

@@ -61,14 +61,16 @@ public static class AuthSetup
                 // email for now, so the address is never confirmed.
                 o.SignIn.RequireConfirmedEmail = false;
 
-                // At least 8 characters with an uppercase letter, a lowercase
-                // letter, and a special character. AuthHelpers checks the
-                // same rule first, with one clear message.
+                // The full rule (uppercase, lowercase, and a special
+                // character, in any language) is AuthHelpers.CheckPasswordLength,
+                // which runs before every password is set. Identity's own
+                // letter checks are A-Z only and would reject letters such as
+                // Ñ, so Identity checks the length only.
                 o.Password.RequiredLength = MinPasswordLength;
                 o.Password.RequireDigit = false;
-                o.Password.RequireLowercase = true;
-                o.Password.RequireUppercase = true;
-                o.Password.RequireNonAlphanumeric = true;
+                o.Password.RequireLowercase = false;
+                o.Password.RequireUppercase = false;
+                o.Password.RequireNonAlphanumeric = false;
                 o.Password.RequiredUniqueChars = 1;
 
                 // Five wrong passwords lock sign-in for 15 minutes.
@@ -112,10 +114,14 @@ public static class AuthSetup
 
             // This is an API, so answer with status codes instead of
             // redirecting to a login page. Only these two events are replaced;
-            // Identity's session check stays in place.
+            // Identity's session check stays in place. The one exception is a
+            // Print link, which opens in its own tab and goes to the site home.
             o.Events.OnRedirectToLogin = ctx =>
             {
-                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                if (IsPrintLink(ctx.Request))
+                    ctx.Response.Redirect("/");
+                else
+                    ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return Task.CompletedTask;
             };
             o.Events.OnRedirectToAccessDenied = ctx =>
@@ -187,4 +193,11 @@ public static class AuthSetup
         Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
             ? id
             : null;
+
+    // A PDF opened by Print (web/src/utils/bookPdf.ts). Downloads carry
+    // download=1 and keep the plain 401, so no HTML page is saved as a file.
+    private static bool IsPrintLink(HttpRequest request) =>
+        HttpMethods.IsGet(request.Method)
+        && request.Path.Value?.EndsWith("/pdf", StringComparison.OrdinalIgnoreCase) == true
+        && !request.Query.ContainsKey("download");
 }

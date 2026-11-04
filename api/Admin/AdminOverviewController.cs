@@ -15,9 +15,10 @@ namespace VeggieBook.Api.Admin;
 // Admins only (Roles.AdminPolicy). The page calls this again every minute.
 //
 // Who counts: "participants" are real accounts that are not admins, the
-// same people the research sheets use. Guests are temporary and admin books
-// are tests, so both are left out of every number here except the two that
-// are about the site itself (locked password resets and guests right now).
+// same people the research sheets use, deleted accounts included. Guests
+// are temporary and admin books are tests, so both are left out of every
+// number here except the two that are about the site itself (locked
+// password resets and guests right now).
 //
 // Tracking: a book counts only if it was saved while the person's tracking
 // was on, and a person counts only while their tracking is on now
@@ -68,10 +69,18 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             .Select(r => r.Id)
             .FirstAsync();
 
+        // Current accounts only, for the site numbers.
         var realAccounts = db.Users.AsNoTracking().Where(u => u.GuestExpiresAt == null);
-        var people = realAccounts
-            .Where(u => !db.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId));
-        var books = db.Books.AsNoTracking()
+
+        // Research counts include deleted accounts and books.
+        var people = db.Users
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(u => u.GuestExpiresAt == null
+                     && !db.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId));
+        var books = db.Books
+            .IgnoreQueryFilters()
+            .AsNoTracking()
             .Where(b => people.Any(u => u.Id == b.UserId));
 
         // Load what the charts need. The study has hundreds of people at
@@ -93,7 +102,7 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
                     b.Language,
                     b.VegetableCode,
                     b.SecretCategoryId,
-                    Personal = b.CoverUpload != null,
+                    Personal = b.CoverUpload != null || b.HadUpload,
                     b.CreatedAt,
                     Items = b.Selections.Select(s => new { s.ContentType, s.Kept }).ToList()
                 })

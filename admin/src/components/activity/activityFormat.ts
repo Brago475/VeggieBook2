@@ -6,6 +6,7 @@ export type ActivityGroup =
   | 'all'
   | 'saved'
   | 'taken_out'
+  | 'printed'
   | 'joined'
   | 'book_deleted'
   | 'account_deleted'
@@ -17,6 +18,7 @@ export const groups: { id: ActivityGroup; label: string; types: ActivityType[] }
   { id: 'all', label: 'All', types: [] },
   { id: 'saved', label: 'Books saved', types: ['book_saved'] },
   { id: 'taken_out', label: 'Taken out', types: ['item_removed'] },
+  { id: 'printed', label: 'Printed and downloaded', types: ['book_printed', 'book_downloaded'] },
   { id: 'joined', label: 'Joined', types: ['joined'] },
   { id: 'book_deleted', label: 'Books deleted', types: ['book_deleted'] },
   { id: 'account_deleted', label: 'Accounts deleted', types: ['account_deleted'] },

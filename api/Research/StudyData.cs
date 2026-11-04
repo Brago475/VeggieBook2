@@ -6,6 +6,7 @@ namespace VeggieBook.Api.Research;
 // What the Studies and Participants pages need, loaded once per request:
 // the people a study can include (real accounts, no admins, no guests),
 // their research IDs, their tracking history, their books, and the notices.
+// Deleted accounts and books are included (Research/KeepOnDelete.cs).
 //
 // Summary builds one study's numbers:
 //
@@ -46,6 +47,7 @@ public sealed class StudyData
         var peopleIds = people.Select(p => p.Id).ToList();
 
         var books = await db.Books
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(b => peopleIds.Contains(b.UserId))
             .Select(b => new BookRow(b.UserId, b.Kind, b.CreatedAt))

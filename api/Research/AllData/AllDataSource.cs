@@ -13,7 +13,8 @@ namespace VeggieBook.Api.Research.AllData;
 //   questions  the visible profiling questions and their answer choices
 //
 // Same rules as ResearchSheets.cs: guests and admins are left out, rows are
-// keyed by the anonymous research ID, and no email or name is read.
+// keyed by the anonymous research ID, and no email or name is read. Deleted
+// accounts and books are included (Research/KeepOnDelete.cs).
 //
 // Only books saved while the person's tracking was on are kept
 // (Research/TrackingHistory.cs). With a study (AllDataStudy.cs), only books
@@ -122,8 +123,8 @@ internal static class AllDataSource
             .ToList();
     }
 
-    // Real, non-admin accounts with their research IDs, giving IDs to any
-    // that don't have one yet.
+    // Real, non-admin accounts with their research IDs, deleted ones
+    // included, giving IDs to any that don't have one yet.
     private static async Task<Dictionary<Guid, AdPerson>> LoadPeopleAsync(AccountsContext db)
     {
         var ids = await ParticipantIds.EnsureAsync(db);
@@ -134,6 +135,7 @@ internal static class AllDataSource
             .FirstAsync();
 
         var users = await db.Users
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(u => u.GuestExpiresAt == null
                      && !db.UserRoles.Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId))
@@ -151,10 +153,10 @@ internal static class AllDataSource
                     string.IsNullOrEmpty(u.AgeRange) ? null : u.AgeRange));
     }
 
-    // Every book of these people, numbered per person by date before any
-    // filter (so a person's 3rd book is always "3"), then filtered: books
-    // saved while tracking was off are dropped, then the study, then the
-    // page's filters.
+    // Every book of these people, deleted ones included, numbered per person
+    // by date before any filter (so a person's 3rd book is always "3"), then
+    // filtered: books saved while tracking was off are dropped, then the
+    // study, then the page's filters.
     private static async Task<List<AdBook>> LoadBooksAsync(
         AccountsContext db,
         Dictionary<Guid, AdPerson> people,
@@ -165,6 +167,7 @@ internal static class AllDataSource
         var userIds = people.Keys.ToList();
 
         var raw = await db.Books
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(b => userIds.Contains(b.UserId))
             .Select(b => new
@@ -175,7 +178,7 @@ internal static class AllDataSource
                 b.VegetableCode,
                 b.SecretCategoryId,
                 b.CoverPath,
-                HasUpload = b.CoverUpload != null,
+                HasUpload = b.CoverUpload != null || b.HadUpload,
                 b.CreatedAt,
                 Attributes = b.Attributes.Select(a => a.Attribute).ToList(),
                 Selections = b.Selections
