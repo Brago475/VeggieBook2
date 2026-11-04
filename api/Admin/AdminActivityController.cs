@@ -15,16 +15,16 @@ namespace VeggieBook.Api.Admin;
 ///   GET /api/admin/activity?study={number}
 ///
 /// Event types: book_saved, joined, book_deleted, item_removed, book_printed,
-/// book_downloaded, account_deleted, tracking_on, tracking_off,
-/// study_started, study_ended, study_renamed, study_deleted, notice_joined,
-/// notice_declined.
+/// book_downloaded, account_deleted, research_erased, tracking_on,
+/// tracking_off, study_started, study_ended, study_renamed, study_deleted,
+/// notice_joined, notice_declined.
 ///
 /// Participant events show only if tracking was on when they happened
-/// (ResearchScope.CountsBook). Saves come from the book table, deleted books
-/// and accounts included, plus book_saved log lines for books erased before
-/// deleted books were kept. A save line shows what was kept and taken out at
-/// the moment of saving ("-" when drops were not recorded yet); later
-/// take-outs are their own lines.
+/// (ResearchScope.CountsBook). Account deletions and erases always show.
+/// Saves come from the book table, deleted books and accounts included, plus
+/// book_saved log lines for books no longer in it. A save line shows what was
+/// kept and taken out at the moment of saving ("-" when drops were not
+/// recorded yet); later take-outs are their own lines.
 /// </summary>
 [ApiController]
 [Route("api/admin/activity")]
@@ -108,8 +108,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             string.IsNullOrEmpty(u.AgeRange) ? "No age range given" : $"Age {u.AgeRange}",
             u.CreatedAt)));
 
-        // Activity log: deletions, take-outs, prints, downloads, admin study
-        // actions, and saves of erased books.
+        // Activity log: deletions, take-outs, prints, downloads, erases, admin
+        // study actions, and saves of books no longer in the book table.
         var logged = await db.ActivityLog.AsNoTracking().ToListAsync();
 
         bool OwnerTracked(ActivityEntry a, DateTime at) =>
@@ -127,6 +127,21 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             else if (a.Kind == ActivityLog.StudyDeleted)
             {
                 events.Add(new Event("study_deleted", null, $"Deleted Study {a.ItemCount}", a.Detail ?? "", a.At));
+            }
+            else if (a.Kind == ParticipantErase.Kind)
+            {
+                var n = a.ItemCount ?? 0;
+                var booksText = n == 1 ? "1 book" : $"{n} books";
+                var (title, detail) = a.Detail switch
+                {
+                    ParticipantErase.Everything => ("Everything erased by the main admin",
+                        $"{booksText}, the account and all tracking data erased"),
+                    ParticipantErase.Account => ("Account and books erased by the main admin",
+                        $"{booksText} and the account erased, tracking history kept"),
+                    _ => ("Books erased by the main admin",
+                        $"{booksText} erased, account kept, tracking turned off")
+                };
+                events.Add(new Event("research_erased", a.ParticipantId, title, detail, a.At));
             }
             else if (a.Kind == ActivityLog.AccountDeleted)
             {

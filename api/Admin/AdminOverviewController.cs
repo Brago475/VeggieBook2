@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 using VeggieBook.Api.Research;
@@ -20,16 +21,17 @@ namespace VeggieBook.Api.Admin;
 // number here except the two that are about the site itself (locked
 // password resets and guests right now).
 //
-// Tracking: a book counts only if it was saved while the person's tracking
-// was on, and a person counts only while their tracking is on now
-// (Research/ResearchScope.cs). People who opted out are not tracked, so
-// they don't show up in any number, chart, or the recent list.
+// Tracking: a book, print or download counts only if it happened while the
+// person's tracking was on, and a person counts only while their tracking is
+// on now (Research/ResearchScope.cs). People who opted out are not tracked,
+// so they don't show up in any number, chart, or the recent list.
 //
 // What it returns:
-//   counts         participants, new in the last 7 days, books, answers
+//   counts         participants, new in the last 7 days, books, answers,
+//                  prints and downloads
 //   weekly         books saved per week, last 8 weeks (Monday to Sunday,
-//                  Eastern time); joinedWeekly and answersWeekly the same
-//                  way, for the trend lines on the cards
+//                  Eastern time); joinedWeekly, answersWeekly and pdfWeekly
+//                  the same way, for the trend lines on the cards
 //   byVegetable    VeggieBooks per vegetable, every active vegetable, with
 //                  its picture (image path, as on the public site)
 //   byCategory     Secrets Books per category, with its picture
@@ -110,6 +112,16 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             .Where(b => scope.CountsBook(b.UserId, b.CreatedAt))
             .ToList();
 
+        // Prints and downloads, from the activity log, while tracking was on.
+        var userOf = (await ParticipantIds.EnsureAsync(db)).ToDictionary(kv => kv.Value, kv => kv.Key);
+        var pdfLines = (await db.ActivityLog
+                .AsNoTracking()
+                .Where(a => a.Kind == ActivityLog.BookPrinted || a.Kind == ActivityLog.BookDownloaded)
+                .Select(a => new { a.Kind, a.ParticipantId, a.At })
+                .ToListAsync())
+            .Where(a => userOf.TryGetValue(a.ParticipantId, out var owner) && scope.CountsBook(owner, a.At))
+            .ToList();
+
         var recoveryLocked = await realAccounts.CountAsync(u => u.RecoveryLockedAt != null);
         var activeGuests = await db.Users.AsNoTracking()
             .CountAsync(u => u.GuestExpiresAt != null && u.GuestExpiresAt > now);
@@ -142,6 +154,13 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
         {
             var w = WeekOfUtc(j.CreatedAt);
             if (w >= 0 && w < Weeks) joinedWeekly[w]++;
+        }
+
+        var pdfWeekly = new int[Weeks];
+        foreach (var p in pdfLines)
+        {
+            var w = WeekOfUtc(p.At);
+            if (w >= 0 && w < Weeks) pdfWeekly[w]++;
         }
 
         // Answers, from the Responses sheet so they match the research data.
@@ -289,11 +308,14 @@ public class AdminOverviewController(AccountsContext db, VeggieBookContext conte
             veggieBooks = allBooks.Count(b => b.Kind == "veggie"),
             secretsBooks = allBooks.Count(b => b.Kind == "secrets"),
             answersRecorded,
+            printed = pdfLines.Count(p => p.Kind == ActivityLog.BookPrinted),
+            downloaded = pdfLines.Count(p => p.Kind == ActivityLog.BookDownloaded),
             recoveryLocked,
             activeGuests,
             weekly,
             joinedWeekly,
             answersWeekly,
+            pdfWeekly,
             byVegetable,
             byCategory,
             ageRanges,

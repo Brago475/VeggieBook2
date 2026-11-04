@@ -8,6 +8,7 @@ namespace VeggieBook.Api.Research.AllData;
 //   Books                one row per saved book. Every answer choice is its
 //                        own 0/1 column (q1_1, q1_2...): 1 = picked, 0 = not
 //                        picked, empty for Secrets Books. The shape SPSS wants.
+//                        Ends with print and download counts.
 //
 //   Recipes and secrets  one row per recipe or secret shown while making a
 //                        saved book, with its status (Kept, Taken out while
@@ -42,7 +43,10 @@ public static class AllDataSheets
             new("recipes_removed", "Recipes taken out", "number"),
             new("secrets_kept", "Secrets kept", "number"),
             new("secrets_removed", "Secrets taken out", "number"),
-            new("extra_copies", "Extra copies", "number")
+            new("extra_copies", "Extra copies", "number"),
+            new("times_printed", "Times the whole book was printed", "number"),
+            new("times_downloaded", "Times the whole book was downloaded", "number"),
+            new("single_pages", "Times single pages were printed or downloaded (one recipe, one secret, or extra copies)", "number")
         ]);
 
         var rows = data.Books
@@ -56,6 +60,9 @@ public static class AllDataSheets
                 row["secrets_kept"] = b.Items.Count(i => i.Type == "secret" && i.Kept);
                 row["secrets_removed"] = b.Items.Count(i => i.Type == "secret" && !i.Kept);
                 row["extra_copies"] = b.Items.Where(i => i.Kept).Sum(i => i.ExtraCopies);
+                row["times_printed"] = b.Prints.Printed;
+                row["times_downloaded"] = b.Prints.Downloaded;
+                row["single_pages"] = b.Prints.SinglePages;
                 return row;
             })
             .ToList();

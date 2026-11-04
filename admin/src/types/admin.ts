@@ -61,11 +61,14 @@ export type Overview = {
   veggieBooks: number
   secretsBooks: number
   answersRecorded: number
+  printed: number // prints of a book, recipe, secret or extra copies
+  downloaded: number // downloads of the same
   recoveryLocked: number
   activeGuests: number
   weekly: WeekCount[] // last 8 weeks, oldest first
   joinedWeekly: number[] // same 8 weeks
   answersWeekly: number[] // same 8 weeks
+  pdfWeekly: number[] // prints and downloads, same 8 weeks
   byVegetable: PictureCount[] // most books first
   byCategory: PictureCount[] // most books first
   ageRanges: NameCount[] // youngest first, "Not given" last

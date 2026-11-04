@@ -8,6 +8,7 @@ export type ActivityType =
   | 'book_printed'
   | 'book_downloaded'
   | 'account_deleted'
+  | 'research_erased'
   | 'tracking_on'
   | 'tracking_off'
   | 'study_started'

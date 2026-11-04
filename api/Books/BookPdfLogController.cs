@@ -14,6 +14,7 @@ namespace VeggieBook.Api.Books;
 // action is "print" or "download". With no recipeId, secretId or extras, the
 // whole book was used. The app calls this when the button is pressed, then
 // opens or saves the PDF (BookPdfController), so one press is one line.
+// Each line carries the book's id, so All Data can count them per book.
 //
 // Same ownership rules as BookPdfController. Guests and admins are never
 // logged (ActivityLog). The response never depends on whether a line was
@@ -93,7 +94,7 @@ public class BookPdfLogController(
         }
 
         var entry = await ActivityLog.ForPdfAsync(
-            db, logger, uid.Value, kind, book.Kind, book.VegetableCode, book.SecretCategoryId,
+            db, logger, uid.Value, id, kind, book.Kind, book.VegetableCode, book.SecretCategoryId,
             scope, contentId, pages);
         await ActivityLog.SaveAsync(db, logger, entry);
 

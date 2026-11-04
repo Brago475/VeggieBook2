@@ -5,10 +5,10 @@ using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Activity;
 
-// Writes the activity log (db/migrations/007, 010, 013 and 015): books saved,
-// deleted, printed and downloaded, items taken out of saved books, accounts
-// deleted, and studies renamed or deleted. Entries are permanent and back the
-// admin Activity page; nothing edits or deletes them.
+// Writes the activity log (db/migrations/007, 010, 013, 015 and 016): books
+// saved, deleted, printed and downloaded, items taken out of saved books,
+// accounts deleted, and studies renamed or deleted. Entries are permanent and
+// back the admin Activity page; nothing edits or deletes them.
 //
 // Participant lines are prepared while the account still exists (null for
 // guests and admins), then stored with SaveAsync. Logging never blocks the
@@ -74,14 +74,16 @@ public static class ActivityLog
     }
 
     /// <summary>
-    /// A print or download line. scope is ScopeBook, ScopeExtras, ScopeRecipe
-    /// or ScopeSecret; contentId is set for one recipe or secret; pages is the
-    /// item count for the whole book or the number of extra copies.
+    /// A print or download line for one saved book. scope is ScopeBook,
+    /// ScopeExtras, ScopeRecipe or ScopeSecret; contentId is set for one
+    /// recipe or secret; pages is the item count for the whole book or the
+    /// number of extra copies.
     /// </summary>
     public static async Task<ActivityEntry?> ForPdfAsync(
         AccountsContext db,
         ILogger logger,
         Guid userId,
+        Guid bookId,
         string kind,
         string bookKind,
         string? vegetableCode,
@@ -94,6 +96,7 @@ public static class ActivityLog
             db, logger, userId, bookKind, vegetableCode, secretCategoryId, pages, kind);
         if (entry is null) return null;
 
+        entry.BookId = bookId;
         entry.Detail = scope;
         entry.ContentId = contentId;
         return entry;
