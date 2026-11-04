@@ -14,6 +14,9 @@ namespace VeggieBook.Api.Data;
 // Same rules as the content context: no EF migrations, snake_case names, and
 // db/migrations is the source of truth for these tables. Identity's own
 // tables are renamed below to match db/migrations/003_identity.sql.
+//
+// Deleted accounts and books are hidden by query filters, so the app never
+// sees them. Research code reads them with IgnoreQueryFilters().
 
 public class AccountsContext(DbContextOptions<AccountsContext> options)
     : IdentityDbContext<AppUser, AppRole, Guid>(options)
@@ -58,6 +61,10 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
                 property.SetColumnName(ToSnakeCase(property.Name));
         }
 
+        // Deleted accounts are invisible to sign-in, the app, and admin
+        // account pages. See db/migrations/014_keep_research_on_delete.sql.
+        b.Entity<AppUser>().HasQueryFilter(u => u.DeletedAt == null);
+
         b.Entity<Book>(e =>
         {
             e.ToTable("book_session");
@@ -70,6 +77,11 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.SecretCategoryId).HasColumnName("secret_category_id");
             e.Property(x => x.CoverPath).HasColumnName("cover_path");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.DeletedAt).HasColumnName("deleted_at");   // 014
+            e.Property(x => x.HadUpload).HasColumnName("had_upload");   // 014
+
+            // Deleted books kept for research are hidden from the app.
+            e.HasQueryFilter(x => x.DeletedAt == null);
 
             e.HasMany(x => x.Attributes).WithOne().HasForeignKey(x => x.SessionId);
             e.HasMany(x => x.Selections).WithOne().HasForeignKey(x => x.SessionId);

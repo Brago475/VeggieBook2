@@ -8,7 +8,8 @@ namespace VeggieBook.Api.Research;
 // endpoints and the app's own endpoints can't drift apart.
 //
 //   Who counts      real accounts that are not admins (the same people as
-//                   the research sheets). Guests and admins never count.
+//                   the research sheets), deleted ones included. Guests and
+//                   admins never count.
 //   Tracking        on by default from the moment an account accepts the
 //                   Terms. Turned off or back on in Settings ("self"), or
 //                   turned off by an admin ("admin"). The latest change
@@ -32,10 +33,12 @@ public record TrackingState(bool On, string? ChangedBy, DateTime? ChangedAt)
 public static class StudyTracking
 {
     // Real accounts that are not admins: everyone a study can include.
+    // Deleted accounts stay in, since their research data is kept.
     public static async Task<IQueryable<AppUser>> PeopleAsync(AccountsContext db)
     {
         var adminRoleId = await AdminRoleIdAsync(db);
         return db.Users
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .Where(u => u.GuestExpiresAt == null
                      && !db.UserRoles.Any(r => r.UserId == u.Id && r.RoleId == adminRoleId));

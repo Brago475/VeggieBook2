@@ -7,6 +7,7 @@ using VeggieBook.Api.Controllers;
 using VeggieBook.Api.Covers;
 using VeggieBook.Api.Data;
 using VeggieBook.Api.Recipes;
+using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Books;
 
@@ -26,6 +27,9 @@ namespace VeggieBook.Api.Books;
 //
 // A Secrets Book is saved by SecretBooksController; listing, opening and
 // deleting work the same for both kinds.
+//
+// Deleted books kept for research are hidden by the context's query filter,
+// so every query here sees only the owner's current books.
 //
 // Saving, deleting and taking a recipe out each write an activity log line
 // (Activity/ActivityLog.cs); the log never blocks the action.
@@ -303,7 +307,8 @@ public class BooksController(
         return Created($"/api/books/{book.Id}", new { id = book.Id });
     }
 
-    // Deletes in one statement; the database cascades to answers, items and cover.
+    // Kept for research if tracking was on when it was saved, otherwise erased
+    // (Research/KeepOnDelete.cs). Either way the owner no longer sees it.
     // The activity line is prepared first and saved once the delete succeeds.
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
@@ -326,10 +331,7 @@ public class BooksController(
         var entry = await ActivityLog.ForBookAsync(
             db, logger, uid, info.Kind, info.VegetableCode, info.SecretCategoryId, info.Items);
 
-        var removed = await db.Books
-            .Where(b => b.Id == id && b.UserId == uid)
-            .ExecuteDeleteAsync();
-        if (removed == 0) return NotFound();
+        if (!await KeepOnDelete.DeleteBookAsync(db, uid, id)) return NotFound();
 
         await ActivityLog.SaveAsync(db, logger, entry);
         return NoContent();

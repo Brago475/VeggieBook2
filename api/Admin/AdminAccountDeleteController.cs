@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Admin;
 
@@ -18,10 +19,10 @@ namespace VeggieBook.Api.Admin;
 //   - Never an admin account; its admin access is removed first.
 //   - Real accounts only. Guests are removed on sign out or after 24 hours.
 //
-// Works the same as a person deleting their own account
-// (Auth/AccountController.cs): books and uploaded covers go with it through
-// ON DELETE CASCADE, and the deletion is logged by research ID only, marked
-// as removed by an admin. The log never blocks the delete.
+// Works the same as a person deleting their own account: personal details
+// are wiped and research data is kept (Research/KeepOnDelete.cs). The
+// deletion is logged by research ID only, marked as removed by an admin.
+// The log never blocks the delete.
 
 public record AdminDeleteAccountRequest(string? ConfirmEmail);
 
@@ -55,7 +56,7 @@ public class AdminAccountDeleteController(
 
         var entry = await ActivityLog.ForAccountAsync(db, logger, user.Id, byAdmin: true);
 
-        var result = await users.DeleteAsync(user);
+        var result = await KeepOnDelete.DeleteAccountAsync(db, users, user);
         if (!result.Succeeded)
             return BadRequest(new { error = AuthHelpers.FirstError(result) });
 

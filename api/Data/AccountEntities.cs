@@ -12,7 +12,6 @@ namespace VeggieBook.Api.Data;
 
 // An account. ASP.NET Core Identity supplies the standard fields: email,
 // email confirmation, password hash, security stamp, lockout, and so on.
-// Identity manages all of them; nothing here touches them by hand.
 //
 // UserName is always set to the email address. Identity requires a user
 // name, and VeggieBook2 signs in by email only. The name people see is
@@ -53,6 +52,10 @@ public class AppUser : IdentityUser<Guid>
 
     // Set when password reset is locked for this account.
     public DateTime? RecoveryLockedAt { get; set; }
+
+    // Set when the account was deleted. Personal details are wiped and the
+    // app treats it as gone; research data stays. See Research/KeepOnDelete.cs.
+    public DateTime? DeletedAt { get; set; }
 }
 
 // A role: Guest, User, or Admin. See Auth/Roles.cs.
@@ -63,9 +66,7 @@ public class AppRole : IdentityRole<Guid>
 }
 
 // A saved book, stored in book_session. Belongs to exactly one account.
-// Deleting the account deletes its books through the database's
-// ON DELETE CASCADE (db/migrations/003_identity.sql), so there is no
-// relationship to AppUser in code: the database enforces it.
+// There is no relationship to AppUser in code: the database enforces it.
 //
 // A VeggieBook names its vegetable (VegetableCode); a Secrets Book names its
 // category (SecretCategoryId). Each kind leaves the other one null.
@@ -84,6 +85,12 @@ public class Book
     // secrets' pictures. Null when the cover is an upload.
     public string? CoverPath { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    // Set when the book was deleted but kept for research. Hidden from the
+    // app; HadUpload records an uploaded cover that was erased.
+    // See db/migrations/014_keep_research_on_delete.sql.
+    public DateTime? DeletedAt { get; set; }
+    public bool HadUpload { get; set; }
 
     public List<BookAttribute> Attributes { get; set; } = [];
     public List<BookSelection> Selections { get; set; } = [];
