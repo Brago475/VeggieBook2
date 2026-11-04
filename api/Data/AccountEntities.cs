@@ -86,11 +86,15 @@ public class Book
     public string? CoverPath { get; set; }
     public DateTime CreatedAt { get; set; }
 
-    // Set when the book was deleted but kept for research. Hidden from the
-    // app; HadUpload records an uploaded cover that was erased.
+    // Set when the book was deleted. Hidden from the app; HadUpload records
+    // an uploaded cover that was erased.
     // See db/migrations/014_keep_research_on_delete.sql.
     public DateTime? DeletedAt { get; set; }
     public bool HadUpload { get; set; }
+
+    // False for books saved before drops were recorded, which show "-" for
+    // drops. See db/migrations/015_print_download_and_drops.sql.
+    public bool DropsRecorded { get; set; } = true;
 
     public List<BookAttribute> Attributes { get; set; } = [];
     public List<BookSelection> Selections { get; set; } = [];

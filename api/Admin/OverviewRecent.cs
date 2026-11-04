@@ -14,7 +14,8 @@ namespace VeggieBook.Api.Admin;
 //
 // Only book_deleted and account_deleted lines are read from the log; saves
 // come from the book table, deleted books included, so they are never
-// listed twice.
+// listed twice. The full history, prints and downloads included, is on the
+// Activity page.
 //
 // People who opted out are not tracked (Research/ResearchScope.cs).
 // Account deletions are always listed.
@@ -50,6 +51,7 @@ public static class OverviewRecent
                     b.VegetableCode,
                     b.SecretCategoryId,
                     b.CreatedAt,
+                    b.DropsRecorded,
                     Deleted = b.DeletedAt != null,
                     KeptAtSave = b.Selections.Count(s => !s.DroppedInReview),
                     Dropped = b.Selections.Count(s => s.DroppedInReview)
@@ -105,7 +107,8 @@ public static class OverviewRecent
                 ids.GetValueOrDefault(b.UserId, ""),
                 BookTitle("Saved", Name(b.Kind, b.VegetableCode, b.SecretCategoryId), b.Kind),
                 Items(b.KeptAtSave, b.Kind) + " kept"
-                    + (b.Dropped > 0 ? $", {b.Dropped} taken out" : "")
+                    + (!b.DropsRecorded ? ", taken out while making: -"
+                        : b.Dropped > 0 ? $", {b.Dropped} taken out" : "")
                     + (b.Deleted ? ", deleted later" : ""),
                 b.CreatedAt))
             .Concat(joined.Select(u => new Line(

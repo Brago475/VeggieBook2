@@ -5,9 +5,10 @@ using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Activity;
 
-// Writes the activity log (db/migrations/007, 010 and 013): books saved and
-// deleted, items taken out of saved books, accounts deleted, and studies
-// renamed or deleted. Entries are permanent and back the admin Activity page.
+// Writes the activity log (db/migrations/007, 010, 013 and 015): books saved,
+// deleted, printed and downloaded, items taken out of saved books, accounts
+// deleted, and studies renamed or deleted. Entries are permanent and back the
+// admin Activity page; nothing edits or deletes them.
 //
 // Participant lines are prepared while the account still exists (null for
 // guests and admins), then stored with SaveAsync. Logging never blocks the
@@ -21,9 +22,17 @@ public static class ActivityLog
     public const string BookSaved = "book_saved";
     public const string BookDeleted = "book_deleted";
     public const string ItemRemoved = "item_removed";
+    public const string BookPrinted = "book_printed";
+    public const string BookDownloaded = "book_downloaded";
     public const string AccountDeleted = "account_deleted";
     public const string StudyRenamed = "study_renamed";
     public const string StudyDeleted = "study_deleted";
+
+    // What a print or download line covers, stored in Detail.
+    public const string ScopeBook = "book";
+    public const string ScopeExtras = "extras";
+    public const string ScopeRecipe = "recipe";
+    public const string ScopeSecret = "secret";
 
     /// <summary>Detail on an account_deleted line when an admin removed the account.</summary>
     public const string RemovedByAdmin = "removed_by_admin";
@@ -62,6 +71,32 @@ public static class ActivityLog
             logger.LogWarning(ex, "Activity log: could not prepare a {Kind} line.", kind);
             return null;
         }
+    }
+
+    /// <summary>
+    /// A print or download line. scope is ScopeBook, ScopeExtras, ScopeRecipe
+    /// or ScopeSecret; contentId is set for one recipe or secret; pages is the
+    /// item count for the whole book or the number of extra copies.
+    /// </summary>
+    public static async Task<ActivityEntry?> ForPdfAsync(
+        AccountsContext db,
+        ILogger logger,
+        Guid userId,
+        string kind,
+        string bookKind,
+        string? vegetableCode,
+        int? secretCategoryId,
+        string scope,
+        int? contentId,
+        int pages)
+    {
+        var entry = await ForBookAsync(
+            db, logger, userId, bookKind, vegetableCode, secretCategoryId, pages, kind);
+        if (entry is null) return null;
+
+        entry.Detail = scope;
+        entry.ContentId = contentId;
+        return entry;
     }
 
     public static async Task<ActivityEntry?> ForAccountAsync(

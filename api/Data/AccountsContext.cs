@@ -77,8 +77,9 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.SecretCategoryId).HasColumnName("secret_category_id");
             e.Property(x => x.CoverPath).HasColumnName("cover_path");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
-            e.Property(x => x.DeletedAt).HasColumnName("deleted_at");   // 014
-            e.Property(x => x.HadUpload).HasColumnName("had_upload");   // 014
+            e.Property(x => x.DeletedAt).HasColumnName("deleted_at");           // 014
+            e.Property(x => x.HadUpload).HasColumnName("had_upload");           // 014
+            e.Property(x => x.DropsRecorded).HasColumnName("drops_recorded");   // 015
 
             // Deleted books kept for research are hidden from the app.
             e.HasQueryFilter(x => x.DeletedAt == null);
@@ -129,7 +130,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
 
-        // See db/migrations/007_activity_log.sql, 010_activity_detail.sql and 013_review_drops.sql.
+        // See db/migrations/007, 010, 013 and 015.
         b.Entity<ActivityEntry>(e =>
         {
             e.ToTable("activity_log");
@@ -143,6 +144,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.SecretCategoryId).HasColumnName("secret_category_id");
             e.Property(x => x.ItemCount).HasColumnName("item_count");
             e.Property(x => x.TakenOutCount).HasColumnName("taken_out_count");
+            e.Property(x => x.ContentId).HasColumnName("content_id");   // 015
             e.Property(x => x.Detail).HasColumnName("detail");
         });
 
