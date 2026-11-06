@@ -31,10 +31,12 @@ import { ChangeVeggieCover } from './pages/ChangeVeggieCover'
 import { CreateAccount } from './pages/CreateAccount'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { HomeLibrary } from './pages/HomeLibrary'
+import { NotificationThread } from './pages/NotificationThread'
 import { Notifications } from './pages/Notifications'
 import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
 import { Welcome } from './pages/Welcome'
+import type { NotificationItem } from './utils/notificationsApi'
 import { routePath } from './utils/routes'
 
 // Stylesheet order is load order, and load order decides who wins a tie.
@@ -141,6 +143,8 @@ export default function App() {
   const openRecipe = route.view === 'book' ? route.recipeId : null
   const openSecret = route.view === 'book' ? route.secretId : null
   const editingCover = route.view === 'book' ? route.cover : false
+  // The message a thread was opened at, or null for the inbox.
+  const openMessage = route.view === 'notifications' ? route.messageId : null
 
   // Which viewer a saved book needs. An open recipe or secret in the
   // address already says; otherwise the book list, which the home screen
@@ -362,10 +366,12 @@ export default function App() {
       if (openSecret !== null) return () => openSecretInBook(null)
       return goHome
     }
-    if (current === 'forgotPassword') return () => goUp('/signin')
-    if (authPage || current === 'account' || current === 'notifications' || readingPage) {
-      return goHome
+    // A message thread goes back to the inbox, and the inbox goes home.
+    if (current === 'notifications') {
+      return openMessage !== null ? () => goUp('/notifications') : goHome
     }
+    if (current === 'forgotPassword') return () => goUp('/signin')
+    if (authPage || current === 'account' || readingPage) return goHome
     return undefined
   }
 
@@ -409,9 +415,18 @@ export default function App() {
     readingPage ||
     (showBook && !editingCover)
 
-  function viewNotifications() {
-    notes.viewCurrent()
+  function openThread(item: NotificationItem) {
+    navigate(`/notifications/${encodeURIComponent(String(item.id))}`)
+  }
+
+  function seeAllFromNotice() {
+    notes.leaveBatch()
     navigate('/notifications')
+  }
+
+  function openFromNotice(item: NotificationItem) {
+    notes.leaveBatch()
+    openThread(item)
   }
 
   // The app renders under the loading screen once the sign-in check answers,
@@ -524,11 +539,21 @@ export default function App() {
               />
             )}
 
-            {current === 'notifications' && hasSession && (
+            {current === 'notifications' && hasSession && openMessage === null && (
               <Notifications
                 items={notes.items}
                 loaded={notes.loaded}
                 error={notes.error}
+                onOpen={openThread}
+              />
+            )}
+
+            {current === 'notifications' && hasSession && openMessage !== null && (
+              <NotificationThread
+                items={notes.items}
+                loaded={notes.loaded}
+                error={notes.error}
+                focusId={openMessage}
                 onOpenAll={notes.openAll}
                 onLink={notes.followLink}
               />
@@ -623,14 +648,13 @@ export default function App() {
             />
           )}
 
-          {calm && notes.current && (
+          {calm && notes.batch.length > 0 && (
             <NotificationNotice
-              item={notes.current}
-              onView={viewNotifications}
-              onClose={notes.closeCurrent}
-              onLink={() => {
-                if (notes.current) notes.followLink(notes.current)
-              }}
+              items={notes.batch}
+              onSeeAll={seeAllFromNotice}
+              onOpen={openFromNotice}
+              onClose={notes.closeBatch}
+              onLink={notes.followLink}
             />
           )}
         </div>

@@ -1,60 +1,62 @@
-/* Notifications: the screen (pages/Notifications.tsx) and the message
-   pop-up (components/notifications/NotificationNotice.tsx). Cards build on
-   .account-card, the pop-up on .dialog. */
+/* Notifications: the inbox (pages/Notifications.tsx), the thread
+   (pages/NotificationThread.tsx) and the pop-up
+   (components/notifications/NotificationNotice.tsx). The pop-up builds on
+   .dialog (dialog.css). */
 
-.nf-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.nf-card {
+/* Shared */
+.nf-avatar {
   position: relative;
-}
-
-/* Arrived since the last visit: a green bar on the left. */
-.nf-card.is-new::before {
-  content: '';
-  position: absolute;
-  top: 14px;
-  bottom: 14px;
-  left: 0;
-  width: 4px;
-  border-radius: 0 4px 4px 0;
-  background: var(--green-dark);
-}
-
-.nf-meta {
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.nf-tag {
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   color: var(--green-deep);
   background: var(--green-tint);
 }
 
-.nf-text,
-.nf-notice-text {
-  margin: 0;
-  font-size: var(--font-label);
-  line-height: 1.55;
+.nf-avatar svg {
+  width: 22px;
+  height: 22px;
+}
+
+.nf-avatar.is-large {
+  width: 52px;
+  height: 52px;
+}
+
+.nf-avatar.is-large svg {
+  width: 26px;
+  height: 26px;
+}
+
+.nf-avatar.is-muted {
+  color: var(--text-muted);
+  background: #f1f0e9;
+}
+
+.nf-avatar-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--green-dark);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.nf-sender {
+  font-weight: 700;
   color: var(--text);
-  overflow-wrap: anywhere;
+}
+
+.nf-time {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .nf-link {
@@ -64,46 +66,555 @@
   text-underline-offset: 2px;
 }
 
-.nf-link:focus-visible {
+.nf-link:focus-visible,
+.nf-linkcard:focus-visible {
   outline: 2px solid var(--green-dark);
   outline-offset: 2px;
-  border-radius: 2px;
+  border-radius: 4px;
 }
 
-.nf-skel {
-  height: 96px;
-  border-radius: var(--r-lg);
+.nf-note {
+  margin: 0 4px var(--sp-5);
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
-/* The pop-up. */
-.nf-notice-head {
+.nf-note.is-center {
+  text-align: center;
+}
+
+/* Inbox */
+.nf-tabs {
+  display: flex;
+  margin: 0 0 var(--sp-5);
+  padding: 4px;
+  background: #e9e8e0;
+  border-radius: 12px;
+}
+
+.nf-tab {
+  flex: 1;
+  min-height: 44px;
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.nf-tab[aria-selected='true'] {
+  font-weight: 700;
+  color: var(--green-deep);
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(20, 20, 15, 0.12);
+}
+
+.nf-tab:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.nf-group-label,
+.nf-waiting-label {
+  margin: 0 4px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.nf-group {
+  margin: 0 0 var(--sp-5);
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.nf-group li + li {
+  border-top: 1px solid var(--line);
+}
+
+.nf-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.nf-row.is-unread {
+  background: #fbfdf7;
+}
+
+.nf-row:hover {
+  background: #f3f8ec;
+}
+
+.nf-row:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: -2px;
+}
+
+.nf-row-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nf-row-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nf-row:not(.is-unread) .nf-sender {
+  font-weight: 600;
+}
+
+.nf-row.is-unread .nf-time {
+  font-weight: 600;
+  color: var(--green-deep);
+}
+
+.nf-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--font-label);
+  line-height: 1.4;
+  color: #44443d;
+}
+
+.nf-row.is-unread .nf-preview {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.nf-skel-row {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+}
+
+.nf-skel-avatar {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.nf-skel-lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.nf-skel-line {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.nf-skel-line.is-short {
+  width: 60%;
+}
+
+/* Thread */
+.nf-thread-head {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: var(--sp-3);
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
 }
 
-.nf-notice-head .dialog-title {
+.nf-thread-title {
   margin: 0;
+  font-size: var(--font-section);
+  font-weight: 700;
+  line-height: 1.3;
 }
 
-.nf-notice-icon {
+.nf-thread-sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.nf-thread {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--sp-5);
+  padding: 0;
+  list-style: none;
+}
+
+.nf-thread-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.nf-day {
+  align-self: center;
+  margin: 16px 0 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: #ebeae2;
+  border-radius: 999px;
+}
+
+.nf-day.is-today {
+  color: var(--green-deep);
+  background: var(--green-tint);
+}
+
+.nf-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(100%, 520px);
+  margin: 0;
+  padding: 12px 15px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px 20px 20px 6px;
+}
+
+.nf-bubble.is-fresh {
+  background: var(--green-tint);
+  border-color: #c9dfae;
+}
+
+.nf-bubble.is-focus {
+  box-shadow: 0 0 0 2px var(--green-dark);
+}
+
+.nf-bubble-text {
+  margin: 0;
+  font-size: var(--font-label);
+  line-height: 1.5;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.nf-bubble-meta {
+  margin: 4px 0 6px 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.nf-linkcard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  text-decoration: none;
+  color: var(--text);
+  background: #f5f5f0;
+  border-radius: 12px;
+  transition: background 0.15s ease;
+}
+
+.nf-bubble.is-fresh .nf-linkcard {
+  background: var(--surface);
+}
+
+.nf-linkcard:hover {
+  background: #eef1e6;
+}
+
+.nf-linkcard-icon {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  color: var(--green-deep);
+  background: var(--green-tint);
+}
+
+.nf-linkcard-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.nf-linkcard-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.nf-linkcard-host {
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.nf-linkcard-note {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.nf-skel-bubble {
+  width: 80%;
+  height: 72px;
+  margin-bottom: 12px;
+  border-radius: 20px 20px 20px 6px;
+}
+
+.nf-skel-bubble.is-short {
+  width: 55%;
+}
+
+/* Pop-up */
+.dialog.nf-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 440px;
+}
+
+.nf-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nf-sheet-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   color: var(--green-deep);
   background: var(--green-tint);
 }
 
-.nf-notice-icon svg {
+.nf-sheet-icon svg {
   width: 22px;
   height: 22px;
 }
 
-.nf-notice-text {
-  margin-bottom: var(--sp-5);
+.nf-sheet-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.nf-sheet-title {
+  margin: 0;
+  font-size: var(--font-section);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.nf-sheet-step {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.nf-steppers {
+  display: flex;
+  gap: 6px;
+}
+
+.nf-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border: 1px solid #c9dfae;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.nf-step svg {
+  width: 18px;
+  height: 18px;
+}
+
+.nf-step:disabled {
+  color: #b7b6ad;
+  background: var(--surface);
+  border-color: var(--line);
+  cursor: default;
+}
+
+.nf-step:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.nf-sheet-message {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nf-bubble-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.nf-sheet .nf-bubble {
+  max-width: none;
+}
+
+.nf-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.nf-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #d3d2c8;
+  transition:
+    width 0.2s ease,
+    background 0.2s ease;
+}
+
+.nf-dot.is-on {
+  width: 18px;
+  background: var(--green-dark);
+}
+
+.nf-waiting {
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
+.nf-waiting-label {
+  margin: 10px 2px 4px;
+}
+
+.nf-waiting ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nf-waiting-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 4px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.nf-waiting-row:hover {
+  background: #f3f8ec;
+}
+
+.nf-waiting-row:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 0;
+}
+
+.nf-unread-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--green-dark);
+}
+
+.nf-waiting-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nf-waiting-preview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--font-label);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.nf-waiting-time {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.nf-waiting-more {
+  margin: 2px 4px 0 22px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* On a phone the pop-up sits at the bottom, within thumb reach. */
+@media (max-width: 600px) {
+  .dialog-overlay.nf-overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .dialog.nf-sheet {
+    border-radius: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-dot,
+  .nf-row,
+  .nf-tab,
+  .nf-linkcard {
+    transition: none;
+  }
 }

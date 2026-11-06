@@ -1,50 +1,48 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { LeafDecor } from '../components/layout/LeafDecor'
-import { LinkedText } from '../components/notifications/LinkedText'
+import { InboxRow } from '../components/notifications/InboxRow'
 import { notificationKey } from '../hooks/useNotifications'
-import { useLang } from '../i18n/languageContext'
 import { NOTIFICATIONS } from '../i18n/strings/notifications'
 import { useStrings } from '../i18n/useStrings'
+import { isToday } from '../utils/notificationDates'
 import type { NotificationItem } from '../utils/notificationsApi'
 
-// The Notifications screen: every live message for this account or guest,
-// newest first. Opening the screen marks unread messages as opened. They
-// keep the New tag until the screen is left, so it is clear which ones
-// arrived since the last visit.
+// The Notifications inbox: every live message, newest first, grouped into
+// Today and Earlier, with All and Unread tabs. A row opens the thread at
+// that message. Visiting the inbox alone does not mark anything opened.
 
 type Props = {
   items: NotificationItem[]
   loaded: boolean
   error: string | null
-  onOpenAll: () => void
-  onLink: (item: NotificationItem) => void
+  onOpen: (item: NotificationItem) => void
 }
 
-const SKELETON_CARDS = 2
+const SKELETON_ROWS = 3
 
-export function Notifications({ items, loaded, error, onOpenAll, onLink }: Props) {
+export function Notifications({ items, loaded, error, onOpen }: Props) {
   const t = useStrings(NOTIFICATIONS)
-  const { lang } = useLang()
-  const [fresh, setFresh] = useState<Set<string>>(() => new Set())
+  const [unreadOnly, setUnreadOnly] = useState(false)
 
-  useEffect(() => {
-    const unread = items.filter((item) => !item.read)
-    if (unread.length === 0) return
-    setFresh((prev) => {
-      const next = new Set(prev)
-      for (const item of unread) next.add(notificationKey(item))
-      return next
-    })
-    onOpenAll()
-  }, [items, onOpenAll])
+  const unread = items.filter((item) => !item.read)
+  const list = unreadOnly ? unread : items
+  const today = list.filter((item) => isToday(item.sentAt))
+  const earlier = list.filter((item) => !isToday(item.sentAt))
 
-  const locale = lang === 'es' ? 'es-US' : 'en-US'
-  function sentOn(iso: string) {
-    return new Date(iso).toLocaleDateString(locale, {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    })
+  function group(label: string, rows: NotificationItem[]) {
+    if (rows.length === 0) return null
+    return (
+      <section>
+        <h2 className="nf-group-label">{label}</h2>
+        <ul className="nf-group">
+          {rows.map((item) => (
+            <li key={notificationKey(item)}>
+              <InboxRow item={item} onOpen={() => onOpen(item)} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
   }
 
   return (
@@ -58,13 +56,38 @@ export function Notifications({ items, loaded, error, onOpenAll, onLink }: Props
         </div>
       </div>
 
+      <div className="nf-tabs" role="tablist" aria-label={t.show}>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!unreadOnly}
+          className="nf-tab"
+          onClick={() => setUnreadOnly(false)}
+        >
+          {t.tabAll(items.length)}
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={unreadOnly}
+          className="nf-tab"
+          onClick={() => setUnreadOnly(true)}
+        >
+          {t.tabUnread(unread.length)}
+        </button>
+      </div>
+
       {!loaded && (
         <div role="status" aria-busy="true">
           <span className="visually-hidden">{t.loading}</span>
-          <ul className="nf-list" aria-hidden="true">
-            {Array.from({ length: SKELETON_CARDS }, (_, i) => (
-              <li key={i}>
-                <div className="skeleton nf-skel" />
+          <ul className="nf-group" aria-hidden="true">
+            {Array.from({ length: SKELETON_ROWS }, (_, i) => (
+              <li key={i} className="nf-skel-row">
+                <span className="skeleton nf-skel-avatar" />
+                <span className="nf-skel-lines">
+                  <span className="skeleton nf-skel-line" />
+                  <span className="skeleton nf-skel-line is-short" />
+                </span>
               </li>
             ))}
           </ul>
@@ -72,27 +95,14 @@ export function Notifications({ items, loaded, error, onOpenAll, onLink }: Props
       )}
 
       {loaded && error && items.length === 0 && <p className="message">{t.couldNotLoad}</p>}
-      {loaded && !error && items.length === 0 && <p className="message">{t.empty}</p>}
-
-      {items.length > 0 && (
-        <ul className="nf-list">
-          {items.map((item) => {
-            const key = notificationKey(item)
-            const isNew = fresh.has(key)
-            return (
-              <li key={key} className={isNew ? 'account-card nf-card is-new' : 'account-card nf-card'}>
-                <div className="nf-meta">
-                  {isNew && <span className="nf-tag">{t.newLabel}</span>}
-                  <span>{t.sent(sentOn(item.sentAt))}</span>
-                </div>
-                <p className="nf-text">
-                  <LinkedText text={item.text} linkNote={t.linkNote} onLink={() => onLink(item)} />
-                </p>
-              </li>
-            )
-          })}
-        </ul>
+      {loaded && !error && list.length === 0 && (
+        <p className="message">{unreadOnly ? t.emptyUnread : t.emptyAll}</p>
       )}
+
+      {group(t.today, today)}
+      {group(t.earlier, earlier)}
+
+      {items.length > 0 && <p className="nf-note">{t.expireNote}</p>}
     </div>
   )
 }

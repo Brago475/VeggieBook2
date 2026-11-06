@@ -78,6 +78,14 @@ export function ChevronRightIcon({ className }: IconProps) {
   )
 }
 
+export function ChevronLeftIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M15 5l-7 7 7 7" />
+    </Svg>
+  )
+}
+
 // Three lines, for the Menu button.
 export function MenuIcon({ className }: IconProps) {
   return (
@@ -106,6 +114,27 @@ export function BellIcon({ className }: IconProps) {
     <Svg className={className}>
       <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
       <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+    </Svg>
+  )
+}
+
+// A leaf, the VeggieBook team's picture in Notifications.
+export function LeafIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15" />
+      <path d="M5 19l7-7" />
+    </Svg>
+  )
+}
+
+// A box with an arrow, for a link to another site.
+export function ExternalLinkIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M14 4h6v6" />
+      <path d="M20 4L10 14" />
+      <path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" />
     </Svg>
   )
 }

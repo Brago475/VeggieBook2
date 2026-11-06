@@ -10,7 +10,8 @@
 //   /book/{id}/secret/{secretId}  one secret inside a Secrets Book
 //   /book/{id}/cover              changing a saved book's cover
 //   /account                      account settings
-//   /notifications                messages from the research team
+//   /notifications                the inbox of messages from the research team
+//   /notifications/{id}           the message thread, opened at one message
 //   /about                        about VeggieBook, open to everyone
 //   /terms, /privacy              Terms of Use and Privacy Policy, open to everyone
 //   /signin, /register            sign in, create account
@@ -23,7 +24,7 @@ export type Route =
   | { view: 'flow' }
   | { view: 'secrets' }
   | { view: 'account' }
-  | { view: 'notifications' }
+  | { view: 'notifications'; messageId: string | null }
   | { view: 'about' }
   | { view: 'terms' }
   | { view: 'privacy' }
@@ -48,6 +49,14 @@ function book(
   return { view: 'book', bookId, recipeId, secretId, cover }
 }
 
+function decode(part: string): string | null {
+  try {
+    return decodeURIComponent(part)
+  } catch {
+    return null
+  }
+}
+
 export function parseRoute(path: string): Route {
   const parts = path.split('/').filter(Boolean)
 
@@ -62,7 +71,7 @@ export function parseRoute(path: string): Route {
       case 'account':
         return { view: 'account' }
       case 'notifications':
-        return { view: 'notifications' }
+        return { view: 'notifications', messageId: null }
       case 'about':
         return { view: 'about' }
       case 'terms':
@@ -76,6 +85,11 @@ export function parseRoute(path: string): Route {
       case 'forgot-password':
         return { view: 'forgotPassword' }
     }
+  }
+
+  if (parts[0] === 'notifications' && parts.length === 2) {
+    const messageId = decode(parts[1])
+    if (messageId) return { view: 'notifications', messageId }
   }
 
   if (parts[0] === 'book' && parts[1]) {
@@ -104,7 +118,9 @@ export function routePath(route: Route): string {
     case 'account':
       return '/account'
     case 'notifications':
-      return '/notifications'
+      return route.messageId === null
+        ? '/notifications'
+        : `/notifications/${encodeURIComponent(route.messageId)}`
     case 'about':
       return '/about'
     case 'terms':
