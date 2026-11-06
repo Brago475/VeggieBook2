@@ -8,6 +8,7 @@
 }
 
 .main-menu-btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -40,6 +41,18 @@
   width: 20px;
   height: 20px;
   color: var(--text-muted);
+}
+
+/* Unread messages: a dot on the button. */
+.main-menu-dot {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 2px var(--surface);
 }
 
 /* The panel. */
@@ -87,6 +100,22 @@
 
 .main-menu .menu-item svg {
   color: var(--text-muted);
+}
+
+/* A row's count, pushed to the right edge. */
+.main-menu-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: auto;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--green-dark);
 }
 
 /* Hover and keyboard focus: the admin sidebar's active look. */

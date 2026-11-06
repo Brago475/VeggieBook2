@@ -10,6 +10,7 @@
 //   /book/{id}/secret/{secretId}  one secret inside a Secrets Book
 //   /book/{id}/cover              changing a saved book's cover
 //   /account                      account settings
+//   /notifications                messages from the research team
 //   /about                        about VeggieBook, open to everyone
 //   /terms, /privacy              Terms of Use and Privacy Policy, open to everyone
 //   /signin, /register            sign in, create account
@@ -22,6 +23,7 @@ export type Route =
   | { view: 'flow' }
   | { view: 'secrets' }
   | { view: 'account' }
+  | { view: 'notifications' }
   | { view: 'about' }
   | { view: 'terms' }
   | { view: 'privacy' }
@@ -59,6 +61,8 @@ export function parseRoute(path: string): Route {
         return { view: 'secrets' }
       case 'account':
         return { view: 'account' }
+      case 'notifications':
+        return { view: 'notifications' }
       case 'about':
         return { view: 'about' }
       case 'terms':
@@ -99,6 +103,8 @@ export function routePath(route: Route): string {
       return '/secrets'
     case 'account':
       return '/account'
+    case 'notifications':
+      return '/notifications'
     case 'about':
       return '/about'
     case 'terms':

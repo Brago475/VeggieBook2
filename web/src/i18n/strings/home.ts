@@ -9,6 +9,7 @@ const en = {
 
   menuVeggieBook: 'VeggieBook',
   menuAccount: 'Account',
+  notifications: 'Notifications',
   about: 'About VeggieBook',
   createAccount: 'Create account',
   signIn: 'Sign in',
@@ -61,6 +62,7 @@ const es: typeof en = {
 
   menuVeggieBook: 'VeggieBook',
   menuAccount: 'Cuenta',
+  notifications: 'Notificaciones',
   about: 'Acerca de VeggieBook',
   createAccount: 'Crear cuenta',
   signIn: 'Iniciar sesión',

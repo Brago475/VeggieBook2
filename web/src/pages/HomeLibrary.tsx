@@ -4,6 +4,7 @@ import { ActionMenu } from '../components/common/ActionMenu'
 import { BookCard } from '../components/library/BookCard'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import {
+  BellIcon,
   ChevronRightIcon,
   InfoIcon,
   LockIcon,
@@ -29,11 +30,11 @@ import { downloadPdf, printPdf } from '../utils/bookPdf'
 // the heading says which, so a guest is never surprised.
 //
 // Beside the heading, the ☰ Menu (MainMenu.tsx), in two groups. On top,
-// features and information: About VeggieBook, and future features as they
-// are added. Below a line, the account: Profile and settings, the language
-// switch, and Sign out, or for a guest, Create account, Sign in, the
-// language switch, and End guest visit, which asks first because it
-// deletes their books.
+// features and information: Notifications (with the unread count), About
+// VeggieBook, and future features as they are added. Below a line, the
+// account: Profile and settings, the language switch, and Sign out, or for
+// a guest, Create account, Sign in, the language switch, and End guest
+// visit, which asks first because it deletes their books.
 //
 // Each card follows the original app: a picture fills the card and the
 // chosen cover sits as a small inset. For a VeggieBook the picture is the
@@ -60,6 +61,8 @@ type Props = {
   secretCategories: SecretCategory[]
   loading: boolean
   error: string | null
+  // Unread messages, shown on the Notifications row and the Menu button.
+  unreadCount: number
   onCreateVeggie: () => void
   onCreateSecrets: () => void
   onAccount: () => void
@@ -67,6 +70,7 @@ type Props = {
   onSignIn: () => void
   // Signs out. For a guest, this also deletes the guest and their books.
   onSignOut: () => Promise<void>
+  onNotifications: () => void
   onAbout: () => void
   onDeleteBook: (id: string) => Promise<void>
   onViewBook: (id: string) => void
@@ -93,12 +97,14 @@ export function HomeLibrary({
   secretCategories,
   loading,
   error,
+  unreadCount,
   onCreateVeggie,
   onCreateSecrets,
   onAccount,
   onRegister,
   onSignIn,
   onSignOut,
+  onNotifications,
   onAbout,
   onDeleteBook,
   onViewBook,
@@ -128,6 +134,12 @@ export function HomeLibrary({
   // The ☰ Menu. Features on top (new ones go at the end of this list), the
   // account below the line.
   const menuItems: MainMenuItem[] = [
+    {
+      label: t.notifications,
+      icon: <BellIcon />,
+      badge: unreadCount,
+      onSelect: onNotifications,
+    },
     { label: t.about, icon: <InfoIcon />, onSelect: onAbout },
   ]
 

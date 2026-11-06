@@ -4,6 +4,7 @@ import { LegalPage } from './components/layout/LegalPage'
 import { LoadingScreen } from './components/layout/LoadingScreen'
 import { Masthead } from './components/layout/Masthead'
 import { SiteFooter } from './components/layout/SiteFooter'
+import { NotificationNotice } from './components/notifications/NotificationNotice'
 import { PRIVACY } from './content/privacy'
 import { TERMS } from './content/terms'
 import { useAuth, type RegisterForm } from './hooks/useAuth'
@@ -11,6 +12,7 @@ import { useBookFlow } from './hooks/useBookFlow'
 import { useBooks } from './hooks/useBooks'
 import { SKELETON_MIN_MS, useHeld } from './hooks/useHeld'
 import { useNewVersion } from './hooks/useNewVersion'
+import { useNotifications } from './hooks/useNotifications'
 import { useRoute } from './hooks/useRoute'
 import { useSecretCategories } from './hooks/useSecrets'
 import { useSecretsFlow } from './hooks/useSecretsFlow'
@@ -29,6 +31,7 @@ import { ChangeVeggieCover } from './pages/ChangeVeggieCover'
 import { CreateAccount } from './pages/CreateAccount'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { HomeLibrary } from './pages/HomeLibrary'
+import { Notifications } from './pages/Notifications'
 import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
 import { Welcome } from './pages/Welcome'
@@ -63,6 +66,7 @@ import './styles/about.css'
 import './styles/legal.css'
 import './styles/footer.css'
 import './styles/dialog.css'
+import './styles/notifications.css'
 import './styles/responsive.css'
 
 // Which screen is showing comes from the address (see utils/routes.ts), so
@@ -83,6 +87,10 @@ import './styles/responsive.css'
 // Right after a book is saved, home shows the saved screen (pages/
 // BookSaved.tsx) until Skip. It is held here, not in the address, so a
 // refresh lands on the library and a book can never be saved twice.
+//
+// Messages from the research team (hooks/useNotifications.ts) reach guests
+// and accounts. Their pop-up shows only on calm screens, never while a book
+// is being made or on a form.
 //
 // After a deploy, the page reloads itself on the next move to a screen
 // where nothing is lost (hooks/useNewVersion.ts).
@@ -150,13 +158,15 @@ export default function App() {
 
   // Screens that need someone the server knows (a guest or an account),
   // and screens that need a real account.
-  const needsSession = view === 'book' || view === 'flow' || view === 'secrets'
+  const needsSession =
+    view === 'book' || view === 'flow' || view === 'secrets' || view === 'notifications'
   const needsAccount = view === 'account'
 
   // Addresses that do not fit who is here are corrected to home, once the
   // sign-in check has answered:
   //   account settings, without a real account
-  //   a book, saved or in progress, without a guest session or an account
+  //   a book, saved or in progress, or Notifications, without a guest
+  //     session or an account
   //   sign in or create account, while already signed in to an account
   //     (a guest may use both, to move to a real account)
   //   an unknown or untidy address
@@ -353,7 +363,9 @@ export default function App() {
       return goHome
     }
     if (current === 'forgotPassword') return () => goUp('/signin')
-    if (authPage || current === 'account' || readingPage) return goHome
+    if (authPage || current === 'account' || current === 'notifications' || readingPage) {
+      return goHome
+    }
     return undefined
   }
 
@@ -364,19 +376,43 @@ export default function App() {
   const reloadSafe =
     status !== 'loading' &&
     !showSaved &&
-    (current === 'home' || current === 'account' || readingPage || (showBook && !editingCover))
+    (current === 'home' ||
+      current === 'account' ||
+      current === 'notifications' ||
+      readingPage ||
+      (showBook && !editingCover))
   useNewVersion(path, reloadSafe)
 
-  // The footer shows on the main screens: Welcome, home, account, the
-  // reading pages, and reading a saved book. It stays off while a book is
-  // being made or its cover changed, so it never sits under the NEXT, KEEP
-  // or SAVE buttons, off on the account screens, so nothing pulls
-  // attention from the form, and off on the saved screen.
+  // Screens where a message may pop up: home, account, About, and reading a
+  // saved book. Never while a book is being made, on the saved screen, or on
+  // a form.
+  const calm =
+    status !== 'loading' &&
+    hasSession &&
+    !showWelcome &&
+    !showSaved &&
+    (current === 'home' ||
+      current === 'account' ||
+      current === 'about' ||
+      (showBook && !editingCover))
+  const notes = useNotifications(hasSession ? owner : null, calm)
+
+  // The footer shows on the main screens: Welcome, home, account,
+  // Notifications, the reading pages, and reading a saved book. It stays
+  // off while a book is being made or its cover changed, so it never sits
+  // under the NEXT, KEEP or SAVE buttons, off on the account screens, so
+  // nothing pulls attention from the form, and off on the saved screen.
   const showFooter =
     (current === 'home' && !showSaved) ||
     current === 'account' ||
+    current === 'notifications' ||
     readingPage ||
     (showBook && !editingCover)
+
+  function viewNotifications() {
+    notes.viewCurrent()
+    navigate('/notifications')
+  }
 
   // The app renders under the loading screen once the sign-in check answers,
   // so the fade reveals the right screen with no white flash.
@@ -439,12 +475,14 @@ export default function App() {
                 secretCategories={secretCategories.categories}
                 loading={booksLoading}
                 error={library.error}
+                unreadCount={notes.unread}
                 onCreateVeggie={startBook}
                 onCreateSecrets={startSecrets}
                 onAccount={() => navigate('/account')}
                 onRegister={() => navigate('/register')}
                 onSignIn={() => navigate('/signin')}
                 onSignOut={signOut}
+                onNotifications={() => navigate('/notifications')}
                 onAbout={() => navigate('/about')}
                 onDeleteBook={deleteBook}
                 onViewBook={viewBook}
@@ -483,6 +521,16 @@ export default function App() {
                 onSignOut={signOut}
                 onChangePassword={account.changePassword}
                 onDeleteAccount={deleteAccount}
+              />
+            )}
+
+            {current === 'notifications' && hasSession && (
+              <Notifications
+                items={notes.items}
+                loaded={notes.loaded}
+                error={notes.error}
+                onOpenAll={notes.openAll}
+                onLink={notes.followLink}
               />
             )}
 
@@ -572,6 +620,17 @@ export default function App() {
               onAbout={current === 'about' ? undefined : () => navigate('/about')}
               onTerms={current === 'terms' ? undefined : () => navigate('/terms')}
               onPrivacy={current === 'privacy' ? undefined : () => navigate('/privacy')}
+            />
+          )}
+
+          {calm && notes.current && (
+            <NotificationNotice
+              item={notes.current}
+              onView={viewNotifications}
+              onClose={notes.closeCurrent}
+              onLink={() => {
+                if (notes.current) notes.followLink(notes.current)
+              }}
             />
           )}
         </div>

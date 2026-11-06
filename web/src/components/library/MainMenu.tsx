@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { COMMON } from '../../i18n/strings/common'
 import { HOME } from '../../i18n/strings/home'
+import { NOTIFICATIONS } from '../../i18n/strings/notifications'
 import { useStrings } from '../../i18n/useStrings'
 import { MenuIcon } from '../icons/LibraryIcons'
 import { LanguageSwitch } from './LanguageSwitch'
@@ -9,12 +10,15 @@ import { LanguageSwitch } from './LanguageSwitch'
 // the admin sidebar: small spaced-out section labels over plain rows.
 //
 // Three sections:
-//   VEGGIEBOOK  items: features and information, such as About VeggieBook.
-//               New features are added here.
+//   VEGGIEBOOK  items: features and information, such as Notifications and
+//               About VeggieBook. New features are added here.
 //   LANGUAGE    the English and Spanish switch.
 //   ACCOUNT     accountItems: Profile and settings and Sign out, or for a
 //               guest, Create account, Sign in, and End guest visit. The red
 //               items come last, so signing out is always in the same place.
+//
+// A row with a badge shows its count, and the Menu button shows a dot while
+// any row has one.
 //
 // Labeled "Menu", not three lines alone: the original VeggieBook's research
 // found pantry clients did best with plainly labeled controls.
@@ -28,6 +32,8 @@ export type MainMenuItem = {
   icon: React.ReactNode
   onSelect: () => void
   danger?: boolean
+  // A count shown on the row, such as unread messages. Hidden at 0.
+  badge?: number
 }
 
 type Props = {
@@ -35,13 +41,21 @@ type Props = {
   accountItems: MainMenuItem[]
 }
 
+const BADGE_MAX = 9
+
 export function MainMenu({ items, accountItems }: Props) {
   const t = useStrings(COMMON)
   const home = useStrings(HOME)
+  const notes = useStrings(NOTIFICATIONS)
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
+
+  const totalBadge = [...items, ...accountItems].reduce(
+    (sum, item) => sum + (item.badge ?? 0),
+    0,
+  )
 
   useEffect(() => {
     if (!open) return
@@ -71,6 +85,7 @@ export function MainMenu({ items, accountItems }: Props) {
   }, [open])
 
   function row(item: MainMenuItem) {
+    const count = item.badge ?? 0
     return (
       <li key={item.label} role="none">
         <button
@@ -84,6 +99,14 @@ export function MainMenu({ items, accountItems }: Props) {
         >
           {item.icon}
           {item.label}
+          {count > 0 && (
+            <>
+              <span className="main-menu-badge" aria-hidden="true">
+                {count > BADGE_MAX ? `${BADGE_MAX}+` : count}
+              </span>
+              <span className="visually-hidden">, {notes.unreadCount(count)}</span>
+            </>
+          )}
         </button>
       </li>
     )
@@ -114,6 +137,12 @@ export function MainMenu({ items, accountItems }: Props) {
       >
         <MenuIcon />
         {t.menu}
+        {totalBadge > 0 && (
+          <>
+            <span className="main-menu-dot" aria-hidden="true" />
+            <span className="visually-hidden">, {notes.unreadCount(totalBadge)}</span>
+          </>
+        )}
       </button>
 
       {open && (
