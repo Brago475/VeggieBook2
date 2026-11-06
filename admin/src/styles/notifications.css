@@ -1,0 +1,319 @@
+/* Notifications page. See pages/Notifications.tsx. Neutral like the rest of
+   the admin site; green only for "Live" and the Spanish note. */
+
+.nt-list {
+  display: grid;
+  gap: var(--sp-4);
+}
+
+.nt-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.nt-empty p {
+  margin: 0;
+}
+
+/* Card */
+
+.card.nt-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.nt-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.nt-card-id {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.nt-tag {
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--subtle);
+  border-radius: 999px;
+}
+
+.nt-card-body {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.nt-card-body a,
+.nt-preview-text a {
+  color: var(--vb);
+}
+
+.nt-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0;
+}
+
+.nt-facts dt {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.nt-facts dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+}
+
+.nt-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+  margin: 0;
+  padding: var(--sp-3) 0 0;
+  list-style: none;
+  font-size: 14px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+
+.nt-count {
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.nt-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* Editor */
+
+.nt-editor {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  overflow: hidden;
+}
+
+.nt-editor-head {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.nt-editor-head p {
+  margin: var(--sp-1) 0 0;
+}
+
+.nt-editor-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5);
+  overflow-y: auto;
+}
+
+.nt-editor-error {
+  margin: 0;
+  padding: 0 var(--sp-5);
+}
+
+.nt-editor-actions {
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--line);
+}
+
+.nt-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.nt-legend {
+  margin-bottom: var(--sp-2);
+  padding: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nt-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.nt-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--sp-3);
+}
+
+.nt-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.nt-hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.nt-input {
+  width: 100%;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+}
+
+.nt-input:focus {
+  outline: 2px solid var(--vb);
+  outline-offset: 1px;
+}
+
+.nt-textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.nt-days {
+  width: 72px;
+}
+
+.nt-check {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: 14px;
+}
+
+.nt-radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-5);
+}
+
+.nt-lang {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.nt-lang.is-ok {
+  color: var(--ok);
+}
+
+.nt-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.nt-preview-text {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: 15px;
+  line-height: 1.5;
+  background: var(--subtle);
+  border-radius: var(--r-lg);
+  overflow-wrap: anywhere;
+}
+
+/* Research ID picker */
+
+.nt-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.nt-picker-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-size: 13px;
+}
+
+.nt-link-btn {
+  padding: 0;
+  font: inherit;
+  color: var(--ink);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.nt-picker-list {
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.nt-picker-list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.nt-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: 8px var(--sp-3);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.nt-picker-row:hover {
+  background: #fafafa;
+}
+
+.nt-picker-id {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.nt-picker-empty {
+  padding: var(--sp-3);
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .nt-editor-body {
+    padding: var(--sp-4);
+  }
+}

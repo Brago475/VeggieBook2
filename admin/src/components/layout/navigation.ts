@@ -7,6 +7,7 @@ export type AdminTab =
   | 'overview'
   | 'participants'
   | 'studies'
+  | 'notifications'
   | 'data'
   | 'books'
   | 'questions'
@@ -36,6 +37,7 @@ export const navGroups: NavGroup[] = [
       { id: 'overview', label: 'Overview', icon: 'home', ready: true },
       { id: 'participants', label: 'Participants', icon: 'users', ready: true },
       { id: 'studies', label: 'Studies', icon: 'study', ready: true },
+      { id: 'notifications', label: 'Notifications', icon: 'bell', ready: true },
     ],
   },
   {

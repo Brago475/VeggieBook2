@@ -10,6 +10,7 @@ import { AllData } from './pages/AllData'
 import { Books } from './pages/Books'
 import { Content } from './pages/Content'
 import { Export } from './pages/Export'
+import { Notifications } from './pages/Notifications'
 import { Overview } from './pages/Overview'
 import { Participants } from './pages/Participants'
 import { QuestionAnalytics } from './pages/QuestionAnalytics'
@@ -18,11 +19,11 @@ import { SignIn } from './pages/SignIn'
 import { Studies } from './pages/Studies'
 import './styles/motion.css'
 
-// Admin site root (admin.veggiebook2.com). Access requires Cloudflare Access
-// and the API's Admin role. The open page is kept in the URL hash (#books),
-// so a refresh reopens it and Back/Forward move between pages. Sections
-// listed in `upcoming` show ComingSoon. dataStudy and dataSearch preselect a
-// study or research ID when another page opens All Data.
+// Admin site root (admin.veggiebook2.com). Access requires the API's Admin
+// role. The open page is kept in the URL hash (#books), so a refresh reopens
+// it and Back/Forward move between pages. Sections listed in `upcoming` show
+// ComingSoon. dataStudy and dataSearch preselect a study or research ID when
+// another page opens All Data.
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {}
 
@@ -89,6 +90,7 @@ export function App() {
           {tab === 'overview' && <Overview onOpen={openTab} />}
           {tab === 'participants' && <Participants onOpen={openTab} onOpenPersonData={openPersonData} />}
           {tab === 'studies' && <Studies onOpen={openTab} onOpenStudyData={openStudyData} />}
+          {tab === 'notifications' && <Notifications />}
           {tab === 'data' && (
             <AllData key={`${dataStudy ?? 'all'}|${dataSearch}`} initialStudy={dataStudy} initialSearch={dataSearch} />
           )}

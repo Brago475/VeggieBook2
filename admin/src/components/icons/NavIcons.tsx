@@ -11,6 +11,7 @@ export type IconName =
   | 'report'
   | 'server'
   | 'study'
+  | 'bell'
   | 'activity'
   | 'content'
   | 'export'
@@ -100,6 +101,12 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M9 3h6" />
       <path d="M10 3v6l-5 9.5A1.7 1.7 0 0 0 6.5 21h11a1.7 1.7 0 0 0 1.5-2.5L14 9V3" />
       <path d="M7.5 15h9" />
+    </>
+  ),
+  bell: (
+    <>
+      <path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
     </>
   ),
   activity: <path d="M3 12h4l3-7 4 14 3-7h4" />,
