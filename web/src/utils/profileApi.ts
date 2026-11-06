@@ -7,8 +7,6 @@ import { apiFetch } from './api'
 // a page refresh.
 
 export type Profile = {
-  firstName: string | null
-  lastName: string | null
   displayName: string | null
   email: string | null
   ageRange: string | null
@@ -20,10 +18,10 @@ export function getProfile() {
   return apiFetch<Profile>('/auth/profile')
 }
 
-export function saveProfile(firstName: string, lastName: string, displayName: string) {
+export function saveProfile(displayName: string) {
   return apiFetch<Profile>('/auth/profile', {
     method: 'PUT',
-    body: { firstName, lastName, displayName },
+    body: { displayName },
   })
 }
 

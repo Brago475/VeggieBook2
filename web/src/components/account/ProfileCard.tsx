@@ -2,30 +2,26 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useHeld } from '../../hooks/useHeld'
 import { useLang } from '../../i18n/languageContext'
 import { ACCOUNT } from '../../i18n/strings/account'
-import { AUTH } from '../../i18n/strings/auth'
 import { COMMON } from '../../i18n/strings/common'
 import { useStrings } from '../../i18n/useStrings'
 import { getProfile, notifyProfileChanged, saveProfile, type Profile } from '../../utils/profileApi'
-import { checkName, checkUsername } from '../../utils/signUpRules'
+import { checkUsername } from '../../utils/signUpRules'
 import { PersonIcon } from '../icons/LibraryIcons'
 import { AccountCardSkeleton, AccountTextSkeleton } from './AccountCardSkeleton'
 
-// Profile, at the top of account settings: first name, last name, and
-// username, which can be changed here. The email is shown but not changed.
-// Outlines show while the profile loads.
+// Profile, at the top of account settings: the username, which can be
+// changed here. The email is shown but not changed. Accounts hold no real
+// names. Outlines show while the profile loads.
 //
 // The rules match Create Account, except the username can't be blank.
 
 export function ProfileCard() {
   const { lang } = useLang()
   const t = useStrings(ACCOUNT)
-  const auth = useStrings(AUTH)
   const common = useStrings(COMMON)
 
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loadFailed, setLoadFailed] = useState<{ message: string | null } | null>(null)
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
   const [username, setUsername] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,8 +33,6 @@ export function ProfileCard() {
 
   function fill(p: Profile) {
     setProfile(p)
-    setFirstName(p.firstName ?? '')
-    setLastName(p.lastName ?? '')
     setUsername(p.displayName ?? '')
   }
 
@@ -56,22 +50,14 @@ export function ProfileCard() {
     }
   }, [])
 
-  const changed =
-    profile !== null &&
-    (firstName.trim() !== (profile.firstName ?? '') ||
-      lastName.trim() !== (profile.lastName ?? '') ||
-      username.trim() !== (profile.displayName ?? ''))
+  const changed = profile !== null && username.trim() !== (profile.displayName ?? '')
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
     setDone(false)
 
-    const problem =
-      checkName(firstName, 'first name', lang) ??
-      checkName(lastName, 'last name', lang) ??
-      (username.trim() ? null : t.enterUsername) ??
-      checkUsername(username, lang)
+    const problem = (username.trim() ? null : t.enterUsername) ?? checkUsername(username, lang)
     if (problem) {
       setError(problem)
       return
@@ -80,7 +66,7 @@ export function ProfileCard() {
     setBusy(true)
     setError(null)
     try {
-      fill(await saveProfile(firstName.trim(), lastName.trim(), username.trim()))
+      fill(await saveProfile(username.trim()))
       notifyProfileChanged()
       setDone(true)
     } catch (err) {
@@ -114,40 +100,10 @@ export function ProfileCard() {
         </p>
       )}
 
-      {held && <AccountCardSkeleton fields={3} />}
+      {held && <AccountCardSkeleton fields={1} />}
 
       {ready && (
         <>
-          <div className="field">
-            <label className="field-label" htmlFor="profile-first">
-              {auth.firstName}
-            </label>
-            <input
-              id="profile-first"
-              className="field-input"
-              type="text"
-              autoComplete="given-name"
-              maxLength={50}
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <label className="field-label" htmlFor="profile-last">
-              {auth.lastName}
-            </label>
-            <input
-              id="profile-last"
-              className="field-input"
-              type="text"
-              autoComplete="family-name"
-              maxLength={50}
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-            />
-          </div>
-
           <div className="field">
             <label className="field-label" htmlFor="profile-username">
               {t.username}

@@ -2,12 +2,12 @@ import { LegalContact, type LegalDocument } from '../components/layout/LegalPage
 import type { Strings } from '../i18n/useStrings'
 
 // Privacy Policy. Changing the text requires a new version and updated date.
-const PRIVACY_VERSION = '1.2'
+const PRIVACY_VERSION = '1.3'
 
 const en: LegalDocument = {
   title: 'Privacy Policy',
   version: PRIVACY_VERSION,
-  updated: 'October 16, 2026',
+  updated: 'November 6, 2026',
   intro: (
     <p>
       This policy explains what information VeggieBook2 collects and how it is
@@ -24,13 +24,16 @@ const en: LegalDocument = {
         <>
           <p>When you create an account, we collect only what the account requires:</p>
           <ul className="legal-list">
-            <li>First and last name</li>
             <li>Username</li>
             <li>Email address</li>
             <li>Age range (not your date of birth)</li>
             <li>Your recovery PIN and security question and answer</li>
             <li>The books you create</li>
           </ul>
+          <p>
+            VeggieBook2 never asks for your real name. Your username can be
+            anything you choose, or we can make one for you.
+          </p>
           <p>
             If research tracking is on, we also record the choices described in
             Research Tracking below.
@@ -48,9 +51,9 @@ const en: LegalDocument = {
       heading: 'Information You Choose to Share',
       body: (
         <p>
-          Please do not include sensitive information, such as health details,
-          identification numbers, or your home address, in your username, your
-          security answer, or your cover photos.
+          Please do not include your real name or sensitive information, such as
+          health details, identification numbers, or your home address, in your
+          username, your security answer, or your cover photos.
         </p>
       ),
     },
@@ -69,9 +72,9 @@ const en: LegalDocument = {
       heading: 'Guest Visits',
       body: (
         <p>
-          Guest visits require no name or email address and are never tracked
-          for research. All guest data is deleted when the visit ends, or after
-          24 hours.
+          Guest visits require no username or email address and are never
+          tracked for research. All guest data is deleted when the visit ends, or
+          after 24 hours.
         </p>
       ),
     },
@@ -111,15 +114,14 @@ const en: LegalDocument = {
             <li>The date and time of each choice, and how long you spend on each question</li>
           </ul>
           <p>
-            <strong>Never recorded for research:</strong> your name, username,
-            email address, password, recovery PIN, security answer, or cover
-            photos.
+            <strong>Never recorded for research:</strong> your username, email
+            address, password, recovery PIN, security answer, or cover photos.
           </p>
           <ul className="legal-list">
             <li>
               Research data is recorded under your <strong>research ID</strong>,
-              which is separate from your account and does not contain your name
-              or email address.
+              which is separate from your account and does not contain your
+              username or email address.
             </li>
             <li>Your research ID is shown in Profile and settings while research tracking is on.</li>
             <li>
@@ -189,7 +191,7 @@ const en: LegalDocument = {
 const es: LegalDocument = {
   title: 'Política de Privacidad',
   version: PRIVACY_VERSION,
-  updated: '16 de octubre de 2026',
+  updated: '6 de noviembre de 2026',
   intro: (
     <>
       <p>
@@ -212,13 +214,16 @@ const es: LegalDocument = {
         <>
           <p>Cuando creas una cuenta, recopilamos solo lo que la cuenta necesita:</p>
           <ul className="legal-list">
-            <li>Nombre y apellido</li>
             <li>Nombre de usuario</li>
             <li>Correo electrónico</li>
             <li>Rango de edad (no tu fecha de nacimiento)</li>
             <li>Tu PIN de recuperación y tu pregunta y respuesta de seguridad</li>
             <li>Los libros que creas</li>
           </ul>
+          <p>
+            VeggieBook2 nunca te pide tu nombre real. Tu nombre de usuario puede
+            ser el que quieras, o podemos crear uno para ti.
+          </p>
           <p>
             Si el seguimiento para la investigación está activado, también
             registramos las elecciones descritas más abajo en Seguimiento para la
@@ -238,9 +243,9 @@ const es: LegalDocument = {
       heading: 'Información que Eliges Compartir',
       body: (
         <p>
-          Por favor, no incluyas información sensible, como datos de salud,
-          números de identificación o tu dirección, en tu nombre de usuario, tu
-          respuesta de seguridad o tus fotos de portada.
+          Por favor, no incluyas tu nombre real ni información sensible, como
+          datos de salud, números de identificación o tu dirección, en tu nombre
+          de usuario, tu respuesta de seguridad o tus fotos de portada.
         </p>
       ),
     },
@@ -259,9 +264,9 @@ const es: LegalDocument = {
       heading: 'Visitas como Invitado',
       body: (
         <p>
-          Las visitas como invitado no piden nombre ni correo electrónico y nunca
-          se registran para la investigación. Todos los datos de invitado se
-          eliminan cuando termina la visita, o después de 24 horas.
+          Las visitas como invitado no piden nombre de usuario ni correo
+          electrónico y nunca se registran para la investigación. Todos los datos
+          de invitado se eliminan cuando termina la visita, o después de 24 horas.
         </p>
       ),
     },
@@ -303,15 +308,15 @@ const es: LegalDocument = {
             <li>La fecha y la hora de cada elección, y cuánto tiempo pasas en cada pregunta</li>
           </ul>
           <p>
-            <strong>Nunca se registra para la investigación:</strong> tu nombre,
-            nombre de usuario, correo electrónico, contraseña, PIN de recuperación,
-            respuesta de seguridad ni fotos de portada.
+            <strong>Nunca se registra para la investigación:</strong> tu nombre de
+            usuario, correo electrónico, contraseña, PIN de recuperación, respuesta
+            de seguridad ni fotos de portada.
           </p>
           <ul className="legal-list">
             <li>
               Los datos de investigación se registran con tu{' '}
               <strong>código de investigación</strong>, que es independiente de tu
-              cuenta y no contiene tu nombre ni tu correo electrónico.
+              cuenta y no contiene tu nombre de usuario ni tu correo electrónico.
             </li>
             <li>
               Tu código de investigación aparece en Perfil y configuración

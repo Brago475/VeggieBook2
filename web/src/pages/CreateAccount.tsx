@@ -16,11 +16,11 @@ import { COMMON } from '../i18n/strings/common'
 import { useStrings } from '../i18n/useStrings'
 import { checkPassword, passwordHint } from '../utils/passwordRule'
 import { checkRecovery, EMPTY_RECOVERY, toNewRecovery } from '../utils/recoveryRules'
-import { ageRanges, checkName, checkUsername } from '../utils/signUpRules'
+import { ageRanges, checkUsername } from '../utils/signUpRules'
 
-// Create Account, in three parts: about you, sign-in details, and account
-// recovery (the PIN and security question used by Forgot password). Then
-// the 18+ and Terms agreement.
+// Create Account, in three parts: about you (the username only; accounts
+// hold no real names), sign-in details, and account recovery (the PIN and
+// security question used by Forgot password). Then the 18+ and Terms agreement.
 //
 // Every rule is checked here first, in the order the form shows them, so
 // the first problem is the one shown. The API checks them all again.
@@ -42,8 +42,6 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
   const hasGuestBooks = guestBookCount > 0
   const { questions, error: questionsError } = useRecoveryQuestions()
 
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [emailAgain, setEmailAgain] = useState('')
@@ -58,8 +56,6 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
 
   function check(): string | null {
     return (
-      checkName(firstName, 'first name', lang) ??
-      checkName(lastName, 'last name', lang) ??
       checkUsername(username, lang) ??
       (email.trim() ? null : t.enterEmail) ??
       (email.trim().toLowerCase() === emailAgain.trim().toLowerCase() ? null : t.emailsDiffer) ??
@@ -85,8 +81,6 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
     setError(null)
     try {
       await onSubmit({
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
         displayName: username.trim(),
         email: email.trim(),
         password,
@@ -113,24 +107,6 @@ export function CreateAccount({ guestBookCount, onSubmit, onSignIn, onBack }: Pr
         <div className="auth-fields">
           <h2 className="auth-section-title">{t.aboutYou}</h2>
 
-          <TextPillField
-            id="reg-first"
-            label={t.firstName}
-            value={firstName}
-            onChange={setFirstName}
-            autoComplete="given-name"
-            autoCapitalize="words"
-            maxLength={50}
-          />
-          <TextPillField
-            id="reg-last"
-            label={t.lastName}
-            value={lastName}
-            onChange={setLastName}
-            autoComplete="family-name"
-            autoCapitalize="words"
-            maxLength={50}
-          />
           <TextPillField
             id="reg-username"
             label={t.usernameOptional}

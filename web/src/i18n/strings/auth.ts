@@ -16,8 +16,6 @@ const en = {
   createTitle: 'Create an account',
   createSub: 'Your books are kept in your account, on any device.',
   aboutYou: 'About you',
-  firstName: 'First name',
-  lastName: 'Last name',
   usernameOptional: 'Username (optional)',
   usernameHint:
     "3 to 20 letters, numbers, or underscores. Leave it blank and we'll make one for you.",
@@ -81,8 +79,6 @@ const es: typeof en = {
   createTitle: 'Crear una cuenta',
   createSub: 'Tus libros se guardan en tu cuenta, en cualquier dispositivo.',
   aboutYou: 'Sobre ti',
-  firstName: 'Nombre',
-  lastName: 'Apellido',
   usernameOptional: 'Nombre de usuario (opcional)',
   usernameHint:
     'De 3 a 20 letras, números o guiones bajos. Si lo dejas en blanco, te crearemos uno.',

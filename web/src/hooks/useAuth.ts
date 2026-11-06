@@ -32,10 +32,8 @@ export type AuthState =
   | { status: 'signedIn'; email: string; displayName: string | null; roles: string[] }
 
 // Everything the Create Account form sends. displayName is the username;
-// blank means the API makes one up.
+// blank means the API makes one up. Accounts hold no real names.
 export type RegisterForm = {
-  firstName: string
-  lastName: string
   displayName: string
   email: string
   password: string

@@ -6,14 +6,6 @@
 type Values = Record<string, number | string>
 type Message = string | ((values: Values) => string)
 
-function nameMessages(field: 'first_name' | 'last_name', word: string, Word: string) {
-  return {
-    [`${field}_empty`]: `Escribe ${word}.`,
-    [`${field}_too_long`]: (v: Values) => `${Word} puede tener ${v.max} caracteres como máximo.`,
-    [`${field}_chars`]: `${Word} solo puede tener letras, espacios, guiones y apóstrofos.`,
-  }
-}
-
 export const SERVER_MESSAGES_ES: Record<string, Message> = {
   // Signing in, signing up, guests
   already_signed_in: 'Ya iniciaste sesión.',
@@ -29,9 +21,7 @@ export const SERVER_MESSAGES_ES: Record<string, Message> = {
   guests_off:
     'Las visitas de invitados están desactivadas en este momento. Crea una cuenta o inicia sesión.',
 
-  // Names, username, age
-  ...nameMessages('first_name', 'tu nombre', 'Tu nombre'),
-  ...nameMessages('last_name', 'tu apellido', 'Tu apellido'),
+  // Username and age
   username_required: 'Escribe un nombre de usuario.',
   username_length: (v) => `Tu nombre de usuario debe tener de ${v.min} a ${v.max} caracteres.`,
   username_chars: 'Tu nombre de usuario solo puede tener letras, números y guiones bajos.',

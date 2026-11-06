@@ -16,19 +16,6 @@ export function ageRanges(lang: Lang = 'en'): { value: string; label: string }[]
 
 export const AGE_RANGES = ageRanges('en')
 
-export function checkName(
-  value: string,
-  label: 'first name' | 'last name',
-  lang: Lang = 'en',
-): string | null {
-  const t = RULES[lang]
-  const name = value.trim()
-  if (!name) return t.nameEmpty(label)
-  if (name.length > 50) return t.nameTooLong(label)
-  if (!/^[\p{L} .'-]+$/u.test(name)) return t.nameChars(label)
-  return null
-}
-
 // The username is optional. Left blank, the API makes one up.
 export function checkUsername(value: string, lang: Lang = 'en'): string | null {
   const t = RULES[lang]
