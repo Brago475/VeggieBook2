@@ -1,105 +1,92 @@
-/* Notifications page. See pages/Notifications.tsx. Neutral like the rest of
-   the admin site; green only for "Live" and the Spanish note. */
+/* Notifications page. See pages/Notifications.tsx. Built on the shared
+   blocks in panels.css (number cards, panel, tabs, data-table); this file
+   only adds the table's message cells, row buttons, and the editor. */
 
-.nt-list {
-  display: grid;
-  gap: var(--sp-4);
+.nt-page {
+  display: flex;
+  flex-direction: column;
 }
 
 .nt-empty {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-4);
+  padding: var(--sp-5) 0 var(--sp-2);
 }
 
-.nt-empty p {
-  margin: 0;
+/* Table */
+
+.nt-table-wrap {
+  margin-top: var(--sp-4);
 }
 
-/* Card */
-
-.card.nt-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
+.nt-table td {
+  vertical-align: top;
 }
 
-.nt-card-head {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
+.nt-table td:first-child {
+  white-space: nowrap;
 }
 
-.nt-card-id {
+.nt-meta {
+  display: block;
+  margin-top: 2px;
   font-size: 13px;
   color: var(--muted);
-  font-variant-numeric: tabular-nums;
 }
 
-.nt-tag {
-  padding: 2px 8px;
-  font-size: 12px;
-  color: var(--muted);
-  background: var(--subtle);
-  border-radius: 999px;
+.nt-msg {
+  min-width: 240px;
+  max-width: 420px;
 }
 
-.nt-card-body {
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.5;
+.nt-msg-text {
+  display: -webkit-box;
+  overflow: hidden;
   color: var(--ink);
   overflow-wrap: anywhere;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
-.nt-card-body a,
+.nt-msg-text a,
 .nt-preview-text a {
   color: var(--vb);
 }
 
-.nt-facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-  gap: var(--sp-2) var(--sp-4);
-  margin: 0;
+.nt-when {
+  white-space: nowrap;
 }
 
-.nt-facts dt {
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.nt-facts dd {
-  margin: 2px 0 0;
-  font-size: 14px;
-}
-
-.nt-counts {
+.nt-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--sp-2) var(--sp-5);
-  margin: 0;
-  padding: var(--sp-3) 0 0;
-  list-style: none;
-  font-size: 14px;
-  color: var(--muted);
-  border-top: 1px solid var(--line);
-}
-
-.nt-count {
-  font-weight: 600;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
-.nt-card-actions {
-  display: flex;
-  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--sp-2);
+}
+
+.nt-btn {
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.nt-btn:hover {
+  background: var(--subtle);
+}
+
+.nt-btn.is-quiet-warn:hover {
+  color: var(--warn);
+  background: var(--warn-tint);
+  border-color: var(--warn-tint);
+}
+
+.nt-btn:focus-visible {
+  outline: 2px solid var(--vb);
+  outline-offset: 2px;
 }
 
 /* Editor */
@@ -108,7 +95,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 720px;
+  max-width: 680px;
   max-height: calc(100vh - 32px);
   padding: 0;
   overflow: hidden;
@@ -121,6 +108,7 @@
 
 .nt-editor-head p {
   margin: var(--sp-1) 0 0;
+  font-size: 14px;
 }
 
 .nt-editor-body {
@@ -132,12 +120,11 @@
 }
 
 .nt-editor-error {
-  margin: 0;
-  padding: 0 var(--sp-5);
+  margin: 0 var(--sp-5) var(--sp-3);
 }
 
 .nt-editor-actions {
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-3) var(--sp-5);
   border-top: 1px solid var(--line);
 }
 
@@ -151,16 +138,19 @@
 }
 
 .nt-legend {
-  margin-bottom: var(--sp-2);
+  margin-bottom: var(--sp-1);
   padding: 0;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .nt-field {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-1);
+  gap: 6px;
   min-width: 0;
 }
 
@@ -184,18 +174,19 @@
 
 .nt-input {
   width: 100%;
-  padding: 9px 11px;
+  min-height: 40px;
+  padding: 8px 12px;
   font: inherit;
   font-size: 14px;
   color: var(--ink);
   background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
 .nt-input:focus {
-  outline: 2px solid var(--vb);
-  outline-offset: 1px;
+  border-color: var(--ok);
+  outline: none;
 }
 
 .nt-textarea {
@@ -234,16 +225,16 @@
 .nt-preview {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-1);
+  gap: 6px;
 }
 
 .nt-preview-text {
   margin: 0;
-  padding: var(--sp-3) var(--sp-4);
-  font-size: 15px;
+  padding: var(--sp-3);
+  font-size: 14px;
   line-height: 1.5;
   background: var(--subtle);
-  border-radius: var(--r-lg);
+  border-radius: 8px;
   overflow-wrap: anywhere;
 }
 
@@ -280,7 +271,7 @@
   overflow-y: auto;
   list-style: none;
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border-radius: 8px;
 }
 
 .nt-picker-list li + li {
@@ -302,9 +293,8 @@
 }
 
 .nt-picker-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
 }
 
 .nt-picker-empty {
