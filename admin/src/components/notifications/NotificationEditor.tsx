@@ -1,13 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import type { AdminNotification, Audience, NotificationDraft, TemplatesResponse } from '../../types/notifications'
 import { fromInputValue, nowInputValue, toInputValue } from '../../utils/localDateTime'
+import { NavIcon } from '../icons/NavIcons'
+import { StudyIcon } from '../studies/StudyIcons'
 import { LinkedText } from './LinkedText'
 import { fillTemplate, MAX_BODY } from './notificationFormat'
 import { ResearchIdPicker } from './ResearchIdPicker'
 
-// Create, edit, or copy a notification. The admin writes English only.
-// Spanish users see Spanish only for a pilot template sent unchanged; the
-// server decides, and this shows which it will be.
+// Create, edit, or copy a notification, in the same dialog style as the
+// Studies page. The admin writes English only. Spanish users see Spanish
+// only for a pilot template sent unchanged; the server decides, and this
+// shows which it will be. Closes on Cancel, the X, Escape, or a click outside.
 
 type Props = {
   mode: 'create' | 'edit'
@@ -39,14 +42,15 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape' && !busy) onClose()
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
   }, [busy, onClose])
 
   const template = templates.templates.find((t) => t.key === templateKey) ?? null
   const veg = templates.vegetables.find((v) => v.key === vegetable) ?? null
+  const text = body.trim()
   const spanishApplies =
-    template !== null && fillTemplate(template, veg, templates.slot) === body.trim() && !body.includes(templates.slot)
+    template !== null && fillTemplate(template, veg, templates.slot) === text && !text.includes(templates.slot)
 
   const startIso = fromInputValue(startsAt)
   const startsLater = startIso !== null && new Date(startIso).getTime() > Date.now() + 60_000
@@ -64,7 +68,6 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
   }
 
   function check(): string | null {
-    const text = body.trim()
     if (!text) return 'Write the message.'
     if (text.length > MAX_BODY) return `Keep the message to ${MAX_BODY} characters or fewer.`
     if (text.includes(templates.slot)) return 'Pick a vegetable for this message.'
@@ -93,7 +96,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
     setBusy(true)
     setError(null)
     const message = await onSave({
-      bodyEn: body.trim(),
+      bodyEn: text,
       templateKey: template?.key ?? null,
       vegetable: template?.needsVegetable ? vegetable : null,
       startsAt: fromInputValue(startsAt)!,
@@ -109,25 +112,37 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
   }
 
   const title = editing ? `Edit notification #${from.id}` : from ? 'Send again' : 'New notification'
+  const subtitle = editing
+    ? 'Changes apply right away. What people already did with it stays recorded.'
+    : 'Shown in the app as a pop-up and in the Notifications menu.'
   const saveLabel = editing ? 'Save changes' : startsLater ? 'Schedule' : 'Send now'
 
   return (
-    <div className="dialog-backdrop">
-      <form className="card nt-editor" onSubmit={submit} noValidate role="dialog" aria-modal="true" aria-labelledby="nt-editor-title">
-        <header className="nt-editor-head">
-          <h2 id="nt-editor-title" className="dialog-title">
-            {title}
-          </h2>
-          {editing && (
-            <p className="muted">
-              Changes apply right away. What people already did with it stays recorded.
-            </p>
-          )}
-        </header>
+    <div className="st-overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
+      <form
+        className="st-dialog nt-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="nt-editor-title"
+        onSubmit={submit}
+        noValidate
+      >
+        <div className="st-dialog-head">
+          <span className="st-dialog-icon">
+            <StudyIcon name="bell" size={20} />
+          </span>
+          <div className="st-dialog-title">
+            <strong id="nt-editor-title">{title}</strong>
+            <span>{subtitle}</span>
+          </div>
+          <button type="button" className="st-dialog-close" aria-label="Close" disabled={busy} onClick={onClose}>
+            <StudyIcon name="close" size={16} />
+          </button>
+        </div>
 
-        <div className="nt-editor-body">
-          <fieldset className="nt-group">
-            <legend className="nt-legend">Message</legend>
+        <div className="st-dialog-body nt-dialog-body">
+          <section className="st-dialog-section">
+            <span className="st-section-title">Message</span>
 
             <label className="nt-field">
               <span className="nt-label">Start from</span>
@@ -158,42 +173,57 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
               <span className="nt-label">Message (English)</span>
               <textarea
                 className="nt-input nt-textarea"
-                rows={4}
+                rows={3}
                 maxLength={MAX_BODY}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
               />
               <span className="nt-hint">
-                {body.trim().length} of {MAX_BODY} characters. Addresses starting with https:// become links.
+                {text.length} of {MAX_BODY} characters. Addresses starting with https:// become links.
               </span>
             </label>
 
-            <p className={`nt-lang ${spanishApplies ? 'is-ok' : ''}`}>
+            <p className={spanishApplies ? 'nt-lang is-ok' : 'nt-lang'}>
               {spanishApplies
                 ? 'Spanish users see the Spanish version of this pilot message.'
                 : 'Everyone sees this message in English.'}
             </p>
 
-            {body.trim() && (
-              <div className="nt-preview">
+            {text && (
+              <div className="nt-field">
                 <span className="nt-label">Preview</span>
-                <p className="nt-preview-text">
-                  <LinkedText text={body.trim()} />
-                </p>
+                <div className="nt-preview">
+                  <span className="nt-preview-icon">
+                    <NavIcon name="bell" size={18} />
+                  </span>
+                  <p className="nt-preview-text">
+                    <LinkedText text={text} />
+                  </p>
+                </div>
               </div>
             )}
-          </fieldset>
+          </section>
 
-          <fieldset className="nt-group">
-            <legend className="nt-legend">When</legend>
+          <section className="st-dialog-section">
+            <span className="st-section-title">When</span>
             <div className="nt-row">
               <label className="nt-field">
                 <span className="nt-label">Starts</span>
-                <input className="nt-input" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+                <input
+                  className="nt-input"
+                  type="datetime-local"
+                  value={startsAt}
+                  onChange={(e) => setStartsAt(e.target.value)}
+                />
               </label>
               <label className="nt-field">
                 <span className="nt-label">Expires</span>
-                <input className="nt-input" type="datetime-local" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
+                <input
+                  className="nt-input"
+                  type="datetime-local"
+                  value={expiresAt}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                />
               </label>
             </div>
             <span className="nt-hint">Shown only between these times. Both can be changed later.</span>
@@ -213,10 +243,10 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
               />
               <span>days until it expires</span>
             </label>
-          </fieldset>
+          </section>
 
-          <fieldset className="nt-group">
-            <legend className="nt-legend">Who gets it</legend>
+          <section className="st-dialog-section">
+            <span className="st-section-title">Who gets it</span>
 
             <div className="nt-radios">
               <label className="nt-check">
@@ -255,23 +285,24 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
               <span>Also show to guests (guests are never recorded for research)</span>
             </label>
             <span className="nt-hint">Admin accounts never get notifications.</span>
-          </fieldset>
+          </section>
+
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="st-dialog-actions">
+            <button type="button" className="st-button" disabled={busy} onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="st-button is-green" disabled={busy}>
+              <StudyIcon name="bell" size={16} />
+              {busy ? 'Saving...' : saveLabel}
+            </button>
+          </div>
         </div>
-
-        {error && (
-          <p className="error nt-editor-error" role="alert">
-            {error}
-          </p>
-        )}
-
-        <footer className="dialog-actions nt-editor-actions">
-          <button type="button" className="button-secondary" onClick={onClose} disabled={busy}>
-            Cancel
-          </button>
-          <button type="submit" className="button-primary" disabled={busy}>
-            {busy ? 'Working...' : saveLabel}
-          </button>
-        </footer>
       </form>
     </div>
   )

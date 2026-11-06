@@ -1,10 +1,10 @@
 import type { AdminNotification } from '../../types/notifications'
 import { formatDateTime } from '../../utils/format'
 import { LinkedText } from './LinkedText'
-import { audienceText, hasLink, repeatText, statusClass, statusLabel } from './notificationFormat'
+import { audienceText, hasLink, repeatText, statusLabel } from './notificationFormat'
 
-// Notifications as one table, in the shared data-table style. Counts are
-// people, not clicks; "-" when the message has no link.
+// Notifications as one table. Counts are people, not clicks; "-" when the
+// message has no link.
 
 type Props = {
   items: AdminNotification[]
@@ -15,8 +15,8 @@ type Props = {
 
 export function NotificationTable({ items, onEdit, onCopy, onStop }: Props) {
   return (
-    <div className="table-wrap nt-table-wrap">
-      <table className="data-table nt-table">
+    <div className="nt-table-wrap">
+      <table className="nt-table">
         <thead>
           <tr>
             <th>Status</th>
@@ -36,7 +36,10 @@ export function NotificationTable({ items, onEdit, onCopy, onStop }: Props) {
             return (
               <tr key={n.id}>
                 <td>
-                  <span className={`status ${statusClass(n.status)}`}>{statusLabel[n.status]}</span>
+                  <span className={`nt-pill is-${n.status}`}>
+                    {n.status === 'live' && <i />}
+                    {statusLabel[n.status]}
+                  </span>
                   <span className="nt-meta">#{n.id}</span>
                 </td>
                 <td className="nt-msg">
@@ -55,7 +58,7 @@ export function NotificationTable({ items, onEdit, onCopy, onStop }: Props) {
                   {n.stoppedAt && <span className="nt-meta">Stopped {formatDateTime(n.stoppedAt)}</span>}
                 </td>
                 <td>{audienceText(n)}</td>
-                <td className="num strong">{n.counts.shown}</td>
+                <td className="num nt-strong">{n.counts.shown}</td>
                 <td className="num">{n.counts.opened}</td>
                 <td className="num">{hasLink(n.bodyEn) ? n.counts.link : '-'}</td>
                 <td className="num">{n.counts.dismissed}</td>
@@ -70,7 +73,7 @@ export function NotificationTable({ items, onEdit, onCopy, onStop }: Props) {
                       Send again
                     </button>
                     {active && (
-                      <button type="button" className="nt-btn is-quiet-warn" onClick={() => onStop(n)}>
+                      <button type="button" className="nt-btn is-stop" onClick={() => onStop(n)}>
                         Stop
                       </button>
                     )}

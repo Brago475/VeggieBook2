@@ -1,21 +1,22 @@
 import { useCallback, useState } from 'react'
-import { ConfirmDialog } from '../components/common/ConfirmDialog'
-import { NumberCard } from '../components/common/NumberCard'
-import { Panel } from '../components/common/Panel'
-import { Tabs } from '../components/common/Tabs'
+import { NavIcon } from '../components/icons/NavIcons'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { NotificationEditor } from '../components/notifications/NotificationEditor'
+import { NotificationStats } from '../components/notifications/NotificationStats'
 import { NotificationTable } from '../components/notifications/NotificationTable'
+import { StopNotificationDialog } from '../components/notifications/StopNotificationDialog'
 import { StudyToast } from '../components/studies/StudyToast'
 import { useHeld } from '../hooks/useHeld'
 import { useNotifications } from '../hooks/useNotifications'
 import type { AdminNotification, NotificationDraft } from '../types/notifications'
-import '../styles/notifications.css'
+import '../styles/studies.css'
 import '../styles/studies-edit.css'
+import '../styles/notifications.css'
 
 // Notifications page: messages shown inside the main site, in a pop-up and
-// in the Notifications section of its menu. Number cards on top, then one
-// table with Live and scheduled / Ended and stopped tabs.
+// in the Notifications section of its menu. Stat cards on top, then one
+// table with Live and scheduled / Ended and stopped tabs. Buttons and
+// dialogs share the Studies page styles.
 // API: api/Admin/AdminNotificationsController.cs.
 
 type Editing = { mode: 'create' | 'edit'; from: AdminNotification | null }
@@ -26,10 +27,10 @@ export function Notifications() {
   const [view, setView] = useState<View>('current')
   const [editing, setEditing] = useState<Editing | null>(null)
   const [stopping, setStopping] = useState<AdminNotification | null>(null)
-  const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const closeToast = useCallback(() => setToast(null), [])
   const closeEditor = useCallback(() => setEditing(null), [])
+  const closeStop = useCallback(() => setStopping(null), [])
   const firstLoad = useHeld(!list && !error)
 
   if (!list && error) {
@@ -40,15 +41,12 @@ export function Notifications() {
     )
   }
 
-  if (firstLoad || !list || !templates) return <p className="muted">Loading notifications...</p>
+  if (firstLoad || !list || !templates) return <p className="st-muted">Loading notifications...</p>
 
   const current = list.filter((n) => n.status === 'live' || n.status === 'scheduled')
   const past = list.filter((n) => n.status === 'ended' || n.status === 'stopped')
   const shown = view === 'current' ? current : past
-  const live = list.filter((n) => n.status === 'live').length
-  const scheduled = list.filter((n) => n.status === 'scheduled').length
-  const seen = list.reduce((sum, n) => sum + n.counts.shown, 0)
-  const opened = list.reduce((sum, n) => sum + n.counts.opened, 0)
+  const openNew = () => setEditing({ mode: 'create', from: null })
 
   async function saveDraft(draft: NotificationDraft) {
     if (!editing) return null
@@ -61,19 +59,22 @@ export function Notifications() {
     return message
   }
 
-  async function confirmStop() {
-    if (!stopping) return
-    setBusy(true)
-    const message = await stop(stopping.id)
-    setBusy(false)
-    setToast(message ?? `Stopped notification #${stopping.id}.`)
-    setStopping(null)
+  async function stopOne(item: AdminNotification) {
+    const message = await stop(item.id)
+    if (!message) setToast(`Stopped notification #${item.id}.`)
+    return message
   }
+
+  const tabs: { id: View; label: string; count: number }[] = [
+    { id: 'current', label: 'Live and scheduled', count: current.length },
+    { id: 'past', label: 'Ended and stopped', count: past.length },
+  ]
 
   return (
     <div className="nt-page">
       <TopbarActions>
-        <button type="button" className="button-primary" onClick={() => setEditing({ mode: 'create', from: null })}>
+        <button type="button" className="st-button is-green" onClick={openNew}>
+          <NavIcon name="bell" size={16} />
           New notification
         </button>
       </TopbarActions>
@@ -84,30 +85,42 @@ export function Notifications() {
         </p>
       )}
 
-      <div className="card-grid cols-4">
-        <NumberCard value={String(live)} label="Live now" icon="bell" tone="green" />
-        <NumberCard value={String(scheduled)} label="Scheduled" icon="clock" tone="blue" />
-        <NumberCard value={String(seen)} label="Seen" icon="users" tone="amber" />
-        <NumberCard value={String(opened)} label="Opened" icon="answers" tone="violet" />
-      </div>
+      <NotificationStats list={list} />
 
-      <Panel title="Messages">
-        <Tabs<View>
-          label="Notification lists"
-          value={view}
-          onChange={setView}
-          tabs={[
-            { id: 'current', label: `Live and scheduled (${current.length})` },
-            { id: 'past', label: `Ended and stopped (${past.length})` },
-          ]}
-        />
+      <section className="nt-list">
+        <div className="nt-list-head">
+          <strong className="nt-list-title">Messages</strong>
+          <div className="nt-tabs" role="tablist" aria-label="Notification lists">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={view === t.id}
+                className={view === t.id ? 'nt-tab is-active' : 'nt-tab'}
+                onClick={() => setView(t.id)}
+              >
+                {t.label}
+                <span className="nt-tab-count">{t.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {shown.length === 0 ? (
-          <p className="muted nt-empty">
-            {view === 'current'
-              ? 'Nothing is showing or scheduled right now. Use New notification to add one.'
-              : 'No notifications have ended or been stopped yet.'}
-          </p>
+          <div className="nt-empty">
+            <p className="st-muted">
+              {view === 'current'
+                ? 'Nothing is showing or scheduled right now.'
+                : 'No notifications have ended or been stopped yet.'}
+            </p>
+            {view === 'current' && (
+              <button type="button" className="st-button is-green" onClick={openNew}>
+                <NavIcon name="bell" size={16} />
+                New notification
+              </button>
+            )}
+          </div>
         ) : (
           <NotificationTable
             items={shown}
@@ -116,7 +129,7 @@ export function Notifications() {
             onStop={setStopping}
           />
         )}
-      </Panel>
+      </section>
 
       {editing && (
         <NotificationEditor
@@ -129,15 +142,7 @@ export function Notifications() {
       )}
 
       {stopping && (
-        <ConfirmDialog
-          title={`Stop notification #${stopping.id}?`}
-          message="It disappears from the app right away and can't be edited afterward. What people already did with it stays recorded."
-          confirmLabel="Stop it"
-          danger
-          busy={busy}
-          onConfirm={() => void confirmStop()}
-          onCancel={() => setStopping(null)}
-        />
+        <StopNotificationDialog item={stopping} onStop={() => stopOne(stopping)} onClose={closeStop} />
       )}
 
       {toast && <StudyToast message={toast} onClose={closeToast} />}
