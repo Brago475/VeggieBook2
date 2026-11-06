@@ -14,12 +14,16 @@ namespace VeggieBook.Api.Admin;
 //
 //   GET  /api/admin/notifications            every notification, newest first,
 //                                            with its status and counts
-//   GET  /api/admin/notifications/templates  the pilot templates and vegetables
+//   GET  /api/admin/notifications/templates  the templates and vegetables
 //   GET  /api/admin/notifications/people     research IDs that can be picked
 //   POST /api/admin/notifications            create
 //   PUT  /api/admin/notifications/{id}       edit text, dates, repeat, audience
 //   POST /api/admin/notifications/{id}/stop  stop now; a stopped message
 //                                            can't be edited
+//
+// Start times: StartNow uses the server's clock at the moment of saving. A
+// requested start that has already passed also starts now, except the
+// unchanged start of a message that has already started, which is kept.
 //
 // Admins only. Accounts are chosen by research ID; no email or username is
 // read or sent. Counts are people (distinct accounts), guests included.
@@ -35,7 +39,8 @@ public record NotificationRequest(
     string? Audience,
     bool? IncludeGuests,
     List<string>? IncludeIds,
-    List<string>? ExcludeIds);
+    List<string>? ExcludeIds,
+    bool? StartNow);
 
 [ApiController]
 [Route("api/admin/notifications")]
@@ -107,7 +112,7 @@ public class AdminNotificationsController(
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] NotificationRequest req)
     {
-        var (parsed, error) = await ParseAsync(req, creating: true);
+        var (parsed, error) = await ParseAsync(req, creating: true, currentStart: null);
         if (parsed is null) return BadRequest(new { error });
 
         var now = DateTime.UtcNow;
@@ -128,7 +133,7 @@ public class AdminNotificationsController(
         if (n.CancelledAt is not null)
             return Conflict(new { error = "This notification was stopped and can't be edited. Create a new one instead." });
 
-        var (parsed, error) = await ParseAsync(req, creating: false);
+        var (parsed, error) = await ParseAsync(req, creating: false, currentStart: n.StartsAt);
         if (parsed is null) return BadRequest(new { error });
 
         Apply(n, parsed);
@@ -158,19 +163,32 @@ public class AdminNotificationsController(
         return Ok((await DescribeAsync([n]))[0]);
     }
 
-    private async Task<(Parsed? Value, string? Error)> ParseAsync(NotificationRequest req, bool creating)
+    private async Task<(Parsed? Value, string? Error)> ParseAsync(
+        NotificationRequest req, bool creating, DateTime? currentStart)
     {
         var body = (req.BodyEn ?? "").Trim();
         if (body.Length == 0) return (null, "Write the message.");
         if (body.Length > MaxBody) return (null, $"Keep the message to {MaxBody} characters or fewer.");
         if (body.Contains(NotificationTemplates.Slot)) return (null, "Pick a vegetable for this message.");
 
-        if (req.StartsAt is null || req.ExpiresAt is null)
-            return (null, "Choose a start date and an expiry date.");
-        var starts = req.StartsAt.Value.UtcDateTime;
+        var now = DateTime.UtcNow;
+        DateTime starts;
+        if (req.StartNow == true) starts = now;
+        else if (req.StartsAt is null) return (null, "Choose when it starts.");
+        else starts = req.StartsAt.Value.UtcDateTime;
+
+        // An unchanged start of a message that already started is kept, so
+        // its rounds and counts stay as they are.
+        var keepsStart = currentStart is DateTime current
+            && current <= now
+            && Math.Abs((starts - current).TotalSeconds) < 1;
+        if (keepsStart) starts = currentStart!.Value;
+        else if (starts < now) starts = now;
+
+        if (req.ExpiresAt is null) return (null, "Choose when it ends.");
         var expires = req.ExpiresAt.Value.UtcDateTime;
-        if (expires <= starts) return (null, "The expiry date must be after the start date.");
-        if (creating && expires <= DateTime.UtcNow) return (null, "The expiry date has already passed.");
+        if (expires <= starts) return (null, "The end must be after the start.");
+        if (creating && expires <= now) return (null, "The end time has already passed.");
 
         if (req.RepeatDays is int days && (days < 1 || days > MaxRepeatDays))
             return (null, $"Repeat every 1 to {MaxRepeatDays} days, or not at all.");

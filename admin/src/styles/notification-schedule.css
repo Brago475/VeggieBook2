@@ -1,0 +1,388 @@
+/* The notification editor's When sections (ScheduleSection.tsx), the
+   calendar (DateCalendar.tsx), the live clock (LiveClock.tsx), and the
+   countdown on each message card (NotificationList.tsx). */
+
+/* Live clock */
+.nt-clock {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin-left: auto;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #14532d;
+  background: #ffffff;
+  border: 1px solid #c9e9d3;
+  border-radius: 999px;
+}
+
+.nt-clock i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #15803d;
+  animation: nt-pulse 1.6s ease-out infinite;
+}
+
+.st-dialog-head .nt-clock + .st-dialog-close {
+  margin-left: 8px;
+}
+
+@keyframes nt-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.45); }
+  70% { box-shadow: 0 0 0 8px rgba(21, 128, 61, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0); }
+}
+
+/* Send now or Schedule */
+.nt-choice-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.nt-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.nt-choice:hover {
+  border-color: #a7d7b5;
+}
+
+.nt-choice.is-on {
+  border-color: #15803d;
+  box-shadow: inset 0 0 0 1px #15803d;
+}
+
+.nt-choice input {
+  margin-top: 3px;
+  accent-color: #15803d;
+}
+
+.nt-choice > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.nt-choice strong {
+  font-size: 14.5px;
+  color: #18181b;
+}
+
+.nt-choice > span > span {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #52525b;
+}
+
+.nt-fixed {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #3f3f46;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+}
+
+.nt-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #7c2d12;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+}
+
+.nt-warn svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #c2410c;
+}
+
+/* Quick choices */
+.nt-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nt-chip {
+  height: 36px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #3f3f46;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.nt-chip:hover {
+  border-color: #a7d7b5;
+}
+
+.nt-chip.is-on {
+  color: #ffffff;
+  background: #15803d;
+  border-color: #15803d;
+}
+
+/* Calendar plus its side fields */
+.nt-cal-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: 16px;
+  align-items: start;
+}
+
+.nt-cal-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nt-cal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 14px;
+}
+
+.nt-cal-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nt-cal-nav {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: #3f3f46;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.nt-cal-nav:disabled {
+  color: #c4c4c9;
+  cursor: default;
+}
+
+.nt-cal-select {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #18181b;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 10px;
+}
+
+.nt-cal-select:last-of-type {
+  flex: 0 0 84px;
+}
+
+.nt-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.nt-cal-dow {
+  padding-bottom: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #6b6f76;
+}
+
+.nt-cal-day {
+  height: 38px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #18181b;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.nt-cal-day:hover:not(:disabled) {
+  background: #f0f9f3;
+}
+
+.nt-cal-day:disabled {
+  color: #c4c4c9;
+  cursor: default;
+}
+
+.nt-cal-day.is-today {
+  box-shadow: inset 0 0 0 2px #15803d;
+  color: #15803d;
+  font-weight: 800;
+}
+
+.nt-cal-day.is-range,
+.nt-cal-day.is-from {
+  color: #14532d;
+  background: #ecf7ef;
+}
+
+.nt-cal-day.is-picked {
+  color: #ffffff;
+  background: #15803d;
+  font-weight: 800;
+}
+
+.nt-cal-day:focus-visible,
+.nt-cal-nav:focus-visible,
+.nt-chip:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 2px;
+}
+
+/* Summary */
+.nt-summary {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #f0f9f3;
+  border: 1px solid #c9e9d3;
+  border-radius: 14px;
+}
+
+.nt-summary > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #15803d;
+}
+
+.nt-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nt-summary strong {
+  font-size: 15px;
+  color: #14532d;
+}
+
+.nt-summary span {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #3f3f46;
+}
+
+.nt-summary.is-bad {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.nt-summary.is-bad > svg,
+.nt-summary.is-bad strong {
+  color: #b91c1c;
+}
+
+/* Countdown on a card */
+.nt-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nt-timeline-text {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 13px;
+  color: #52525b;
+}
+
+.nt-timeline-text strong {
+  color: #14532d;
+}
+
+.nt-timeline.is-scheduled .nt-timeline-text strong {
+  color: #9a3412;
+}
+
+.nt-bar {
+  height: 8px;
+  overflow: hidden;
+  background: #f0f0f2;
+  border-radius: 999px;
+}
+
+.nt-bar span {
+  display: block;
+  height: 100%;
+  background: #15803d;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+@media (max-width: 720px) {
+  .nt-choice-row,
+  .nt-cal-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nt-clock i {
+    animation: none;
+  }
+
+  .nt-bar span,
+  .nt-chip,
+  .nt-choice,
+  .nt-cal-day {
+    transition: none;
+  }
+}

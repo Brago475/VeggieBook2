@@ -1,11 +1,15 @@
+import { useNow } from '../../hooks/useNow'
 import type { AdminNotification } from '../../types/notifications'
+import { spanText } from '../../utils/calendarDates'
 import { formatDateTime } from '../../utils/format'
 import { NavIcon, type IconName } from '../icons/NavIcons'
 import { LinkedText } from './LinkedText'
 import { audienceText, hasLink, repeatText, statusLabel } from './notificationFormat'
+import '../../styles/notification-schedule.css'
 
-// One card per notification: status edge and pill, the message, facts as
-// chips, and what people did as number boxes. Counts are people.
+// One card per notification: status edge and pill, the message, a live
+// countdown, facts as chips, and what people did as number boxes. Counts
+// are people.
 
 type Props = {
   items: AdminNotification[]
@@ -23,7 +27,52 @@ function Fact({ icon, text }: { icon: IconName; text: string }) {
   )
 }
 
+// Live: time left and how much of the run has passed. Scheduled: time
+// until it starts.
+function Countdown({ item, now }: { item: AdminNotification; now: Date }) {
+  const start = new Date(item.startsAt).getTime()
+  const end = new Date(item.expiresAt).getTime()
+  const t = now.getTime()
+
+  if (item.status === 'live') {
+    const pct = Math.min(100, Math.max(0, ((t - start) / (end - start)) * 100))
+    return (
+      <div className="nt-timeline">
+        <div className="nt-timeline-text">
+          <span>Started {formatDateTime(item.startsAt)}</span>
+          <strong>Ends in {spanText(end - t)}</strong>
+        </div>
+        <div
+          className="nt-bar"
+          role="progressbar"
+          aria-label="Time passed"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(pct)}
+        >
+          <span style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+    )
+  }
+
+  if (item.status === 'scheduled') {
+    return (
+      <div className="nt-timeline is-scheduled">
+        <div className="nt-timeline-text">
+          <strong>{start > t ? `Starts in ${spanText(start - t)}` : 'Starting now'}</strong>
+          <span>{formatDateTime(item.startsAt)}</span>
+        </div>
+      </div>
+    )
+  }
+
+  return null
+}
+
 export function NotificationList({ items, onEdit, onCopy, onStop }: Props) {
+  const now = useNow(30_000)
+
   return (
     <div className="nt-items">
       {items.map((n) => {
@@ -39,7 +88,7 @@ export function NotificationList({ items, onEdit, onCopy, onStop }: Props) {
                   {statusLabel[n.status]}
                 </span>
                 <span className="nt-item-id">#{n.id}</span>
-                {n.templateKey && <span className="nt-tag">Pilot message</span>}
+                {n.templateKey && <span className="nt-tag">Template</span>}
               </div>
               <div className="nt-actions">
                 {n.status !== 'stopped' && (
@@ -61,6 +110,8 @@ export function NotificationList({ items, onEdit, onCopy, onStop }: Props) {
             <p className="nt-item-text">
               <LinkedText text={n.bodyEn} />
             </p>
+
+            <Countdown item={n} now={now} />
 
             <div className="nt-facts">
               <Fact icon="clock" text={`${formatDateTime(n.startsAt)} to ${formatDateTime(n.expiresAt)}`} />

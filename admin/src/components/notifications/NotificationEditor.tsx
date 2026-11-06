@@ -1,17 +1,24 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { useNow } from '../../hooks/useNow'
 import type { AdminNotification, Audience, NotificationDraft, TemplatesResponse } from '../../types/notifications'
-import { fromInputValue, nowInputValue, toInputValue } from '../../utils/localDateTime'
+import { startOfDay, timeOf } from '../../utils/calendarDates'
 import { NavIcon } from '../icons/NavIcons'
 import { StudyIcon } from '../studies/StudyIcons'
 import { LinkedText } from './LinkedText'
+import { LiveClock } from './LiveClock'
 import { fillTemplate, MAX_BODY } from './notificationFormat'
 import { ResearchIdPicker } from './ResearchIdPicker'
+import { endAt, startAt, startPassed, type Schedule } from './schedule'
+import { ScheduleSection } from './ScheduleSection'
 
 // Create, edit, or copy a notification, in the Studies dialog style. The
 // header and the buttons stay in view; the sections scroll between them.
-// The admin writes English only. Spanish users see Spanish only for a pilot
+// The admin writes English only. Spanish users see Spanish only for a
 // template sent unchanged; the server decides, and this shows which it will
 // be. Closes on Cancel, the X, Escape, or a click outside.
+//
+// Send again (a copy) keeps the text, audience and repeat, and leaves the
+// dates empty so they are picked fresh.
 
 type Props = {
   mode: 'create' | 'edit'
@@ -22,16 +29,42 @@ type Props = {
   onClose: () => void
 }
 
+const DEFAULT_START = '09:00'
+const DEFAULT_END = '23:59'
+
+function initialSchedule(from: AdminNotification | null, editing: boolean): Schedule {
+  const repeat = {
+    repeatOn: from?.repeatDays != null,
+    repeatDays: String(from?.repeatDays ?? 7),
+  }
+  if (!editing || !from) {
+    return { startMode: 'now', startDay: null, startTime: DEFAULT_START, endDay: null, endTime: DEFAULT_END, ...repeat }
+  }
+
+  const start = new Date(from.startsAt)
+  const end = new Date(from.expiresAt)
+  const started = start.getTime() <= Date.now()
+  return {
+    startMode: started ? 'fixed' : 'later',
+    startDay: started ? null : startOfDay(start),
+    startTime: started ? DEFAULT_START : timeOf(start),
+    endDay: startOfDay(end),
+    endTime: timeOf(end),
+    ...repeat,
+  }
+}
+
 export function NotificationEditor({ mode, from, templates, onSave, onClose }: Props) {
   const editing = mode === 'edit' && from !== null
+  const now = useNow(1000)
 
   const [templateKey, setTemplateKey] = useState(from?.templateKey ?? '')
   const [vegetable, setVegetable] = useState(from?.vegetable ?? templates.vegetables[0]?.key ?? '')
   const [body, setBody] = useState(from?.bodyEn ?? '')
-  const [startsAt, setStartsAt] = useState(editing ? toInputValue(from.startsAt) : nowInputValue())
-  const [expiresAt, setExpiresAt] = useState(editing ? toInputValue(from.expiresAt) : '')
-  const [repeatOn, setRepeatOn] = useState(from?.repeatDays != null)
-  const [repeatDays, setRepeatDays] = useState(String(from?.repeatDays ?? 7))
+  const [schedule, setSchedule] = useState<Schedule>(() => initialSchedule(from, editing))
+  const [fixedStart] = useState<Date | null>(() =>
+    editing && new Date(from.startsAt).getTime() <= Date.now() ? new Date(from.startsAt) : null,
+  )
   const [audience, setAudience] = useState<Audience>(from?.audience ?? 'all')
   const [includeGuests, setIncludeGuests] = useState(from?.includeGuests ?? false)
   const [includeIds, setIncludeIds] = useState<string[]>(from?.includeIds ?? [])
@@ -53,8 +86,8 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
   const spanishApplies =
     template !== null && fillTemplate(template, veg, templates.slot) === text && !text.includes(templates.slot)
 
-  const startIso = fromInputValue(startsAt)
-  const startsLater = startIso !== null && new Date(startIso).getTime() > Date.now() + 60_000
+  const passed = startPassed(schedule, now)
+  const startsNow = schedule.startMode === 'now' || passed
 
   function chooseTemplate(key: string) {
     setTemplateKey(key)
@@ -72,12 +105,17 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
     if (!text) return 'Write the message.'
     if (text.length > MAX_BODY) return `Keep the message to ${MAX_BODY} characters or fewer.`
     if (text.includes(templates.slot)) return 'Pick a vegetable for this message.'
-    const s = fromInputValue(startsAt)
-    const e = fromInputValue(expiresAt)
-    if (!s || !e) return 'Choose a start date and an expiry date.'
-    if (new Date(e) <= new Date(s)) return 'The expiry date must be after the start date.'
-    if (repeatOn) {
-      const d = Number(repeatDays)
+
+    const current = new Date()
+    if (schedule.startMode === 'later' && !schedule.startDay) return 'Pick a start day on the calendar.'
+    const start = startAt(schedule, current, fixedStart)
+    const end = endAt(schedule)
+    if (!end) return 'Pick an end day on the calendar.'
+    if (start && end <= start) return 'The end must be after the start.'
+    if (end <= current) return 'The end time has already passed.'
+
+    if (schedule.repeatOn) {
+      const d = Number(schedule.repeatDays)
       if (!Number.isInteger(d) || d < 1 || d > 365) return 'Repeat every 1 to 365 days.'
     }
     if (audience === 'selected' && includeIds.length === 0)
@@ -94,15 +132,25 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
       return
     }
 
+    const current = new Date()
+    const sendNow = schedule.startMode === 'now' || startPassed(schedule, current)
+    const startsAt =
+      schedule.startMode === 'fixed' && from
+        ? from.startsAt
+        : sendNow
+          ? null
+          : startAt(schedule, current, fixedStart)!.toISOString()
+
     setBusy(true)
     setError(null)
     const message = await onSave({
       bodyEn: text,
       templateKey: template?.key ?? null,
       vegetable: template?.needsVegetable ? vegetable : null,
-      startsAt: fromInputValue(startsAt)!,
-      expiresAt: fromInputValue(expiresAt)!,
-      repeatDays: repeatOn ? Number(repeatDays) : null,
+      startNow: sendNow && schedule.startMode !== 'fixed',
+      startsAt,
+      expiresAt: endAt(schedule)!.toISOString(),
+      repeatDays: schedule.repeatOn ? Number(schedule.repeatDays) : null,
       audience,
       includeGuests,
       includeIds: audience === 'selected' ? includeIds : [],
@@ -115,8 +163,8 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
   const title = editing ? `Edit notification #${from.id}` : from ? 'Send again' : 'New notification'
   const subtitle = editing
     ? 'Changes apply right away. What people already did with it stays recorded.'
-    : 'Shown in the app as a pop-up and in the Notifications menu.'
-  const saveLabel = editing ? 'Save changes' : startsLater ? 'Schedule' : 'Send now'
+    : 'Shown in the app as a pop-up and in Notifications.'
+  const saveLabel = editing ? 'Save changes' : startsNow ? 'Send now' : 'Schedule'
 
   return (
     <div className="st-overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
@@ -136,6 +184,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
             <strong id="nt-editor-title">{title}</strong>
             <span>{subtitle}</span>
           </div>
+          <LiveClock />
           <button type="button" className="st-dialog-close" aria-label="Close" disabled={busy} onClick={onClose}>
             <StudyIcon name="close" size={16} />
           </button>
@@ -152,7 +201,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
                   <option value="">Blank message</option>
                   {templates.templates.map((t) => (
                     <option key={t.key} value={t.key}>
-                      Pilot: {t.en.replace(templates.slot, '...')}
+                      Template: {t.en.replace(templates.slot, '...')}
                     </option>
                   ))}
                 </select>
@@ -189,7 +238,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
 
             <p className={spanishApplies ? 'nt-lang is-ok' : 'nt-lang'}>
               {spanishApplies
-                ? 'Spanish users see the Spanish version of this pilot message.'
+                ? 'Spanish users see the Spanish version of this template.'
                 : 'Everyone sees this message in English.'}
             </p>
 
@@ -208,46 +257,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
             )}
           </section>
 
-          <section className="st-dialog-section nt-section">
-            <span className="st-section-title">When</span>
-            <div className="nt-row">
-              <label className="nt-field">
-                <span className="nt-label">Starts</span>
-                <input
-                  className="nt-input"
-                  type="datetime-local"
-                  value={startsAt}
-                  onChange={(e) => setStartsAt(e.target.value)}
-                />
-              </label>
-              <label className="nt-field">
-                <span className="nt-label">Expires</span>
-                <input
-                  className="nt-input"
-                  type="datetime-local"
-                  value={expiresAt}
-                  onChange={(e) => setExpiresAt(e.target.value)}
-                />
-              </label>
-            </div>
-            <span className="nt-hint">Shown only between these times. Both can be changed later.</span>
-
-            <label className="nt-check">
-              <input type="checkbox" checked={repeatOn} onChange={(e) => setRepeatOn(e.target.checked)} />
-              <span>Show it again every</span>
-              <input
-                className="nt-input nt-days"
-                type="number"
-                min={1}
-                max={365}
-                value={repeatDays}
-                disabled={!repeatOn}
-                onChange={(e) => setRepeatDays(e.target.value)}
-                aria-label="Days between showings"
-              />
-              <span>days until it expires</span>
-            </label>
-          </section>
+          <ScheduleSection value={schedule} onChange={setSchedule} now={now} fixedStart={fixedStart} />
 
           <section className="st-dialog-section nt-section">
             <span className="st-section-title">Who gets it</span>

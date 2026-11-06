@@ -4,7 +4,11 @@ import { api } from '../utils/api'
 
 // Loads the Notifications page and runs create, edit, and stop.
 // After each change the list loads again so counts and statuses match the
-// server. A failed change returns the API's message for the page to show.
+// server. It also reloads every minute while the tab is visible, so a
+// scheduled message turns live and counts move without a refresh. A failed
+// change returns the API's message for the page to show.
+
+const REFRESH_MS = 60_000
 
 export function useNotifications() {
   const [list, setList] = useState<AdminNotification[] | null>(null)
@@ -27,6 +31,10 @@ export function useNotifications() {
 
   useEffect(() => {
     void load()
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void load()
+    }, REFRESH_MS)
+    return () => window.clearInterval(timer)
   }, [load])
 
   const change = useCallback(

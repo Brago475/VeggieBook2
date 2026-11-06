@@ -55,12 +55,14 @@ export type PickPerson = {
   joinedAt: string
 }
 
-// What the editor sends. Dates are ISO strings.
+// What the editor sends. Dates are ISO strings. With startNow the server
+// sets the start to the moment it saves, and startsAt is null.
 export type NotificationDraft = {
   bodyEn: string
   templateKey: string | null
   vegetable: string | null
-  startsAt: string
+  startNow: boolean
+  startsAt: string | null
   expiresAt: string
   repeatDays: number | null
   audience: Audience
