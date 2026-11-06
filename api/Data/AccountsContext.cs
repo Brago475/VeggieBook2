@@ -189,7 +189,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.AnsweredAt).HasColumnName("answered_at");
         });
 
-        // See db/migrations/019_notifications.sql.
+        // See db/migrations/019_notifications.sql and 020.
         b.Entity<Notification>(e =>
         {
             e.ToTable("notification");
@@ -197,7 +197,6 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
             e.Property(x => x.BodyEn).HasColumnName("body_en");
             e.Property(x => x.BodyEs).HasColumnName("body_es");
-            e.Property(x => x.BodyEsAuto).HasColumnName("body_es_auto");
             e.Property(x => x.TemplateKey).HasColumnName("template_key");
             e.Property(x => x.Vegetable).HasColumnName("vegetable");
             e.Property(x => x.Audience).HasColumnName("audience");

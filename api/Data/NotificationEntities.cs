@@ -1,7 +1,7 @@
 namespace VeggieBook.Api.Data;
 
 // Admin notifications shown in the main site.
-// See db/migrations/019_notifications.sql.
+// See db/migrations/019_notifications.sql and 020_notification_english_only.sql.
 
 public class Notification
 {
@@ -10,12 +10,12 @@ public class Notification
 
     public int Id { get; set; }
     public string BodyEn { get; set; } = "";
-    public string BodyEs { get; set; } = "";
 
-    // True while the Spanish is the automatic translation.
-    public bool BodyEsAuto { get; set; } = true;
+    // Set only for a pilot template sent with its English unchanged.
+    // Otherwise everyone sees the English.
+    public string? BodyEs { get; set; }
 
-    // The pilot template it came from, and the vegetable chosen for it (English).
+    // The pilot template it came from, and the vegetable chosen for it.
     public string? TemplateKey { get; set; }
     public string? Vegetable { get; set; }
 
