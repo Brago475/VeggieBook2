@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace VeggieBook.Api.Data;
 
 // Database context for user data: accounts, roles, saved books, research
-// IDs, studies and tracking, and the activity log.
+// IDs, studies and tracking, the activity log, and notifications.
 //
 // Separate from VeggieBookContext, which is read-only with tracking switched
 // off. Keeping writes in their own context means the content endpoints never
@@ -28,6 +28,9 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
     public DbSet<TrackingChange> TrackingChanges => Set<TrackingChange>();
     public DbSet<Study> Studies => Set<Study>();
     public DbSet<StudyNotice> StudyNotices => Set<StudyNotice>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationTarget> NotificationTargets => Set<NotificationTarget>();
+    public DbSet<NotificationReceipt> NotificationReceipts => Set<NotificationReceipt>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -184,6 +187,53 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.ShownAt).HasColumnName("shown_at");
             e.Property(x => x.Answer).HasColumnName("answer");
             e.Property(x => x.AnsweredAt).HasColumnName("answered_at");
+        });
+
+        // See db/migrations/019_notifications.sql.
+        b.Entity<Notification>(e =>
+        {
+            e.ToTable("notification");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.BodyEn).HasColumnName("body_en");
+            e.Property(x => x.BodyEs).HasColumnName("body_es");
+            e.Property(x => x.BodyEsAuto).HasColumnName("body_es_auto");
+            e.Property(x => x.TemplateKey).HasColumnName("template_key");
+            e.Property(x => x.Vegetable).HasColumnName("vegetable");
+            e.Property(x => x.Audience).HasColumnName("audience");
+            e.Property(x => x.IncludeGuests).HasColumnName("include_guests");
+            e.Property(x => x.StartsAt).HasColumnName("starts_at");
+            e.Property(x => x.ExpiresAt).HasColumnName("expires_at");
+            e.Property(x => x.RepeatDays).HasColumnName("repeat_days");
+            e.Property(x => x.CancelledAt).HasColumnName("cancelled_at");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.CreatedBy).HasColumnName("created_by");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            e.Property(x => x.UpdatedBy).HasColumnName("updated_by");
+
+            e.HasMany(x => x.Targets).WithOne().HasForeignKey(x => x.NotificationId);
+        });
+
+        b.Entity<NotificationTarget>(e =>
+        {
+            e.ToTable("notification_target");
+            e.HasKey(x => new { x.NotificationId, x.UserId });
+            e.Property(x => x.NotificationId).HasColumnName("notification_id");
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Mode).HasColumnName("mode");
+        });
+
+        b.Entity<NotificationReceipt>(e =>
+        {
+            e.ToTable("notification_receipt");
+            e.HasKey(x => new { x.NotificationId, x.UserId, x.Round });
+            e.Property(x => x.NotificationId).HasColumnName("notification_id");
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Round).HasColumnName("round");
+            e.Property(x => x.ShownAt).HasColumnName("shown_at");
+            e.Property(x => x.OpenedAt).HasColumnName("opened_at");
+            e.Property(x => x.ClickedAt).HasColumnName("clicked_at");
+            e.Property(x => x.DismissedAt).HasColumnName("dismissed_at");
         });
     }
 
