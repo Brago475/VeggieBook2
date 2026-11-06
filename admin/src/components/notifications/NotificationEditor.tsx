@@ -7,10 +7,11 @@ import { LinkedText } from './LinkedText'
 import { fillTemplate, MAX_BODY } from './notificationFormat'
 import { ResearchIdPicker } from './ResearchIdPicker'
 
-// Create, edit, or copy a notification, in the same dialog style as the
-// Studies page. The admin writes English only. Spanish users see Spanish
-// only for a pilot template sent unchanged; the server decides, and this
-// shows which it will be. Closes on Cancel, the X, Escape, or a click outside.
+// Create, edit, or copy a notification, in the Studies dialog style. The
+// header and the buttons stay in view; the sections scroll between them.
+// The admin writes English only. Spanish users see Spanish only for a pilot
+// template sent unchanged; the server decides, and this shows which it will
+// be. Closes on Cancel, the X, Escape, or a click outside.
 
 type Props = {
   mode: 'create' | 'edit'
@@ -141,33 +142,35 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
         </div>
 
         <div className="st-dialog-body nt-dialog-body">
-          <section className="st-dialog-section">
+          <section className="st-dialog-section nt-section">
             <span className="st-section-title">Message</span>
 
-            <label className="nt-field">
-              <span className="nt-label">Start from</span>
-              <select className="nt-input" value={templateKey} onChange={(e) => chooseTemplate(e.target.value)}>
-                <option value="">Blank message</option>
-                {templates.templates.map((t) => (
-                  <option key={t.key} value={t.key}>
-                    Pilot: {t.en.replace(templates.slot, '...')}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            {template?.needsVegetable && (
+            <div className="nt-row">
               <label className="nt-field">
-                <span className="nt-label">Vegetable in season</span>
-                <select className="nt-input" value={vegetable} onChange={(e) => chooseVegetable(e.target.value)}>
-                  {templates.vegetables.map((v) => (
-                    <option key={v.key} value={v.key}>
-                      {v.en}
+                <span className="nt-label">Start from</span>
+                <select className="nt-input" value={templateKey} onChange={(e) => chooseTemplate(e.target.value)}>
+                  <option value="">Blank message</option>
+                  {templates.templates.map((t) => (
+                    <option key={t.key} value={t.key}>
+                      Pilot: {t.en.replace(templates.slot, '...')}
                     </option>
                   ))}
                 </select>
               </label>
-            )}
+
+              {template?.needsVegetable && (
+                <label className="nt-field">
+                  <span className="nt-label">Vegetable in season</span>
+                  <select className="nt-input" value={vegetable} onChange={(e) => chooseVegetable(e.target.value)}>
+                    {templates.vegetables.map((v) => (
+                      <option key={v.key} value={v.key}>
+                        {v.en}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
 
             <label className="nt-field">
               <span className="nt-label">Message (English)</span>
@@ -176,6 +179,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
                 rows={3}
                 maxLength={MAX_BODY}
                 value={body}
+                placeholder="Write what people will see in the app."
                 onChange={(e) => setBody(e.target.value)}
               />
               <span className="nt-hint">
@@ -204,7 +208,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
             )}
           </section>
 
-          <section className="st-dialog-section">
+          <section className="st-dialog-section nt-section">
             <span className="st-section-title">When</span>
             <div className="nt-row">
               <label className="nt-field">
@@ -245,7 +249,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
             </label>
           </section>
 
-          <section className="st-dialog-section">
+          <section className="st-dialog-section nt-section">
             <span className="st-section-title">Who gets it</span>
 
             <div className="nt-radios">
@@ -292,16 +296,16 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
               {error}
             </p>
           )}
+        </div>
 
-          <div className="st-dialog-actions">
-            <button type="button" className="st-button" disabled={busy} onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="st-button is-green" disabled={busy}>
-              <StudyIcon name="bell" size={16} />
-              {busy ? 'Saving...' : saveLabel}
-            </button>
-          </div>
+        <div className="st-dialog-actions nt-dialog-foot">
+          <button type="button" className="st-button" disabled={busy} onClick={onClose}>
+            Cancel
+          </button>
+          <button type="submit" className="st-button is-green" disabled={busy}>
+            <StudyIcon name="bell" size={16} />
+            {busy ? 'Saving...' : saveLabel}
+          </button>
         </div>
       </form>
     </div>

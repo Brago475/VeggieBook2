@@ -2,8 +2,8 @@ import { useCallback, useState } from 'react'
 import { NavIcon } from '../components/icons/NavIcons'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { NotificationEditor } from '../components/notifications/NotificationEditor'
+import { NotificationList } from '../components/notifications/NotificationList'
 import { NotificationStats } from '../components/notifications/NotificationStats'
-import { NotificationTable } from '../components/notifications/NotificationTable'
 import { StopNotificationDialog } from '../components/notifications/StopNotificationDialog'
 import { StudyToast } from '../components/studies/StudyToast'
 import { useHeld } from '../hooks/useHeld'
@@ -15,8 +15,8 @@ import '../styles/notifications.css'
 
 // Notifications page: messages shown inside the main site, in a pop-up and
 // in the Notifications section of its menu. Stat cards on top, then one
-// table with Live and scheduled / Ended and stopped tabs. Buttons and
-// dialogs share the Studies page styles.
+// card per message under Live and scheduled / Ended and stopped. Buttons
+// and dialogs share the Studies page styles.
 // API: api/Admin/AdminNotificationsController.cs.
 
 type Editing = { mode: 'create' | 'edit'; from: AdminNotification | null }
@@ -122,7 +122,7 @@ export function Notifications() {
             )}
           </div>
         ) : (
-          <NotificationTable
+          <NotificationList
             items={shown}
             onEdit={(n) => setEditing({ mode: 'edit', from: n })}
             onCopy={(n) => setEditing({ mode: 'create', from: n })}
