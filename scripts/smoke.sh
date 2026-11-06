@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
 # Post-deploy smoke check for VeggieBook2. Run on the server from the repo root.
+# Waits up to WAIT_SECONDS for the API to start, then runs every check.
 # Exits non-zero if any check fails.
 
 set -u
 
 UA="VeggieBook2-smoke"
+WAIT_SECONDS=30
+API_PROBE="http://127.0.0.1:5000/api/questions?lang=en"
 fails=0
 
 pass() { printf "PASS  %-24s %s\n" "$1" "$2"; }
 fail() { printf "FAIL  %-24s %s\n" "$1" "$2"; fails=$((fails + 1)); }
+
+status_of() {
+  curl -s -o /dev/null -m 5 -A "$UA" -w "%{http_code}" "$1"
+}
 
 check() {
   local name="$1" url="$2" expected="$3"
@@ -21,8 +28,24 @@ check() {
   fi
 }
 
+# A freshly restarted API needs a few seconds before it answers.
+echo "Waiting for the API (up to ${WAIT_SECONDS}s)"
+waited=0
+until [ "$(status_of "$API_PROBE")" = "200" ]; do
+  if [ "$waited" -ge "$WAIT_SECONDS" ]; then
+    echo "API did not answer within ${WAIT_SECONDS}s. Running the checks anyway."
+    break
+  fi
+  sleep 1
+  waited=$((waited + 1))
+done
+if [ "$waited" -lt "$WAIT_SECONDS" ]; then
+  echo "API ready after ${waited}s"
+fi
+
+echo
 echo "API container"
-check "questions" "http://127.0.0.1:5000/api/questions?lang=en" "200"
+check "questions" "$API_PROBE" "200"
 
 echo
 echo "Main site, local nginx"
