@@ -10,11 +10,11 @@ namespace VeggieBook.Api.Auth;
 
 // Account endpoints, part 4: the profile.
 //
-//   GET /api/auth/profile   first and last name, username, email, age range
-//   PUT /api/auth/profile   change first and last name, and username
+//   GET /api/auth/profile   username, email, age range
+//   PUT /api/auth/profile   change the username
 //
-// Email and age range are shown but not changed here. The same rules as
-// Create Account apply (SignUpRules), except the username can't be left
+// Email and age range are shown but not changed here. The same username
+// rules as Create Account apply (SignUpRules), except it can't be left
 // blank: an account always keeps one.
 
 [ApiController]
@@ -44,9 +44,7 @@ public class ProfileController(UserManager<AppUser> users) : ControllerBase
         if (user is null) return Unauthorized();
 
         var displayName = req.DisplayName?.Trim() ?? "";
-        var error = SignUpRules.CheckName(req.FirstName, "first name")
-            ?? SignUpRules.CheckName(req.LastName, "last name")
-            ?? (displayName.Length == 0
+        var error = (displayName.Length == 0
                 ? new ApiError(ErrorCodes.UsernameRequired, "Please enter a username.")
                 : null)
             ?? SignUpRules.CheckDisplayName(displayName);
@@ -55,8 +53,6 @@ public class ProfileController(UserManager<AppUser> users) : ControllerBase
         if (await TakenBySomeoneElse(displayName, user.Id))
             return Conflict(UsernameTaken.Body());
 
-        user.FirstName = req.FirstName!.Trim();
-        user.LastName = req.LastName!.Trim();
         user.DisplayName = displayName;
 
         try
@@ -86,14 +82,12 @@ public class ProfileController(UserManager<AppUser> users) : ControllerBase
     }
 
     private static ProfileResponse ToResponse(AppUser user) =>
-        new(user.FirstName, user.LastName, user.DisplayName, user.Email, user.AgeRange);
+        new(user.DisplayName, user.Email, user.AgeRange);
 }
 
-public record ProfileRequest(string? FirstName, string? LastName, string? DisplayName);
+public record ProfileRequest(string? DisplayName);
 
 public record ProfileResponse(
-    string? FirstName,
-    string? LastName,
     string? DisplayName,
     string? Email,
     string? AgeRange);

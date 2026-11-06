@@ -6,6 +6,9 @@ namespace VeggieBook.Api.Auth;
 //
 // Every new message a user can see gets a code here. Never rename or reuse
 // a code; add a new one instead. Admin-only messages need no code.
+//
+// Retired codes, never to be reused: first_name_* and last_name_* (accounts
+// hold no real names since Terms 1.3).
 
 public static class ErrorCodes
 {
@@ -20,9 +23,7 @@ public static class ErrorCodes
     public const string TooManyAttempts = "too_many_attempts";
     public const string GuestsOff = "guests_off";
 
-    // Names, username, age (SignUpRules). Name codes are built by Name():
-    // first_name_empty, first_name_too_long, first_name_chars, and the same
-    // for last_name.
+    // Username and age (SignUpRules)
     public const string UsernameRequired = "username_required";
     public const string UsernameLength = "username_length";
     public const string UsernameChars = "username_chars";
@@ -78,8 +79,4 @@ public static class ErrorCodes
 
     // An error from ASP.NET Identity itself, sent with Identity's English text.
     public const string IdentityError = "identity_error";
-
-    // "first name" + "empty" gives first_name_empty.
-    public static string Name(string label, string problem) =>
-        $"{label.Replace(' ', '_')}_{problem}";
 }

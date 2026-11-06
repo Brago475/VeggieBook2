@@ -15,7 +15,8 @@ namespace VeggieBook.Api.Data;
 //
 // UserName is always set to the email address. Identity requires a user
 // name, and VeggieBook2 signs in by email only. The name people see is
-// DisplayName (the username on the Create Account form).
+// DisplayName (the username on the Create Account form). Accounts hold no
+// real names; see db/migrations/018_drop_names.sql.
 //
 // Column names come from AccountsContext, which turns every property name
 // into snake_case (RecoveryPinHash becomes recovery_pin_hash).
@@ -32,8 +33,6 @@ public class AppUser : IdentityUser<Guid>
 
     // The profile from the Create Account form.
     // See db/migrations/005_profile.sql and Auth/SignUpRules.cs.
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
     public string? DisplayName { get; set; }
     public string? AgeRange { get; set; }
     public string? TermsVersion { get; set; }

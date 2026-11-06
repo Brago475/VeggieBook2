@@ -117,8 +117,6 @@ public static class KeepOnDelete
         user.LockoutEnabled = true;
         user.LockoutEnd = DateTimeOffset.MaxValue;
 
-        user.FirstName = null;
-        user.LastName = null;
         user.DisplayName = null;
         user.PendingGuestId = null;
 

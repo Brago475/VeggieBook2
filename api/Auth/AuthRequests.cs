@@ -10,10 +10,8 @@ namespace VeggieBook.Api.Auth;
 public record CredentialsRequest(string? Email, string? Password, bool? KeepGuestBooks);
 
 // Create Account. DisplayName is the username; left blank, one is made up.
-// KeepGuestBooks works the same as on sign in.
+// KeepGuestBooks works the same as on sign in. Accounts hold no real names.
 public record RegisterRequest(
-    string? FirstName,
-    string? LastName,
     string? DisplayName,
     string? Email,
     string? Password,

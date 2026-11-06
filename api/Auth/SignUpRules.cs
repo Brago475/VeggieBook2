@@ -9,28 +9,12 @@ public static class SignUpRules
     // Must match the version in web/src/content/terms.tsx.
     public const string TermsVersion = "1.2";
 
-    public const int MaxNameLength = 50;
     public const int MinDisplayNameLength = 3;
     public const int MaxDisplayNameLength = 20;
 
     // Accounts are 18 and older only.
     public static readonly string[] AgeRanges =
         ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"];
-
-    public static ApiError? CheckName(string? value, string label)
-    {
-        var name = value?.Trim() ?? "";
-        if (name.Length == 0)
-            return new(ErrorCodes.Name(label, "empty"), $"Please enter your {label}.");
-        if (name.Length > MaxNameLength)
-            return new(ErrorCodes.Name(label, "too_long"),
-                $"Your {label} must be at most {MaxNameLength} characters.")
-            { Values = new { max = MaxNameLength } };
-        if (!name.All(c => char.IsLetter(c) || c is ' ' or '-' or '\'' or '.'))
-            return new(ErrorCodes.Name(label, "chars"),
-                $"Your {label} can only use letters, spaces, hyphens, and apostrophes.");
-        return null;
-    }
 
     public static ApiError? CheckDisplayName(string name)
     {

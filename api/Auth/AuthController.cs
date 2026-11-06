@@ -65,9 +65,7 @@ public class AuthController(
 
         // Every field is checked, in the order the form shows them, before
         // anything is saved.
-        var error = SignUpRules.CheckName(req.FirstName, "first name")
-            ?? SignUpRules.CheckName(req.LastName, "last name")
-            ?? (AuthHelpers.IsValidEmail(address)
+        var error = (AuthHelpers.IsValidEmail(address)
                 ? null
                 : new ApiError(ErrorCodes.EmailInvalid, "Enter a valid email address."))
             ?? AuthHelpers.CheckPasswordLength(req.Password)
@@ -101,8 +99,6 @@ public class AuthController(
             UserName = address,
             Email = address,
             CreatedAt = now,
-            FirstName = req.FirstName!.Trim(),
-            LastName = req.LastName!.Trim(),
             DisplayName = displayName,
             AgeRange = req.AgeRange,
             TermsVersion = SignUpRules.TermsVersion,
