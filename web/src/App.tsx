@@ -33,11 +33,14 @@ import { ForgotPassword } from './pages/ForgotPassword'
 import { HomeLibrary } from './pages/HomeLibrary'
 import { NotificationDetail } from './pages/NotificationDetail'
 import { Notifications } from './pages/Notifications'
+import { PlaylistLibrary } from './pages/PlaylistLibrary'
+import { PlaylistMaker } from './pages/PlaylistMaker'
+import { PlaylistView } from './pages/PlaylistView'
 import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
 import { Welcome } from './pages/Welcome'
 import type { NotificationItem } from './utils/notificationsApi'
-import { routePath } from './utils/routes'
+import { playlistPath, routePath, type PlaylistOpen, type PlaylistSource } from './utils/routes'
 
 // Stylesheet order is load order, and load order decides who wins a tie.
 // Tokens first so the variables exist, then base, then the shared pieces,
@@ -69,6 +72,7 @@ import './styles/legal.css'
 import './styles/footer.css'
 import './styles/dialog.css'
 import './styles/notifications.css'
+import './styles/playlists.css'
 import './styles/responsive.css'
 
 // Which screen is showing comes from the address (see utils/routes.ts), so
@@ -93,11 +97,16 @@ import './styles/responsive.css'
 // Notifications from the research team (hooks/useNotifications.ts) reach
 // guests and accounts. Their pop-up shows only on calm screens, never while
 // a book is being made or on a form. Each notification opens on its own page.
+// Playlists live inside Notifications: the Playlists tab, a playlist's page,
+// and making your own from saved books. Books are never changed by them.
 //
 // After a deploy, the page reloads itself on the next move to a screen
 // where nothing is lost (hooks/useNewVersion.ts).
 
 type JustSaved = { id: string; kind: 'veggie' | 'secrets' }
+
+// The notification a playlist was opened from, so Keep and Skip can name it.
+type PlaylistFrom = { playlistId: number; notificationId: number }
 
 export default function App() {
   const { vegetables, questions, error, loading } = useVeggieBookData()
@@ -130,6 +139,7 @@ export default function App() {
 
   // The book that was just saved, while its saved screen shows.
   const [justSaved, setJustSaved] = useState<JustSaved | null>(null)
+  const [playlistFrom, setPlaylistFrom] = useState<PlaylistFrom | null>(null)
 
   // First-load screen, held until the app is ready, then faded out.
   const splash = useSplash(status !== 'loading')
@@ -163,14 +173,20 @@ export default function App() {
   // Screens that need someone the server knows (a guest or an account),
   // and screens that need a real account.
   const needsSession =
-    view === 'book' || view === 'flow' || view === 'secrets' || view === 'notifications'
+    view === 'book' ||
+    view === 'flow' ||
+    view === 'secrets' ||
+    view === 'notifications' ||
+    view === 'playlists' ||
+    view === 'playlist' ||
+    view === 'playlistMaker'
   const needsAccount = view === 'account'
 
   // Addresses that do not fit who is here are corrected to home, once the
   // sign-in check has answered:
   //   account settings, without a real account
-  //   a book, saved or in progress, or Notifications, without a guest
-  //     session or an account
+  //   a book, saved or in progress, Notifications, or a playlist, without a
+  //     guest session or an account
   //   sign in or create account, while already signed in to an account
   //     (a guest may use both, to move to a real account)
   //   an unknown or untidy address
@@ -317,6 +333,30 @@ export default function App() {
     await library.deleteBook(id)
   }
 
+  // --- playlists ---
+
+  function openPlaylist(source: PlaylistSource, id: number) {
+    navigate(playlistPath(source, id))
+  }
+
+  function openPlaylistFromNotification(item: NotificationItem) {
+    if (!item.playlist) return
+    const notificationId = Number(item.id)
+    setPlaylistFrom(
+      Number.isFinite(notificationId) ? { playlistId: item.playlist.id, notificationId } : null,
+    )
+    openPlaylist('admin', item.playlist.id)
+  }
+
+  function openPlaylistItem(source: PlaylistSource, id: number, open: PlaylistOpen) {
+    if (open === null) goUp(playlistPath(source, id))
+    else navigate(playlistPath(source, id, open))
+  }
+
+  function backToPlaylists() {
+    goUp('/notifications/playlists')
+  }
+
   // For the frame before the redirect above runs, show home rather than a
   // screen this visitor cannot use.
   const current =
@@ -326,6 +366,7 @@ export default function App() {
   const passwordPage = current === 'forgotPassword'
   const readingPage =
     current === 'about' || current === 'terms' || current === 'privacy'
+  const playlistPage = current === 'playlists' || current === 'playlist'
 
   // The book on the saved screen, as the home list now holds it.
   const savedBook =
@@ -374,6 +415,17 @@ export default function App() {
     if (current === 'notifications') {
       return openNotification !== null ? backToNotifications : goHome
     }
+    // The Playlists tab goes home, like the messages list. An open item
+    // goes back to its playlist, and a playlist to the Playlists tab.
+    if (current === 'playlists') return goHome
+    if (current === 'playlist' && route.view === 'playlist') {
+      const { source, playlistId, open } = route
+      return open ? () => openPlaylistItem(source, playlistId, null) : backToPlaylists
+    }
+    if (current === 'playlistMaker' && route.view === 'playlistMaker') {
+      const id = route.playlistId
+      return id === null ? backToPlaylists : () => goUp(playlistPath('own', id))
+    }
     if (current === 'forgotPassword') return () => goUp('/signin')
     if (authPage || current === 'account' || readingPage) return goHome
     return undefined
@@ -389,6 +441,7 @@ export default function App() {
     (current === 'home' ||
       current === 'account' ||
       current === 'notifications' ||
+      playlistPage ||
       readingPage ||
       (showBook && !editingCover))
   useNewVersion(path, reloadSafe)
@@ -408,14 +461,16 @@ export default function App() {
   const notes = useNotifications(hasSession ? owner : null, calm)
 
   // The footer shows on the main screens: Welcome, home, account,
-  // Notifications, the reading pages, and reading a saved book. It stays
-  // off while a book is being made or its cover changed, so it never sits
-  // under the NEXT, KEEP or SAVE buttons, off on the account screens, so
-  // nothing pulls attention from the form, and off on the saved screen.
+  // Notifications and its playlists, the reading pages, and reading a saved
+  // book. It stays off while a book is being made or its cover changed, so
+  // it never sits under the NEXT, KEEP or SAVE buttons, off on the account
+  // screens, so nothing pulls attention from the form, off on the saved
+  // screen, and off while making a playlist.
   const showFooter =
     (current === 'home' && !showSaved) ||
     current === 'account' ||
     current === 'notifications' ||
+    playlistPage ||
     readingPage ||
     (showBook && !editingCover)
 
@@ -549,6 +604,7 @@ export default function App() {
                 loaded={notes.loaded}
                 error={notes.error}
                 onOpen={openNotificationPage}
+                onPlaylists={() => navigate('/notifications/playlists', { replace: true })}
               />
             )}
 
@@ -559,7 +615,43 @@ export default function App() {
                 focusId={openNotification}
                 onOpen={notes.openOne}
                 onLink={notes.followLink}
+                onOpenPlaylist={openPlaylistFromNotification}
                 onBack={backToNotifications}
+              />
+            )}
+
+            {current === 'playlists' && hasSession && (
+              <PlaylistLibrary
+                onMessages={() => navigate('/notifications', { replace: true })}
+                onOpen={openPlaylist}
+                onNew={() => navigate('/notifications/mine/new')}
+              />
+            )}
+
+            {current === 'playlist' && hasSession && route.view === 'playlist' && (
+              <PlaylistView
+                key={`${route.source}:${route.playlistId}`}
+                source={route.source}
+                playlistId={route.playlistId}
+                open={route.open}
+                notificationId={
+                  route.source === 'admin' && playlistFrom?.playlistId === route.playlistId
+                    ? playlistFrom.notificationId
+                    : null
+                }
+                onOpenItem={(open) => openPlaylistItem(route.source, route.playlistId, open)}
+                onEdit={() => navigate(`/notifications/mine/${route.playlistId}/edit`)}
+                onDeleted={() => navigate('/notifications/playlists', { replace: true })}
+                onBack={backToPlaylists}
+              />
+            )}
+
+            {current === 'playlistMaker' && hasSession && route.view === 'playlistMaker' && (
+              <PlaylistMaker
+                key={route.playlistId ?? 'new'}
+                playlistId={route.playlistId}
+                onSaved={(id) => navigate(playlistPath('own', id), { replace: true })}
+                onCancel={backAction() ?? backToPlaylists}
               />
             )}
 

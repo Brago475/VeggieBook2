@@ -1,0 +1,375 @@
+/* Playlists inside Notifications: the Messages and Playlists switch, the
+   Playlists tab, a playlist's page, a tip, and making your own playlist.
+   Rows reuse the book's recipe rows (reading.css) and the notification
+   cards (notifications.css). */
+
+/* Switch */
+.pl-switch {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 var(--sp-4);
+}
+
+.pl-switch-btn {
+  flex: 1;
+  min-height: 44px;
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: 700;
+  color: var(--green-deep);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.pl-switch-btn[aria-selected='true'] {
+  color: #fff;
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+  cursor: default;
+}
+
+.pl-switch-btn:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+/* Playlists tab */
+.pl-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.pl-group-head .nf-group-label {
+  margin-bottom: 0;
+}
+
+.pl-new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.pl-new:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.pl-empty {
+  margin: 0 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.pl-row-cover {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.pl-row-name {
+  font-size: var(--font-label);
+  font-weight: 700;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+/* The playlist card inside a notification */
+.pl-attached {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f6f9f1;
+  border: 1px solid #d5e6c0;
+  border-radius: 16px;
+}
+
+.pl-attached-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pl-attached-text strong {
+  font-size: 16px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.pl-attached-text span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.pl-open {
+  min-height: 50px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--green-dark);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.pl-open:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+/* A playlist's page */
+.pl-head {
+  margin-bottom: var(--sp-4);
+}
+
+.pl-kicker {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--green-deep);
+}
+
+.pl-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: var(--sp-4);
+}
+
+.pl-items .recipe-row {
+  width: 100%;
+}
+
+.pl-item-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+
+.pl-item-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.pl-tip-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green-deep);
+  background: var(--green-tint);
+}
+
+.pl-tip-thumb svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Keep and Skip */
+.pl-decide {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: var(--sp-5);
+  padding: 12px 0 16px;
+  background: linear-gradient(to bottom, rgba(250, 250, 245, 0), var(--bg, #fafaf5) 30%);
+}
+
+.pl-decide-note {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--green-deep);
+}
+
+.pl-decide-row,
+.pl-savebar {
+  display: flex;
+  gap: 10px;
+}
+
+.pl-decide-row > *,
+.pl-savebar > * {
+  flex: 1;
+}
+
+.pl-savebar {
+  position: sticky;
+  bottom: 0;
+  margin-top: var(--sp-5);
+  padding: 12px 0 16px;
+  background: linear-gradient(to bottom, rgba(250, 250, 245, 0), var(--bg, #fafaf5) 30%);
+}
+
+/* Buttons */
+.pl-btn {
+  min-height: 48px;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.pl-btn.is-primary {
+  color: #fff;
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+}
+
+.pl-btn.is-danger {
+  color: #a3302a;
+}
+
+.pl-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.pl-btn:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+/* A tip */
+.pl-tip .pl-kicker {
+  margin-bottom: 6px;
+}
+
+.pl-tip-block {
+  margin-top: var(--sp-4);
+}
+
+.pl-tip-block p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.6;
+  white-space: pre-line;
+  color: var(--text);
+}
+
+.pl-tip-img {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  margin-bottom: 12px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+/* Making your own playlist */
+.pl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--sp-5);
+}
+
+.pl-field-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.pl-input {
+  min-height: 48px;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.pl-input:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 1px;
+}
+
+.pl-pick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.pl-pick.is-on {
+  border-color: var(--green-dark);
+  box-shadow: inset 0 0 0 1px var(--green-dark);
+}
+
+.pl-pick:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.pl-pick-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-label);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.pl-check {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #c9c8bf;
+  border-radius: 50%;
+}
+
+.pl-pick.is-on .pl-check {
+  color: #fff;
+  background: var(--green-dark);
+  border-color: var(--green-dark);
+}
+
+.pl-check svg {
+  width: 16px;
+  height: 16px;
+}

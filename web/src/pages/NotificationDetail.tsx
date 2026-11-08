@@ -1,19 +1,20 @@
 import { useEffect } from 'react'
-import { BellIcon, ExternalLinkIcon } from '../components/icons/LibraryIcons'
+import { BellIcon, ExternalLinkIcon, LeafIcon } from '../components/icons/LibraryIcons'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { LinkedText } from '../components/notifications/LinkedText'
 import { useLang } from '../i18n/languageContext'
 import { NOTIFICATIONS } from '../i18n/strings/notifications'
+import { PLAYLISTS } from '../i18n/strings/playlists'
 import { useStrings } from '../i18n/useStrings'
 import { firstLink, hostOf } from '../utils/messageLinks'
 import { dayAndTime, shortDate } from '../utils/notificationDates'
 import type { NotificationItem } from '../utils/notificationsApi'
 
 // One notification on its own page: one soft card with the date, the text,
-// and a button for its web link, then how long it stays available. Opening
-// the page marks this notification opened. The masthead's Back returns to
-// the list; a notification that has expired or was taken down shows a note
-// and a button back to the list instead.
+// a button for its web link, and the playlist it opens, if any, then how
+// long it stays available. Opening the page marks this notification opened.
+// The masthead's Back returns to the list; a notification that has expired
+// or was taken down shows a note and a button back to the list instead.
 
 type Props = {
   items: NotificationItem[]
@@ -22,11 +23,13 @@ type Props = {
   focusId: string
   onOpen: (item: NotificationItem) => void
   onLink: (item: NotificationItem) => void
+  onOpenPlaylist: (item: NotificationItem) => void
   onBack: () => void
 }
 
-export function NotificationDetail({ items, loaded, focusId, onOpen, onLink, onBack }: Props) {
+export function NotificationDetail({ items, loaded, focusId, onOpen, onLink, onOpenPlaylist, onBack }: Props) {
   const t = useStrings(NOTIFICATIONS)
+  const pt = useStrings(PLAYLISTS)
   const { lang } = useLang()
 
   // The newest round of this notification, when it repeats.
@@ -37,6 +40,7 @@ export function NotificationDetail({ items, loaded, focusId, onOpen, onLink, onB
   }, [item, onOpen])
 
   const link = item ? firstLink(item.text) : null
+  const playlist = item?.playlist ?? null
 
   return (
     <div className="account-screen nf-screen">
@@ -71,6 +75,24 @@ export function NotificationDetail({ items, loaded, focusId, onOpen, onLink, onB
             <p className="nf-detail-text">
               <LinkedText text={item.text} linkNote={t.linkNote} onLink={() => onLink(item)} />
             </p>
+
+            {playlist && (
+              <>
+                <div className="pl-attached">
+                  <span className="nf-icon is-small" aria-hidden="true">
+                    <LeafIcon />
+                  </span>
+                  <span className="pl-attached-text">
+                    <strong>{playlist.name}</strong>
+                    <span>{pt.counts(playlist.tips, playlist.recipes)}</span>
+                  </span>
+                  {playlist.choice === 'kept' && <span className="nf-new">{pt.kept}</span>}
+                </div>
+                <button type="button" className="pl-open" onClick={() => onOpenPlaylist(item)}>
+                  {pt.openPlaylist}
+                </button>
+              </>
+            )}
 
             {link && (
               <a

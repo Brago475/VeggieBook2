@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { InboxRow } from '../components/notifications/InboxRow'
+import { SectionSwitch } from '../components/notifications/SectionSwitch'
 import { notificationKey } from '../hooks/useNotifications'
 import { NOTIFICATIONS } from '../i18n/strings/notifications'
 import { useStrings } from '../i18n/useStrings'
@@ -10,18 +11,19 @@ import type { NotificationItem } from '../utils/notificationsApi'
 // The Notifications list: every live notification, newest first, as
 // separate cards grouped into Today and Earlier, with All and Unread tabs.
 // A card opens that notification's own page. The list alone does not mark
-// anything opened.
+// anything opened. The switch on top leads to the Playlists tab.
 
 type Props = {
   items: NotificationItem[]
   loaded: boolean
   error: string | null
   onOpen: (item: NotificationItem) => void
+  onPlaylists: () => void
 }
 
 const SKELETON_CARDS = 3
 
-export function Notifications({ items, loaded, error, onOpen }: Props) {
+export function Notifications({ items, loaded, error, onOpen, onPlaylists }: Props) {
   const t = useStrings(NOTIFICATIONS)
   const [unreadOnly, setUnreadOnly] = useState(false)
 
@@ -56,6 +58,8 @@ export function Notifications({ items, loaded, error, onOpen }: Props) {
           <p className="library-sub">{t.sub}</p>
         </div>
       </div>
+
+      <SectionSwitch active="messages" onMessages={() => {}} onPlaylists={onPlaylists} />
 
       <div className="nf-tabs" role="tablist" aria-label={t.show}>
         <button
