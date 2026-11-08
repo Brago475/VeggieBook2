@@ -23,7 +23,8 @@ namespace VeggieBook.Api.Admin;
 //   POST /api/admin/notifications/{id}/stop  stop now; a stopped message
 //                                            can't be edited, only renamed
 //
-// The title is an admin-only label; the app never shows it.
+// The title is an admin-only label; the app never shows it. Activity names
+// the message by its title, so the log details here hold only the facts.
 //
 // Start times: StartNow uses the server's clock at the moment of saving. A
 // requested start that has already passed also starts now, except the
@@ -189,7 +190,8 @@ public class AdminNotificationsController(
         await db.SaveChangesAsync();
 
         await NotificationActivity.RecordAdminAsync(
-            db, logger, NotificationActivity.Stopped, n, $"{Label(n)} stopped {Eastern(now)}");
+            db, logger, NotificationActivity.Stopped, n,
+            $"Taken down {Eastern(now)}, was set to end {Eastern(n.ExpiresAt)}");
         return Ok((await DescribeAsync([n]))[0]);
     }
 
@@ -361,18 +363,15 @@ public class AdminNotificationsController(
         }).ToList();
     }
 
-    // "Cucumber season" (#4), or Notification 4 without a title.
-    private static string Label(Notification n) =>
-        n.Title is null ? $"Notification {n.Id}" : $"\"{n.Title}\" (#{n.Id})";
-
     private static string Quoted(string? title) => title is null ? "no title" : $"\"{title}\"";
 
+    // "Nov 8, 2026 10:23 AM to Nov 8, 2026 11:59 PM, every 7 days, to all accounts and guests"
     private static string Summary(Notification n)
     {
         var who = n.Audience == Notification.AudienceSelected ? "selected accounts" : "all accounts";
         if (n.IncludeGuests) who += " and guests";
         var repeat = n.RepeatDays is int d ? $", every {d} days" : "";
-        return $"{Label(n)}: {Eastern(n.StartsAt)} to {Eastern(n.ExpiresAt)}{repeat}, to {who}";
+        return $"{Eastern(n.StartsAt)} to {Eastern(n.ExpiresAt)}{repeat}, to {who}";
     }
 
     private static string Eastern(DateTime utc) =>

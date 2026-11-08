@@ -1,29 +1,58 @@
-/* Notification titles: the heading on each message card
-   (NotificationList.tsx) and the rename dialog
+/* The compact message card (NotificationList.tsx): labeled Title and
+   Message rows and the Details dropdown. Also the rename dialog
    (RenameNotificationDialog.tsx). */
 
-.nt-item-name {
+.nt-item.nt-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+/* Title and Message, as labeled rows */
+.nt-card-fields {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 6px 14px;
+  align-items: baseline;
+  margin: 0;
+}
+
+.nt-card-fields dt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.nt-card-fields dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.nt-card-title {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: #18181b;
+}
+
+.nt-card-title.is-empty {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 10px;
-  margin: 0;
-}
-
-.nt-item-name strong {
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.35;
-  color: #18181b;
-  overflow-wrap: anywhere;
-}
-
-.nt-item-name.is-empty strong {
-  font-weight: 600;
+  font-weight: 500;
   color: #71717a;
 }
 
-.nt-item-name .nt-name-add {
+.nt-card-body {
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #3f3f46;
+}
+
+.nt-name-add {
   padding: 0;
   font: inherit;
   font-size: 13px;
@@ -36,8 +65,84 @@
   text-underline-offset: 2px;
 }
 
-.nt-item-name .nt-name-add:focus-visible {
+.nt-name-add:focus-visible {
   outline: 2px solid #15803d;
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Details dropdown */
+.nt-more {
+  border-top: 1px solid #f0f0f2;
+}
+
+.nt-more > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.nt-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nt-more > summary::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin: 0 2px 0 3px;
+  border-right: 2px solid #52525b;
+  border-bottom: 2px solid #52525b;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+
+.nt-more[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+.nt-more > summary:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.nt-more-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #18181b;
+}
+
+.nt-more-counts {
+  font-size: 13px;
+  color: #52525b;
+}
+
+.nt-more-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .nt-card-fields {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .nt-card-fields dd + dt {
+    margin-top: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nt-more > summary::before {
+    transition: none;
+  }
 }

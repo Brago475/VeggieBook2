@@ -28,8 +28,9 @@ namespace VeggieBook.Api.Admin;
 /// book_saved log lines for books no longer in it. A save line shows what was
 /// kept and taken out at the moment of saving ("-" when drops were not
 /// recorded yet); later take-outs are their own lines. Notification lines
-/// name the message by its current title and number and show the start of
-/// its text, with the round (counted from 1) for a repeating message.
+/// read "What happened: Title", using the message's current title, and show
+/// the start of its text, with the round (counted from 1) for a repeating
+/// message.
 /// </summary>
 [ApiController]
 [Route("api/admin/activity")]
@@ -40,21 +41,21 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
 
     private const int PreviewLength = 80;
 
-    // What a participant did with a notification, as the start of the title.
+    // What a participant did with a notification.
     private static readonly Dictionary<string, string> ParticipantNotification = new()
     {
-        [NotificationActivity.Shown] = "Saw",
-        [NotificationActivity.Opened] = "Opened",
-        [NotificationActivity.Link] = "Used the link in",
-        [NotificationActivity.Dismissed] = "Closed"
+        [NotificationActivity.Shown] = "Got the pop-up",
+        [NotificationActivity.Opened] = "Read the message",
+        [NotificationActivity.Link] = "Tapped the link",
+        [NotificationActivity.Dismissed] = "Closed the pop-up"
     };
 
     // What an admin did with a notification.
     private static readonly Dictionary<string, string> AdminNotification = new()
     {
-        [NotificationActivity.Created] = "Created",
-        [NotificationActivity.Edited] = "Edited",
-        [NotificationActivity.Stopped] = "Stopped"
+        [NotificationActivity.Created] = "Created notification",
+        [NotificationActivity.Edited] = "Edited notification",
+        [NotificationActivity.Stopped] = "Stopped notification"
     };
 
     [HttpGet]
@@ -93,11 +94,11 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             ? (categoryId is int id ? categoryNames.GetValueOrDefault(id, "") : "")
             : (vegetableCode is string code ? vegetableNames.GetValueOrDefault(code, code) : "");
 
-        // "Cucumber season" (#4), or notification #4 without a title.
+        // The message's title, or Untitled (#4) without one.
         string NotificationName(int? noteId) =>
             noteId is int i && notifications.TryGetValue(i, out var note) && !string.IsNullOrWhiteSpace(note.Title)
-                ? $"\"{note.Title}\" (#{i})"
-                : $"notification #{noteId}";
+                ? note.Title!
+                : $"Untitled (#{noteId})";
 
         // The start of the message, with the round for a repeating message.
         // Rounds are stored from 0 and shown from 1.
@@ -177,12 +178,12 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             else if (ParticipantNotification.TryGetValue(a.Kind, out var did))
             {
                 if (OwnerTracked(a, a.At))
-                    events.Add(new Event(a.Kind, a.ParticipantId, $"{did} {NotificationName(a.ContentId)}",
+                    events.Add(new Event(a.Kind, a.ParticipantId, $"{did}: {NotificationName(a.ContentId)}",
                         NotificationDetail(a), a.At));
             }
             else if (AdminNotification.TryGetValue(a.Kind, out var adminDid))
             {
-                events.Add(new Event(a.Kind, null, $"{adminDid} {NotificationName(a.ContentId)}",
+                events.Add(new Event(a.Kind, null, $"{adminDid}: {NotificationName(a.ContentId)}",
                     a.Detail ?? "", a.At));
             }
             else if (a.Kind == ParticipantErase.Kind)

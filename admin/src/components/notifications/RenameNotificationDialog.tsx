@@ -5,8 +5,8 @@ import { MAX_TITLE } from './notificationFormat'
 import '../../styles/notification-names.css'
 
 // Adds or changes a notification's title, in any status, stopped included.
-// The title is an admin-only label; leaving it empty removes it. Closes on
-// Cancel, the X, Escape, or a click outside.
+// An empty title removes it. Closes on Cancel, the X, Escape, or a click
+// outside.
 
 type Props = {
   item: AdminNotification
@@ -57,7 +57,7 @@ export function RenameNotificationDialog({ item, onSave, onClose }: Props) {
             <StudyIcon name="bell" size={20} />
           </span>
           <div className="st-dialog-title">
-            <strong id="nr-title">{item.title ? `Rename notification #${item.id}` : `Add a title to #${item.id}`}</strong>
+            <strong id="nr-title">{item.title ? 'Rename notification' : 'Add a title'}</strong>
             <span className="nt-dialog-excerpt">{item.bodyEn}</span>
           </div>
           <button type="button" className="st-dialog-close" aria-label="Close" disabled={busy} onClick={onClose}>
@@ -67,7 +67,7 @@ export function RenameNotificationDialog({ item, onSave, onClose }: Props) {
 
         <div className="st-dialog-body">
           <label className="nt-field">
-            <span className="nt-label">Title (admin only)</span>
+            <span className="nt-label">Title</span>
             <input
               ref={inputRef}
               className="nt-input"
@@ -76,9 +76,6 @@ export function RenameNotificationDialog({ item, onSave, onClose }: Props) {
               placeholder="For example: Cucumber season, fall 2026"
               onChange={(e) => setTitle(e.target.value)}
             />
-            <span className="nt-hint">
-              Shown here and in Activity. People in the app never see it. Leave it empty to remove the title.
-            </span>
           </label>
 
           {error && (

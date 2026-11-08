@@ -206,7 +206,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
             <span className="st-section-title">Message</span>
 
             <label className="nt-field">
-              <span className="nt-label">Title (admin only)</span>
+              <span className="nt-label">Title</span>
               <input
                 className="nt-input"
                 maxLength={MAX_TITLE}
@@ -214,9 +214,6 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
                 placeholder="For example: Cucumber season, fall 2026"
                 onChange={(e) => setTitle(e.target.value)}
               />
-              <span className="nt-hint">
-                Helps you find this message here and in Activity. People in the app never see it.
-              </span>
             </label>
 
             <div className="nt-row">
