@@ -3,19 +3,19 @@ import { useLang } from '../../i18n/languageContext'
 import { COMMON } from '../../i18n/strings/common'
 import { NOTIFICATIONS } from '../../i18n/strings/notifications'
 import { useStrings } from '../../i18n/useStrings'
+import { notificationKey } from '../../hooks/useNotifications'
 import { listTime } from '../../utils/notificationDates'
 import type { NotificationItem } from '../../utils/notificationsApi'
 import { BellIcon, ChevronLeftIcon, ChevronRightIcon } from '../icons/LibraryIcons'
-import { notificationKey } from '../../hooks/useNotifications'
 import { LinkedText } from './LinkedText'
 
-// The pop-up for new messages. The newest shows as a chat bubble, with
-// arrows to step through the others, and the rest wait below in an
-// email-style list. Built on the confirm dialog's styles (dialog.css); on
-// a phone it sits at the bottom of the screen.
+// The pop-up for new notifications. The newest shows in full, with arrows
+// to step through the others, and the rest are listed below. Built on the
+// confirm dialog's styles (dialog.css); on a phone it sits at the bottom of
+// the screen.
 //
-// See all messages opens the inbox, a waiting message opens its thread,
-// and Close, a tap outside, or Escape closes it.
+// See all notifications opens the list, a listed notification opens its own
+// page, and Close, a tap outside, or Escape closes it.
 
 const MAX_WAITING = 2
 
@@ -70,14 +70,14 @@ export function NotificationNotice({ items, onSeeAll, onOpen, onClose, onLink }:
         onClick={(event) => event.stopPropagation()}
       >
         <div className="nf-sheet-head">
-          <span className="nf-sheet-icon" aria-hidden="true">
+          <span className="nf-icon" aria-hidden="true">
             <BellIcon />
           </span>
           <div className="nf-sheet-heading">
             <h2 className="nf-sheet-title" id="nf-sheet-title">
-              {t.newMessages(items.length)}
+              {t.newCount(items.length)}
             </h2>
-            {many && <p className="nf-sheet-step">{t.messageOf(position + 1, items.length)}</p>}
+            {many && <p className="nf-sheet-step">{t.stepOf(position + 1, items.length)}</p>}
           </div>
           {many && (
             <div className="nf-steppers">
@@ -103,26 +103,16 @@ export function NotificationNotice({ items, onSeeAll, onOpen, onClose, onLink }:
           )}
         </div>
 
-        <div className="nf-sheet-message" aria-live="polite">
-          <div className="nf-bubble-top">
-            <span className="nf-sender">{t.sender}</span>
-            <span className="nf-time">{listTime(item.sentAt, lang)}</span>
-          </div>
-          <p className="nf-bubble nf-bubble-text is-fresh">
+        <div className="nf-sheet-card" aria-live="polite">
+          <p className="nf-sheet-text">
             <LinkedText text={item.text} linkNote={t.linkNote} onLink={() => onLink(item)} />
           </p>
-          {many && (
-            <div className="nf-dots" aria-hidden="true">
-              {items.map((m, i) => (
-                <span key={notificationKey(m)} className={i === position ? 'nf-dot is-on' : 'nf-dot'} />
-              ))}
-            </div>
-          )}
+          <span className="nf-sheet-time">{listTime(item.sentAt, lang)}</span>
         </div>
 
         {waiting.length > 0 && (
           <div className="nf-waiting">
-            <p className="nf-waiting-label">{t.alsoWaiting}</p>
+            <p className="nf-waiting-label">{t.moreWaiting}</p>
             <ul>
               {waiting.map((other) => (
                 <li key={notificationKey(other)}>

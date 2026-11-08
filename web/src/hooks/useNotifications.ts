@@ -7,15 +7,16 @@ import {
   type NotificationStep,
 } from '../utils/notificationsApi'
 
-// Messages from the research team for the current account or guest.
+// Notifications from the research team for the current account or guest.
 //
 // Checks once a minute while the tab is visible, and again when the tab
 // comes back into view. Each step (seen, open, link, close) is sent to the
 // API, which records it in the activity log for tracked accounts.
 //
-// The pop-up holds every unseen message at once, newest first, and opens
-// only while `calm` is true, so it never interrupts making a book or a
+// The pop-up holds every unseen notification at once, newest first, and
+// opens only while `calm` is true, so it never interrupts making a book or a
 // form. All of them count as shown when it opens, and as closed on Close.
+// A notification counts as opened when its own page is opened.
 
 const POLL_MS = 60_000
 
@@ -43,12 +44,7 @@ export function useNotifications(owner: string | null, calm: boolean) {
   // has recorded them does not undo them on screen.
   const seenSent = useRef(new Set<string>())
   const openSent = useRef(new Set<string>())
-  const itemsRef = useRef<NotificationItem[]>([])
   const batchRef = useRef<NotificationItem[]>([])
-
-  useEffect(() => {
-    itemsRef.current = items
-  }, [items])
 
   useEffect(() => {
     batchRef.current = batch
@@ -105,7 +101,7 @@ export function useNotifications(owner: string | null, calm: boolean) {
     }
   }, [owner, lang])
 
-  // Opens the pop-up with every unseen message and records each as shown.
+  // Opens the pop-up with every unseen notification and records each as shown.
   useEffect(() => {
     if (!calm || batch.length > 0) return
     const fresh = items.filter(
@@ -125,34 +121,25 @@ export function useNotifications(owner: string | null, calm: boolean) {
     )
   }, [calm, batch.length, items])
 
-  // Close: every message in the pop-up counts as closed.
+  // Close: every notification in the pop-up counts as closed.
   const closeBatch = useCallback(() => {
     for (const item of batchRef.current) send(item, 'close')
     setBatch([])
   }, [])
 
-  // Leaving for Notifications: the open is recorded there.
+  // Leaving the pop-up for Notifications: the open is recorded there.
   const leaveBatch = useCallback(() => {
     setBatch([])
   }, [])
 
-  // Opening the thread opens every unread message, like opening a chat.
-  const openAll = useCallback(() => {
-    const unread = itemsRef.current.filter(
-      (item) => !item.read && !openSent.current.has(notificationKey(item)),
-    )
-    if (unread.length === 0) return
-
-    for (const item of unread) {
-      openSent.current.add(notificationKey(item))
-      send(item, 'open')
-    }
+  // One notification's page was opened.
+  const openOne = useCallback((item: NotificationItem) => {
+    const key = notificationKey(item)
+    if (item.read || openSent.current.has(key)) return
+    openSent.current.add(key)
+    send(item, 'open')
     setItems((list) =>
-      list.map((item) =>
-        openSent.current.has(notificationKey(item))
-          ? { ...item, read: true, shown: true }
-          : item,
-      ),
+      list.map((i) => (notificationKey(i) === key ? { ...i, read: true, shown: true } : i)),
     )
   }, [])
 
@@ -170,7 +157,7 @@ export function useNotifications(owner: string | null, calm: boolean) {
     batch,
     closeBatch,
     leaveBatch,
-    openAll,
+    openOne,
     followLink,
   }
 }

@@ -7,9 +7,10 @@ import { useStrings } from '../i18n/useStrings'
 import { isToday } from '../utils/notificationDates'
 import type { NotificationItem } from '../utils/notificationsApi'
 
-// The Notifications inbox: every live message, newest first, grouped into
-// Today and Earlier, with All and Unread tabs. A row opens the thread at
-// that message. Visiting the inbox alone does not mark anything opened.
+// The Notifications list: every live notification, newest first, as
+// separate cards grouped into Today and Earlier, with All and Unread tabs.
+// A card opens that notification's own page. The list alone does not mark
+// anything opened.
 
 type Props = {
   items: NotificationItem[]
@@ -18,7 +19,7 @@ type Props = {
   onOpen: (item: NotificationItem) => void
 }
 
-const SKELETON_ROWS = 3
+const SKELETON_CARDS = 3
 
 export function Notifications({ items, loaded, error, onOpen }: Props) {
   const t = useStrings(NOTIFICATIONS)
@@ -29,13 +30,13 @@ export function Notifications({ items, loaded, error, onOpen }: Props) {
   const today = list.filter((item) => isToday(item.sentAt))
   const earlier = list.filter((item) => !isToday(item.sentAt))
 
-  function group(label: string, rows: NotificationItem[]) {
-    if (rows.length === 0) return null
+  function group(label: string, cards: NotificationItem[]) {
+    if (cards.length === 0) return null
     return (
-      <section>
+      <section className="nf-section">
         <h2 className="nf-group-label">{label}</h2>
-        <ul className="nf-group">
-          {rows.map((item) => (
+        <ul className="nf-list">
+          {cards.map((item) => (
             <li key={notificationKey(item)}>
               <InboxRow item={item} onOpen={() => onOpen(item)} />
             </li>
@@ -80,14 +81,10 @@ export function Notifications({ items, loaded, error, onOpen }: Props) {
       {!loaded && (
         <div role="status" aria-busy="true">
           <span className="visually-hidden">{t.loading}</span>
-          <ul className="nf-group" aria-hidden="true">
-            {Array.from({ length: SKELETON_ROWS }, (_, i) => (
-              <li key={i} className="nf-skel-row">
-                <span className="skeleton nf-skel-avatar" />
-                <span className="nf-skel-lines">
-                  <span className="skeleton nf-skel-line" />
-                  <span className="skeleton nf-skel-line is-short" />
-                </span>
+          <ul className="nf-list" aria-hidden="true">
+            {Array.from({ length: SKELETON_CARDS }, (_, i) => (
+              <li key={i}>
+                <div className="skeleton nf-skel-card" />
               </li>
             ))}
           </ul>

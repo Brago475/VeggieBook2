@@ -31,7 +31,7 @@ import { ChangeVeggieCover } from './pages/ChangeVeggieCover'
 import { CreateAccount } from './pages/CreateAccount'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { HomeLibrary } from './pages/HomeLibrary'
-import { NotificationThread } from './pages/NotificationThread'
+import { NotificationDetail } from './pages/NotificationDetail'
 import { Notifications } from './pages/Notifications'
 import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
@@ -90,9 +90,9 @@ import './styles/responsive.css'
 // BookSaved.tsx) until Skip. It is held here, not in the address, so a
 // refresh lands on the library and a book can never be saved twice.
 //
-// Messages from the research team (hooks/useNotifications.ts) reach guests
-// and accounts. Their pop-up shows only on calm screens, never while a book
-// is being made or on a form.
+// Notifications from the research team (hooks/useNotifications.ts) reach
+// guests and accounts. Their pop-up shows only on calm screens, never while
+// a book is being made or on a form. Each notification opens on its own page.
 //
 // After a deploy, the page reloads itself on the next move to a screen
 // where nothing is lost (hooks/useNewVersion.ts).
@@ -143,8 +143,8 @@ export default function App() {
   const openRecipe = route.view === 'book' ? route.recipeId : null
   const openSecret = route.view === 'book' ? route.secretId : null
   const editingCover = route.view === 'book' ? route.cover : false
-  // The message a thread was opened at, or null for the inbox.
-  const openMessage = route.view === 'notifications' ? route.messageId : null
+  // The notification open on its own page, or null for the list.
+  const openNotification = route.view === 'notifications' ? route.messageId : null
 
   // Which viewer a saved book needs. An open recipe or secret in the
   // address already says; otherwise the book list, which the home screen
@@ -355,6 +355,10 @@ export default function App() {
       ? 'secrets'
       : 'veggie'
 
+  function backToNotifications() {
+    goUp('/notifications')
+  }
+
   function backAction(): (() => void) | undefined {
     if (current === 'flow') return flow.backAction(goHome)
     if (current === 'secrets') return secrets.backAction(goHome)
@@ -366,9 +370,9 @@ export default function App() {
       if (openSecret !== null) return () => openSecretInBook(null)
       return goHome
     }
-    // A message thread goes back to the inbox, and the inbox goes home.
+    // One notification goes back to the list, and the list goes home.
     if (current === 'notifications') {
-      return openMessage !== null ? () => goUp('/notifications') : goHome
+      return openNotification !== null ? backToNotifications : goHome
     }
     if (current === 'forgotPassword') return () => goUp('/signin')
     if (authPage || current === 'account' || readingPage) return goHome
@@ -389,9 +393,9 @@ export default function App() {
       (showBook && !editingCover))
   useNewVersion(path, reloadSafe)
 
-  // Screens where a message may pop up: home, account, About, and reading a
-  // saved book. Never while a book is being made, on the saved screen, or on
-  // a form.
+  // Screens where a notification may pop up: home, account, About, and
+  // reading a saved book. Never while a book is being made, on the saved
+  // screen, or on a form.
   const calm =
     status !== 'loading' &&
     hasSession &&
@@ -415,7 +419,7 @@ export default function App() {
     readingPage ||
     (showBook && !editingCover)
 
-  function openThread(item: NotificationItem) {
+  function openNotificationPage(item: NotificationItem) {
     navigate(`/notifications/${encodeURIComponent(String(item.id))}`)
   }
 
@@ -426,7 +430,7 @@ export default function App() {
 
   function openFromNotice(item: NotificationItem) {
     notes.leaveBatch()
-    openThread(item)
+    openNotificationPage(item)
   }
 
   // The app renders under the loading screen once the sign-in check answers,
@@ -539,23 +543,23 @@ export default function App() {
               />
             )}
 
-            {current === 'notifications' && hasSession && openMessage === null && (
+            {current === 'notifications' && hasSession && openNotification === null && (
               <Notifications
                 items={notes.items}
                 loaded={notes.loaded}
                 error={notes.error}
-                onOpen={openThread}
+                onOpen={openNotificationPage}
               />
             )}
 
-            {current === 'notifications' && hasSession && openMessage !== null && (
-              <NotificationThread
+            {current === 'notifications' && hasSession && openNotification !== null && (
+              <NotificationDetail
                 items={notes.items}
                 loaded={notes.loaded}
-                error={notes.error}
-                focusId={openMessage}
-                onOpenAll={notes.openAll}
+                focusId={openNotification}
+                onOpen={notes.openOne}
                 onLink={notes.followLink}
+                onBack={backToNotifications}
               />
             )}
 

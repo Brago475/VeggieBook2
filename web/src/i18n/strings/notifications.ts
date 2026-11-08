@@ -1,74 +1,78 @@
-// The Notifications inbox, the message thread, and the pop-up. Spanish
-// uses tú.
+// The Notifications list, one notification's page, and the pop-up.
+// Spanish uses tú.
 
 const en = {
   title: 'Notifications',
-  sub: 'Messages from the VeggieBook team',
-  sender: 'VeggieBook team',
-  loading: 'Loading messages...',
-  couldNotLoad: 'Could not load your messages.',
+  sub: 'Updates from the VeggieBook team',
+  loading: 'Loading notifications...',
+  couldNotLoad: 'Could not load your notifications.',
 
   show: 'Show',
   tabAll: (n: number) => `All ${n}`,
   tabUnread: (n: number) => `Unread ${n}`,
   today: 'Today',
   earlier: 'Earlier',
-  emptyAll: 'You have no messages right now.',
+  emptyAll: 'You have no notifications right now.',
   emptyUnread: 'You are all caught up.',
-  expireNote: 'Messages leave this list when they expire.',
+  expireNote: 'Notifications leave this list when they expire.',
   unreadLabel: 'Unread',
+  newLabel: 'New',
 
-  threadCount: (n: number) => (n === 1 ? '1 message' : `${n} messages`),
-  availableUntil: (date: string) => `available until ${date}`,
-  noReplies: 'Messages from the team only. Replies are not available.',
+  kicker: 'VeggieBook notification',
+  sentAt: (date: string, time: string) => `${date}, ${time}`,
+  availableUntil: (date: string) => `Available until ${date}`,
+  notFound: 'This notification is no longer available.',
+  backToAll: 'All notifications',
   opensNewTab: 'Opens in a new tab',
   linkNote: 'opens in a new tab',
 
-  newMessages: (n: number) => (n === 1 ? '1 new message' : `${n} new messages`),
-  messageOf: (i: number, n: number) => `Message ${i} of ${n}`,
-  previous: 'Previous message',
-  next: 'Next message',
-  alsoWaiting: 'Also waiting',
+  newCount: (n: number) => (n === 1 ? '1 new notification' : `${n} new notifications`),
+  stepOf: (i: number, n: number) => `${i} of ${n}`,
+  previous: 'Previous notification',
+  next: 'Next notification',
+  moreWaiting: 'More notifications',
   andMore: (n: number) => (n === 1 ? 'and 1 more' : `and ${n} more`),
-  seeAll: 'See all messages',
+  seeAll: 'See all notifications',
 
   unreadCount: (n: number) =>
-    n === 1 ? '1 unread message' : `${n} unread messages`,
+    n === 1 ? '1 unread notification' : `${n} unread notifications`,
 }
 
 const es: typeof en = {
   title: 'Notificaciones',
-  sub: 'Mensajes del equipo de VeggieBook',
-  sender: 'Equipo de VeggieBook',
-  loading: 'Cargando mensajes...',
-  couldNotLoad: 'No se pudieron cargar tus mensajes.',
+  sub: 'Novedades del equipo de VeggieBook',
+  loading: 'Cargando notificaciones...',
+  couldNotLoad: 'No se pudieron cargar tus notificaciones.',
 
   show: 'Mostrar',
-  tabAll: (n: number) => `Todos ${n}`,
+  tabAll: (n: number) => `Todas ${n}`,
   tabUnread: (n: number) => `Sin leer ${n}`,
   today: 'Hoy',
   earlier: 'Antes',
-  emptyAll: 'No tienes mensajes por ahora.',
-  emptyUnread: 'Ya leíste todos tus mensajes.',
-  expireNote: 'Los mensajes salen de esta lista cuando vencen.',
+  emptyAll: 'No tienes notificaciones por ahora.',
+  emptyUnread: 'Ya leíste todas tus notificaciones.',
+  expireNote: 'Las notificaciones salen de esta lista cuando vencen.',
   unreadLabel: 'Sin leer',
+  newLabel: 'Nueva',
 
-  threadCount: (n: number) => (n === 1 ? '1 mensaje' : `${n} mensajes`),
-  availableUntil: (date: string) => `disponible hasta el ${date}`,
-  noReplies: 'Solo mensajes del equipo. No se puede responder.',
+  kicker: 'Notificación de VeggieBook',
+  sentAt: (date: string, time: string) => `${date}, ${time}`,
+  availableUntil: (date: string) => `Disponible hasta el ${date}`,
+  notFound: 'Esta notificación ya no está disponible.',
+  backToAll: 'Todas las notificaciones',
   opensNewTab: 'Se abre en una pestaña nueva',
   linkNote: 'se abre en una pestaña nueva',
 
-  newMessages: (n: number) => (n === 1 ? '1 mensaje nuevo' : `${n} mensajes nuevos`),
-  messageOf: (i: number, n: number) => `Mensaje ${i} de ${n}`,
-  previous: 'Mensaje anterior',
-  next: 'Mensaje siguiente',
-  alsoWaiting: 'También te esperan',
+  newCount: (n: number) => (n === 1 ? '1 notificación nueva' : `${n} notificaciones nuevas`),
+  stepOf: (i: number, n: number) => `${i} de ${n}`,
+  previous: 'Notificación anterior',
+  next: 'Notificación siguiente',
+  moreWaiting: 'Más notificaciones',
   andMore: (n: number) => (n === 1 ? 'y 1 más' : `y ${n} más`),
-  seeAll: 'Ver todos los mensajes',
+  seeAll: 'Ver todas las notificaciones',
 
   unreadCount: (n: number) =>
-    n === 1 ? '1 mensaje sin leer' : `${n} mensajes sin leer`,
+    n === 1 ? '1 notificación sin leer' : `${n} notificaciones sin leer`,
 }
 
 export const NOTIFICATIONS = { en, es }
