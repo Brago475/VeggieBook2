@@ -26,14 +26,14 @@ const en = {
   opensNewTab: 'Opens in a new tab',
   linkNote: 'opens in a new tab',
 
-  newTitle: (n: number) => (n === 1 ? 'New notification' : 'New notifications'),
+  newTitle: (n: number): string => (n === 1 ? 'New notification' : 'New notifications'),
   readMore: 'Read more',
   stepOf: (i: number, n: number) => `${i} of ${n}`,
   previous: 'Previous notification',
   next: 'Next notification',
   seeAll: 'See all',
 
-  unreadCount: (n: number) =>
+  unreadCount: (n: number): string =>
     n === 1 ? '1 unread notification' : `${n} unread notifications`,
 }
 
