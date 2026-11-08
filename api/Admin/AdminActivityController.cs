@@ -5,6 +5,7 @@ using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 using VeggieBook.Api.Notifications;
+using VeggieBook.Api.Playlists;
 using VeggieBook.Api.Research;
 using VeggieBook.Api.Research.AllData;
 
@@ -20,7 +21,10 @@ namespace VeggieBook.Api.Admin;
 /// tracking_off, study_started, study_ended, study_renamed, study_deleted,
 /// notice_joined, notice_declined, notification_shown, notification_opened,
 /// notification_link, notification_dismissed, notification_created,
-/// notification_edited, notification_stopped.
+/// notification_edited, notification_stopped, playlist_created,
+/// playlist_edited, playlist_archived, playlist_opened, playlist_kept,
+/// playlist_skipped, playlist_removed, playlist_item_opened,
+/// user_playlist_created, user_playlist_edited, user_playlist_deleted.
 ///
 /// Participant events show only if tracking was on when they happened
 /// (ResearchScope.CountsBook). Account deletions and erases always show.
@@ -30,7 +34,8 @@ namespace VeggieBook.Api.Admin;
 /// recorded yet); later take-outs are their own lines. Notification lines
 /// read "What happened: Title", using the message's current title, and show
 /// the start of its text, with the round (counted from 1) for a repeating
-/// message.
+/// message. Playlist lines use the playlist's current English name; a
+/// participant's own playlist is never named, since its name is typed by them.
 /// </summary>
 [ApiController]
 [Route("api/admin/activity")]
@@ -56,6 +61,31 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
         [NotificationActivity.Created] = "Created notification",
         [NotificationActivity.Edited] = "Edited notification",
         [NotificationActivity.Stopped] = "Stopped notification"
+    };
+
+    // What an admin did with a playlist.
+    private static readonly Dictionary<string, string> AdminPlaylist = new()
+    {
+        [PlaylistActivity.Created] = "Created playlist",
+        [PlaylistActivity.Edited] = "Edited playlist",
+        [PlaylistActivity.Archived] = "Archived playlist"
+    };
+
+    // What a participant did with a playlist made by an admin.
+    private static readonly Dictionary<string, string> ParticipantPlaylist = new()
+    {
+        [PlaylistActivity.Opened] = "Opened the playlist",
+        [PlaylistActivity.Kept] = "Kept the playlist",
+        [PlaylistActivity.Skipped] = "Skipped the playlist",
+        [PlaylistActivity.Removed] = "Removed the playlist"
+    };
+
+    // What a participant did with a playlist of their own.
+    private static readonly Dictionary<string, string> OwnPlaylist = new()
+    {
+        [PlaylistActivity.OwnCreated] = "Made their own playlist",
+        [PlaylistActivity.OwnEdited] = "Changed their own playlist",
+        [PlaylistActivity.OwnDeleted] = "Deleted their own playlist"
     };
 
     [HttpGet]
@@ -85,10 +115,27 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                 .ToListAsync())
             .ToDictionary(s => s.Id, s => $"#{s.DisplayNumber} {s.HeadlineEn}");
 
+        var tipNames = (await content.Tips
+                .AsNoTracking()
+                .Select(t => new { t.Id, t.VegetableCode, t.HeadingEn })
+                .ToListAsync())
+            .ToDictionary(t => t.Id, t => $"{vegetableNames.GetValueOrDefault(t.VegetableCode, t.VegetableCode)}: {t.HeadingEn}");
+
         var notifications = await db.Notifications
             .AsNoTracking()
             .Select(n => new { n.Id, n.Title, n.BodyEn, n.RepeatDays })
             .ToDictionaryAsync(n => n.Id);
+
+        var playlists = await db.Playlists
+            .AsNoTracking()
+            .Select(p => new
+            {
+                p.Id,
+                p.NameEn,
+                Tips = p.Items.Count(i => i.Kind == PlaylistKinds.Tip),
+                Recipes = p.Items.Count(i => i.Kind == PlaylistKinds.Recipe)
+            })
+            .ToDictionaryAsync(p => p.Id);
 
         string Name(string kind, string? vegetableCode, int? categoryId) => kind == "secrets"
             ? (categoryId is int id ? categoryNames.GetValueOrDefault(id, "") : "")
@@ -108,6 +155,34 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                 return "Message no longer available";
             var text = Preview(note.BodyEn);
             return note.RepeatDays is not null && a.ItemCount is int round ? $"Round {round + 1}: {text}" : text;
+        }
+
+        string PlaylistName(int? playlistId) =>
+            playlistId is int i && playlists.TryGetValue(i, out var p) ? p.NameEn : $"Playlist #{playlistId}";
+
+        // "2 tips and 4 recipes", from what the playlist holds now.
+        string PlaylistDetail(int? playlistId) =>
+            playlistId is int i && playlists.TryGetValue(i, out var p)
+                ? $"{Count(p.Tips, "tip")} and {Count(p.Recipes, "recipe")}"
+                : "Playlist no longer available";
+
+        // Detail is "source:kind:id", for example "admin:recipe:212".
+        (string Title, string Detail) ItemLine(ActivityEntry a)
+        {
+            var parts = (a.Detail ?? "").Split(':');
+            var source = parts.ElementAtOrDefault(0);
+            var kind = parts.ElementAtOrDefault(1);
+            int? itemId = int.TryParse(parts.ElementAtOrDefault(2), out var n) ? n : null;
+
+            var what = kind == PlaylistKinds.Tip ? "a tip" : "a recipe";
+            var title = source == PlaylistActivity.SourceOwn
+                ? $"Opened {what} in their own playlist"
+                : $"Opened {what} in the playlist: {PlaylistName(a.ContentId)}";
+
+            var detail = itemId is not int x ? ""
+                : kind == PlaylistKinds.Tip ? tipNames.GetValueOrDefault(x, $"Tip {x}")
+                : recipeNames.GetValueOrDefault(x, $"Recipe {x}");
+            return (title, detail);
         }
 
         var events = new List<Event>();
@@ -155,8 +230,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             u.CreatedAt)));
 
         // Activity log: deletions, take-outs, prints, downloads, erases, admin
-        // study actions, notifications, and saves of books no longer in the
-        // book table.
+        // study actions, notifications, playlists, and saves of books no
+        // longer in the book table.
         var logged = await db.ActivityLog.AsNoTracking().ToListAsync();
 
         bool OwnerTracked(ActivityEntry a, DateTime at) =>
@@ -185,6 +260,36 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             {
                 events.Add(new Event(a.Kind, null, $"{adminDid}: {NotificationName(a.ContentId)}",
                     a.Detail ?? "", a.At));
+            }
+            else if (AdminPlaylist.TryGetValue(a.Kind, out var adminPlaylistDid))
+            {
+                events.Add(new Event(a.Kind, null, $"{adminPlaylistDid}: {PlaylistName(a.ContentId)}",
+                    a.Detail ?? "", a.At));
+            }
+            else if (ParticipantPlaylist.TryGetValue(a.Kind, out var playlistDid))
+            {
+                if (OwnerTracked(a, a.At))
+                {
+                    var own = a.Detail == PlaylistActivity.SourceOwn;
+                    events.Add(new Event(a.Kind, a.ParticipantId,
+                        own ? "Opened their own playlist" : $"{playlistDid}: {PlaylistName(a.ContentId)}",
+                        own ? (a.ItemCount is int c ? Count(c, "recipe") : "") : PlaylistDetail(a.ContentId),
+                        a.At));
+                }
+            }
+            else if (a.Kind == PlaylistActivity.ItemOpened)
+            {
+                if (OwnerTracked(a, a.At))
+                {
+                    var (title, detail) = ItemLine(a);
+                    events.Add(new Event(a.Kind, a.ParticipantId, title, detail, a.At));
+                }
+            }
+            else if (OwnPlaylist.TryGetValue(a.Kind, out var ownDid))
+            {
+                if (OwnerTracked(a, a.At))
+                    events.Add(new Event(a.Kind, a.ParticipantId, ownDid,
+                        a.ItemCount is int c ? Count(c, "recipe") : "", a.At));
             }
             else if (a.Kind == ParticipantErase.Kind)
             {
@@ -326,6 +431,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
         var word = kind == "secrets" ? "secret" : "recipe";
         return n == 1 ? $"1 {word}" : $"{n} {word}s";
     }
+
+    private static string Count(int n, string word) => n == 1 ? $"1 {word}" : $"{n} {word}s";
 
     // The message on one line, cut to PreviewLength characters.
     private static string Preview(string text)
