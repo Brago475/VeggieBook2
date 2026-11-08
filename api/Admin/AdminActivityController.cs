@@ -29,7 +29,7 @@ namespace VeggieBook.Api.Admin;
 /// kept and taken out at the moment of saving ("-" when drops were not
 /// recorded yet); later take-outs are their own lines. Notification lines
 /// name the message by number and show the start of its text, with the round
-/// for a repeating message.
+/// (counted from 1) for a repeating message.
 /// </summary>
 [ApiController]
 [Route("api/admin/activity")]
@@ -94,12 +94,13 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             : (vegetableCode is string code ? vegetableNames.GetValueOrDefault(code, code) : "");
 
         // The start of the message, with the round for a repeating message.
+        // Rounds are stored from 0 and shown from 1.
         string NotificationDetail(ActivityEntry a)
         {
             if (a.ContentId is not int noteId || !notifications.TryGetValue(noteId, out var note))
                 return "Message no longer available";
             var text = Preview(note.BodyEn);
-            return note.RepeatDays is not null && a.ItemCount is int round ? $"Round {round}: {text}" : text;
+            return note.RepeatDays is not null && a.ItemCount is int round ? $"Round {round + 1}: {text}" : text;
         }
 
         var events = new List<Event>();
