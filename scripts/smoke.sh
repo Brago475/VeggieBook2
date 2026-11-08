@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # Post-deploy smoke check for VeggieBook2. Run on the server from the repo root.
 # Waits up to WAIT_SECONDS for the API to start, then runs every check.
+# Also fails when the API has logged activity log lines it could not save
+# since it last started. Run it again later to catch those.
 # Exits non-zero if any check fails.
 
 set -u
 
 UA="VeggieBook2-smoke"
 WAIT_SECONDS=30
+API_CONTAINER="veggiebook-api"
 API_PROBE="http://127.0.0.1:5000/api/questions?lang=en"
 fails=0
 
@@ -60,6 +63,25 @@ echo
 echo "Admin site, local nginx"
 check "home page" "http://127.0.0.1:8081/" "200"
 check "admin api" "http://127.0.0.1:8081/api/admin/overview" "401"
+
+# Activity log writes fail quietly by design (the main action still works),
+# so a missing database rule only shows in the API log. Any such warning
+# since the API last started fails this check.
+echo
+echo "Activity log, since the API started"
+started=$(docker inspect -f '{{.State.StartedAt}}' "$API_CONTAINER" 2>/dev/null)
+if [ -z "$started" ]; then
+  fail "activity log writes" "container $API_CONTAINER not found"
+else
+  log=$(docker logs --since "$started" "$API_CONTAINER" 2>&1)
+  problems=$(printf '%s\n' "$log" | grep -c "Activity log: could not")
+  if [ "$problems" -eq 0 ]; then
+    pass "activity log writes" "no failures"
+  else
+    fail "activity log writes" "$problems failed"
+    printf '%s\n' "$log" | grep -o "could not [^.]*line" | sort | uniq -c | sed 's/^/        /'
+  fi
+fi
 
 # Cloudflare challenges curl from this server, so the public addresses cannot
 # be tested from here. The local checks cover the origin; this covers the tunnel.
