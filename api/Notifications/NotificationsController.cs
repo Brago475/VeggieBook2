@@ -12,14 +12,16 @@ namespace VeggieBook.Api.Notifications;
 //
 //   GET  /api/notifications?lang=en|es   live notifications for this visitor,
 //                                       newest first: text, round, whether
-//                                       the pop-up has shown, whether read
+//                                       the pop-up has shown, whether read,
+//                                       and the playlist it opens, if any,
+//                                       with this account's Keep or Skip
 //   POST /api/notifications/{id}/{step}  step: seen (the pop-up showed), open,
 //                                       link, or close. Body: { "round": n }.
 //                                       Only the first of each step per round
 //                                       counts.
 //
 // Visitors and admins get an empty list. Read means opened or closed.
-// Research lines follow NotificationActivity.
+// Research lines follow NotificationActivity. Playlists: api/Playlists.
 
 public record NotificationStepRequest(int? Round);
 
@@ -52,6 +54,37 @@ public class NotificationsController(
 
         var language = lang == "es" ? "es" : "en";
 
+        var playlistIds = live.Where(n => n.PlaylistId != null).Select(n => n.PlaylistId!.Value).Distinct().ToList();
+        var playlists = await db.Playlists
+            .AsNoTracking()
+            .Where(p => playlistIds.Contains(p.Id))
+            .Select(p => new
+            {
+                p.Id,
+                p.NameEn,
+                p.NameEs,
+                Tips = p.Items.Count(i => i.Kind == PlaylistKinds.Tip),
+                Recipes = p.Items.Count(i => i.Kind == PlaylistKinds.Recipe)
+            })
+            .ToDictionaryAsync(p => p.Id);
+        var choices = await db.PlaylistChoices
+            .AsNoTracking()
+            .Where(c => c.UserId == viewer.Id && playlistIds.Contains(c.PlaylistId))
+            .ToDictionaryAsync(c => c.PlaylistId, c => c.Kept);
+
+        object? PlaylistOf(Notification n)
+        {
+            if (n.PlaylistId is not int pid || !playlists.TryGetValue(pid, out var p)) return null;
+            return new
+            {
+                id = p.Id,
+                name = language == "es" && !string.IsNullOrEmpty(p.NameEs) ? p.NameEs : p.NameEn,
+                tips = p.Tips,
+                recipes = p.Recipes,
+                choice = choices.TryGetValue(pid, out var kept) ? (kept ? "kept" : "skipped") : null
+            };
+        }
+
         var items = live
             .Select(n =>
             {
@@ -65,7 +98,8 @@ public class NotificationsController(
                     sentAt = NotificationRules.RoundStart(n, round),
                     expiresAt = n.ExpiresAt,
                     shown = receipt is not null,
-                    read = receipt?.OpenedAt is not null || receipt?.DismissedAt is not null
+                    read = receipt?.OpenedAt is not null || receipt?.DismissedAt is not null,
+                    playlist = PlaylistOf(n)
                 };
             })
             .OrderByDescending(i => i.sentAt)
