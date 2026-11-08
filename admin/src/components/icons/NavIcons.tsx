@@ -12,6 +12,7 @@ export type IconName =
   | 'server'
   | 'study'
   | 'bell'
+  | 'playlist'
   | 'activity'
   | 'content'
   | 'export'
@@ -25,8 +26,14 @@ export type IconName =
   | 'updown'
   | 'back'
   | 'chevron'
+  | 'up'
   | 'lock'
   | 'trash'
+  | 'plus'
+  | 'search'
+  | 'leaf'
+  | 'archive'
+  | 'restore'
 
 const paths: Record<IconName, React.ReactNode> = {
   home: (
@@ -109,6 +116,14 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M10 20.5a2 2 0 0 0 4 0" />
     </>
   ),
+  playlist: (
+    <>
+      <path d="M4 6h12" />
+      <path d="M4 11h12" />
+      <path d="M4 16h7" />
+      <path d="M15 14.5v6l5-3z" />
+    </>
+  ),
   activity: <path d="M3 12h4l3-7 4 14 3-7h4" />,
   content: (
     <>
@@ -171,6 +186,7 @@ const paths: Record<IconName, React.ReactNode> = {
     </>
   ),
   chevron: <path d="m6 9 6 6 6-6" />,
+  up: <path d="m6 15 6-6 6 6" />,
   lock: (
     <>
       <rect x="5" y="11" width="14" height="10" rx="2" />
@@ -183,6 +199,32 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M10 11v6M14 11v6" />
       <path d="M6 7l1 13h10l1-13" />
       <path d="M9 7V4h6v3" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m20 20-4.2-4.2" />
+    </>
+  ),
+  leaf: (
+    <>
+      <path d="M5 19c0-8.5 5.5-14 15-14 0 9.5-5.5 15-14 15" />
+      <path d="M5 19c2.8-3.8 5.8-6.3 9.5-8.5" />
+    </>
+  ),
+  archive: (
+    <>
+      <rect x="3" y="4" width="18" height="5" rx="1" />
+      <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9" />
+      <path d="M10 13h4" />
+    </>
+  ),
+  restore: (
+    <>
+      <path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1" />
+      <path d="M3 4v5h5" />
     </>
   ),
 }

@@ -1,0 +1,475 @@
+/* Playlists page and editor. Dialog, buttons, tabs and fields come from the
+   Studies and Notifications styles. */
+
+/* List */
+.pl-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.pl-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid #e3e8e2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.pl-card-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.pl-card-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pl-card-name strong {
+  font-size: 15px;
+}
+
+.pl-card-es {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.pl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pl-chip {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f2f5f1;
+  color: #4b5563;
+}
+
+.pl-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef0f2;
+  color: #4b5563;
+}
+
+.pl-badge.is-live {
+  background: #e3f3e6;
+  color: #1f6b35;
+}
+
+.pl-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Editor layout */
+.st-dialog.pl-dialog {
+  width: min(1120px, calc(100vw - 32px));
+  max-width: none;
+}
+
+.pl-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+.pl-editor-main {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.pl-editor-side {
+  position: sticky;
+  top: 0;
+}
+
+/* Browse */
+.pl-browse {
+  display: grid;
+  gap: 10px;
+}
+
+.pl-browse-filters {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 10px;
+}
+
+.pl-browse-search {
+  display: flex;
+  gap: 8px;
+}
+
+.pl-browse-search .nt-input {
+  flex: 1;
+}
+
+.pl-results {
+  border: 1px solid #e3e8e2;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pl-results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f7f9f6;
+  border-bottom: 1px solid #e3e8e2;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.pl-results-empty {
+  padding: 12px;
+  margin: 0;
+}
+
+.pl-result-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.pl-result,
+.pl-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.pl-result + .pl-result,
+.pl-item + .pl-item {
+  border-top: 1px solid #eef1ed;
+}
+
+.pl-result-text,
+.pl-item-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.pl-result-text strong,
+.pl-item-text strong {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pl-result-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.pl-result-snippet {
+  font-size: 12px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pl-kind {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.pl-kind.is-tip {
+  background: #fff4dc;
+  color: #8a5a00;
+}
+
+.pl-kind.is-recipe {
+  background: #e3f3e6;
+  color: #1f6b35;
+}
+
+.pl-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: #eaf5ec;
+  color: #3c8a50;
+  display: grid;
+  place-items: center;
+}
+
+.st-button.pl-add {
+  justify-content: center;
+  min-width: 72px;
+}
+
+.st-button.pl-add.is-added {
+  opacity: 0.55;
+}
+
+/* Ordered list */
+.pl-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #e3e8e2;
+  border-radius: 10px;
+}
+
+.pl-item-pos {
+  width: 22px;
+  text-align: right;
+  font-size: 12px;
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+}
+
+.pl-item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.pl-icon-button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e3e8e2;
+  border-radius: 8px;
+  background: #fff;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.pl-icon-button:hover:not(:disabled) {
+  background: #f2f5f1;
+}
+
+.pl-icon-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pl-note {
+  margin: 0;
+  font-size: 13px;
+  color: #8a5a00;
+}
+
+/* Preview */
+.pl-preview {
+  display: grid;
+  gap: 10px;
+}
+
+.pl-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pl-lang {
+  display: inline-flex;
+  border: 1px solid #e3e8e2;
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.pl-lang button {
+  border: 0;
+  background: none;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.pl-lang button.is-active {
+  background: #1f6b35;
+  color: #fff;
+}
+
+.pl-phone {
+  border: 8px solid #1f2420;
+  border-radius: 30px;
+  background: #1f2420;
+}
+
+.pl-phone-screen {
+  height: 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 14px 14px;
+  border-radius: 22px;
+  background: #f7f9f6;
+  overflow: hidden;
+}
+
+.pl-phone-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #3c8a50;
+}
+
+.pl-phone-title {
+  font-size: 18px;
+  line-height: 1.25;
+  color: #1f2420;
+}
+
+.pl-phone-count {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.pl-phone-list {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  overflow: auto;
+}
+
+.pl-phone-card {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid #e3e8e2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.pl-phone-card img,
+.pl-phone-leaf {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.pl-phone-leaf {
+  display: grid;
+  place-items: center;
+  background: #eaf5ec;
+  color: #3c8a50;
+}
+
+.pl-phone-card div {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pl-phone-card strong {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.pl-phone-meta {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.pl-phone-snippet {
+  font-size: 11px;
+  color: #4b5563;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pl-phone-empty {
+  margin: 24px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.pl-phone-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 10px;
+}
+
+.pl-phone-actions span {
+  flex: 1;
+  padding: 10px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pl-phone-skip {
+  border: 1px solid #d6dcd4;
+  background: #fff;
+  color: #4b5563;
+}
+
+.pl-phone-keep {
+  background: #1f6b35;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .pl-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .pl-editor-side {
+    position: static;
+  }
+
+  .pl-browse-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .pl-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

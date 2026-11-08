@@ -13,6 +13,7 @@ import { Export } from './pages/Export'
 import { Notifications } from './pages/Notifications'
 import { Overview } from './pages/Overview'
 import { Participants } from './pages/Participants'
+import { Playlists } from './pages/Playlists'
 import { QuestionAnalytics } from './pages/QuestionAnalytics'
 import { Settings } from './pages/Settings'
 import { SignIn } from './pages/SignIn'
@@ -91,6 +92,7 @@ export function App() {
           {tab === 'participants' && <Participants onOpen={openTab} onOpenPersonData={openPersonData} />}
           {tab === 'studies' && <Studies onOpen={openTab} onOpenStudyData={openStudyData} />}
           {tab === 'notifications' && <Notifications />}
+          {tab === 'playlists' && <Playlists />}
           {tab === 'data' && (
             <AllData key={`${dataStudy ?? 'all'}|${dataSearch}`} initialStudy={dataStudy} initialSearch={dataSearch} />
           )}

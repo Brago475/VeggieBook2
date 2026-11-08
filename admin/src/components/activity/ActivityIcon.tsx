@@ -26,7 +26,20 @@ const tone: Record<ActivityType, string> = {
   notification_created: 'is-study',
   notification_edited: 'is-study',
   notification_stopped: 'is-deleted',
+  playlist_created: 'is-study',
+  playlist_edited: 'is-study',
+  playlist_archived: 'is-deleted',
+  playlist_opened: 'is-notice',
+  playlist_kept: 'is-saved',
+  playlist_skipped: 'is-notice',
+  playlist_removed: 'is-deleted',
+  playlist_item_opened: 'is-notice',
+  user_playlist_created: 'is-saved',
+  user_playlist_edited: 'is-study',
+  user_playlist_deleted: 'is-deleted',
 }
+
+const LIST = 'M4 6h12M4 11h12M4 16h7'
 
 const paths: Record<ActivityType, React.ReactNode> = {
   book_saved: <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5zM4 19.5A1.5 1.5 0 0 0 5.5 21H20" />,
@@ -52,6 +65,17 @@ const paths: Record<ActivityType, React.ReactNode> = {
   notification_created: <path d="M6 8a6 6 0 0 1 9-5.2M18 8c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0M19 2v6M16 5h6" />,
   notification_edited: <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />,
   notification_stopped: <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0M3 3l18 18" />,
+  playlist_created: <path d={`${LIST}M18 13v6M15 16h6`} />,
+  playlist_edited: <path d="M4 6h12M4 11h7M4 16h4M11 20h3l7-7-3-3-7 7z" />,
+  playlist_archived: <path d="M3 4h18v5H3zM5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />,
+  playlist_opened: <path d={`${LIST}M15 14.5v6l5-3z`} />,
+  playlist_kept: <path d={`${LIST}M14.5 17.5l2 2 4-4.5`} />,
+  playlist_skipped: <path d={`${LIST}M15 14l5 5M20 14l-5 5`} />,
+  playlist_removed: <path d={`${LIST}M15 17.5h5`} />,
+  playlist_item_opened: <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />,
+  user_playlist_created: <path d={`${LIST}M18 13v6M15 16h6`} />,
+  user_playlist_edited: <path d="M4 6h12M4 11h7M4 16h4M11 20h3l7-7-3-3-7 7z" />,
+  user_playlist_deleted: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
 }
 
 export function ActivityIcon({ type }: { type: ActivityType }) {

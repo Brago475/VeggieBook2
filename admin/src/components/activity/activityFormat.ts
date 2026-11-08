@@ -15,6 +15,7 @@ export type ActivityGroup =
   | 'studies'
   | 'notice'
   | 'notifications'
+  | 'playlists'
 
 export const groups: { id: ActivityGroup; label: string; types: ActivityType[] }[] = [
   { id: 'all', label: 'All', types: [] },
@@ -39,6 +40,23 @@ export const groups: { id: ActivityGroup; label: string; types: ActivityType[] }
       'notification_created',
       'notification_edited',
       'notification_stopped',
+    ],
+  },
+  {
+    id: 'playlists',
+    label: 'Playlists',
+    types: [
+      'playlist_created',
+      'playlist_edited',
+      'playlist_archived',
+      'playlist_opened',
+      'playlist_kept',
+      'playlist_skipped',
+      'playlist_removed',
+      'playlist_item_opened',
+      'user_playlist_created',
+      'user_playlist_edited',
+      'user_playlist_deleted',
     ],
   },
 ]

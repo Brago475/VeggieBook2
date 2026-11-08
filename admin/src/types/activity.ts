@@ -24,6 +24,17 @@ export type ActivityType =
   | 'notification_created'
   | 'notification_edited'
   | 'notification_stopped'
+  | 'playlist_created'
+  | 'playlist_edited'
+  | 'playlist_archived'
+  | 'playlist_opened'
+  | 'playlist_kept'
+  | 'playlist_skipped'
+  | 'playlist_removed'
+  | 'playlist_item_opened'
+  | 'user_playlist_created'
+  | 'user_playlist_edited'
+  | 'user_playlist_deleted'
 
 export type ActivityEvent = {
   type: ActivityType
