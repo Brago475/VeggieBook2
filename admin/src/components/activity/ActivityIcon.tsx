@@ -19,6 +19,13 @@ const tone: Record<ActivityType, string> = {
   study_deleted: 'is-deleted',
   notice_joined: 'is-notice',
   notice_declined: 'is-notice',
+  notification_shown: 'is-notice',
+  notification_opened: 'is-notice',
+  notification_link: 'is-notice',
+  notification_dismissed: 'is-notice',
+  notification_created: 'is-study',
+  notification_edited: 'is-study',
+  notification_stopped: 'is-deleted',
 }
 
 const paths: Record<ActivityType, React.ReactNode> = {
@@ -38,6 +45,13 @@ const paths: Record<ActivityType, React.ReactNode> = {
   study_deleted: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
   notice_joined: <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0" />,
   notice_declined: <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0" />,
+  notification_shown: <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />,
+  notification_opened: <path d="M3 10l9-6 9 6v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM3 10l9 6 9-6" />,
+  notification_link: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />,
+  notification_dismissed: <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9 9l6 6M15 9l-6 6" />,
+  notification_created: <path d="M6 8a6 6 0 0 1 9-5.2M18 8c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0M19 2v6M16 5h6" />,
+  notification_edited: <path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" />,
+  notification_stopped: <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0M3 3l18 18" />,
 }
 
 export function ActivityIcon({ type }: { type: ActivityType }) {
