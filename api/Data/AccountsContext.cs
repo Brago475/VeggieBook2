@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace VeggieBook.Api.Data;
 
 // Database context for user data: accounts, roles, saved books, research
-// IDs, studies and tracking, the activity log, notifications, and playlists.
+// IDs, studies and tracking, the activity log, notifications, playlists, and
+// meal labels.
 //
 // Separate from VeggieBookContext, which is read-only with tracking switched
 // off. Keeping writes in their own context means the content endpoints never
@@ -36,6 +37,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
     public DbSet<PlaylistChoice> PlaylistChoices => Set<PlaylistChoice>();
     public DbSet<UserPlaylist> UserPlaylists => Set<UserPlaylist>();
     public DbSet<UserPlaylistItem> UserPlaylistItems => Set<UserPlaylistItem>();
+    public DbSet<MealLabel> MealLabels => Set<MealLabel>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -241,7 +243,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.DismissedAt).HasColumnName("dismissed_at");
         });
 
-        // See db/migrations/023_playlists.sql.
+        // See db/migrations/023_playlists.sql and 026_playlist_auto.sql.
         b.Entity<Playlist>(e =>
         {
             e.ToTable("playlist");
@@ -249,6 +251,8 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
             e.Property(x => x.NameEn).HasColumnName("name_en");
             e.Property(x => x.NameEs).HasColumnName("name_es");
+            e.Property(x => x.AutoVegetable).HasColumnName("auto_vegetable");   // 026
+            e.Property(x => x.AutoMeal).HasColumnName("auto_meal");             // 026
             e.Property(x => x.ArchivedAt).HasColumnName("archived_at");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
             e.Property(x => x.CreatedBy).HasColumnName("created_by");
@@ -301,6 +305,18 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.UserPlaylistId).HasColumnName("user_playlist_id");
             e.Property(x => x.Position).HasColumnName("position");
             e.Property(x => x.RecipeId).HasColumnName("recipe_id");
+        });
+
+        // See db/migrations/024_meal_labels.sql.
+        b.Entity<MealLabel>(e =>
+        {
+            e.ToTable("meal_label");
+            e.HasKey(x => new { x.Kind, x.ItemId, x.Meal });
+            e.Property(x => x.Kind).HasColumnName("kind");
+            e.Property(x => x.ItemId).HasColumnName("item_id");
+            e.Property(x => x.Meal).HasColumnName("meal");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.CreatedBy).HasColumnName("created_by");
         });
     }
 

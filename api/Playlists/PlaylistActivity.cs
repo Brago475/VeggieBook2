@@ -5,15 +5,16 @@ using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Playlists;
 
-// Activity log lines for playlists.
+// Activity log lines for playlists and meal labels.
 //
 // Participant lines follow the same rules as notification lines: real,
 // non-admin accounts with tracking on while a study is running. ContentId
 // holds the playlist number and Detail the source ("admin" or "own"); for an
 // opened item, Detail is "source:kind:id" (for example "admin:recipe:212").
 //
-// Admin lines have no participant; ContentId holds the playlist number and
-// Detail a readable summary.
+// Admin lines have no participant. Playlist lines hold the playlist number
+// in ContentId and a readable summary in Detail. Meal label lines hold the
+// item id in ContentId and "kind|after|before" in Detail.
 
 public static class PlaylistActivity
 {
@@ -21,6 +22,7 @@ public static class PlaylistActivity
     public const string Created = "playlist_created";
     public const string Edited = "playlist_edited";
     public const string Archived = "playlist_archived";
+    public const string MealLabelsChanged = "meal_labels_changed";
 
     // Participant, admin playlists
     public const string Opened = "playlist_opened";
@@ -81,11 +83,19 @@ public static class PlaylistActivity
         string kind,
         Playlist p,
         string summary) =>
+        RecordAdminLineAsync(db, logger, kind, p.Id, summary);
+
+    public static Task RecordAdminLineAsync(
+        AccountsContext db,
+        ILogger logger,
+        string kind,
+        int contentId,
+        string detail) =>
         ActivityLog.SaveAsync(db, logger, new ActivityEntry
         {
             Kind = kind,
             ParticipantId = "",
-            ContentId = p.Id,
-            Detail = summary
+            ContentId = contentId,
+            Detail = detail
         });
 }

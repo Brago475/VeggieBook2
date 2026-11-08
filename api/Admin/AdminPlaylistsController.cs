@@ -9,25 +9,25 @@ using VeggieBook.Api.Recipes;
 
 namespace VeggieBook.Api.Admin;
 
-// The Playlists page.
+// Playlists, in the Notifications page.
 //
 //   GET  /api/admin/playlists              every playlist with counts
 //   GET  /api/admin/playlists/{id}         one playlist with its items
-//   GET  /api/admin/playlists/options      vegetables, topics from the
-//                                          question labels, and how many tips
-//                                          and recipes each pair has
-//   GET  /api/admin/playlists/content      browse tips and recipes by
-//                                          ?vegetable=, ?topic= and ?q=
+//   GET  /api/admin/playlists/options      vegetables with pictures, the four
+//                                          meals, and how many tips and
+//                                          recipes each pair has
+//   GET  /api/admin/playlists/content      browse by ?vegetable=, ?meal= and ?q=
 //   POST /api/admin/playlists/preview      items as the app shows them,
 //                                          body { items, lang }
-//   POST /api/admin/playlists              create
-//   PUT  /api/admin/playlists/{id}         edit names and items
+//   POST /api/admin/playlists              create a hand-made playlist
+//   PUT  /api/admin/playlists/{id}         edit names and items; an automatic
+//                                          playlist becomes hand-made
 //   POST /api/admin/playlists/{id}/archive no longer offered for new sends
 //   POST /api/admin/playlists/{id}/restore offered again
 //
-// A recipe matches a topic when the topic is one of its labels. Playlists are
-// archived, never deleted, so a kept playlist never disappears. Admins only.
-// Every change is written to the activity log.
+// Automatic playlists are made from the notification editor (AutoPlaylists).
+// Playlists are archived, never deleted. Admins only. Every change is
+// written to the activity log.
 
 public record PlaylistItemRequest(string? Kind, int Id);
 
@@ -45,7 +45,6 @@ public class AdminPlaylistsController(
     ILogger<AdminPlaylistsController> logger) : ControllerBase
 {
     private const int MaxName = 80;
-    private const int MaxItems = 60;
     private const int SnippetLength = 140;
 
     private sealed record Parsed(string NameEn, string? NameEs, List<PlaylistRef> Items);
@@ -60,6 +59,8 @@ public class AdminPlaylistsController(
                 p.Id,
                 p.NameEn,
                 p.NameEs,
+                p.AutoVegetable,
+                p.AutoMeal,
                 p.ArchivedAt,
                 p.CreatedAt,
                 p.UpdatedAt,
@@ -95,6 +96,9 @@ public class AdminPlaylistsController(
                 id = p.Id,
                 nameEn = p.NameEn,
                 nameEs = p.NameEs,
+                auto = p.AutoMeal != null,
+                autoVegetable = p.AutoVegetable,
+                autoMeal = p.AutoMeal,
                 archived = p.ArchivedAt != null,
                 archivedAt = p.ArchivedAt,
                 createdAt = p.CreatedAt,
@@ -128,78 +132,70 @@ public class AdminPlaylistsController(
             .AsNoTracking()
             .Where(v => v.Active)
             .OrderBy(v => v.SortOrder)
-            .Select(v => new { code = v.Code, name = v.NameEn })
+            .Select(v => new { code = v.Code, name = v.NameEn, nameEs = v.NameEs, image = v.ImagePath })
             .ToListAsync();
 
-        // Visible question choices, in the order the app asks them.
-        var choiceRows = await content.QuestionChoices
+        var labels = await db.MealLabels
             .AsNoTracking()
-            .Where(c => !c.Question!.IsHidden)
-            .OrderBy(c => c.Question!.Phase)
-            .ThenBy(c => c.Question!.OrderPriority)
-            .ThenBy(c => c.SortOrder)
-            .Select(c => new { c.Attribute, c.TextEn, c.TextEs, Question = c.Question!.Mnemonic })
+            .Select(m => new { m.Kind, m.ItemId, m.Meal })
             .ToListAsync();
 
-        var topics = choiceRows
-            .GroupBy(c => c.Attribute)
-            .Select(g => g.First())
-            .Select(c => new
+        var recipeVeg = await content.Recipes
+            .AsNoTracking()
+            .Where(r => r.Active)
+            .ToDictionaryAsync(r => r.Id, r => r.VegetableCode);
+        var tipVeg = await content.Tips
+            .AsNoTracking()
+            .ToDictionaryAsync(t => t.Id, t => t.VegetableCode);
+
+        var counts = labels
+            .Select(l => new
             {
-                topic = c.Attribute,
-                question = c.Question,
-                textEn = c.TextEn,
-                textEs = c.TextEs,
-                label = c.TextEn.Replace("%s", "vegetables")
+                Vegetable = l.Kind == PlaylistKinds.Tip
+                    ? tipVeg.GetValueOrDefault(l.ItemId)
+                    : recipeVeg.GetValueOrDefault(l.ItemId),
+                l.Meal,
+                l.Kind
             })
-            .ToList();
-        var known = topics.Select(t => t.topic).ToHashSet();
-
-        var tipCounts = await content.Tips
-            .AsNoTracking()
-            .GroupBy(t => new { t.VegetableCode, t.Attribute })
-            .Select(g => new { g.Key.VegetableCode, g.Key.Attribute, Count = g.Count() })
-            .ToListAsync();
-
-        var recipeCounts = await (
-                from a in content.RecipeAttributes
-                join r in content.Recipes on a.RecipeId equals r.Id
-                where r.Active
-                group a by new { r.VegetableCode, a.Attribute } into g
-                select new { g.Key.VegetableCode, g.Key.Attribute, Count = g.Count() })
-            .ToListAsync();
-
-        var counts = tipCounts
-            .Select(t => (t.VegetableCode, t.Attribute))
-            .Concat(recipeCounts.Select(r => (r.VegetableCode, r.Attribute)))
-            .Distinct()
-            .Where(k => known.Contains(k.Attribute))
-            .Select(k => new
+            .Where(x => x.Vegetable != null)
+            .GroupBy(x => (x.Vegetable, x.Meal))
+            .Select(g => new
             {
-                vegetable = k.VegetableCode,
-                topic = k.Attribute,
-                tips = tipCounts.FirstOrDefault(t => t.VegetableCode == k.VegetableCode && t.Attribute == k.Attribute)?.Count ?? 0,
-                recipes = recipeCounts.FirstOrDefault(r => r.VegetableCode == k.VegetableCode && r.Attribute == k.Attribute)?.Count ?? 0
+                vegetable = g.Key.Vegetable,
+                meal = g.Key.Meal,
+                tips = g.Count(x => x.Kind == PlaylistKinds.Tip),
+                recipes = g.Count(x => x.Kind == PlaylistKinds.Recipe)
             })
             .ToList();
 
         Response.Headers.CacheControl = "no-store";
-        return Ok(new { vegetables, topics, counts });
+        return Ok(new
+        {
+            vegetables,
+            meals = Meals.All.Select(m => new { key = m.Key, en = m.En, es = m.Es }),
+            counts
+        });
     }
 
-    // Everything that matches, for "view all" before adding. At least one
+    // Everything that matches, for View all before adding. At least one
     // filter is required.
     [HttpGet("content")]
     public async Task<IActionResult> Browse(
         [FromQuery] string? vegetable,
-        [FromQuery] string? topic,
+        [FromQuery] string? meal,
         [FromQuery] string? q)
     {
         var veg = string.IsNullOrWhiteSpace(vegetable) ? null : vegetable.Trim();
-        var top = string.IsNullOrWhiteSpace(topic) ? null : topic.Trim();
+        var mealKey = Meals.Find(meal)?.Key;
         var search = string.IsNullOrWhiteSpace(q) ? null : $"%{q.Trim()}%";
-        if (veg is null && top is null && search is null)
-            return BadRequest(new { error = "Pick a vegetable, a topic, or type a search." });
+        if (veg is null && mealKey is null && search is null)
+            return BadRequest(new { error = "Pick a vegetable, a meal, or type a search." });
+
+        var labels = await db.MealLabels
+            .AsNoTracking()
+            .Select(m => new { m.Kind, m.ItemId, m.Meal })
+            .ToListAsync();
+        var mealsOf = labels.ToLookup(l => (l.Kind, l.ItemId), l => l.Meal);
 
         var vegetables = await content.Vegetables
             .AsNoTracking()
@@ -210,7 +206,11 @@ public class AdminPlaylistsController(
 
         var tipQuery = content.Tips.AsNoTracking().AsQueryable();
         if (veg is not null) tipQuery = tipQuery.Where(t => t.VegetableCode == veg);
-        if (top is not null) tipQuery = tipQuery.Where(t => t.Attribute == top);
+        if (mealKey is not null)
+        {
+            var ids = labels.Where(l => l.Meal == mealKey && l.Kind == PlaylistKinds.Tip).Select(l => l.ItemId).ToArray();
+            tipQuery = tipQuery.Where(t => ids.Contains(t.Id));
+        }
         if (search is not null)
             tipQuery = tipQuery.Where(t =>
                 EF.Functions.ILike(t.HeadingEn, search)
@@ -221,17 +221,22 @@ public class AdminPlaylistsController(
             {
                 t.Id,
                 t.VegetableCode,
-                t.Attribute,
                 t.HeadingEn,
                 t.SortOrder,
                 First = t.Blocks.OrderBy(b => b.Position).Select(b => b.TextEn).FirstOrDefault(),
+                Image = t.Blocks.Where(b => b.ImagePath != null).OrderBy(b => b.Position)
+                    .Select(b => b.ImagePath).FirstOrDefault(),
                 BlockCount = t.Blocks.Count
             })
             .ToListAsync();
 
         var recipeQuery = content.Recipes.AsNoTracking().Where(r => r.Active);
         if (veg is not null) recipeQuery = recipeQuery.Where(r => r.VegetableCode == veg);
-        if (top is not null) recipeQuery = recipeQuery.Where(r => r.Attributes.Any(a => a.Attribute == top));
+        if (mealKey is not null)
+        {
+            var ids = labels.Where(l => l.Meal == mealKey && l.Kind == PlaylistKinds.Recipe).Select(l => l.ItemId).ToArray();
+            recipeQuery = recipeQuery.Where(r => ids.Contains(r.Id));
+        }
         if (search is not null)
             recipeQuery = recipeQuery.Where(r =>
                 EF.Functions.ILike(r.TitleEn, search)
@@ -244,7 +249,6 @@ public class AdminPlaylistsController(
                 r.DisplayCode,
                 r.VegetableCode,
                 r.TitleEn,
-                Topics = r.Attributes.Select(a => a.Attribute).ToList(),
                 Photos = r.Photos.OrderBy(p => p.Position).Select(p => p.ImagePath).ToList()
             })
             .ToListAsync();
@@ -259,7 +263,9 @@ public class AdminPlaylistsController(
                 vegetable = t.VegetableCode,
                 vegetableName = NameOf(t.VegetableCode),
                 title = t.HeadingEn,
-                topics = new[] { t.Attribute },
+                meals = Meals.Ordered(mealsOf[(PlaylistKinds.Tip, t.Id)]),
+                code = (string?)null,
+                photo = t.Image,
                 snippet = Clip(t.First),
                 blocks = t.BlockCount
             })
@@ -276,10 +282,12 @@ public class AdminPlaylistsController(
                 id = r.Id,
                 vegetable = r.VegetableCode,
                 vegetableName = NameOf(r.VegetableCode),
-                code = r.DisplayCode,
                 title = r.TitleEn,
-                topics = r.Topics,
-                photo = RecipePhotos.Finished(r.Photos)
+                meals = Meals.Ordered(mealsOf[(PlaylistKinds.Recipe, r.Id)]),
+                code = r.DisplayCode,
+                photo = RecipePhotos.Finished(r.Photos),
+                snippet = (string?)null,
+                blocks = 0
             })
             .ToList();
 
@@ -295,7 +303,7 @@ public class AdminPlaylistsController(
             .Where(i => PlaylistKinds.IsKnown(i.Kind))
             .Select(i => new PlaylistRef(i.Kind!, i.Id))
             .Distinct()
-            .Take(MaxItems)
+            .Take(PlaylistHelpers.MaxItems)
             .ToList();
 
         return Ok(new { items = await PlaylistContent.LoadAsync(content, refs, req.Lang) });
@@ -313,12 +321,12 @@ public class AdminPlaylistsController(
             NameEs = parsed.NameEs,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = AdminId(),
-            Items = ToItems(parsed.Items)
+            Items = PlaylistHelpers.ToItems(parsed.Items)
         };
         db.Playlists.Add(p);
         await db.SaveChangesAsync();
 
-        await PlaylistActivity.RecordAdminAsync(db, logger, PlaylistActivity.Created, p, Summary(p));
+        await PlaylistActivity.RecordAdminAsync(db, logger, PlaylistActivity.Created, p, PlaylistHelpers.Summary(p));
         return Ok(await DescribeAsync(p));
     }
 
@@ -332,22 +340,26 @@ public class AdminPlaylistsController(
         if (parsed is null) return BadRequest(new { error });
 
         var before = p.NameEn;
+        var wasAuto = p.AutoMeal is not null;
 
         // Items are replaced as a whole; positions follow the new order.
         db.PlaylistItems.RemoveRange(p.Items);
         p.Items.Clear();
-        p.Items.AddRange(ToItems(parsed.Items));
+        p.Items.AddRange(PlaylistHelpers.ToItems(parsed.Items));
 
         p.NameEn = parsed.NameEn;
         p.NameEs = parsed.NameEs;
+        p.AutoVegetable = null;
+        p.AutoMeal = null;
         p.UpdatedAt = DateTime.UtcNow;
         p.UpdatedBy = AdminId();
         await db.SaveChangesAsync();
 
-        var summary = before == p.NameEn
-            ? Summary(p)
-            : $"Renamed from \"{before}\" to \"{p.NameEn}\", {Summary(p)}";
-        await PlaylistActivity.RecordAdminAsync(db, logger, PlaylistActivity.Edited, p, summary);
+        var parts = new List<string>();
+        if (before != p.NameEn) parts.Add($"Renamed from \"{before}\" to \"{p.NameEn}\"");
+        if (wasAuto) parts.Add("now hand-made");
+        parts.Add(PlaylistHelpers.Summary(p));
+        await PlaylistActivity.RecordAdminAsync(db, logger, PlaylistActivity.Edited, p, string.Join(", ", parts));
         return Ok(await DescribeAsync(p));
     }
 
@@ -365,8 +377,8 @@ public class AdminPlaylistsController(
         await db.SaveChangesAsync();
 
         var kept = await db.PlaylistChoices.CountAsync(c => c.PlaylistId == id && c.Kept);
-        await PlaylistActivity.RecordAdminAsync(
-            db, logger, PlaylistActivity.Archived, p, $"Archived, kept by {People(kept)}");
+        var people = kept == 1 ? "1 person" : $"{kept} people";
+        await PlaylistActivity.RecordAdminAsync(db, logger, PlaylistActivity.Archived, p, $"Archived, kept by {people}");
         return Ok(await DescribeAsync(p));
     }
 
@@ -382,7 +394,8 @@ public class AdminPlaylistsController(
         p.UpdatedBy = AdminId();
         await db.SaveChangesAsync();
 
-        await PlaylistActivity.RecordAdminAsync(db, logger, PlaylistActivity.Edited, p, $"Restored, {Summary(p)}");
+        await PlaylistActivity.RecordAdminAsync(
+            db, logger, PlaylistActivity.Edited, p, $"Restored, {PlaylistHelpers.Summary(p)}");
         return Ok(await DescribeAsync(p));
     }
 
@@ -397,7 +410,8 @@ public class AdminPlaylistsController(
 
         var raw = req.Items ?? [];
         if (raw.Count == 0) return (null, "Add at least one tip or recipe.");
-        if (raw.Count > MaxItems) return (null, $"A playlist can hold up to {MaxItems} items.");
+        if (raw.Count > PlaylistHelpers.MaxItems)
+            return (null, $"A playlist can hold up to {PlaylistHelpers.MaxItems} items.");
         if (raw.Any(i => !PlaylistKinds.IsKnown(i.Kind))) return (null, "One of the items is not a tip or a recipe.");
 
         var refs = raw.Select(i => new PlaylistRef(i.Kind!, i.Id)).ToList();
@@ -407,48 +421,30 @@ public class AdminPlaylistsController(
         var tipIds = refs.Where(r => r.Kind == PlaylistKinds.Tip).Select(r => r.Id).ToArray();
 
         var foundRecipes = await content.Recipes.CountAsync(r => recipeIds.Contains(r.Id) && r.Active);
-        if (foundRecipes != recipeIds.Length) return (null, "One of the recipes is no longer available. Refresh and try again.");
+        if (foundRecipes != recipeIds.Length)
+            return (null, "One of the recipes is no longer available. Refresh and try again.");
 
         var foundTips = await content.Tips.CountAsync(t => tipIds.Contains(t.Id));
-        if (foundTips != tipIds.Length) return (null, "One of the tips is no longer available. Refresh and try again.");
+        if (foundTips != tipIds.Length)
+            return (null, "One of the tips is no longer available. Refresh and try again.");
 
         return (new Parsed(nameEn, nameEs.Length == 0 ? null : nameEs, refs), null);
     }
 
-    private static List<PlaylistItem> ToItems(List<PlaylistRef> refs) =>
-        refs.Select((r, i) => new PlaylistItem { Position = i, Kind = r.Kind, ItemId = r.Id }).ToList();
-
-    private async Task<object> DescribeAsync(Playlist p)
+    private async Task<object> DescribeAsync(Playlist p) => new
     {
-        var refs = p.Items
-            .OrderBy(i => i.Position)
-            .Select(i => new PlaylistRef(i.Kind, i.ItemId))
-            .ToList();
-
-        return new
-        {
-            id = p.Id,
-            nameEn = p.NameEn,
-            nameEs = p.NameEs,
-            archived = p.ArchivedAt != null,
-            archivedAt = p.ArchivedAt,
-            createdAt = p.CreatedAt,
-            updatedAt = p.UpdatedAt,
-            items = await PlaylistContent.LoadAsync(content, refs, "en")
-        };
-    }
-
-    // "2 tips and 4 recipes"
-    private static string Summary(Playlist p)
-    {
-        var tips = p.Items.Count(i => i.Kind == PlaylistKinds.Tip);
-        var recipes = p.Items.Count(i => i.Kind == PlaylistKinds.Recipe);
-        return $"{Count(tips, "tip")} and {Count(recipes, "recipe")}";
-    }
-
-    private static string Count(int n, string word) => n == 1 ? $"1 {word}" : $"{n} {word}s";
-
-    private static string People(int n) => n == 1 ? "1 person" : $"{n} people";
+        id = p.Id,
+        nameEn = p.NameEn,
+        nameEs = p.NameEs,
+        auto = p.AutoMeal != null,
+        autoVegetable = p.AutoVegetable,
+        autoMeal = p.AutoMeal,
+        archived = p.ArchivedAt != null,
+        archivedAt = p.ArchivedAt,
+        createdAt = p.CreatedAt,
+        updatedAt = p.UpdatedAt,
+        items = await PlaylistContent.LoadAsync(content, PlaylistHelpers.RefsOf(p), "en")
+    };
 
     private static string? Clip(string? text)
     {

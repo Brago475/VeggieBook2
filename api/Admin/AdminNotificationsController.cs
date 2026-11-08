@@ -5,26 +5,31 @@ using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 using VeggieBook.Api.Notifications;
+using VeggieBook.Api.Playlists;
 using VeggieBook.Api.Research;
 using VeggieBook.Api.Research.AllData;
 
 namespace VeggieBook.Api.Admin;
 
-// The Notifications page.
+// The Notifications page, Messages section.
 //
 //   GET  /api/admin/notifications            every notification, newest first,
 //                                            with its status and counts
 //   GET  /api/admin/notifications/templates  the templates and vegetables
 //   GET  /api/admin/notifications/people     research IDs that can be picked
 //   POST /api/admin/notifications            create
-//   PUT  /api/admin/notifications/{id}       edit title, text, dates, repeat,
-//                                            audience
+//   PUT  /api/admin/notifications/{id}       edit title, text, playlist,
+//                                            dates, repeat, audience
 //   PUT  /api/admin/notifications/{id}/title rename, allowed in any status
 //   POST /api/admin/notifications/{id}/stop  stop now; a stopped message
 //                                            can't be edited, only renamed
 //
 // The title is an admin-only label; the app never shows it. Activity names
 // the message by its title, so the log details here hold only the facts.
+//
+// Playlist: "none", "made" (a saved playlist by id) or "auto" (a vegetable
+// and a meal; AutoPlaylists builds or refreshes it). Timing and audience are
+// the notification's own.
 //
 // Start times: StartNow uses the server's clock at the moment of saving. A
 // requested start that has already passed also starts now, except the
@@ -46,7 +51,11 @@ public record NotificationRequest(
     bool? IncludeGuests,
     List<string>? IncludeIds,
     List<string>? ExcludeIds,
-    bool? StartNow);
+    bool? StartNow,
+    string? PlaylistMode,
+    int? PlaylistId,
+    string? PlaylistVegetable,
+    string? PlaylistMeal);
 
 public record NotificationTitleRequest(string? Title);
 
@@ -55,6 +64,7 @@ public record NotificationTitleRequest(string? Title);
 [Authorize(Policy = Roles.AdminPolicy)]
 public class AdminNotificationsController(
     AccountsContext db,
+    VeggieBookContext content,
     UserManager<AppUser> users,
     ILogger<AdminNotificationsController> logger) : ControllerBase
 {
@@ -125,13 +135,18 @@ public class AdminNotificationsController(
         var (parsed, error) = await ParseAsync(req, creating: true, currentStart: null);
         if (parsed is null) return BadRequest(new { error });
 
+        var (playlistId, playlistName, playlistError) = await ResolvePlaylistAsync(req, current: null);
+        if (playlistError is not null) return BadRequest(new { error = playlistError });
+
         var now = DateTime.UtcNow;
         var n = new Notification { CreatedAt = now, CreatedBy = AdminId() };
         Apply(n, parsed);
+        n.PlaylistId = playlistId;
         db.Notifications.Add(n);
         await db.SaveChangesAsync();
 
-        await NotificationActivity.RecordAdminAsync(db, logger, NotificationActivity.Created, n, Summary(n));
+        await NotificationActivity.RecordAdminAsync(
+            db, logger, NotificationActivity.Created, n, Summary(n, playlistName));
         return Ok((await DescribeAsync([n]))[0]);
     }
 
@@ -146,12 +161,17 @@ public class AdminNotificationsController(
         var (parsed, error) = await ParseAsync(req, creating: false, currentStart: n.StartsAt);
         if (parsed is null) return BadRequest(new { error });
 
+        var (playlistId, playlistName, playlistError) = await ResolvePlaylistAsync(req, current: n.PlaylistId);
+        if (playlistError is not null) return BadRequest(new { error = playlistError });
+
         Apply(n, parsed);
+        n.PlaylistId = playlistId;
         n.UpdatedAt = DateTime.UtcNow;
         n.UpdatedBy = AdminId();
         await db.SaveChangesAsync();
 
-        await NotificationActivity.RecordAdminAsync(db, logger, NotificationActivity.Edited, n, Summary(n));
+        await NotificationActivity.RecordAdminAsync(
+            db, logger, NotificationActivity.Edited, n, Summary(n, playlistName));
         return Ok((await DescribeAsync([n]))[0]);
     }
 
@@ -193,6 +213,38 @@ public class AdminNotificationsController(
             db, logger, NotificationActivity.Stopped, n,
             $"Taken down {Eastern(now)}, was set to end {Eastern(n.ExpiresAt)}");
         return Ok((await DescribeAsync([n]))[0]);
+    }
+
+    // The playlist this notification opens. A saved playlist that is now
+    // archived can stay on the message it was already on.
+    private async Task<(int? Id, string? Name, string? Error)> ResolvePlaylistAsync(
+        NotificationRequest req, int? current)
+    {
+        switch (req.PlaylistMode ?? "none")
+        {
+            case "none":
+                return (null, null, null);
+
+            case "made":
+            {
+                if (req.PlaylistId is not int id) return (null, null, "Pick a playlist.");
+                var p = await db.Playlists.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+                if (p is null) return (null, null, "That playlist no longer exists. Refresh the page.");
+                if (p.ArchivedAt is not null && id != current)
+                    return (null, null, "That playlist is archived. Restore it first.");
+                return (p.Id, p.NameEn, null);
+            }
+
+            case "auto":
+            {
+                var (p, error) = await AutoPlaylists.EnsureAsync(
+                    db, content, logger, req.PlaylistVegetable, req.PlaylistMeal, AdminId());
+                return p is null ? (null, null, error) : (p.Id, p.NameEn, null);
+            }
+
+            default:
+                return (null, null, "Choose what the notification opens.");
+        }
     }
 
     // Empty means no title.
@@ -327,7 +379,38 @@ public class AdminNotificationsController(
             .ToListAsync();
         var byNote = receipts.ToLookup(r => r.NotificationId);
 
+        var playlistIds = list.Where(n => n.PlaylistId != null).Select(n => n.PlaylistId!.Value).Distinct().ToList();
+        var playlists = await db.Playlists
+            .AsNoTracking()
+            .Where(p => playlistIds.Contains(p.Id))
+            .Select(p => new
+            {
+                p.Id,
+                p.NameEn,
+                p.AutoVegetable,
+                p.AutoMeal,
+                Archived = p.ArchivedAt != null,
+                Tips = p.Items.Count(i => i.Kind == PlaylistKinds.Tip),
+                Recipes = p.Items.Count(i => i.Kind == PlaylistKinds.Recipe)
+            })
+            .ToDictionaryAsync(p => p.Id);
+
         string IdOf(Guid userId) => ids.TryGetValue(userId, out var rid) ? rid : "";
+
+        object? PlaylistOf(Notification n) =>
+            n.PlaylistId is int pid && playlists.TryGetValue(pid, out var p)
+                ? new
+                {
+                    id = p.Id,
+                    name = p.NameEn,
+                    auto = p.AutoMeal != null,
+                    vegetable = p.AutoVegetable,
+                    meal = p.AutoMeal,
+                    archived = p.Archived,
+                    tips = p.Tips,
+                    recipes = p.Recipes
+                }
+                : null;
 
         return list.Select(n =>
         {
@@ -340,6 +423,7 @@ public class AdminNotificationsController(
                 hasSpanish = n.BodyEs is not null,
                 templateKey = n.TemplateKey,
                 vegetable = n.Vegetable,
+                playlist = PlaylistOf(n),
                 audience = n.Audience,
                 includeGuests = n.IncludeGuests,
                 includeIds = n.Targets.Where(t => t.Mode == NotificationTarget.Include).Select(t => IdOf(t.UserId)).ToList(),
@@ -365,13 +449,15 @@ public class AdminNotificationsController(
 
     private static string Quoted(string? title) => title is null ? "no title" : $"\"{title}\"";
 
-    // "Nov 8, 2026 10:23 AM to Nov 8, 2026 11:59 PM, every 7 days, to all accounts and guests"
-    private static string Summary(Notification n)
+    // "Nov 8, 2026 10:23 AM to Nov 8, 2026 11:59 PM, every 7 days, to all
+    // accounts and guests, opens "Snack ideas with zucchini""
+    private static string Summary(Notification n, string? playlistName)
     {
         var who = n.Audience == Notification.AudienceSelected ? "selected accounts" : "all accounts";
         if (n.IncludeGuests) who += " and guests";
         var repeat = n.RepeatDays is int d ? $", every {d} days" : "";
-        return $"{Eastern(n.StartsAt)} to {Eastern(n.ExpiresAt)}{repeat}, to {who}";
+        var opens = playlistName is null ? "" : $", opens \"{playlistName}\"";
+        return $"{Eastern(n.StartsAt)} to {Eastern(n.ExpiresAt)}{repeat}, to {who}{opens}";
     }
 
     private static string Eastern(DateTime utc) =>

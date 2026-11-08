@@ -1,11 +1,13 @@
 namespace VeggieBook.Api.Data;
 
-// Playlists. See db/migrations/023_playlists.sql.
+// Playlists and meal labels. See db/migrations/023_playlists.sql,
+// 024_meal_labels.sql and 026_playlist_auto.sql.
 //
-//   Playlist      made by an admin, sent through notifications
-//   PlaylistItem  one tip or recipe in an admin playlist
+//   Playlist       made by an admin, or built automatically from meal labels
+//   PlaylistItem   one tip or recipe in an admin playlist
 //   PlaylistChoice Keep or Skip by one account
-//   UserPlaylist  made by an account from recipes in its saved books
+//   UserPlaylist   made by an account from recipes in its saved books
+//   MealLabel      Breakfast, Lunch, Dinner or Snack on a recipe or tip
 
 public static class PlaylistKinds
 {
@@ -22,6 +24,10 @@ public class Playlist
 
     // Optional; Spanish readers see the English name without it.
     public string? NameEs { get; set; }
+
+    // Set together for an automatic playlist; null for a hand-made one.
+    public string? AutoVegetable { get; set; }
+    public string? AutoMeal { get; set; }
 
     // Archived playlists cannot be sent again but stay with those who kept them.
     public DateTime? ArchivedAt { get; set; }
@@ -69,4 +75,13 @@ public class UserPlaylistItem
     public int UserPlaylistId { get; set; }
     public int Position { get; set; }
     public int RecipeId { get; set; }
+}
+
+public class MealLabel
+{
+    public string Kind { get; set; } = PlaylistKinds.Recipe;
+    public int ItemId { get; set; }
+    public string Meal { get; set; } = "";
+    public DateTime CreatedAt { get; set; }
+    public Guid? CreatedBy { get; set; }
 }
