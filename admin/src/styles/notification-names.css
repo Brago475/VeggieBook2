@@ -1,0 +1,43 @@
+/* Notification titles: the heading on each message card
+   (NotificationList.tsx) and the rename dialog
+   (RenameNotificationDialog.tsx). */
+
+.nt-item-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+}
+
+.nt-item-name strong {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #18181b;
+  overflow-wrap: anywhere;
+}
+
+.nt-item-name.is-empty strong {
+  font-weight: 600;
+  color: #71717a;
+}
+
+.nt-item-name .nt-name-add {
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #15803d;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nt-item-name .nt-name-add:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

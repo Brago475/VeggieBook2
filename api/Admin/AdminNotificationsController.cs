@@ -17,9 +17,13 @@ namespace VeggieBook.Api.Admin;
 //   GET  /api/admin/notifications/templates  the templates and vegetables
 //   GET  /api/admin/notifications/people     research IDs that can be picked
 //   POST /api/admin/notifications            create
-//   PUT  /api/admin/notifications/{id}       edit text, dates, repeat, audience
+//   PUT  /api/admin/notifications/{id}       edit title, text, dates, repeat,
+//                                            audience
+//   PUT  /api/admin/notifications/{id}/title rename, allowed in any status
 //   POST /api/admin/notifications/{id}/stop  stop now; a stopped message
-//                                            can't be edited
+//                                            can't be edited, only renamed
+//
+// The title is an admin-only label; the app never shows it.
 //
 // Start times: StartNow uses the server's clock at the moment of saving. A
 // requested start that has already passed also starts now, except the
@@ -27,9 +31,10 @@ namespace VeggieBook.Api.Admin;
 //
 // Admins only. Accounts are chosen by research ID; no email or username is
 // read or sent. Counts are people (distinct accounts), guests included.
-// Every create, edit and stop is written to the activity log.
+// Every create, edit, rename and stop is written to the activity log.
 
 public record NotificationRequest(
+    string? Title,
     string? BodyEn,
     string? TemplateKey,
     string? Vegetable,
@@ -42,6 +47,8 @@ public record NotificationRequest(
     List<string>? ExcludeIds,
     bool? StartNow);
 
+public record NotificationTitleRequest(string? Title);
+
 [ApiController]
 [Route("api/admin/notifications")]
 [Authorize(Policy = Roles.AdminPolicy)]
@@ -51,9 +58,11 @@ public class AdminNotificationsController(
     ILogger<AdminNotificationsController> logger) : ControllerBase
 {
     private const int MaxBody = 500;
+    private const int MaxTitle = 80;
     private const int MaxRepeatDays = 365;
 
     private sealed record Parsed(
+        string? Title,
         string BodyEn,
         string? BodyEs,
         string? TemplateKey,
@@ -145,6 +154,27 @@ public class AdminNotificationsController(
         return Ok((await DescribeAsync([n]))[0]);
     }
 
+    [HttpPut("{id:int}/title")]
+    public async Task<IActionResult> Rename(int id, [FromBody] NotificationTitleRequest req)
+    {
+        var n = await db.Notifications.Include(x => x.Targets).FirstOrDefaultAsync(x => x.Id == id);
+        if (n is null) return NotFound(new { error = "That notification no longer exists. Refresh the page." });
+
+        var (title, error) = ParseTitle(req.Title);
+        if (error is not null) return BadRequest(new { error });
+        if (title == n.Title) return Ok((await DescribeAsync([n]))[0]);
+
+        var before = n.Title;
+        n.Title = title;
+        n.UpdatedAt = DateTime.UtcNow;
+        n.UpdatedBy = AdminId();
+        await db.SaveChangesAsync();
+
+        await NotificationActivity.RecordAdminAsync(
+            db, logger, NotificationActivity.Edited, n, $"Renamed from {Quoted(before)} to {Quoted(title)}");
+        return Ok((await DescribeAsync([n]))[0]);
+    }
+
     [HttpPost("{id:int}/stop")]
     public async Task<IActionResult> Stop(int id)
     {
@@ -159,13 +189,24 @@ public class AdminNotificationsController(
         await db.SaveChangesAsync();
 
         await NotificationActivity.RecordAdminAsync(
-            db, logger, NotificationActivity.Stopped, n, $"Notification {n.Id} stopped {Eastern(now)}");
+            db, logger, NotificationActivity.Stopped, n, $"{Label(n)} stopped {Eastern(now)}");
         return Ok((await DescribeAsync([n]))[0]);
+    }
+
+    // Empty means no title.
+    private static (string? Title, string? Error) ParseTitle(string? raw)
+    {
+        var title = (raw ?? "").Trim();
+        if (title.Length > MaxTitle) return (null, $"Keep the title to {MaxTitle} characters or fewer.");
+        return (title.Length == 0 ? null : title, null);
     }
 
     private async Task<(Parsed? Value, string? Error)> ParseAsync(
         NotificationRequest req, bool creating, DateTime? currentStart)
     {
+        var (title, titleError) = ParseTitle(req.Title);
+        if (titleError is not null) return (null, titleError);
+
         var body = (req.BodyEn ?? "").Trim();
         if (body.Length == 0) return (null, "Write the message.");
         if (body.Length > MaxBody) return (null, $"Keep the message to {MaxBody} characters or fewer.");
@@ -211,6 +252,7 @@ public class AdminNotificationsController(
             : null;
 
         return (new Parsed(
+            title,
             body,
             NotificationTemplates.SpanishFor(template?.Key, vegetable?.Key, body),
             template?.Key,
@@ -248,6 +290,7 @@ public class AdminNotificationsController(
     // Updates targets in place so a kept target is never removed and re-added.
     private static void Apply(Notification n, Parsed p)
     {
+        n.Title = p.Title;
         n.BodyEn = p.BodyEn;
         n.BodyEs = p.BodyEs;
         n.TemplateKey = p.TemplateKey;
@@ -290,6 +333,7 @@ public class AdminNotificationsController(
             return (object)new
             {
                 id = n.Id,
+                title = n.Title,
                 bodyEn = n.BodyEn,
                 hasSpanish = n.BodyEs is not null,
                 templateKey = n.TemplateKey,
@@ -317,12 +361,18 @@ public class AdminNotificationsController(
         }).ToList();
     }
 
+    // "Cucumber season" (#4), or Notification 4 without a title.
+    private static string Label(Notification n) =>
+        n.Title is null ? $"Notification {n.Id}" : $"\"{n.Title}\" (#{n.Id})";
+
+    private static string Quoted(string? title) => title is null ? "no title" : $"\"{title}\"";
+
     private static string Summary(Notification n)
     {
         var who = n.Audience == Notification.AudienceSelected ? "selected accounts" : "all accounts";
         if (n.IncludeGuests) who += " and guests";
         var repeat = n.RepeatDays is int d ? $", every {d} days" : "";
-        return $"Notification {n.Id}: {Eastern(n.StartsAt)} to {Eastern(n.ExpiresAt)}{repeat}, to {who}";
+        return $"{Label(n)}: {Eastern(n.StartsAt)} to {Eastern(n.ExpiresAt)}{repeat}, to {who}";
     }
 
     private static string Eastern(DateTime utc) =>

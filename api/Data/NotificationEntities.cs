@@ -1,7 +1,10 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace VeggieBook.Api.Data;
 
 // Admin notifications shown in the main site.
-// See db/migrations/019_notifications.sql and 020_notification_english_only.sql.
+// See db/migrations/019_notifications.sql, 020_notification_english_only.sql
+// and 022_notification_title.sql.
 
 public class Notification
 {
@@ -9,13 +12,18 @@ public class Notification
     public const string AudienceSelected = "selected";
 
     public int Id { get; set; }
+
+    // Admin-only label, never shown in the app.
+    [Column("title")]
+    public string? Title { get; set; }
+
     public string BodyEn { get; set; } = "";
 
-    // Set only for a pilot template sent with its English unchanged.
+    // Set only for a template sent with its English unchanged.
     // Otherwise everyone sees the English.
     public string? BodyEs { get; set; }
 
-    // The pilot template it came from, and the vegetable chosen for it.
+    // The template it came from, and the vegetable chosen for it.
     public string? TemplateKey { get; set; }
     public string? Vegetable { get; set; }
 

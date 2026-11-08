@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { AdminNotification, NotificationDraft, TemplatesResponse } from '../types/notifications'
 import { api } from '../utils/api'
 
-// Loads the Notifications page and runs create, edit, and stop.
+// Loads the Notifications page and runs create, edit, rename, and stop.
 // After each change the list loads again so counts and statuses match the
 // server. It also reloads every minute while the tab is visible, so a
 // scheduled message turns live and counts move without a refresh. A failed
@@ -63,10 +63,16 @@ export function useNotifications() {
     [change],
   )
 
+  const rename = useCallback(
+    (id: number, title: string | null) =>
+      change(() => api(`/admin/notifications/${id}/title`, { method: 'PUT', body: { title } })),
+    [change],
+  )
+
   const stop = useCallback(
     (id: number) => change(() => api(`/admin/notifications/${id}/stop`, { method: 'POST' })),
     [change],
   )
 
-  return { list, templates, error, reload: load, create, save, stop }
+  return { list, templates, error, reload: load, create, save, rename, stop }
 }

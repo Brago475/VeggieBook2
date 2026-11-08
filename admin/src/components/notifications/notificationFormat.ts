@@ -8,6 +8,7 @@ import type {
 // Labels and helpers shared by the Notifications page.
 
 export const MAX_BODY = 500
+export const MAX_TITLE = 80
 
 export const statusLabel: Record<NotificationStatus, string> = {
   scheduled: 'Scheduled',
@@ -20,6 +21,12 @@ export function statusClass(status: NotificationStatus): string {
   if (status === 'live') return 'is-ok'
   if (status === 'stopped') return 'is-warn'
   return 'is-off'
+}
+
+// "Cucumber season" in quotes, or notification #4 without a title. For
+// sentences such as "Stop ... ?" and toasts.
+export function notificationName(n: AdminNotification): string {
+  return n.title ? `"${n.title}"` : `notification #${n.id}`
 }
 
 // A template's English with the vegetable filled in. Without a vegetable

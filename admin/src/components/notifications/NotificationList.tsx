@@ -6,15 +6,17 @@ import { NavIcon, type IconName } from '../icons/NavIcons'
 import { LinkedText } from './LinkedText'
 import { audienceText, hasLink, repeatText, statusLabel } from './notificationFormat'
 import '../../styles/notification-schedule.css'
+import '../../styles/notification-names.css'
 
-// One card per notification: status edge and pill, the message, a live
-// countdown, facts as chips, and what people did as number boxes. Counts
-// are people.
+// One card per notification: status edge and pill, the admin-only title,
+// the message, a live countdown, facts as chips, and what people did as
+// number boxes. Counts are people.
 
 type Props = {
   items: AdminNotification[]
   onEdit: (item: AdminNotification) => void
   onCopy: (item: AdminNotification) => void
+  onRename: (item: AdminNotification) => void
   onStop: (item: AdminNotification) => void
 }
 
@@ -70,7 +72,7 @@ function Countdown({ item, now }: { item: AdminNotification; now: Date }) {
   return null
 }
 
-export function NotificationList({ items, onEdit, onCopy, onStop }: Props) {
+export function NotificationList({ items, onEdit, onCopy, onRename, onStop }: Props) {
   const now = useNow(30_000)
 
   return (
@@ -96,6 +98,9 @@ export function NotificationList({ items, onEdit, onCopy, onStop }: Props) {
                     Edit
                   </button>
                 )}
+                <button type="button" className="nt-btn" onClick={() => onRename(n)}>
+                  {n.title ? 'Rename' : 'Add title'}
+                </button>
                 <button type="button" className="nt-btn" onClick={() => onCopy(n)}>
                   Send again
                 </button>
@@ -106,6 +111,15 @@ export function NotificationList({ items, onEdit, onCopy, onStop }: Props) {
                 )}
               </div>
             </header>
+
+            <h3 className={n.title ? 'nt-item-name' : 'nt-item-name is-empty'}>
+              <strong>{n.title ?? `Notification #${n.id}`}</strong>
+              {!n.title && (
+                <button type="button" className="nt-name-add" onClick={() => onRename(n)}>
+                  Add a title
+                </button>
+              )}
+            </h3>
 
             <p className="nt-item-text">
               <LinkedText text={n.bodyEn} />

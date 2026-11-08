@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { AdminNotification } from '../../types/notifications'
 import { StudyIcon } from '../studies/StudyIcons'
+import { notificationName } from './notificationFormat'
 
 // The check before a notification is stopped, in the same orange style as
 // switching a study off. Closes on Cancel, the X, Escape, or a click outside.
@@ -39,7 +40,7 @@ export function StopNotificationDialog({ item, onStop, onClose }: Props) {
             <StudyIcon name="stop" size={20} />
           </span>
           <div className="st-dialog-title">
-            <strong id="ns-title">Stop notification #{item.id}?</strong>
+            <strong id="ns-title">Stop {notificationName(item)}?</strong>
             <span className="nt-dialog-excerpt">{item.bodyEn}</span>
           </div>
           <button type="button" className="st-dialog-close" aria-label="Close" disabled={busy} onClick={onClose}>
@@ -53,6 +54,7 @@ export function StopNotificationDialog({ item, onStop, onClose }: Props) {
               <span className="st-tile-label">Leaves the app</span>
               <span className="st-tile-note">
                 It disappears from the pop-up and the Notifications menu right away, and can't be edited afterward.
+                It can still be renamed.
               </span>
             </div>
             <div className="st-tile is-green">

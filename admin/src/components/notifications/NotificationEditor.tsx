@@ -6,19 +6,20 @@ import { NavIcon } from '../icons/NavIcons'
 import { StudyIcon } from '../studies/StudyIcons'
 import { LinkedText } from './LinkedText'
 import { LiveClock } from './LiveClock'
-import { fillTemplate, MAX_BODY } from './notificationFormat'
+import { fillTemplate, MAX_BODY, MAX_TITLE, notificationName } from './notificationFormat'
 import { ResearchIdPicker } from './ResearchIdPicker'
 import { endAt, startAt, startPassed, type Schedule } from './schedule'
 import { ScheduleSection } from './ScheduleSection'
 
 // Create, edit, or copy a notification, in the Studies dialog style. The
 // header and the buttons stay in view; the sections scroll between them.
-// The admin writes English only. Spanish users see Spanish only for a
-// template sent unchanged; the server decides, and this shows which it will
-// be. Closes on Cancel, the X, Escape, or a click outside.
+// The title is an admin-only label. The admin writes English only. Spanish
+// users see Spanish only for a template sent unchanged; the server decides,
+// and this shows which it will be. Closes on Cancel, the X, Escape, or a
+// click outside.
 //
-// Send again (a copy) keeps the text, audience and repeat, and leaves the
-// dates empty so they are picked fresh.
+// Send again (a copy) keeps the text, audience and repeat, marks the title
+// as a copy, and leaves the dates empty so they are picked fresh.
 
 type Props = {
   mode: 'create' | 'edit'
@@ -31,6 +32,7 @@ type Props = {
 
 const DEFAULT_START = '09:00'
 const DEFAULT_END = '23:59'
+const COPY_SUFFIX = ' (copy)'
 
 function initialSchedule(from: AdminNotification | null, editing: boolean): Schedule {
   const repeat = {
@@ -54,10 +56,17 @@ function initialSchedule(from: AdminNotification | null, editing: boolean): Sche
   }
 }
 
+function initialTitle(from: AdminNotification | null, editing: boolean): string {
+  if (!from?.title) return ''
+  if (editing) return from.title
+  return (from.title.slice(0, MAX_TITLE - COPY_SUFFIX.length) + COPY_SUFFIX).trim()
+}
+
 export function NotificationEditor({ mode, from, templates, onSave, onClose }: Props) {
   const editing = mode === 'edit' && from !== null
   const now = useNow(1000)
 
+  const [title, setTitle] = useState(() => initialTitle(from, editing))
   const [templateKey, setTemplateKey] = useState(from?.templateKey ?? '')
   const [vegetable, setVegetable] = useState(from?.vegetable ?? templates.vegetables[0]?.key ?? '')
   const [body, setBody] = useState(from?.bodyEn ?? '')
@@ -102,6 +111,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
   }
 
   function check(): string | null {
+    if (title.trim().length > MAX_TITLE) return `Keep the title to ${MAX_TITLE} characters or fewer.`
     if (!text) return 'Write the message.'
     if (text.length > MAX_BODY) return `Keep the message to ${MAX_BODY} characters or fewer.`
     if (text.includes(templates.slot)) return 'Pick a vegetable for this message.'
@@ -144,6 +154,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
     setBusy(true)
     setError(null)
     const message = await onSave({
+      title: title.trim() || null,
       bodyEn: text,
       templateKey: template?.key ?? null,
       vegetable: template?.needsVegetable ? vegetable : null,
@@ -160,7 +171,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
     if (message) setError(message)
   }
 
-  const title = editing ? `Edit notification #${from.id}` : from ? 'Send again' : 'New notification'
+  const heading = editing ? `Edit ${notificationName(from)}` : from ? 'Send again' : 'New notification'
   const subtitle = editing
     ? 'Changes apply right away. What people already did with it stays recorded.'
     : 'Shown in the app as a pop-up and in Notifications.'
@@ -181,7 +192,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
             <StudyIcon name="bell" size={20} />
           </span>
           <div className="st-dialog-title">
-            <strong id="nt-editor-title">{title}</strong>
+            <strong id="nt-editor-title">{heading}</strong>
             <span>{subtitle}</span>
           </div>
           <LiveClock />
@@ -193,6 +204,20 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
         <div className="st-dialog-body nt-dialog-body">
           <section className="st-dialog-section nt-section">
             <span className="st-section-title">Message</span>
+
+            <label className="nt-field">
+              <span className="nt-label">Title (admin only)</span>
+              <input
+                className="nt-input"
+                maxLength={MAX_TITLE}
+                value={title}
+                placeholder="For example: Cucumber season, fall 2026"
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              <span className="nt-hint">
+                Helps you find this message here and in Activity. People in the app never see it.
+              </span>
+            </label>
 
             <div className="nt-row">
               <label className="nt-field">

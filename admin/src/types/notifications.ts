@@ -12,6 +12,8 @@ export type NotificationCounts = {
 
 export type AdminNotification = {
   id: number
+  // Admin-only label; the app never shows it.
+  title: string | null
   bodyEn: string
   hasSpanish: boolean
   templateKey: string | null
@@ -58,6 +60,7 @@ export type PickPerson = {
 // What the editor sends. Dates are ISO strings. With startNow the server
 // sets the start to the moment it saves, and startsAt is null.
 export type NotificationDraft = {
+  title: string | null
   bodyEn: string
   templateKey: string | null
   vegetable: string | null

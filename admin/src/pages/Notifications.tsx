@@ -2,8 +2,10 @@ import { useCallback, useState } from 'react'
 import { NavIcon } from '../components/icons/NavIcons'
 import { TopbarActions } from '../components/layout/TopbarSlot'
 import { NotificationEditor } from '../components/notifications/NotificationEditor'
+import { notificationName } from '../components/notifications/notificationFormat'
 import { NotificationList } from '../components/notifications/NotificationList'
 import { NotificationStats } from '../components/notifications/NotificationStats'
+import { RenameNotificationDialog } from '../components/notifications/RenameNotificationDialog'
 import { StopNotificationDialog } from '../components/notifications/StopNotificationDialog'
 import { StudyToast } from '../components/studies/StudyToast'
 import { useHeld } from '../hooks/useHeld'
@@ -15,21 +17,24 @@ import '../styles/notifications.css'
 
 // Notifications page: messages shown inside the main site, in a pop-up and
 // in the Notifications section of its menu. Stat cards on top, then one
-// card per message under Live and scheduled / Ended and stopped. Buttons
-// and dialogs share the Studies page styles.
+// card per message under Live and scheduled / Ended and stopped. Each
+// message can carry an admin-only title. Buttons and dialogs share the
+// Studies page styles.
 // API: api/Admin/AdminNotificationsController.cs.
 
 type Editing = { mode: 'create' | 'edit'; from: AdminNotification | null }
 type View = 'current' | 'past'
 
 export function Notifications() {
-  const { list, templates, error, create, save, stop } = useNotifications()
+  const { list, templates, error, create, save, rename, stop } = useNotifications()
   const [view, setView] = useState<View>('current')
   const [editing, setEditing] = useState<Editing | null>(null)
+  const [renaming, setRenaming] = useState<AdminNotification | null>(null)
   const [stopping, setStopping] = useState<AdminNotification | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const closeToast = useCallback(() => setToast(null), [])
   const closeEditor = useCallback(() => setEditing(null), [])
+  const closeRename = useCallback(() => setRenaming(null), [])
   const closeStop = useCallback(() => setStopping(null), [])
   const firstLoad = useHeld(!list && !error)
 
@@ -54,14 +59,21 @@ export function Notifications() {
     const message = editId !== null ? await save(editId, draft) : await create(draft)
     if (!message) {
       setEditing(null)
-      setToast(editId !== null ? `Saved notification #${editId}.` : 'Notification saved.')
+      const name = draft.title ? `"${draft.title}"` : editId !== null ? `notification #${editId}` : 'the notification'
+      setToast(`Saved ${name}.`)
     }
+    return message
+  }
+
+  async function renameOne(item: AdminNotification, title: string | null) {
+    const message = await rename(item.id, title)
+    if (!message) setToast(title ? `Titled #${item.id} "${title}".` : `Removed the title from #${item.id}.`)
     return message
   }
 
   async function stopOne(item: AdminNotification) {
     const message = await stop(item.id)
-    if (!message) setToast(`Stopped notification #${item.id}.`)
+    if (!message) setToast(`Stopped ${notificationName(item)}.`)
     return message
   }
 
@@ -126,6 +138,7 @@ export function Notifications() {
             items={shown}
             onEdit={(n) => setEditing({ mode: 'edit', from: n })}
             onCopy={(n) => setEditing({ mode: 'create', from: n })}
+            onRename={setRenaming}
             onStop={setStopping}
           />
         )}
@@ -138,6 +151,14 @@ export function Notifications() {
           templates={templates}
           onSave={saveDraft}
           onClose={closeEditor}
+        />
+      )}
+
+      {renaming && (
+        <RenameNotificationDialog
+          item={renaming}
+          onSave={(title) => renameOne(renaming, title)}
+          onClose={closeRename}
         />
       )}
 
