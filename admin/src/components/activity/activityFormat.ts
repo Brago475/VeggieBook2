@@ -57,6 +57,7 @@ export const groups: { id: ActivityGroup; label: string; types: ActivityType[] }
       'user_playlist_created',
       'user_playlist_edited',
       'user_playlist_deleted',
+      'meal_labels_changed',
     ],
   },
 ]

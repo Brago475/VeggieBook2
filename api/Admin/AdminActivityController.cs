@@ -24,7 +24,8 @@ namespace VeggieBook.Api.Admin;
 /// notification_edited, notification_stopped, playlist_created,
 /// playlist_edited, playlist_archived, playlist_opened, playlist_kept,
 /// playlist_skipped, playlist_removed, playlist_item_opened,
-/// user_playlist_created, user_playlist_edited, user_playlist_deleted.
+/// user_playlist_created, user_playlist_edited, user_playlist_deleted,
+/// meal_labels_changed.
 ///
 /// Participant events show only if tracking was on when they happened
 /// (ResearchScope.CountsBook). Account deletions and erases always show.
@@ -166,23 +167,34 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                 ? $"{Count(p.Tips, "tip")} and {Count(p.Recipes, "recipe")}"
                 : "Playlist no longer available";
 
+        string ItemName(string? itemKind, int? itemId) =>
+            itemId is not int x ? ""
+            : itemKind == PlaylistKinds.Tip ? tipNames.GetValueOrDefault(x, $"Tip {x}")
+            : recipeNames.GetValueOrDefault(x, $"Recipe {x}");
+
         // Detail is "source:kind:id", for example "admin:recipe:212".
         (string Title, string Detail) ItemLine(ActivityEntry a)
         {
             var parts = (a.Detail ?? "").Split(':');
             var source = parts.ElementAtOrDefault(0);
-            var kind = parts.ElementAtOrDefault(1);
+            var itemKind = parts.ElementAtOrDefault(1);
             int? itemId = int.TryParse(parts.ElementAtOrDefault(2), out var n) ? n : null;
 
-            var what = kind == PlaylistKinds.Tip ? "a tip" : "a recipe";
+            var what = itemKind == PlaylistKinds.Tip ? "a tip" : "a recipe";
             var title = source == PlaylistActivity.SourceOwn
                 ? $"Opened {what} in their own playlist"
                 : $"Opened {what} in the playlist: {PlaylistName(a.ContentId)}";
+            return (title, ItemName(itemKind, itemId));
+        }
 
-            var detail = itemId is not int x ? ""
-                : kind == PlaylistKinds.Tip ? tipNames.GetValueOrDefault(x, $"Tip {x}")
-                : recipeNames.GetValueOrDefault(x, $"Recipe {x}");
-            return (title, detail);
+        // Detail is "kind|after|before", for example "recipe|Lunch and Dinner|Dinner".
+        (string Title, string Detail) LabelLine(ActivityEntry a)
+        {
+            var parts = (a.Detail ?? "").Split('|');
+            var labelKind = parts.ElementAtOrDefault(0);
+            var after = parts.ElementAtOrDefault(1) ?? "";
+            var before = parts.ElementAtOrDefault(2) ?? "";
+            return ($"Changed meal labels: {ItemName(labelKind, a.ContentId)}", $"{after}, was {before}");
         }
 
         var events = new List<Event>();
@@ -230,8 +242,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             u.CreatedAt)));
 
         // Activity log: deletions, take-outs, prints, downloads, erases, admin
-        // study actions, notifications, playlists, and saves of books no
-        // longer in the book table.
+        // study actions, notifications, playlists, meal labels, and saves of
+        // books no longer in the book table.
         var logged = await db.ActivityLog.AsNoTracking().ToListAsync();
 
         bool OwnerTracked(ActivityEntry a, DateTime at) =>
@@ -265,6 +277,11 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             {
                 events.Add(new Event(a.Kind, null, $"{adminPlaylistDid}: {PlaylistName(a.ContentId)}",
                     a.Detail ?? "", a.At));
+            }
+            else if (a.Kind == PlaylistActivity.MealLabelsChanged)
+            {
+                var (title, detail) = LabelLine(a);
+                events.Add(new Event(a.Kind, null, title, detail, a.At));
             }
             else if (ParticipantPlaylist.TryGetValue(a.Kind, out var playlistDid))
             {

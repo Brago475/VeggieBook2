@@ -37,6 +37,7 @@ const tone: Record<ActivityType, string> = {
   user_playlist_created: 'is-saved',
   user_playlist_edited: 'is-study',
   user_playlist_deleted: 'is-deleted',
+  meal_labels_changed: 'is-study',
 }
 
 const LIST = 'M4 6h12M4 11h12M4 16h7'
@@ -76,6 +77,7 @@ const paths: Record<ActivityType, React.ReactNode> = {
   user_playlist_created: <path d={`${LIST}M18 13v6M15 16h6`} />,
   user_playlist_edited: <path d="M4 6h12M4 11h7M4 16h4M11 20h3l7-7-3-3-7 7z" />,
   user_playlist_deleted: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
+  meal_labels_changed: <path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01" />,
 }
 
 export function ActivityIcon({ type }: { type: ActivityType }) {
