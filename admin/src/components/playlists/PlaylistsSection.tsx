@@ -1,26 +1,22 @@
 import { useCallback, useState } from 'react'
-import { NavIcon } from '../components/icons/NavIcons'
-import { TopbarActions } from '../components/layout/TopbarSlot'
-import { PlaylistEditor } from '../components/playlists/PlaylistEditor'
-import { PlaylistList } from '../components/playlists/PlaylistList'
-import { StudyToast } from '../components/studies/StudyToast'
-import { useHeld } from '../hooks/useHeld'
-import { usePlaylists } from '../hooks/usePlaylists'
-import type { PlaylistDetail, PlaylistDraft, PlaylistSummary } from '../types/playlists'
-import { fetchPlaylist } from '../utils/playlistsApi'
-import '../styles/studies.css'
-import '../styles/studies-edit.css'
-import '../styles/notifications.css'
-import '../styles/playlists.css'
+import { useHeld } from '../../hooks/useHeld'
+import { usePlaylists } from '../../hooks/usePlaylists'
+import type { PlaylistDetail, PlaylistDraft, PlaylistSummary } from '../../types/playlists'
+import { fetchPlaylist } from '../../utils/playlistsApi'
+import { NavIcon } from '../icons/NavIcons'
+import { TopbarActions } from '../layout/TopbarSlot'
+import { StudyToast } from '../studies/StudyToast'
+import { PlaylistEditor } from './PlaylistEditor'
+import { PlaylistList } from './PlaylistList'
 
-// Playlists page: lists of tips and recipes sent through notifications.
-// Archived playlists stay with the people who kept them and can be restored.
-// API: api/Admin/AdminPlaylistsController.cs.
+// Playlists section of the Notifications page: lists of tips and recipes a
+// message can open. Archived playlists stay with the people who kept them
+// and can be restored.
 
 type Editing = { from: PlaylistDetail | null }
 type View = 'active' | 'archived'
 
-export function Playlists() {
+export function PlaylistsSection() {
   const { list, options, error, create, save, archive, restore } = usePlaylists()
   const [view, setView] = useState<View>('active')
   const [editing, setEditing] = useState<Editing | null>(null)
@@ -84,7 +80,7 @@ export function Playlists() {
   ]
 
   return (
-    <div className="nt-page">
+    <>
       <TopbarActions>
         <button type="button" className="st-button is-green" onClick={openNew}>
           <NavIcon name="playlist" size={16} />
@@ -120,9 +116,7 @@ export function Playlists() {
 
         {shown.length === 0 ? (
           <div className="nt-empty">
-            <p className="st-muted">
-              {view === 'active' ? 'No playlists yet.' : 'No archived playlists.'}
-            </p>
+            <p className="st-muted">{view === 'active' ? 'No playlists yet.' : 'No archived playlists.'}</p>
             {view === 'active' && (
               <button type="button" className="st-button is-green" onClick={openNew}>
                 <NavIcon name="playlist" size={16} />
@@ -146,6 +140,6 @@ export function Playlists() {
       )}
 
       {toast && <StudyToast message={toast} onClose={closeToast} />}
-    </div>
+    </>
   )
 }

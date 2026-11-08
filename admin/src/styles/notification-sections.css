@@ -1,0 +1,32 @@
+/* Messages | Playlists switch at the top of the Notifications page. */
+
+.nt-sections {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 16px;
+  border: 1px solid #e3e8e2;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.nt-section-tab {
+  border: 0;
+  background: none;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.nt-section-tab:hover:not(.is-active) {
+  background: #f2f5f1;
+}
+
+.nt-section-tab.is-active {
+  background: #1f6b35;
+  color: #fff;
+}
