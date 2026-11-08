@@ -18,12 +18,10 @@ const en = {
   unreadLabel: 'Unread',
   newLabel: 'New',
 
-  kicker: 'VeggieBook notification',
-  sentAt: (date: string, time: string) => `${date}, ${time}`,
   availableUntil: (date: string) => `Available until ${date}`,
+  openLink: (host: string) => `Open ${host}`,
   notFound: 'This notification is no longer available.',
   backToAll: 'All notifications',
-  opensNewTab: 'Opens in a new tab',
   linkNote: 'opens in a new tab',
 
   newTitle: (n: number): string => (n === 1 ? 'New notification' : 'New notifications'),
@@ -54,12 +52,10 @@ const es: typeof en = {
   unreadLabel: 'Sin leer',
   newLabel: 'Nueva',
 
-  kicker: 'Notificación de VeggieBook',
-  sentAt: (date: string, time: string) => `${date}, ${time}`,
   availableUntil: (date: string) => `Disponible hasta el ${date}`,
+  openLink: (host: string) => `Abrir ${host}`,
   notFound: 'Esta notificación ya no está disponible.',
   backToAll: 'Todas las notificaciones',
-  opensNewTab: 'Se abre en una pestaña nueva',
   linkNote: 'se abre en una pestaña nueva',
 
   newTitle: (n: number) => (n === 1 ? 'Notificación nueva' : 'Notificaciones nuevas'),

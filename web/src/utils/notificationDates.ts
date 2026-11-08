@@ -36,24 +36,16 @@ export function shortDate(iso: string, lang: Lang): string {
   )
 }
 
-// November 8, or 8 de noviembre in Spanish; with the year for another year.
-export function longDate(iso: string, lang: Lang): string {
+// Sun, Nov 8, 11:16 AM
+export function dayAndTime(iso: string, lang: Lang): string {
   const d = new Date(iso)
-  return d.toLocaleDateString(
-    locale(lang),
-    thisYear(d) ? { month: 'long', day: 'numeric' } : { month: 'long', day: 'numeric', year: 'numeric' },
-  )
-}
-
-// Sunday, November 8
-export function weekdayDate(iso: string, lang: Lang): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString(locale(lang), {
-    weekday: 'long',
-    month: 'long',
+  const day = d.toLocaleDateString(locale(lang), {
+    weekday: 'short',
+    month: 'short',
     day: 'numeric',
     year: thisYear(d) ? undefined : 'numeric',
   })
+  return `${day}, ${timeOf(iso, lang)}`
 }
 
 // The time for today's notifications, the date for older ones.
