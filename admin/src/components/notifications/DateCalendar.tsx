@@ -3,7 +3,11 @@ import { monthCells, sameDay, startOfDay } from '../../utils/calendarDates'
 
 // A month calendar for picking one day. Month and year jump from the
 // dropdowns or step with the arrows. Days before `min` cannot be picked.
-// With `rangeFrom`, the days from it to the picked day are shaded.
+//
+// The picked day is the only solid green day. Today carries a small dot and
+// no fill, so it never looks picked. With `rangeFrom` and a picked day, the
+// days between are tinted. A line underneath says which day is picked, or
+// that none is yet.
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -29,6 +33,10 @@ function Chevron({ back }: { back?: boolean }) {
   )
 }
 
+function longDay(d: Date): string {
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+}
+
 export function DateCalendar({ label, value, min, rangeFrom = null, onChange }: Props) {
   const minDay = startOfDay(min)
   const [view, setView] = useState(() => {
@@ -49,6 +57,7 @@ export function DateCalendar({ label, value, min, rangeFrom = null, onChange }: 
   const month = view.getMonth()
   const cells = monthCells(year, month)
   const canGoBack = new Date(year, month, 1) > new Date(minDay.getFullYear(), minDay.getMonth(), 1)
+  const from = rangeFrom ? startOfDay(rangeFrom) : null
 
   const firstYear = Math.min(minDay.getFullYear(), year)
   const years = Array.from(
@@ -58,11 +67,17 @@ export function DateCalendar({ label, value, min, rangeFrom = null, onChange }: 
 
   function dayClass(day: Date): string {
     const classes = ['nt-cal-day']
-    if (sameDay(day, today)) classes.push('is-today')
     if (sameDay(day, value)) classes.push('is-picked')
-    else if (rangeFrom && value && day >= startOfDay(rangeFrom) && day < value) classes.push('is-range')
-    if (rangeFrom && sameDay(day, rangeFrom) && !sameDay(day, value)) classes.push('is-from')
+    else if (value && from && day >= from && day < value) classes.push('is-range')
+    if (sameDay(day, today)) classes.push('is-today')
     return classes.join(' ')
+  }
+
+  function dayLabel(day: Date): string {
+    const parts = [longDay(day)]
+    if (sameDay(day, today)) parts.push('today')
+    if (sameDay(day, value)) parts.push('picked')
+    return parts.join(', ')
   }
 
   return (
@@ -127,7 +142,7 @@ export function DateCalendar({ label, value, min, rangeFrom = null, onChange }: 
               className={dayClass(day)}
               disabled={day < minDay}
               aria-pressed={sameDay(day, value)}
-              aria-label={day.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+              aria-label={dayLabel(day)}
               onClick={() => onChange(day)}
             >
               {day.getDate()}
@@ -135,6 +150,16 @@ export function DateCalendar({ label, value, min, rangeFrom = null, onChange }: 
           ),
         )}
       </div>
+
+      <div className="nt-cal-legend" aria-hidden="true">
+        <span><i className="nt-key is-today" />Today</span>
+        <span><i className="nt-key is-picked" />Picked</span>
+        {from && <span><i className="nt-key is-range" />Live days</span>}
+      </div>
+
+      <p className={value ? 'nt-cal-picked' : 'nt-cal-picked is-none'} aria-live="polite">
+        {value ? `Picked: ${longDay(value)}` : 'No day picked yet'}
+      </p>
     </div>
   )
 }

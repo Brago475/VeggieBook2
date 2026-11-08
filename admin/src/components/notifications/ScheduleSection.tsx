@@ -129,7 +129,7 @@ export function ScheduleSection({ value: s, onChange, now, fixedStart }: Props) 
             onChange={(d) => set({ endDay: d })}
           />
           <div className="nt-cal-side">
-            <TimeSelect label="Ends at" value={s.endTime} onChange={(t) => set({ endTime: t })} />
+            <TimeSelect label="Ends at" value={s.endTime} onChange={(t) => set({ endTime: t })} endOfDay />
             <label className="nt-check">
               <input type="checkbox" checked={s.repeatOn} onChange={(e) => set({ repeatOn: e.target.checked })} />
               <span>Show it again every</span>

@@ -1,6 +1,7 @@
 /* The notification editor's When sections (ScheduleSection.tsx), the
-   calendar (DateCalendar.tsx), the live clock (LiveClock.tsx), and the
-   countdown on each message card (NotificationList.tsx). */
+   calendar (DateCalendar.tsx), the time picker (TimeSelect.tsx), the live
+   clock (LiveClock.tsx), and the countdown on each message card
+   (NotificationList.tsx). */
 
 /* Live clock */
 .nt-clock {
@@ -155,10 +156,79 @@
   border-color: #15803d;
 }
 
+.nt-chip.is-small {
+  align-self: flex-start;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+
+/* Time picker: Hour : Minute AM/PM */
+.nt-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nt-time-part {
+  width: 58px;
+  height: 42px;
+  padding: 0 6px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #18181b;
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.nt-time-colon {
+  font-size: 16px;
+  font-weight: 800;
+  color: #52525b;
+}
+
+.nt-ampm {
+  display: inline-flex;
+  margin-left: 4px;
+  padding: 3px;
+  background: #f0f0f2;
+  border-radius: 10px;
+}
+
+.nt-ampm-btn {
+  height: 36px;
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #52525b;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.nt-ampm-btn.is-on {
+  color: #14532d;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.nt-time-part:focus-visible,
+.nt-ampm-btn:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 2px;
+}
+
 /* Calendar plus its side fields */
 .nt-cal-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 200px;
+  grid-template-columns: minmax(0, 1fr) 240px;
   gap: 16px;
   align-items: start;
 }
@@ -239,6 +309,7 @@
 }
 
 .nt-cal-day {
+  position: relative;
   height: 38px;
   font: inherit;
   font-size: 14px;
@@ -251,8 +322,8 @@
   transition: background 0.12s ease;
 }
 
-.nt-cal-day:hover:not(:disabled) {
-  background: #f0f9f3;
+.nt-cal-day:hover:not(:disabled):not(.is-picked) {
+  background: #f4f4f5;
 }
 
 .nt-cal-day:disabled {
@@ -260,22 +331,35 @@
   cursor: default;
 }
 
-.nt-cal-day.is-today {
-  box-shadow: inset 0 0 0 2px #15803d;
-  color: #15803d;
-  font-weight: 800;
+/* Today: a dot under the number, never a fill or outline. */
+.nt-cal-day.is-today::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: #2563eb;
 }
 
-.nt-cal-day.is-range,
-.nt-cal-day.is-from {
+/* Between the start and the picked day. */
+.nt-cal-day.is-range {
   color: #14532d;
   background: #ecf7ef;
 }
 
+/* The picked day: the only solid green day. */
 .nt-cal-day.is-picked {
   color: #ffffff;
   background: #15803d;
   font-weight: 800;
+  box-shadow: 0 2px 6px rgba(21, 128, 61, 0.35);
+}
+
+.nt-cal-day.is-picked.is-today::after {
+  background: #ffffff;
 }
 
 .nt-cal-day:focus-visible,
@@ -283,6 +367,58 @@
 .nt-chip:focus-visible {
   outline: 2px solid #15803d;
   outline-offset: 2px;
+}
+
+.nt-cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 12px;
+  color: #52525b;
+}
+
+.nt-cal-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nt-key {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+}
+
+.nt-key.is-today {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2563eb;
+}
+
+.nt-key.is-picked {
+  background: #15803d;
+}
+
+.nt-key.is-range {
+  background: #ecf7ef;
+  box-shadow: inset 0 0 0 1px #c9e9d3;
+}
+
+.nt-cal-picked {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #14532d;
+  background: #f0f9f3;
+  border-radius: 8px;
+}
+
+.nt-cal-picked.is-none {
+  color: #9a3412;
+  background: #fff7ed;
 }
 
 /* Summary */
@@ -367,7 +503,7 @@
   transition: width 0.4s ease;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
   .nt-choice-row,
   .nt-cal-row {
     grid-template-columns: 1fr;
