@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace VeggieBook.Api.Data;
 
 // Database context for user data: accounts, roles, saved books, research
-// IDs, studies and tracking, the activity log, and notifications.
+// IDs, studies and tracking, the activity log, notifications, and playlists.
 //
 // Separate from VeggieBookContext, which is read-only with tracking switched
 // off. Keeping writes in their own context means the content endpoints never
@@ -31,6 +31,11 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationTarget> NotificationTargets => Set<NotificationTarget>();
     public DbSet<NotificationReceipt> NotificationReceipts => Set<NotificationReceipt>();
+    public DbSet<Playlist> Playlists => Set<Playlist>();
+    public DbSet<PlaylistItem> PlaylistItems => Set<PlaylistItem>();
+    public DbSet<PlaylistChoice> PlaylistChoices => Set<PlaylistChoice>();
+    public DbSet<UserPlaylist> UserPlaylists => Set<UserPlaylist>();
+    public DbSet<UserPlaylistItem> UserPlaylistItems => Set<UserPlaylistItem>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -189,7 +194,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.AnsweredAt).HasColumnName("answered_at");
         });
 
-        // See db/migrations/019_notifications.sql and 020.
+        // See db/migrations/019_notifications.sql, 020 and 023.
         b.Entity<Notification>(e =>
         {
             e.ToTable("notification");
@@ -199,6 +204,7 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.BodyEs).HasColumnName("body_es");
             e.Property(x => x.TemplateKey).HasColumnName("template_key");
             e.Property(x => x.Vegetable).HasColumnName("vegetable");
+            e.Property(x => x.PlaylistId).HasColumnName("playlist_id");     // 023
             e.Property(x => x.Audience).HasColumnName("audience");
             e.Property(x => x.IncludeGuests).HasColumnName("include_guests");
             e.Property(x => x.StartsAt).HasColumnName("starts_at");
@@ -233,6 +239,68 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.OpenedAt).HasColumnName("opened_at");
             e.Property(x => x.ClickedAt).HasColumnName("clicked_at");
             e.Property(x => x.DismissedAt).HasColumnName("dismissed_at");
+        });
+
+        // See db/migrations/023_playlists.sql.
+        b.Entity<Playlist>(e =>
+        {
+            e.ToTable("playlist");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.NameEn).HasColumnName("name_en");
+            e.Property(x => x.NameEs).HasColumnName("name_es");
+            e.Property(x => x.ArchivedAt).HasColumnName("archived_at");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.CreatedBy).HasColumnName("created_by");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            e.Property(x => x.UpdatedBy).HasColumnName("updated_by");
+
+            e.HasMany(x => x.Items).WithOne().HasForeignKey(x => x.PlaylistId);
+        });
+
+        b.Entity<PlaylistItem>(e =>
+        {
+            e.ToTable("playlist_item");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.PlaylistId).HasColumnName("playlist_id");
+            e.Property(x => x.Position).HasColumnName("position");
+            e.Property(x => x.Kind).HasColumnName("kind");
+            e.Property(x => x.ItemId).HasColumnName("item_id");
+        });
+
+        b.Entity<PlaylistChoice>(e =>
+        {
+            e.ToTable("playlist_choice");
+            e.HasKey(x => new { x.PlaylistId, x.UserId });
+            e.Property(x => x.PlaylistId).HasColumnName("playlist_id");
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Kept).HasColumnName("kept");
+            e.Property(x => x.NotificationId).HasColumnName("notification_id");
+            e.Property(x => x.DecidedAt).HasColumnName("decided_at");
+        });
+
+        b.Entity<UserPlaylist>(e =>
+        {
+            e.ToTable("user_playlist");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Name).HasColumnName("name");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+
+            e.HasMany(x => x.Items).WithOne().HasForeignKey(x => x.UserPlaylistId);
+        });
+
+        b.Entity<UserPlaylistItem>(e =>
+        {
+            e.ToTable("user_playlist_item");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.UserPlaylistId).HasColumnName("user_playlist_id");
+            e.Property(x => x.Position).HasColumnName("position");
+            e.Property(x => x.RecipeId).HasColumnName("recipe_id");
         });
     }
 

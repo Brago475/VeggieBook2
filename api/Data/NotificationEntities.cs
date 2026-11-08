@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace VeggieBook.Api.Data;
 
 // Admin notifications shown in the main site.
-// See db/migrations/019_notifications.sql, 020_notification_english_only.sql
-// and 022_notification_title.sql.
+// See db/migrations/019_notifications.sql, 020_notification_english_only.sql,
+// 022_notification_title.sql and 023_playlists.sql.
 
 public class Notification
 {
@@ -26,6 +26,9 @@ public class Notification
     // The template it came from, and the vegetable chosen for it.
     public string? TemplateKey { get; set; }
     public string? Vegetable { get; set; }
+
+    // The playlist this notification opens, if any.
+    public int? PlaylistId { get; set; }
 
     public string Audience { get; set; } = AudienceAll;
     public bool IncludeGuests { get; set; }
