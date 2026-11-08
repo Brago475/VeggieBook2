@@ -1,12 +1,14 @@
-import { useState } from 'react'
-import type { BrowseItem, BrowseResult, PlaylistOptions } from '../../types/playlists'
+import { useEffect, useState } from 'react'
+import type { BrowseItem, BrowseResult, MealKey, PlaylistOptions } from '../../types/playlists'
 import { browseContent } from '../../utils/playlistsApi'
 import { NavIcon } from '../icons/NavIcons'
-import { ItemThumb, KindTag } from './ItemBits'
-import { countText, itemKey, topicLabel } from './playlistFormat'
+import { ItemThumb, KindTag, MealTags } from './ItemBits'
+import { MealButtons } from './MealButtons'
+import { countText, itemKey, mealCount } from './playlistFormat'
+import { VegetableTiles } from './VegetableTiles'
 
-// Quick start and View all: pick a vegetable, a topic from the question
-// labels, or type a search, then see every match before adding.
+// Hand-picking: tap a vegetable, a meal, or search, and every match shows
+// right away with its photo, ready to add one by one or all at once.
 
 type Props = {
   options: PlaylistOptions
@@ -16,105 +18,85 @@ type Props = {
 
 export function ContentBrowser({ options, picked, onAdd }: Props) {
   const [vegetable, setVegetable] = useState('')
-  const [topic, setTopic] = useState('')
+  const [meal, setMeal] = useState<MealKey | ''>('')
   const [q, setQ] = useState('')
+  const [search, setSearch] = useState('')
   const [result, setResult] = useState<BrowseResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const vegName = options.vegetables.find((v) => v.code === vegetable)?.name ?? null
-  const canSearch = vegetable !== '' || topic !== '' || q.trim() !== ''
-
-  function countFor(t: string) {
-    const rows = options.counts.filter((c) => c.topic === t && (vegetable === '' || c.vegetable === vegetable))
-    return {
-      tips: rows.reduce((sum, c) => sum + c.tips, 0),
-      recipes: rows.reduce((sum, c) => sum + c.recipes, 0),
-    }
-  }
-
-  async function viewAll() {
-    if (!canSearch || loading) return
-    setLoading(true)
-    setError(null)
-    try {
-      setResult(await browseContent({ vegetable, topic, q: q.trim() }))
-    } catch (err) {
+  useEffect(() => {
+    if (!vegetable && !meal && !search) {
       setResult(null)
-      setError((err as Error).message)
-    } finally {
-      setLoading(false)
+      return
     }
-  }
+    let live = true
+    setLoading(true)
+    browseContent({ vegetable, meal, q: search })
+      .then((r) => {
+        if (!live) return
+        setResult(r)
+        setError(null)
+      })
+      .catch((err) => {
+        if (!live) return
+        setResult(null)
+        setError((err as Error).message)
+      })
+      .finally(() => {
+        if (live) setLoading(false)
+      })
+    return () => {
+      live = false
+    }
+  }, [vegetable, meal, search])
 
   const all = result ? [...result.tips, ...result.recipes] : []
   const notAdded = all.filter((i) => !picked.has(itemKey(i.kind, i.id)))
 
   return (
     <div className="pl-browse">
-      <div className="pl-browse-filters">
-        <label className="nt-field">
-          <span className="nt-label">Vegetable</span>
-          <select
-            className="nt-input"
-            value={vegetable}
-            onChange={(e) => {
-              setVegetable(e.target.value)
-              setResult(null)
-            }}
-          >
-            <option value="">Any vegetable</option>
-            {options.vegetables.map((v) => (
-              <option key={v.code} value={v.code}>
-                {v.name}
-              </option>
-            ))}
-          </select>
-        </label>
+      <span className="nt-label">Vegetable</span>
+      <VegetableTiles vegetables={options.vegetables} value={vegetable} onChange={setVegetable} allowAny />
 
-        <label className="nt-field">
-          <span className="nt-label">Topic</span>
-          <select
-            className="nt-input"
-            value={topic}
-            onChange={(e) => {
-              setTopic(e.target.value)
-              setResult(null)
-            }}
-          >
-            <option value="">Any topic</option>
-            {options.topics.map((t) => {
-              const c = countFor(t.topic)
-              return (
-                <option key={t.topic} value={t.topic}>
-                  {topicLabel(t, vegName)} ({countText(c.tips, c.recipes)})
-                </option>
-              )
-            })}
-          </select>
-        </label>
-      </div>
+      <span className="nt-label">Meal</span>
+      <MealButtons
+        meals={options.meals}
+        value={meal}
+        onChange={setMeal}
+        countFor={(m) => mealCount(options.counts, m, vegetable)}
+        allowNone
+      />
 
       <div className="pl-browse-search">
         <input
           className="nt-input"
           value={q}
           placeholder="Search titles, for example muffins or BR-212"
-          onChange={(e) => {
-            setQ(e.target.value)
-            setResult(null)
-          }}
+          onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault()
-              void viewAll()
+              setSearch(q.trim())
             }
           }}
         />
-        <button type="button" className="st-button" disabled={!canSearch || loading} onClick={() => void viewAll()}>
+        <button type="button" className="st-button" onClick={() => setSearch(q.trim())}>
           <NavIcon name="search" size={16} />
-          {loading ? 'Loading...' : 'View all'}
+          Search
         </button>
+        {search && (
+          <button
+            type="button"
+            className="st-button"
+            onClick={() => {
+              setQ('')
+              setSearch('')
+            }}
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {error && (
@@ -123,10 +105,18 @@ export function ContentBrowser({ options, picked, onAdd }: Props) {
         </p>
       )}
 
+      {!result && !loading && (
+        <p className="st-muted">Pick a vegetable, a meal, or search to see what you can add.</p>
+      )}
+      {loading && !result && <p className="st-muted">Loading...</p>}
+
       {result && (
         <div className="pl-results">
           <div className="pl-results-head">
-            <span>{countText(result.tipCount, result.recipeCount)} found</span>
+            <span>
+              {countText(result.tipCount, result.recipeCount)} found
+              {loading ? ', updating...' : ''}
+            </span>
             <button
               type="button"
               className="st-button is-green pl-add"
@@ -139,7 +129,7 @@ export function ContentBrowser({ options, picked, onAdd }: Props) {
           </div>
 
           {all.length === 0 ? (
-            <p className="st-muted pl-results-empty">Nothing matches. Try another vegetable or topic.</p>
+            <p className="st-muted pl-results-empty">Nothing matches. Try another vegetable or meal.</p>
           ) : (
             <ul className="pl-result-list">
               {all.map((item) => {
@@ -152,6 +142,7 @@ export function ContentBrowser({ options, picked, onAdd }: Props) {
                         <KindTag kind={item.kind} />
                         {item.vegetableName}
                         {item.code ? `, ${item.code}` : ''}
+                        <MealTags meals={item.meals} names={options.meals} />
                       </span>
                       <strong>{item.title}</strong>
                       {item.snippet && <span className="pl-result-snippet">{item.snippet}</span>}

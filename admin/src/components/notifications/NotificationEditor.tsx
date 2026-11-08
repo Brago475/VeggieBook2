@@ -7,6 +7,7 @@ import { StudyIcon } from '../studies/StudyIcons'
 import { LinkedText } from './LinkedText'
 import { LiveClock } from './LiveClock'
 import { fillTemplate, MAX_BODY, MAX_TITLE, notificationName } from './notificationFormat'
+import { PlaylistPicker, type PlaylistChoice } from './PlaylistPicker'
 import { ResearchIdPicker } from './ResearchIdPicker'
 import { endAt, startAt, startPassed, type Schedule } from './schedule'
 import { ScheduleSection } from './ScheduleSection'
@@ -15,11 +16,12 @@ import { ScheduleSection } from './ScheduleSection'
 // header and the buttons stay in view; the sections scroll between them.
 // The title is an admin-only label. The admin writes English only. Spanish
 // users see Spanish only for a template sent unchanged; the server decides,
-// and this shows which it will be. Closes on Cancel, the X, Escape, or a
-// click outside.
+// and this shows which it will be. A message can open a playlist, timed and
+// sent to the same people as the message. Closes on Cancel, the X, Escape,
+// or a click outside.
 //
-// Send again (a copy) keeps the title, text, audience and repeat, and leaves
-// the dates empty so they are picked fresh.
+// Send again (a copy) keeps the title, text, playlist, audience and repeat,
+// and leaves the dates empty so they are picked fresh.
 
 type Props = {
   mode: 'create' | 'edit'
@@ -63,6 +65,13 @@ function initialTitle(from: AdminNotification | null, editing: boolean): string 
   return editing ? from.title : from.title.replace(COPY_ENDINGS, '').trim()
 }
 
+function initialPlaylist(from: AdminNotification | null): PlaylistChoice {
+  const p = from?.playlist
+  if (!p) return { mode: 'none', vegetable: '', meal: '', playlistId: null }
+  if (p.auto && p.vegetable && p.meal) return { mode: 'auto', vegetable: p.vegetable, meal: p.meal, playlistId: null }
+  return { mode: 'made', vegetable: '', meal: '', playlistId: p.id }
+}
+
 export function NotificationEditor({ mode, from, templates, onSave, onClose }: Props) {
   const editing = mode === 'edit' && from !== null
   const now = useNow(1000)
@@ -71,6 +80,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
   const [templateKey, setTemplateKey] = useState(from?.templateKey ?? '')
   const [vegetable, setVegetable] = useState(from?.vegetable ?? templates.vegetables[0]?.key ?? '')
   const [body, setBody] = useState(from?.bodyEn ?? '')
+  const [playlist, setPlaylist] = useState<PlaylistChoice>(() => initialPlaylist(from))
   const [schedule, setSchedule] = useState<Schedule>(() => initialSchedule(from, editing))
   const [fixedStart] = useState<Date | null>(() =>
     editing && new Date(from.startsAt).getTime() <= Date.now() ? new Date(from.startsAt) : null,
@@ -116,6 +126,10 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
     if (!text) return 'Write the message.'
     if (text.length > MAX_BODY) return `Keep the message to ${MAX_BODY} characters or fewer.`
     if (text.includes(templates.slot)) return 'Pick a vegetable for this message.'
+
+    if (playlist.mode === 'auto' && (!playlist.vegetable || !playlist.meal))
+      return 'Pick a vegetable and a meal for the playlist.'
+    if (playlist.mode === 'made' && playlist.playlistId === null) return 'Pick a playlist.'
 
     const current = new Date()
     if (schedule.startMode === 'later' && !schedule.startDay) return 'Pick a start day on the calendar.'
@@ -167,6 +181,10 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
       includeGuests,
       includeIds: audience === 'selected' ? includeIds : [],
       excludeIds: audience === 'all' ? excludeIds : [],
+      playlistMode: playlist.mode,
+      playlistId: playlist.mode === 'made' ? playlist.playlistId : null,
+      playlistVegetable: playlist.mode === 'auto' ? playlist.vegetable : null,
+      playlistMeal: playlist.mode === 'auto' && playlist.meal ? playlist.meal : null,
     })
     setBusy(false)
     if (message) setError(message)
@@ -272,12 +290,24 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
                   <span className="nt-preview-icon">
                     <NavIcon name="bell" size={18} />
                   </span>
-                  <p className="nt-preview-text">
-                    <LinkedText text={text} />
-                  </p>
+                  <div className="nt-preview-main">
+                    <p className="nt-preview-text">
+                      <LinkedText text={text} />
+                    </p>
+                    {playlist.mode !== 'none' && <span className="nt-preview-cta">Open playlist</span>}
+                  </div>
                 </div>
               </div>
             )}
+          </section>
+
+          <section className="st-dialog-section nt-section">
+            <span className="st-section-title">Playlist</span>
+            <PlaylistPicker
+              value={playlist}
+              currentPlaylistId={editing ? (from.playlist?.id ?? null) : null}
+              onChange={setPlaylist}
+            />
           </section>
 
           <ScheduleSection value={schedule} onChange={setSchedule} now={now} fixedStart={fixedStart} />

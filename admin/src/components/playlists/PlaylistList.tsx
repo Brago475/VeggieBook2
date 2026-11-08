@@ -20,6 +20,7 @@ export function PlaylistList({ items, opening, onEdit, onArchive, onRestore }: P
           <div className="pl-card-main">
             <div className="pl-card-name">
               <strong>{p.nameEn}</strong>
+              {p.auto && <span className="pl-badge is-auto">Automatic</span>}
               {p.live && <span className="pl-badge is-live">In a live notification</span>}
               {p.archived && <span className="pl-badge">Archived</span>}
             </div>
@@ -27,7 +28,9 @@ export function PlaylistList({ items, opening, onEdit, onArchive, onRestore }: P
             <div className="pl-chips">
               <span className="pl-chip">{plural(p.tips, 'tip')}</span>
               <span className="pl-chip">{plural(p.recipes, 'recipe')}</span>
-              <span className="pl-chip">{p.sent === 0 ? 'Not sent yet' : `Sent ${p.sent === 1 ? 'once' : `${p.sent} times`}`}</span>
+              <span className="pl-chip">
+                {p.sent === 0 ? 'Not sent yet' : `Sent ${p.sent === 1 ? 'once' : `${p.sent} times`}`}
+              </span>
               <span className="pl-chip">Kept by {p.kept}</span>
               <span className="pl-chip">Not kept by {p.notKept}</span>
             </div>

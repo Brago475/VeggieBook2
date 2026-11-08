@@ -3,15 +3,16 @@ import type { AdminNotification } from '../../types/notifications'
 import { spanText } from '../../utils/calendarDates'
 import { formatDateTime } from '../../utils/format'
 import { NavIcon, type IconName } from '../icons/NavIcons'
+import { countText } from '../playlists/playlistFormat'
 import { LinkedText } from './LinkedText'
 import { audienceText, hasLink, repeatText, statusLabel } from './notificationFormat'
 import '../../styles/notification-schedule.css'
 import '../../styles/notification-names.css'
 
-// One compact card per notification: status and actions, the title and the
-// message as labeled rows, a live countdown, then Details, which opens to
-// the dates, audience, language and the four counts. The closed Details row
-// still shows the counts in one line. Counts are people.
+// One compact card per notification: status and actions, the title, the
+// message and the playlist it opens as labeled rows, a live countdown, then
+// Details, which opens to the dates, audience, language and the four counts.
+// The closed Details row still shows the counts in one line. Counts are people.
 
 type Props = {
   items: AdminNotification[]
@@ -99,6 +100,7 @@ export function NotificationList({ items, onEdit, onCopy, onRename, onStop }: Pr
                   {statusLabel[n.status]}
                 </span>
                 {n.templateKey && <span className="nt-tag">Template</span>}
+                {n.playlist && <span className="nt-tag">Playlist</span>}
               </div>
               <div className="nt-actions">
                 {n.status !== 'stopped' && (
@@ -136,6 +138,19 @@ export function NotificationList({ items, onEdit, onCopy, onRename, onStop }: Pr
               <dd className="nt-card-body">
                 <LinkedText text={n.bodyEn} />
               </dd>
+              {n.playlist && (
+                <>
+                  <dt>Playlist</dt>
+                  <dd className="nt-card-body">
+                    {n.playlist.name}
+                    <span className="nt-card-playlist-meta">
+                      {countText(n.playlist.tips, n.playlist.recipes)}
+                      {n.playlist.auto ? ', automatic' : ''}
+                      {n.playlist.archived ? ', archived' : ''}
+                    </span>
+                  </dd>
+                </>
+              )}
             </dl>
 
             <Countdown item={n} now={now} />

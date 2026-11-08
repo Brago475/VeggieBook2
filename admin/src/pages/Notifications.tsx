@@ -6,11 +6,14 @@ import '../styles/studies-edit.css'
 import '../styles/notifications.css'
 import '../styles/notification-sections.css'
 import '../styles/playlists.css'
+import '../styles/meal-labels.css'
 
 // Notifications page, in two sections: Messages (shown in the main site as a
-// pop-up and in its Notifications section) and Playlists (lists of tips and
-// recipes a message can open). Each section has its own top bar button.
-// APIs: api/Admin/AdminNotificationsController.cs and AdminPlaylistsController.cs.
+// pop-up and in its Notifications section, and able to open a playlist) and
+// Playlists (hand-made and automatic playlists, and their meal labels). Each
+// section has its own top bar button.
+// APIs: api/Admin/AdminNotificationsController.cs, AdminPlaylistsController.cs
+// and AdminMealLabelsController.cs.
 
 type Section = 'messages' | 'playlists'
 

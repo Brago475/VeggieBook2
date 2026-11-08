@@ -6,15 +6,16 @@ import { fetchPlaylist } from '../../utils/playlistsApi'
 import { NavIcon } from '../icons/NavIcons'
 import { TopbarActions } from '../layout/TopbarSlot'
 import { StudyToast } from '../studies/StudyToast'
+import { MealLabels } from './MealLabels'
 import { PlaylistEditor } from './PlaylistEditor'
 import { PlaylistList } from './PlaylistList'
 
-// Playlists section of the Notifications page: lists of tips and recipes a
-// message can open. Archived playlists stay with the people who kept them
-// and can be restored.
+// Playlists section of the Notifications page: hand-made and automatic
+// playlists a message can open, and the meal labels both kinds use.
+// Archived playlists stay with the people who kept them and can be restored.
 
 type Editing = { from: PlaylistDetail | null }
-type View = 'active' | 'archived'
+type View = 'active' | 'archived' | 'labels'
 
 export function PlaylistsSection() {
   const { list, options, error, create, save, archive, restore } = usePlaylists()
@@ -38,7 +39,7 @@ export function PlaylistsSection() {
 
   const active = list.filter((p) => !p.archived)
   const archived = list.filter((p) => p.archived)
-  const shown = view === 'active' ? active : archived
+  const shown = view === 'archived' ? archived : active
   const openNew = () => setEditing({ from: null })
 
   async function openEdit(p: PlaylistSummary) {
@@ -74,9 +75,10 @@ export function PlaylistsSection() {
     setToast(message ?? `Restored "${p.nameEn}".`)
   }
 
-  const tabs: { id: View; label: string; count: number }[] = [
+  const tabs: { id: View; label: string; count: number | null }[] = [
     { id: 'active', label: 'Active', count: active.length },
     { id: 'archived', label: 'Archived', count: archived.length },
+    { id: 'labels', label: 'Meal labels', count: null },
   ]
 
   return (
@@ -108,13 +110,15 @@ export function PlaylistsSection() {
                 onClick={() => setView(t.id)}
               >
                 {t.label}
-                <span className="nt-tab-count">{t.count}</span>
+                {t.count !== null && <span className="nt-tab-count">{t.count}</span>}
               </button>
             ))}
           </div>
         </div>
 
-        {shown.length === 0 ? (
+        {view === 'labels' ? (
+          <MealLabels />
+        ) : shown.length === 0 ? (
           <div className="nt-empty">
             <p className="st-muted">{view === 'active' ? 'No playlists yet.' : 'No archived playlists.'}</p>
             {view === 'active' && (

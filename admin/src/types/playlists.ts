@@ -1,11 +1,16 @@
-// Shapes of /api/admin/playlists (api/Admin/AdminPlaylistsController.cs).
+// Shapes of /api/admin/playlists and /api/admin/meal-labels
+// (api/Admin/AdminPlaylistsController.cs, AdminMealLabelsController.cs).
 
 export type PlaylistKind = 'tip' | 'recipe'
+export type MealKey = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
 export type PlaylistSummary = {
   id: number
   nameEn: string
   nameEs: string | null
+  auto: boolean
+  autoVegetable: string | null
+  autoMeal: MealKey | null
   archived: boolean
   archivedAt: string | null
   createdAt: string
@@ -51,6 +56,9 @@ export type PlaylistDetail = {
   id: number
   nameEn: string
   nameEs: string | null
+  auto: boolean
+  autoVegetable: string | null
+  autoMeal: MealKey | null
   archived: boolean
   archivedAt: string | null
   createdAt: string
@@ -58,20 +66,16 @@ export type PlaylistDetail = {
   items: PlaylistEntry[]
 }
 
-export type PlaylistTopic = {
-  topic: string
-  question: string
-  textEn: string
-  textEs: string
-  label: string
-}
+export type PlaylistVegetable = { code: string; name: string; nameEs?: string; image: string | null }
 
-export type TopicCount = { vegetable: string; topic: string; tips: number; recipes: number }
+export type PlaylistMeal = { key: MealKey; en: string; es?: string }
+
+export type MealCount = { vegetable: string; meal: MealKey; tips: number; recipes: number }
 
 export type PlaylistOptions = {
-  vegetables: { code: string; name: string }[]
-  topics: PlaylistTopic[]
-  counts: TopicCount[]
+  vegetables: PlaylistVegetable[]
+  meals: PlaylistMeal[]
+  counts: MealCount[]
 }
 
 export type BrowseItem = {
@@ -80,11 +84,11 @@ export type BrowseItem = {
   vegetable: string
   vegetableName: string
   title: string
-  topics: string[]
-  code?: string | null
-  photo?: string | null
-  snippet?: string | null
-  blocks?: number
+  meals: MealKey[]
+  code: string | null
+  photo: string | null
+  snippet: string | null
+  blocks: number
 }
 
 export type BrowseResult = {
@@ -108,4 +112,23 @@ export type PlaylistDraft = {
   nameEn: string
   nameEs: string | null
   items: PlaylistItemRef[]
+}
+
+// Meal labels screen.
+export type LabelItem = {
+  kind: PlaylistKind
+  id: number
+  code: string | null
+  vegetable: string
+  title: string
+  photo: string | null
+  snippet: string | null
+  meals: MealKey[]
+}
+
+export type MealLabelsResponse = {
+  meals: PlaylistMeal[]
+  vegetables: PlaylistVegetable[]
+  recipes: LabelItem[]
+  tips: LabelItem[]
 }

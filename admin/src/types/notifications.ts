@@ -1,13 +1,28 @@
+import type { MealKey } from './playlists'
+
 // Shapes from api/Admin/AdminNotificationsController.cs.
 
 export type NotificationStatus = 'scheduled' | 'live' | 'ended' | 'stopped'
 export type Audience = 'all' | 'selected'
+export type PlaylistMode = 'none' | 'auto' | 'made'
 
 export type NotificationCounts = {
   shown: number
   opened: number
   link: number
   dismissed: number
+}
+
+// The playlist a notification opens.
+export type NotificationPlaylist = {
+  id: number
+  name: string
+  auto: boolean
+  vegetable: string | null
+  meal: MealKey | null
+  archived: boolean
+  tips: number
+  recipes: number
 }
 
 export type AdminNotification = {
@@ -18,6 +33,7 @@ export type AdminNotification = {
   hasSpanish: boolean
   templateKey: string | null
   vegetable: string | null
+  playlist: NotificationPlaylist | null
   audience: Audience
   includeGuests: boolean
   includeIds: string[]
@@ -72,4 +88,8 @@ export type NotificationDraft = {
   includeGuests: boolean
   includeIds: string[]
   excludeIds: string[]
+  playlistMode: PlaylistMode
+  playlistId: number | null
+  playlistVegetable: string | null
+  playlistMeal: MealKey | null
 }
