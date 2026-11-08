@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.Notifications;
 using VeggieBook.Api.Research;
 using VeggieBook.Api.Research.AllData;
 
@@ -17,14 +18,18 @@ namespace VeggieBook.Api.Admin;
 /// Event types: book_saved, joined, book_deleted, item_removed, book_printed,
 /// book_downloaded, account_deleted, research_erased, tracking_on,
 /// tracking_off, study_started, study_ended, study_renamed, study_deleted,
-/// notice_joined, notice_declined.
+/// notice_joined, notice_declined, notification_shown, notification_opened,
+/// notification_link, notification_dismissed, notification_created,
+/// notification_edited, notification_stopped.
 ///
 /// Participant events show only if tracking was on when they happened
 /// (ResearchScope.CountsBook). Account deletions and erases always show.
 /// Saves come from the book table, deleted books and accounts included, plus
 /// book_saved log lines for books no longer in it. A save line shows what was
 /// kept and taken out at the moment of saving ("-" when drops were not
-/// recorded yet); later take-outs are their own lines.
+/// recorded yet); later take-outs are their own lines. Notification lines
+/// name the message by number and show the start of its text, with the round
+/// for a repeating message.
 /// </summary>
 [ApiController]
 [Route("api/admin/activity")]
@@ -32,6 +37,25 @@ namespace VeggieBook.Api.Admin;
 public class AdminActivityController(AccountsContext db, VeggieBookContext content) : ControllerBase
 {
     private record Event(string Type, string? ResearchId, string Title, string Detail, DateTime At);
+
+    private const int PreviewLength = 80;
+
+    // What a participant did with a notification, as the start of the title.
+    private static readonly Dictionary<string, string> ParticipantNotification = new()
+    {
+        [NotificationActivity.Shown] = "Saw",
+        [NotificationActivity.Opened] = "Opened",
+        [NotificationActivity.Link] = "Used the link in",
+        [NotificationActivity.Dismissed] = "Closed"
+    };
+
+    // What an admin did with a notification.
+    private static readonly Dictionary<string, string> AdminNotification = new()
+    {
+        [NotificationActivity.Created] = "Created",
+        [NotificationActivity.Edited] = "Edited",
+        [NotificationActivity.Stopped] = "Stopped"
+    };
 
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] int? study)
@@ -60,9 +84,23 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                 .ToListAsync())
             .ToDictionary(s => s.Id, s => $"#{s.DisplayNumber} {s.HeadlineEn}");
 
+        var notifications = await db.Notifications
+            .AsNoTracking()
+            .Select(n => new { n.Id, n.BodyEn, n.RepeatDays })
+            .ToDictionaryAsync(n => n.Id);
+
         string Name(string kind, string? vegetableCode, int? categoryId) => kind == "secrets"
             ? (categoryId is int id ? categoryNames.GetValueOrDefault(id, "") : "")
             : (vegetableCode is string code ? vegetableNames.GetValueOrDefault(code, code) : "");
+
+        // The start of the message, with the round for a repeating message.
+        string NotificationDetail(ActivityEntry a)
+        {
+            if (a.ContentId is not int noteId || !notifications.TryGetValue(noteId, out var note))
+                return "Message no longer available";
+            var text = Preview(note.BodyEn);
+            return note.RepeatDays is not null && a.ItemCount is int round ? $"Round {round}: {text}" : text;
+        }
 
         var events = new List<Event>();
 
@@ -109,7 +147,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             u.CreatedAt)));
 
         // Activity log: deletions, take-outs, prints, downloads, erases, admin
-        // study actions, and saves of books no longer in the book table.
+        // study actions, notifications, and saves of books no longer in the
+        // book table.
         var logged = await db.ActivityLog.AsNoTracking().ToListAsync();
 
         bool OwnerTracked(ActivityEntry a, DateTime at) =>
@@ -127,6 +166,17 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             else if (a.Kind == ActivityLog.StudyDeleted)
             {
                 events.Add(new Event("study_deleted", null, $"Deleted Study {a.ItemCount}", a.Detail ?? "", a.At));
+            }
+            else if (ParticipantNotification.TryGetValue(a.Kind, out var did))
+            {
+                if (OwnerTracked(a, a.At))
+                    events.Add(new Event(a.Kind, a.ParticipantId, $"{did} notification #{a.ContentId}",
+                        NotificationDetail(a), a.At));
+            }
+            else if (AdminNotification.TryGetValue(a.Kind, out var adminDid))
+            {
+                events.Add(new Event(a.Kind, null, $"{adminDid} notification #{a.ContentId}",
+                    a.Detail ?? "", a.At));
             }
             else if (a.Kind == ParticipantErase.Kind)
             {
@@ -267,5 +317,12 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
     {
         var word = kind == "secrets" ? "secret" : "recipe";
         return n == 1 ? $"1 {word}" : $"{n} {word}s";
+    }
+
+    // The message on one line, cut to PreviewLength characters.
+    private static string Preview(string text)
+    {
+        var line = string.Join(' ', text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return line.Length <= PreviewLength ? line : line[..PreviewLength].TrimEnd() + "...";
     }
 }

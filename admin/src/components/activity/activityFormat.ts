@@ -14,6 +14,7 @@ export type ActivityGroup =
   | 'tracking'
   | 'studies'
   | 'notice'
+  | 'notifications'
 
 export const groups: { id: ActivityGroup; label: string; types: ActivityType[] }[] = [
   { id: 'all', label: 'All', types: [] },
@@ -27,6 +28,19 @@ export const groups: { id: ActivityGroup; label: string; types: ActivityType[] }
   { id: 'tracking', label: 'Tracking', types: ['tracking_on', 'tracking_off'] },
   { id: 'studies', label: 'Studies', types: ['study_started', 'study_ended', 'study_renamed', 'study_deleted'] },
   { id: 'notice', label: 'Study notice', types: ['notice_joined', 'notice_declined'] },
+  {
+    id: 'notifications',
+    label: 'Notifications',
+    types: [
+      'notification_shown',
+      'notification_opened',
+      'notification_link',
+      'notification_dismissed',
+      'notification_created',
+      'notification_edited',
+      'notification_stopped',
+    ],
+  },
 ]
 
 export function inGroup(e: ActivityEvent, group: ActivityGroup): boolean {

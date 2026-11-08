@@ -17,6 +17,13 @@ export type ActivityType =
   | 'study_deleted'
   | 'notice_joined'
   | 'notice_declined'
+  | 'notification_shown'
+  | 'notification_opened'
+  | 'notification_link'
+  | 'notification_dismissed'
+  | 'notification_created'
+  | 'notification_edited'
+  | 'notification_stopped'
 
 export type ActivityEvent = {
   type: ActivityType
