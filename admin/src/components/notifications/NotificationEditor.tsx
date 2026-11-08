@@ -18,8 +18,8 @@ import { ScheduleSection } from './ScheduleSection'
 // and this shows which it will be. Closes on Cancel, the X, Escape, or a
 // click outside.
 //
-// Send again (a copy) keeps the text, audience and repeat, marks the title
-// as a copy, and leaves the dates empty so they are picked fresh.
+// Send again (a copy) keeps the title, text, audience and repeat, and leaves
+// the dates empty so they are picked fresh.
 
 type Props = {
   mode: 'create' | 'edit'
@@ -32,7 +32,9 @@ type Props = {
 
 const DEFAULT_START = '09:00'
 const DEFAULT_END = '23:59'
-const COPY_SUFFIX = ' (copy)'
+
+// "(copy)" endings left by earlier versions of Send again.
+const COPY_ENDINGS = /(\s*\(copy\))+$/i
 
 function initialSchedule(from: AdminNotification | null, editing: boolean): Schedule {
   const repeat = {
@@ -58,8 +60,7 @@ function initialSchedule(from: AdminNotification | null, editing: boolean): Sche
 
 function initialTitle(from: AdminNotification | null, editing: boolean): string {
   if (!from?.title) return ''
-  if (editing) return from.title
-  return (from.title.slice(0, MAX_TITLE - COPY_SUFFIX.length) + COPY_SUFFIX).trim()
+  return editing ? from.title : from.title.replace(COPY_ENDINGS, '').trim()
 }
 
 export function NotificationEditor({ mode, from, templates, onSave, onClose }: Props) {
