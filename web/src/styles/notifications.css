@@ -21,6 +21,17 @@
   height: 22px;
 }
 
+.nf-icon.is-small {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+.nf-icon.is-small svg {
+  width: 19px;
+  height: 19px;
+}
+
 .nf-icon.is-large {
   width: 52px;
   height: 52px;
@@ -104,8 +115,7 @@
   margin-bottom: var(--sp-5);
 }
 
-.nf-group-label,
-.nf-waiting-label {
+.nf-group-label {
   margin: 0 4px 10px;
   font-size: 11px;
   font-weight: 800;
@@ -139,8 +149,7 @@
   cursor: pointer;
   transition:
     border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.15s ease;
+    box-shadow 0.15s ease;
 }
 
 .nf-card:hover {
@@ -331,42 +340,34 @@
 .nf-sheet-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.nf-sheet-heading {
-  flex: 1;
-  min-width: 0;
+  gap: 10px;
 }
 
 .nf-sheet-title {
+  flex: 1;
+  min-width: 0;
   margin: 0;
-  font-size: var(--font-section);
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.3;
   color: var(--text);
 }
 
-.nf-sheet-step {
-  margin: 2px 0 0;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
 .nf-steppers {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 4px;
 }
 
 .nf-step {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   color: var(--green-deep);
   background: var(--green-tint);
-  border: 1px solid #c9dfae;
+  border: none;
   border-radius: 50%;
   cursor: pointer;
 }
@@ -377,9 +378,8 @@
 }
 
 .nf-step:disabled {
-  color: #b7b6ad;
-  background: var(--surface);
-  border-color: var(--line);
+  color: #c4c3ba;
+  background: transparent;
   cursor: default;
 }
 
@@ -388,22 +388,56 @@
   outline-offset: 2px;
 }
 
+.nf-step-count {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
 .nf-sheet-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  width: 100%;
   padding: 16px;
-  background: #fafaf6;
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: #f6f9f1;
+  border: 1px solid #d5e6c0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.nf-sheet-card:hover {
+  border-color: var(--green-dark);
+  box-shadow: 0 4px 14px rgba(59, 94, 31, 0.12);
+}
+
+.nf-sheet-card:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
 }
 
 .nf-sheet-text {
-  margin: 0;
-  font-size: var(--font-label);
-  line-height: 1.55;
-  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 17px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
+}
+
+.nf-sheet-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .nf-sheet-time {
@@ -411,82 +445,28 @@
   color: var(--text-muted);
 }
 
-.nf-waiting {
-  padding-top: 4px;
-  border-top: 1px solid var(--line);
-}
-
-.nf-waiting-label {
-  margin: 10px 2px 4px;
-}
-
-.nf-waiting ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.nf-waiting-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 4px;
-  font: inherit;
-  text-align: left;
-  color: var(--text);
-  background: transparent;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-.nf-waiting-row:hover {
-  background: #f3f8ec;
-}
-
-.nf-waiting-row:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 0;
-}
-
-.nf-unread-dot {
-  flex: 0 0 auto;
-  width: 8px;
-  height: 8px;
-  margin-top: 7px;
-  border-radius: 50%;
-  background: var(--green-dark);
-}
-
-.nf-waiting-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
+.nf-sheet-more {
+  display: inline-flex;
+  align-items: center;
   gap: 2px;
-  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-deep);
 }
 
-.nf-waiting-preview {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: var(--font-label);
-  font-weight: 600;
-  line-height: 1.4;
+.nf-sheet-more svg {
+  width: 16px;
+  height: 16px;
 }
 
-.nf-waiting-time {
-  font-size: 13px;
-  color: var(--text-muted);
+.nf-sheet-actions {
+  display: flex;
+  gap: 10px;
 }
 
-.nf-waiting-more {
-  margin: 2px 4px 0 22px;
-  font-size: 13px;
-  color: var(--text-muted);
+.nf-sheet-actions > * {
+  flex: 1;
+  margin: 0;
 }
 
 /* On a phone the pop-up sits at the bottom, within thumb reach. */
@@ -508,7 +488,8 @@
 @media (prefers-reduced-motion: reduce) {
   .nf-card,
   .nf-tab,
-  .nf-linkcard {
+  .nf-linkcard,
+  .nf-sheet-card {
     transition: none;
   }
 }

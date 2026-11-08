@@ -26,13 +26,12 @@ const en = {
   opensNewTab: 'Opens in a new tab',
   linkNote: 'opens in a new tab',
 
-  newCount: (n: number) => (n === 1 ? '1 new notification' : `${n} new notifications`),
+  newTitle: (n: number) => (n === 1 ? 'New notification' : 'New notifications'),
+  readMore: 'Read more',
   stepOf: (i: number, n: number) => `${i} of ${n}`,
   previous: 'Previous notification',
   next: 'Next notification',
-  moreWaiting: 'More notifications',
-  andMore: (n: number) => (n === 1 ? 'and 1 more' : `and ${n} more`),
-  seeAll: 'See all notifications',
+  seeAll: 'See all',
 
   unreadCount: (n: number) =>
     n === 1 ? '1 unread notification' : `${n} unread notifications`,
@@ -63,13 +62,12 @@ const es: typeof en = {
   opensNewTab: 'Se abre en una pestaña nueva',
   linkNote: 'se abre en una pestaña nueva',
 
-  newCount: (n: number) => (n === 1 ? '1 notificación nueva' : `${n} notificaciones nuevas`),
+  newTitle: (n: number) => (n === 1 ? 'Notificación nueva' : 'Notificaciones nuevas'),
+  readMore: 'Leer más',
   stepOf: (i: number, n: number) => `${i} de ${n}`,
   previous: 'Notificación anterior',
   next: 'Notificación siguiente',
-  moreWaiting: 'Más notificaciones',
-  andMore: (n: number) => (n === 1 ? 'y 1 más' : `y ${n} más`),
-  seeAll: 'Ver todas las notificaciones',
+  seeAll: 'Ver todas',
 
   unreadCount: (n: number) =>
     n === 1 ? '1 notificación sin leer' : `${n} notificaciones sin leer`,

@@ -658,7 +658,6 @@ export default function App() {
               onSeeAll={seeAllFromNotice}
               onOpen={openFromNotice}
               onClose={notes.closeBatch}
-              onLink={notes.followLink}
             />
           )}
         </div>
