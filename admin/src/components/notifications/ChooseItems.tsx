@@ -1,33 +1,22 @@
 import { useEffect, useState } from 'react'
 import type { BrowseResult, MealKey, PickedItem, PlaylistOptions } from '../../types/playlists'
+import { imageUrl } from '../../utils/images'
 import { browseContent } from '../../utils/playlistsApi'
-import { ItemThumb, KindTag } from '../playlists/ItemBits'
-import { countText, itemKey, MAX_ITEMS, pickedFromBrowse } from '../playlists/playlistFormat'
+import { NavIcon } from '../icons/NavIcons'
+import { KindTag } from '../playlists/ItemBits'
+import { countText, itemKey, MAX_ITEMS, mealCount, pickedFromBrowse } from '../playlists/playlistFormat'
+import { MealPills } from './MealPills'
+import { VegetableStrip } from './VegetableStrip'
+import { ZoomThumb } from './ZoomThumb'
 
-// Hand-picks the items for a new playlist. Back drops the changes; Done
-// keeps them. Chosen items stay on top in the order they were picked.
+// Hand-picks the items for a new playlist. Results show as photo cards;
+// a click checks or unchecks one. Back drops the changes; Done keeps them.
 
 type Props = {
   options: PlaylistOptions
   initial: PickedItem[]
   onBack: () => void
   onDone: (items: PickedItem[]) => void
-}
-
-function PickRow({ item, checked, onToggle }: { item: PickedItem; checked: boolean; onToggle: () => void }) {
-  return (
-    <li>
-      <button type="button" className="ps-pick-row" aria-pressed={checked} onClick={onToggle}>
-        <span className={checked ? 'ps-box is-on' : 'ps-box'} aria-hidden="true">
-          {checked ? '\u2713' : ''}
-        </span>
-        <ItemThumb kind={item.kind} photo={item.photo} />
-        <KindTag kind={item.kind} />
-        <span className="ps-title">{item.title}</span>
-        {item.code && <span className="ps-code">{item.code}</span>}
-      </button>
-    </li>
-  )
 }
 
 export function ChooseItems({ options, initial, onBack, onDone }: Props) {
@@ -91,10 +80,11 @@ export function ChooseItems({ options, initial, onBack, onDone }: Props) {
         </button>
       </div>
 
-      <div className="ps-choose-filters">
+      <div className="ps-search">
+        <NavIcon name="search" size={16} />
         <input
-          className="nt-input"
           value={q}
+          aria-label="Search recipes and tips"
           placeholder="Search, for example muffins or BR-212"
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => {
@@ -104,34 +94,41 @@ export function ChooseItems({ options, initial, onBack, onDone }: Props) {
             }
           }}
         />
-        <select className="nt-input" value={vegetable} onChange={(e) => setVegetable(e.target.value)}>
-          <option value="">All vegetables</option>
-          {options.vegetables.map((v) => (
-            <option key={v.code} value={v.code}>
-              {v.name}
-            </option>
-          ))}
-        </select>
-        <select className="nt-input" value={meal} onChange={(e) => setMeal(e.target.value as MealKey | '')}>
-          <option value="">All meals</option>
-          {options.meals.map((m) => (
-            <option key={m.key} value={m.key}>
-              {m.en}
-            </option>
-          ))}
-        </select>
+        {q && (
+          <button type="button" className="ps-clear" aria-label="Clear search" onClick={() => setQ('')}>
+            &#10005;
+          </button>
+        )}
       </div>
 
-      {chosen.length > MAX_ITEMS && <p className="pl-note">A playlist holds up to {MAX_ITEMS} items.</p>}
+      <VegetableStrip vegetables={options.vegetables} value={vegetable} onChange={setVegetable} allowAny />
+      <MealPills
+        meals={options.meals}
+        value={meal}
+        onChange={setMeal}
+        countFor={(m) => mealCount(options.counts, m, vegetable)}
+        allowNone
+      />
 
       {chosen.length > 0 && (
         <div className="ps-group">
           <span className="nt-label">Chosen ({chosen.length})</span>
-          <ul className="ps-list ps-pick">
+          <div className="ps-tray">
             {chosen.map((i) => (
-              <PickRow key={itemKey(i.kind, i.id)} item={i} checked onToggle={() => remove(i)} />
+              <button
+                key={itemKey(i.kind, i.id)}
+                type="button"
+                className="ps-chip"
+                title={`Remove ${i.title}`}
+                onClick={() => remove(i)}
+              >
+                <ZoomThumb kind={i.kind} photo={i.photo} />
+                <span className="ps-chip-text">{i.title}</span>
+                <span aria-hidden="true">&#10005;</span>
+              </button>
             ))}
-          </ul>
+          </div>
+          {chosen.length > MAX_ITEMS && <p className="pl-note">A playlist holds up to {MAX_ITEMS} items.</p>}
         </div>
       )}
 
@@ -156,13 +153,42 @@ export function ChooseItems({ options, initial, onBack, onDone }: Props) {
               </button>
             )}
           </div>
-          {notChosen.length === 0 ? (
-            <p className="st-muted">{found.length === 0 ? 'Nothing matches.' : 'All of these are chosen.'}</p>
+
+          {found.length === 0 ? (
+            <p className="st-muted">Nothing matches. Try another vegetable or meal.</p>
           ) : (
-            <ul className="ps-list ps-pick">
-              {notChosen.map((i) => (
-                <PickRow key={itemKey(i.kind, i.id)} item={i} checked={false} onToggle={() => add([i])} />
-              ))}
+            <ul className="ps-cards">
+              {found.map((i) => {
+                const on = chosenKeys.has(itemKey(i.kind, i.id))
+                return (
+                  <li key={itemKey(i.kind, i.id)}>
+                    <button
+                      type="button"
+                      aria-pressed={on}
+                      className={on ? 'ps-card is-on' : 'ps-card'}
+                      onClick={() => (on ? remove(i) : add([i]))}
+                    >
+                      {i.photo ? (
+                        <img className="ps-card-img" src={imageUrl(i.photo)} alt="" loading="lazy" />
+                      ) : (
+                        <span className="ps-card-img" aria-hidden="true">
+                          <NavIcon name="leaf" size={24} />
+                        </span>
+                      )}
+                      <span className={on ? 'ps-card-check is-on' : 'ps-card-check'} aria-hidden="true">
+                        {on ? '\u2713' : '+'}
+                      </span>
+                      <span className="ps-card-text">
+                        <span className="ps-card-meta">
+                          <KindTag kind={i.kind} />
+                          {i.code && <span>{i.code}</span>}
+                        </span>
+                        <span className="ps-card-title">{i.title}</span>
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
             </ul>
           )}
         </div>

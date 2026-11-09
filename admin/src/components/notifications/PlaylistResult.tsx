@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { PickedItem } from '../../types/playlists'
 import { ItemThumb, KindTag } from '../playlists/ItemBits'
 import { countText, itemKey, MAX_ITEMS } from '../playlists/playlistFormat'
+import { ZoomThumb } from './ZoomThumb'
 
 // The one line every playlist choice ends with: name, what goes out, and
 // View all to list the items.
@@ -44,7 +45,7 @@ export function PlaylistResult({ name, items, loading, capped = false }: Props) 
         <ul className="ps-list">
           {items.map((i) => (
             <li key={itemKey(i.kind, i.id)}>
-              <ItemThumb kind={i.kind} photo={i.photo} />
+              <ZoomThumb kind={i.kind} photo={i.photo} />
               <KindTag kind={i.kind} />
               <span className="ps-title">{i.title}</span>
               {i.code && <span className="ps-code">{i.code}</span>}
