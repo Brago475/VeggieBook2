@@ -4,6 +4,7 @@ import type {
   MealKey,
   MealLabelsResponse,
   PlaylistDetail,
+  PlaylistDraft,
   PlaylistEntry,
   PlaylistItemRef,
   PlaylistKind,
@@ -25,6 +26,10 @@ export function fetchPlaylistOptions(): Promise<PlaylistOptions> {
 
 export function fetchPlaylist(id: number): Promise<PlaylistDetail> {
   return api<PlaylistDetail>(`/admin/playlists/${id}`)
+}
+
+export function createPlaylist(draft: PlaylistDraft): Promise<{ id: number }> {
+  return api<{ id: number }>('/admin/playlists', { method: 'POST', body: draft })
 }
 
 export function browseContent(filter: { vegetable: string; meal: string; q: string }): Promise<BrowseResult> {

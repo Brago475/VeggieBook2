@@ -1,0 +1,419 @@
+/* Playlist steps in the notification editor. Fields and buttons come from
+   the Notifications and Studies styles. */
+
+.ps {
+  display: grid;
+  gap: 12px;
+}
+
+/* On and off */
+.ps-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ps-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #cbd5d0;
+  transition: background 0.15s;
+}
+
+.ps-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+}
+
+.ps-toggle.is-on .ps-switch {
+  background: #1f6b35;
+}
+
+.ps-toggle.is-on .ps-switch::after {
+  transform: translateX(18px);
+}
+
+.ps-switch-text {
+  display: grid;
+  gap: 2px;
+}
+
+.ps-switch-text strong {
+  font-size: 14px;
+}
+
+.ps-switch-text span {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+/* Steps */
+.ps-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-step strong {
+  font-size: 14px;
+}
+
+.ps-num {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  background: #e8f3ea;
+  color: #1f6b35;
+}
+
+.ps-num.is-done {
+  background: #1f6b35;
+  color: #fff;
+}
+
+.ps-done {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e3e8e2;
+  border-radius: 12px;
+}
+
+.ps-done-value {
+  flex: 1;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.ps-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f6b35;
+  cursor: pointer;
+}
+
+.ps-link:hover {
+  text-decoration: underline;
+}
+
+/* Kind cards */
+.ps-kinds {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ps-kind {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #e3e8e2;
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+  text-align: left;
+  color: #1f6b35;
+  cursor: pointer;
+}
+
+.ps-kind:hover {
+  border-color: #1f6b35;
+  background: #f6faf6;
+}
+
+.ps-kind strong {
+  font-size: 14px;
+  color: #111827;
+}
+
+.ps-kind span {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+/* Vegetables */
+.ps-veg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ps-veg-item {
+  width: 62px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.ps-veg-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: #eaf5ec;
+  color: #3c8a50;
+}
+
+.ps-veg-item.is-active {
+  font-weight: 700;
+  color: #1f6b35;
+}
+
+.ps-veg-item.is-active .ps-veg-img {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #1f6b35;
+}
+
+/* Meals */
+.ps-meals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ps-meal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid #e3e8e2;
+  border-radius: 999px;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ps-meal span {
+  opacity: 0.65;
+}
+
+.ps-meal.is-active {
+  border-color: #1f6b35;
+  background: #1f6b35;
+  color: #fff;
+}
+
+.ps-meal:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Pick myself */
+.ps-items {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px dashed #b7c9bb;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.ps-items > span {
+  flex: 1;
+}
+
+.ps-items strong {
+  color: #111827;
+}
+
+/* Result line */
+.ps-result {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #e8f3ea;
+}
+
+.ps-result-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ps-result-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.ps-result-text strong {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-result-text span {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+/* Item lists */
+.ps-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid #e3e8e2;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.ps-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+}
+
+.ps-list li + li {
+  border-top: 1px solid #eef1ed;
+}
+
+.ps-list .pl-thumb {
+  width: 32px;
+  height: 32px;
+}
+
+.ps-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ps-code {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Choose items */
+.ps-choose {
+  display: grid;
+  gap: 12px;
+}
+
+.ps-choose-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-choose-head strong {
+  flex: 1;
+  text-align: center;
+  font-size: 15px;
+}
+
+.ps-choose-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.ps-group {
+  display: grid;
+  gap: 6px;
+}
+
+.ps-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ps-pick li {
+  padding: 0;
+}
+
+.ps-pick-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ps-pick-row:hover {
+  background: #f6faf6;
+}
+
+.ps-box {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border: 2px solid #cbd5d0;
+  border-radius: 5px;
+  font-size: 11px;
+  color: #fff;
+}
+
+.ps-box.is-on {
+  border-color: #1f6b35;
+  background: #1f6b35;
+}
+
+@media (max-width: 640px) {
+  .ps-kinds,
+  .ps-choose-filters {
+    grid-template-columns: 1fr;
+  }
+}

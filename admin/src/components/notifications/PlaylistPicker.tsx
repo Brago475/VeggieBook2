@@ -1,35 +1,24 @@
-import { useEffect, useState } from 'react'
-import type { PlaylistMode } from '../../types/notifications'
-import type { MealKey, PickedItem, PlaylistOptions, PlaylistSummary } from '../../types/playlists'
+import { useEffect, useRef, useState } from 'react'
+import '../../styles/playlist-steps.css'
+import type { PickedItem, PlaylistOptions, PlaylistSummary } from '../../types/playlists'
 import { browseContent, fetchPlaylist, fetchPlaylistList, fetchPlaylistOptions } from '../../utils/playlistsApi'
-import { ItemThumb, KindTag } from '../playlists/ItemBits'
-import { MealButtons } from '../playlists/MealButtons'
+import { NavIcon } from '../icons/NavIcons'
 import {
   countText,
-  itemKey,
   MAX_ITEMS,
+  MAX_NAME,
   mealCount,
   pickedFromBrowse,
   pickedFromEntry,
 } from '../playlists/playlistFormat'
-import { VegetableTiles } from '../playlists/VegetableTiles'
+import { ChooseItems } from './ChooseItems'
+import { MealPills } from './MealPills'
+import { KIND_LABELS, type PlaylistChoice, type PlaylistKindChoice } from './playlistChoice'
+import { PlaylistResult } from './PlaylistResult'
+import { VegetableStrip } from './VegetableStrip'
 
-// The Playlist part of the notification editor: none, automatic (a
-// vegetable and a meal, built by the server from meal labels), or one made
-// in the Playlists section. View all lists every item that goes out.
-
-export type PlaylistChoice = {
-  mode: PlaylistMode
-  vegetable: string
-  meal: MealKey | ''
-  playlistId: number | null
-}
-
-const MODES: { id: PlaylistMode; label: string }[] = [
-  { id: 'none', label: 'None' },
-  { id: 'auto', label: 'Automatic' },
-  { id: 'made', label: 'One you made' },
-]
+// The Playlist part of the notification editor. Off by default. When on, it
+// asks one thing at a time; a finished step folds into one line with Change.
 
 type Props = {
   value: PlaylistChoice
@@ -38,14 +27,32 @@ type Props = {
   onChange: (next: PlaylistChoice) => void
 }
 
+const KINDS: { id: PlaylistKindChoice; hint: string; icon: string }[] = [
+  { id: 'saved', hint: 'Send one made before', icon: 'playlist' },
+  { id: 'auto', hint: 'Vegetable plus meal', icon: 'leaf' },
+  { id: 'pick', hint: 'Choose the items', icon: 'plus' },
+]
+
+function Step({ n, title, done = false }: { n: number; title: string; done?: boolean }) {
+  return (
+    <div className="ps-step">
+      <span className={done ? 'ps-num is-done' : 'ps-num'}>{done ? '\u2713' : n}</span>
+      <strong>{title}</strong>
+    </div>
+  )
+}
+
 export function PlaylistPicker({ value, currentPlaylistId, onChange }: Props) {
   const [options, setOptions] = useState<PlaylistOptions | null>(null)
   const [playlists, setPlaylists] = useState<PlaylistSummary[] | null>(null)
-  const [items, setItems] = useState<PickedItem[] | null>(null)
+  const [loaded, setLoaded] = useState<PickedItem[] | null>(null)
   const [loading, setLoading] = useState(false)
+  const [choosing, setChoosing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const reloadedFor = useRef<number | null>(null)
 
-  const { mode, vegetable, meal, playlistId } = value
+  const { on, kind, playlistId, vegetable, meal, picked, name } = value
+  const set = (patch: Partial<PlaylistChoice>) => onChange({ ...value, ...patch })
 
   useEffect(() => {
     let live = true
@@ -63,22 +70,33 @@ export function PlaylistPicker({ value, currentPlaylistId, onChange }: Props) {
     }
   }, [])
 
+  // A playlist saved by this editor is not in the first list; load it once.
   useEffect(() => {
-    const ready = (mode === 'auto' && vegetable !== '' && meal !== '') || (mode === 'made' && playlistId !== null)
-    if (!ready) {
-      setItems(null)
+    if (kind !== 'saved' || playlistId === null || !playlists) return
+    if (playlists.some((p) => p.id === playlistId) || reloadedFor.current === playlistId) return
+    reloadedFor.current = playlistId
+    fetchPlaylistList()
+      .then(setPlaylists)
+      .catch(() => {})
+  }, [kind, playlistId, playlists])
+
+  useEffect(() => {
+    let job: Promise<PickedItem[]> | null = null
+    if (on && kind === 'saved' && playlistId !== null) {
+      job = fetchPlaylist(playlistId).then((d) => d.items.map(pickedFromEntry))
+    } else if (on && kind === 'auto' && vegetable && meal) {
+      job = browseContent({ vegetable, meal, q: '' }).then((r) => [...r.tips, ...r.recipes].map(pickedFromBrowse))
+    }
+    if (!job) {
+      setLoaded(null)
       return
     }
     let live = true
     setLoading(true)
-    const run =
-      mode === 'auto'
-        ? browseContent({ vegetable, meal, q: '' }).then((r) => [...r.tips, ...r.recipes].map(pickedFromBrowse))
-        : fetchPlaylist(playlistId as number).then((d) => d.items.map(pickedFromEntry))
-    run
+    job
       .then((list) => {
         if (!live) return
-        setItems(list)
+        setLoaded(list)
         setError(null)
       })
       .catch((err) => {
@@ -90,108 +108,160 @@ export function PlaylistPicker({ value, currentPlaylistId, onChange }: Props) {
     return () => {
       live = false
     }
-  }, [mode, vegetable, meal, playlistId])
+  }, [on, kind, playlistId, vegetable, meal])
 
-  const set = (patch: Partial<PlaylistChoice>) => onChange({ ...value, ...patch })
+  if (choosing && options) {
+    return (
+      <ChooseItems
+        options={options}
+        initial={picked}
+        onBack={() => setChoosing(false)}
+        onDone={(items) => {
+          set({ picked: items })
+          setChoosing(false)
+        }}
+      />
+    )
+  }
+
   const choosable = (playlists ?? []).filter((p) => !p.archived || p.id === currentPlaylistId)
+  const savedName = playlists?.find((p) => p.id === playlistId)?.nameEn ?? 'Saved playlist'
   const vegName = options?.vegetables.find((v) => v.code === vegetable)?.name
   const mealName = options?.meals.find((m) => m.key === meal)?.en
-  const autoName = vegName && mealName ? `${mealName} ideas with ${vegName.toLowerCase()}` : null
-  const tips = items?.filter((i) => i.kind === 'tip').length ?? 0
-  const recipes = (items?.length ?? 0) - tips
+  const autoName = vegName && mealName ? `${mealName} ideas with ${vegName.toLowerCase()}` : ''
+  const autoItems = loaded && kind === 'auto' ? loaded.slice(0, MAX_ITEMS) : loaded
+  const pickedTips = picked.filter((i) => i.kind === 'tip').length
 
   return (
-    <div className="pp-block">
-      <div className="seg" role="radiogroup" aria-label="What the notification opens">
-        {MODES.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            role="radio"
-            aria-checked={mode === m.id}
-            className={mode === m.id ? 'seg-btn is-active' : 'seg-btn'}
-            onClick={() => set({ mode: m.id })}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+    <div className="ps">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        className={on ? 'ps-toggle is-on' : 'ps-toggle'}
+        onClick={() => set({ on: !on })}
+      >
+        <span className="ps-switch" aria-hidden="true" />
+        <span className="ps-switch-text">
+          <strong>Add a playlist</strong>
+          <span>{on ? 'People see an Open playlist button and can keep or skip it.' : 'Off: this is a message only.'}</span>
+        </span>
+      </button>
 
-      {mode === 'none' && <p className="st-muted">A message only, with no playlist.</p>}
-
-      {error && (
+      {on && error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
 
-      {mode !== 'none' && !options && !error && <p className="st-muted">Loading...</p>}
+      {on && !options && !error && <p className="st-muted">Loading...</p>}
 
-      {mode === 'auto' && options && (
+      {on && options && kind === null && (
         <>
-          <span className="nt-label">Vegetable</span>
-          <VegetableTiles vegetables={options.vegetables} value={vegetable} onChange={(code) => set({ vegetable: code })} />
-          <span className="nt-label">Meal</span>
-          <MealButtons
-            meals={options.meals}
-            value={meal}
-            onChange={(m) => set({ meal: m })}
-            countFor={(m) => mealCount(options.counts, m, vegetable)}
-          />
-          {autoName && (
-            <p className="pp-name">
-              Name in the app: <strong>{autoName}</strong>
-            </p>
-          )}
+          <Step n={1} title="What kind?" />
+          <div className="ps-kinds" role="radiogroup" aria-label="Kind of playlist">
+            {KINDS.map((k) => (
+              <button key={k.id} type="button" role="radio" aria-checked={false} className="ps-kind" onClick={() => set({ kind: k.id })}>
+                <NavIcon name={k.icon} size={18} />
+                <strong>{KIND_LABELS[k.id]}</strong>
+                <span>{k.hint}</span>
+              </button>
+            ))}
+          </div>
         </>
       )}
 
-      {mode === 'made' &&
-        playlists &&
-        (choosable.length === 0 ? (
-          <p className="st-muted">No playlists yet. Make one in the Playlists section first.</p>
-        ) : (
-          <label className="nt-field">
-            <span className="nt-label">Playlist</span>
-            <select
-              className="nt-input"
-              value={playlistId ?? ''}
-              onChange={(e) => set({ playlistId: e.target.value ? Number(e.target.value) : null })}
-            >
-              <option value="">Pick a playlist</option>
-              {choosable.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nameEn} ({countText(p.tips, p.recipes)}){p.auto ? ', automatic' : ''}
-                  {p.archived ? ', archived' : ''}
-                </option>
-              ))}
-            </select>
-          </label>
-        ))}
+      {on && options && kind !== null && (
+        <>
+          <div className="ps-done">
+            <Step n={1} title="Kind" done />
+            <span className="ps-done-value">{KIND_LABELS[kind]}</span>
+            <button type="button" className="ps-link" onClick={() => set({ kind: null })}>
+              Change
+            </button>
+          </div>
 
-      {mode !== 'none' && loading && <p className="st-muted">Loading items...</p>}
+          {kind === 'saved' && (
+            <>
+              <Step n={2} title="Which one?" />
+              {choosable.length === 0 ? (
+                <p className="st-muted">No saved playlists yet. Use Pick myself to make one.</p>
+              ) : (
+                <select
+                  className="nt-input"
+                  aria-label="Saved playlist"
+                  value={playlistId ?? ''}
+                  onChange={(e) => set({ playlistId: e.target.value ? Number(e.target.value) : null })}
+                >
+                  <option value="">Pick a playlist</option>
+                  {choosable.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nameEn} ({countText(p.tips, p.recipes)}){p.auto ? ', automatic' : ''}
+                      {p.archived ? ', archived' : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {playlistId !== null && <PlaylistResult name={savedName} items={loaded} loading={loading} />}
+            </>
+          )}
 
-      {mode !== 'none' && !loading && items && (
-        <details className="pp-items" open>
-          <summary className="pp-summary">
-            View all: {items.length === 0 ? 'nothing matches yet' : `${countText(tips, recipes)} go out`}
-          </summary>
-          {mode === 'auto' && items.length > MAX_ITEMS && (
-            <p className="pl-note">Only the first {MAX_ITEMS} go out.</p>
+          {kind === 'auto' && (
+            <>
+              <Step n={2} title="Vegetable" />
+              <VegetableStrip vegetables={options.vegetables} value={vegetable} onChange={(code) => set({ vegetable: code })} />
+              <Step n={3} title="Meal" />
+              <MealPills
+                meals={options.meals}
+                value={meal}
+                onChange={(m) => set({ meal: m })}
+                countFor={(m) => mealCount(options.counts, m, vegetable)}
+              />
+              {vegetable && meal && (
+                <PlaylistResult
+                  name={autoName}
+                  items={autoItems}
+                  loading={loading}
+                  capped={(loaded?.length ?? 0) > MAX_ITEMS}
+                />
+              )}
+            </>
           )}
-          {items.length > 0 && (
-            <ul className="pp-list">
-              {items.map((i) => (
-                <li key={itemKey(i.kind, i.id)}>
-                  <ItemThumb kind={i.kind} photo={i.photo} />
-                  <KindTag kind={i.kind} />
-                  <span className="pp-title">{i.title}</span>
-                  {i.code && <span className="pp-code">{i.code}</span>}
-                </li>
-              ))}
-            </ul>
+
+          {kind === 'pick' && (
+            <>
+              <Step n={2} title="Items" />
+              <div className="ps-items">
+                <span>
+                  {picked.length === 0 ? (
+                    'Nothing chosen yet.'
+                  ) : (
+                    <>
+                      <strong>{picked.length === 1 ? '1 item:' : `${picked.length} items:`}</strong>{' '}
+                      {countText(pickedTips, picked.length - pickedTips)}
+                    </>
+                  )}
+                </span>
+                <button type="button" className="st-button is-green" onClick={() => setChoosing(true)}>
+                  {picked.length === 0 ? 'Choose items' : 'Change items'}
+                </button>
+              </div>
+              <Step n={3} title="Name" />
+              <input
+                className="nt-input"
+                aria-label="Playlist name"
+                maxLength={MAX_NAME}
+                value={name}
+                placeholder="For example: Zucchini snacks"
+                onChange={(e) => set({ name: e.target.value })}
+              />
+              <span className="nt-hint">Saved so you can send it again under Saved.</span>
+              {picked.length > 0 && (
+                <PlaylistResult name={name.trim() || 'New playlist'} items={picked} loading={false} />
+              )}
+            </>
           )}
-        </details>
+        </>
       )}
     </div>
   )

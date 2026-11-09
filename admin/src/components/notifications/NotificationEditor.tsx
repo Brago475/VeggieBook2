@@ -2,12 +2,14 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNow } from '../../hooks/useNow'
 import type { AdminNotification, Audience, NotificationDraft, TemplatesResponse } from '../../types/notifications'
 import { startOfDay, timeOf } from '../../utils/calendarDates'
+import { createPlaylist } from '../../utils/playlistsApi'
 import { NavIcon } from '../icons/NavIcons'
 import { StudyIcon } from '../studies/StudyIcons'
 import { LinkedText } from './LinkedText'
 import { LiveClock } from './LiveClock'
 import { fillTemplate, MAX_BODY, MAX_TITLE, notificationName } from './notificationFormat'
-import { PlaylistPicker, type PlaylistChoice } from './PlaylistPicker'
+import { choiceMode, choiceProblem, EMPTY_CHOICE, initialChoice, type PlaylistChoice } from './playlistChoice'
+import { PlaylistPicker } from './PlaylistPicker'
 import { ResearchIdPicker } from './ResearchIdPicker'
 import { endAt, startAt, startPassed, type Schedule } from './schedule'
 import { ScheduleSection } from './ScheduleSection'
@@ -16,9 +18,9 @@ import { ScheduleSection } from './ScheduleSection'
 // header and the buttons stay in view; the sections scroll between them.
 // The title is an admin-only label. The admin writes English only. Spanish
 // users see Spanish only for a template sent unchanged; the server decides,
-// and this shows which it will be. A message can open a playlist, timed and
-// sent to the same people as the message. Closes on Cancel, the X, Escape,
-// or a click outside.
+// and this shows which it will be. A playlist is optional; a hand-picked one
+// is saved first, then sent like a saved playlist. Closes on Cancel, the X,
+// Escape, or a click outside.
 //
 // Send again (a copy) keeps the title, text, playlist, audience and repeat,
 // and leaves the dates empty so they are picked fresh.
@@ -65,13 +67,6 @@ function initialTitle(from: AdminNotification | null, editing: boolean): string 
   return editing ? from.title : from.title.replace(COPY_ENDINGS, '').trim()
 }
 
-function initialPlaylist(from: AdminNotification | null): PlaylistChoice {
-  const p = from?.playlist
-  if (!p) return { mode: 'none', vegetable: '', meal: '', playlistId: null }
-  if (p.auto && p.vegetable && p.meal) return { mode: 'auto', vegetable: p.vegetable, meal: p.meal, playlistId: null }
-  return { mode: 'made', vegetable: '', meal: '', playlistId: p.id }
-}
-
 export function NotificationEditor({ mode, from, templates, onSave, onClose }: Props) {
   const editing = mode === 'edit' && from !== null
   const now = useNow(1000)
@@ -80,7 +75,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
   const [templateKey, setTemplateKey] = useState(from?.templateKey ?? '')
   const [vegetable, setVegetable] = useState(from?.vegetable ?? templates.vegetables[0]?.key ?? '')
   const [body, setBody] = useState(from?.bodyEn ?? '')
-  const [playlist, setPlaylist] = useState<PlaylistChoice>(() => initialPlaylist(from))
+  const [playlist, setPlaylist] = useState<PlaylistChoice>(() => initialChoice(from))
   const [schedule, setSchedule] = useState<Schedule>(() => initialSchedule(from, editing))
   const [fixedStart] = useState<Date | null>(() =>
     editing && new Date(from.startsAt).getTime() <= Date.now() ? new Date(from.startsAt) : null,
@@ -127,9 +122,8 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
     if (text.length > MAX_BODY) return `Keep the message to ${MAX_BODY} characters or fewer.`
     if (text.includes(templates.slot)) return 'Pick a vegetable for this message.'
 
-    if (playlist.mode === 'auto' && (!playlist.vegetable || !playlist.meal))
-      return 'Pick a vegetable and a meal for the playlist.'
-    if (playlist.mode === 'made' && playlist.playlistId === null) return 'Pick a playlist.'
+    const playlistProblem = choiceProblem(playlist)
+    if (playlistProblem) return playlistProblem
 
     const current = new Date()
     if (schedule.startMode === 'later' && !schedule.startDay) return 'Pick a start day on the calendar.'
@@ -157,6 +151,28 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
       return
     }
 
+    setBusy(true)
+    setError(null)
+
+    // A hand-picked playlist is saved first. After that the choice points at
+    // it, so a retry does not save it twice.
+    let playlistId = playlist.kind === 'saved' ? playlist.playlistId : null
+    if (playlist.on && playlist.kind === 'pick') {
+      try {
+        const made = await createPlaylist({
+          nameEn: playlist.name.trim(),
+          nameEs: null,
+          items: playlist.picked.map((i) => ({ kind: i.kind, id: i.id })),
+        })
+        playlistId = made.id
+        setPlaylist({ ...EMPTY_CHOICE, on: true, kind: 'saved', playlistId: made.id })
+      } catch (err) {
+        setBusy(false)
+        setError((err as Error).message)
+        return
+      }
+    }
+
     const current = new Date()
     const sendNow = schedule.startMode === 'now' || startPassed(schedule, current)
     const startsAt =
@@ -165,9 +181,8 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
         : sendNow
           ? null
           : startAt(schedule, current, fixedStart)!.toISOString()
+    const playlistMode = choiceMode(playlist)
 
-    setBusy(true)
-    setError(null)
     const message = await onSave({
       title: title.trim() || null,
       bodyEn: text,
@@ -181,10 +196,10 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
       includeGuests,
       includeIds: audience === 'selected' ? includeIds : [],
       excludeIds: audience === 'all' ? excludeIds : [],
-      playlistMode: playlist.mode,
-      playlistId: playlist.mode === 'made' ? playlist.playlistId : null,
-      playlistVegetable: playlist.mode === 'auto' ? playlist.vegetable : null,
-      playlistMeal: playlist.mode === 'auto' && playlist.meal ? playlist.meal : null,
+      playlistMode,
+      playlistId: playlistMode === 'made' ? playlistId : null,
+      playlistVegetable: playlistMode === 'auto' ? playlist.vegetable : null,
+      playlistMeal: playlistMode === 'auto' && playlist.meal ? playlist.meal : null,
     })
     setBusy(false)
     if (message) setError(message)
@@ -294,7 +309,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
                     <p className="nt-preview-text">
                       <LinkedText text={text} />
                     </p>
-                    {playlist.mode !== 'none' && <span className="nt-preview-cta">Open playlist</span>}
+                    {playlist.on && playlist.kind !== null && <span className="nt-preview-cta">Open playlist</span>}
                   </div>
                 </div>
               </div>
