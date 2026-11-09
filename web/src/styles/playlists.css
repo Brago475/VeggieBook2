@@ -319,6 +319,138 @@
   outline-offset: 1px;
 }
 
+/* Saved books, one open at a time */
+.pl-books-label {
+  margin: 0 0 8px;
+}
+
+.pl-books {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pl-book {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  scroll-margin-top: 80px;
+}
+
+.pl-book.is-open {
+  border-color: var(--green-dark);
+}
+
+.pl-book-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.pl-book-head:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: -2px;
+  border-radius: 18px;
+}
+
+.pl-book-cover {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.pl-book-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pl-book-name {
+  font-size: var(--font-label);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.pl-book-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.pl-book-badge {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--green-dark);
+  border-radius: 999px;
+}
+
+.pl-book-chevron {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.pl-book.is-open .pl-book-chevron {
+  transform: rotate(180deg);
+}
+
+.pl-book-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--line);
+  background: #fafaf5;
+}
+
+.pl-book-tools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding-top: 10px;
+}
+
+.pl-book-link {
+  padding: 4px 2px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.pl-book-link:disabled {
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pl-book-link:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Recipe rows to pick */
 .pl-pick {
   display: flex;
   align-items: center;
