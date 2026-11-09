@@ -1,22 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { SafeImage } from '../components/common/SafeImage'
 import { LeafDecor } from '../components/layout/LeafDecor'
-import { BookPicker } from '../components/playlists/BookPicker'
 import { useLang } from '../i18n/languageContext'
 import { PLAYLISTS } from '../i18n/strings/playlists'
 import { useStrings } from '../i18n/useStrings'
-import {
-  createOwnPlaylist,
-  fetchBookChoices,
-  fetchOwnPlaylist,
-  updateOwnPlaylist,
-  type BookChoice,
-} from '../utils/playlistsApi'
+import { coverSrc } from '../utils/coverSrc'
+import { fetchOwnPlaylist, updateOwnPlaylist, type PlaylistRecipe } from '../utils/playlistsApi'
 
-// Making or changing your own playlist: a name, then your saved books, one
-// open at a time, with their recipes tapped to pick. Books are only read.
+// Editing your own playlist: its name, and only the recipes already in it.
+// Unchecking a recipe takes it out on save. Recipes are added from a
+// VeggieBook's ⋮ on home (pages/BookPlaylist.tsx). Books are only read.
 
 type Props = {
-  // Null for a new playlist.
+  // Null only for the old New playlist address, which now points to books.
   playlistId: number | null
   onSaved: (id: number) => void
   onCancel: () => void
@@ -24,79 +20,89 @@ type Props = {
 
 const MAX_NAME = 60
 
+function Check({ on }: { on: boolean }) {
+  return (
+    <span className="pl-check" aria-hidden="true">
+      {on && (
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path
+            d="M5 12.5l4.5 4.5L19 7.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </span>
+  )
+}
+
 export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
   const t = useStrings(PLAYLISTS)
   const { lang } = useLang()
-  const [books, setBooks] = useState<BookChoice[] | null>(null)
+  const [recipes, setRecipes] = useState<PlaylistRecipe[] | null>(null)
   const [name, setName] = useState('')
-  const [picked, setPicked] = useState<number[]>([])
-  const [openId, setOpenId] = useState<string | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [kept, setKept] = useState<number[]>([])
+  const [loadError, setLoadError] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  // The name, picks and open book are set from the first load only.
-  const filled = useRef(false)
 
   useEffect(() => {
+    if (playlistId === null) return
     let live = true
-    Promise.all([fetchBookChoices(lang), playlistId === null ? Promise.resolve(null) : fetchOwnPlaylist(playlistId, lang)])
-      .then(([choices, existing]) => {
+    fetchOwnPlaylist(playlistId, lang)
+      .then((d) => {
         if (!live) return
-        setBooks(choices)
-        if (filled.current) return
-        filled.current = true
-        const ids = existing?.recipeIds ?? []
-        if (existing) {
-          setName(existing.name)
-          setPicked(ids)
-        }
-        const first = choices.find((b) => b.recipes.some((r) => ids.includes(r.id))) ?? choices[0]
-        setOpenId(first?.id ?? null)
+        const list = d.items.filter((i): i is PlaylistRecipe => i.kind === 'recipe')
+        setRecipes(list)
+        setName((prev) => prev || d.name)
+        setKept((prev) => (prev.length > 0 ? prev : list.map((r) => r.id)))
       })
-      .catch((err) => {
-        if (live) setLoadError(err instanceof Error ? err.message : t.somethingWrong)
+      .catch(() => {
+        if (live) setLoadError(true)
       })
     return () => {
       live = false
     }
-  }, [playlistId, lang, t.somethingWrong])
+  }, [playlistId, lang])
 
   function toggle(id: number) {
-    setPicked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
-    setError(null)
-  }
-
-  function setMany(ids: number[], on: boolean) {
-    setPicked((prev) => (on ? [...prev, ...ids.filter((id) => !prev.includes(id))] : prev.filter((x) => !ids.includes(x))))
+    setKept((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
     setError(null)
   }
 
   async function save() {
-    if (busy) return
+    if (busy || playlistId === null || !recipes) return
     const trimmed = name.trim()
-    if (!trimmed) {
-      setError(t.needName)
-      return
-    }
-    if (picked.length === 0) {
-      setError(t.needRecipe)
-      return
-    }
+    if (!trimmed) return setError(t.needName)
+    const ids = recipes.map((r) => r.id).filter((id) => kept.includes(id))
+    if (ids.length === 0) return setError(t.needKeep)
 
     setBusy(true)
     setError(null)
     try {
-      if (playlistId === null) {
-        const created = await createOwnPlaylist(trimmed, picked)
-        onSaved(created.id)
-      } else {
-        await updateOwnPlaylist(playlistId, trimmed, picked)
-        onSaved(playlistId)
-      }
+      await updateOwnPlaylist(playlistId, trimmed, ids)
+      onSaved(playlistId)
     } catch (err) {
       setError(err instanceof Error ? err.message : t.somethingWrong)
       setBusy(false)
     }
+  }
+
+  if (playlistId === null) {
+    return (
+      <div className="account-screen nf-screen pl-maker">
+        <LeafDecor className="account-leaf" />
+        <p className="pl-empty">{t.mineEmpty}</p>
+        <div className="pl-savebar">
+          <button type="button" className="pl-btn" onClick={onCancel}>
+            {t.backToPlaylists}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -105,8 +111,8 @@ export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
 
       <div className="library-head">
         <div className="library-head-text">
-          <h1 className="library-title">{playlistId === null ? t.makerNew : t.makerEdit}</h1>
-          <p className="library-sub">{t.makerSub}</p>
+          <h1 className="library-title">{t.makerEdit}</h1>
+          <p className="library-sub">{t.editSub}</p>
         </div>
       </div>
 
@@ -125,27 +131,35 @@ export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
       </label>
 
       {loadError && <p className="message">{t.couldNotLoad}</p>}
-      {!books && !loadError && <div className="skeleton nf-skel-detail" aria-hidden="true" />}
+      {!recipes && !loadError && <div className="skeleton nf-skel-detail" aria-hidden="true" />}
 
-      {books && books.length === 0 && <p className="pl-empty">{t.noBooks}</p>}
-
-      {books && books.length > 0 && (
-        <>
-          <p className="pl-field-label pl-books-label">{t.yourBooks}</p>
-          <div className="pl-books">
-            {books.map((book) => (
-              <BookPicker
-                key={book.id}
-                book={book}
-                open={openId === book.id}
-                picked={picked}
-                onOpen={() => setOpenId(openId === book.id ? null : book.id)}
-                onToggle={toggle}
-                onSetMany={setMany}
-              />
-            ))}
-          </div>
-        </>
+      {recipes && (
+        <section className="bp-section">
+          <p className="pl-field-label bp-label">{t.inThisPlaylist(kept.length)}</p>
+          <ul className="nf-list">
+            {recipes.map((r) => {
+              const on = kept.includes(r.id)
+              return (
+                <li key={r.id}>
+                  <button
+                    type="button"
+                    className={on ? 'pl-pick is-on' : 'pl-pick'}
+                    aria-pressed={on}
+                    onClick={() => toggle(r.id)}
+                  >
+                    <SafeImage className="recipe-thumb" src={r.photo ? coverSrc(r.photo) : null} />
+                    <span className="bp-row-text">
+                      <span className="pl-pick-title">{r.title}</span>
+                      <span className="bp-row-meta">{on ? r.vegetableName : t.willRemove}</span>
+                    </span>
+                    <Check on={on} />
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+          <p className="pl-empty">{t.editAddHint}</p>
+        </section>
       )}
 
       {error && <p className="message">{error}</p>}
@@ -154,8 +168,8 @@ export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
         <button type="button" className="pl-btn" disabled={busy} onClick={onCancel}>
           {t.cancel}
         </button>
-        <button type="button" className="pl-btn is-primary" disabled={busy} onClick={save}>
-          {busy ? t.saving : t.save(picked.length)}
+        <button type="button" className="pl-btn is-primary" disabled={busy || !recipes} onClick={save}>
+          {busy ? t.saving : t.saveChanges}
         </button>
       </div>
     </div>
