@@ -9,6 +9,8 @@
 //   /book/{id}/recipe/{recipeId}              one recipe inside a VeggieBook
 //   /book/{id}/secret/{secretId}              one secret inside a Secrets Book
 //   /book/{id}/cover                          changing a saved book's cover
+//   /book/{id}/playlist/new                   a new playlist from a VeggieBook
+//   /book/{id}/playlist/add                   adding a VeggieBook's recipes to a playlist
 //   /account                                  account settings
 //   /notifications                            the inbox of messages from the research team
 //   /notifications/{id}                       one message on its own page
@@ -16,7 +18,7 @@
 //   /notifications/playlist/{id}              a playlist from a notification
 //   /notifications/playlist/{id}/recipe/{r}   one recipe opened from it
 //   /notifications/playlist/{id}/tip/{t}      one tip opened from it
-//   /notifications/mine/new                   making your own playlist
+//   /notifications/mine/new                   making your own playlist from all books
 //   /notifications/mine/{id}                  one of your own playlists
 //   /notifications/mine/{id}/recipe/{r}       one recipe opened from it
 //   /notifications/mine/{id}/edit             changing your own playlist
@@ -31,6 +33,8 @@ export type PlaylistSource = 'admin' | 'own'
 
 export type PlaylistOpen = { kind: 'recipe' | 'tip'; id: number } | null
 
+export type BookPlaylistMode = 'new' | 'add'
+
 export type Route =
   | { view: 'home' }
   | { view: 'flow' }
@@ -40,6 +44,7 @@ export type Route =
   | { view: 'playlists' }
   | { view: 'playlist'; source: PlaylistSource; playlistId: number; open: PlaylistOpen }
   | { view: 'playlistMaker'; playlistId: number | null }
+  | { view: 'bookPlaylist'; bookId: string; mode: BookPlaylistMode }
   | { view: 'about' }
   | { view: 'terms' }
   | { view: 'privacy' }
@@ -146,6 +151,9 @@ export function parseRoute(path: string): Route {
     const id = parts[1]
     if (parts.length === 2) return book(id)
     if (parts.length === 3 && parts[2] === 'cover') return book(id, null, null, true)
+    if (parts.length === 4 && parts[2] === 'playlist' && (parts[3] === 'new' || parts[3] === 'add')) {
+      return { view: 'bookPlaylist', bookId: id, mode: parts[3] }
+    }
     if (parts.length === 4 && NUMBER.test(parts[3])) {
       if (parts[2] === 'recipe') return book(id, Number(parts[3]))
       if (parts[2] === 'secret') return book(id, null, Number(parts[3]))
@@ -159,6 +167,11 @@ export function parseRoute(path: string): Route {
 export function playlistPath(source: PlaylistSource, playlistId: number, open: PlaylistOpen = null): string {
   const base = `/notifications/${source === 'admin' ? 'playlist' : 'mine'}/${playlistId}`
   return open ? `${base}/${open.kind}/${open.id}` : base
+}
+
+// The address for making a playlist from one book.
+export function bookPlaylistPath(bookId: string, mode: BookPlaylistMode): string {
+  return `/book/${bookId}/playlist/${mode}`
 }
 
 // The one correct address for a route, so a stray trailing slash or an
@@ -185,6 +198,8 @@ export function routePath(route: Route): string {
       return route.playlistId === null
         ? '/notifications/mine/new'
         : `/notifications/mine/${route.playlistId}/edit`
+    case 'bookPlaylist':
+      return bookPlaylistPath(route.bookId, route.mode)
     case 'about':
       return '/about'
     case 'terms':

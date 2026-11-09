@@ -24,6 +24,7 @@ import { About } from './pages/About'
 import { AccountSettings } from './pages/AccountSettings'
 import { AuthForm } from './pages/AuthForm'
 import { BookFlow } from './pages/BookFlow'
+import { BookPlaylist } from './pages/BookPlaylist'
 import { BookSaved } from './pages/BookSaved'
 import { BookViewer } from './pages/BookViewer'
 import { ChangeSecretCover } from './pages/ChangeSecretCover'
@@ -40,7 +41,13 @@ import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
 import { Welcome } from './pages/Welcome'
 import type { NotificationItem } from './utils/notificationsApi'
-import { playlistPath, routePath, type PlaylistOpen, type PlaylistSource } from './utils/routes'
+import {
+  bookPlaylistPath,
+  playlistPath,
+  routePath,
+  type PlaylistOpen,
+  type PlaylistSource,
+} from './utils/routes'
 
 // Stylesheet order is load order, and load order decides who wins a tie.
 // Tokens first so the variables exist, then base, then the shared pieces,
@@ -73,6 +80,7 @@ import './styles/footer.css'
 import './styles/dialog.css'
 import './styles/notifications.css'
 import './styles/playlists.css'
+import './styles/book-playlist.css'
 import './styles/responsive.css'
 
 // Which screen is showing comes from the address (see utils/routes.ts), so
@@ -97,8 +105,9 @@ import './styles/responsive.css'
 // Notifications from the research team (hooks/useNotifications.ts) reach
 // guests and accounts. Their pop-up shows only on calm screens, never while
 // a book is being made or on a form. Each notification opens on its own page.
-// Playlists live inside Notifications: the Playlists tab, a playlist's page,
-// and making your own from saved books. Books are never changed by them.
+// Playlists live inside Notifications: the Playlists tab and a playlist's
+// page. Own playlists are made from a VeggieBook's ⋮ on home (pages/
+// BookPlaylist.tsx). Books are never changed by them.
 //
 // After a deploy, the page reloads itself on the next move to a screen
 // where nothing is lost (hooks/useNewVersion.ts).
@@ -179,7 +188,8 @@ export default function App() {
     view === 'notifications' ||
     view === 'playlists' ||
     view === 'playlist' ||
-    view === 'playlistMaker'
+    view === 'playlistMaker' ||
+    view === 'bookPlaylist'
   const needsAccount = view === 'account'
 
   // Addresses that do not fit who is here are corrected to home, once the
@@ -426,6 +436,8 @@ export default function App() {
       const id = route.playlistId
       return id === null ? backToPlaylists : () => goUp(playlistPath('own', id))
     }
+    // Making a playlist from a book goes back to home, where it started.
+    if (current === 'bookPlaylist') return goHome
     if (current === 'forgotPassword') return () => goUp('/signin')
     if (authPage || current === 'account' || readingPage) return goHome
     return undefined
@@ -560,6 +572,7 @@ export default function App() {
                 onAbout={() => navigate('/about')}
                 onDeleteBook={deleteBook}
                 onViewBook={viewBook}
+                onMakePlaylist={(bookId, mode) => navigate(bookPlaylistPath(bookId, mode))}
               />
             )}
 
@@ -624,7 +637,6 @@ export default function App() {
               <PlaylistLibrary
                 onMessages={() => navigate('/notifications', { replace: true })}
                 onOpen={openPlaylist}
-                onNew={() => navigate('/notifications/mine/new')}
               />
             )}
 
@@ -652,6 +664,17 @@ export default function App() {
                 playlistId={route.playlistId}
                 onSaved={(id) => navigate(playlistPath('own', id), { replace: true })}
                 onCancel={backAction() ?? backToPlaylists}
+              />
+            )}
+
+            {current === 'bookPlaylist' && hasSession && route.view === 'bookPlaylist' && (
+              <BookPlaylist
+                key={route.bookId}
+                bookId={route.bookId}
+                mode={route.mode}
+                onMode={(mode) => navigate(bookPlaylistPath(route.bookId, mode), { replace: true })}
+                onSaved={(id) => navigate(playlistPath('own', id), { replace: true })}
+                onCancel={goHome}
               />
             )}
 

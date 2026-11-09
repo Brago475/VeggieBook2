@@ -1,0 +1,61 @@
+/* Making a playlist from one book (pages/BookPlaylist.tsx). Rows, buttons
+   and the switch come from playlists.css. */
+
+.bp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: var(--sp-4);
+}
+
+.bp-label {
+  margin: 0;
+}
+
+.bp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bp-tools {
+  display: flex;
+  gap: 14px;
+}
+
+.bp-link {
+  padding: 4px 2px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.bp-link:disabled {
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.bp-link:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.bp-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bp-row-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}

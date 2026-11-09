@@ -9,17 +9,16 @@ import { useStrings } from '../i18n/useStrings'
 import type { PlaylistSource } from '../utils/routes'
 
 // The Playlists tab of Notifications: playlists kept from notifications,
-// then the account's own playlists with New playlist.
+// then the account's own playlists. Own playlists are made from a book's ⋮.
 
 type Props = {
   onMessages: () => void
   onOpen: (source: PlaylistSource, id: number) => void
-  onNew: () => void
 }
 
 const SKELETON_CARDS = 2
 
-export function PlaylistLibrary({ onMessages, onOpen, onNew }: Props) {
+export function PlaylistLibrary({ onMessages, onOpen }: Props) {
   const t = useStrings(PLAYLISTS)
   const nt = useStrings(NOTIFICATIONS)
   const { data, error, loading } = usePlaylistLibrary()
@@ -76,12 +75,7 @@ export function PlaylistLibrary({ onMessages, onOpen, onNew }: Props) {
           </section>
 
           <section className="nf-section">
-            <div className="pl-group-head">
-              <h2 className="nf-group-label">{t.mineTitle}</h2>
-              <button type="button" className="pl-new" onClick={onNew}>
-                <span aria-hidden="true">+</span> {t.newPlaylist}
-              </button>
-            </div>
+            <h2 className="nf-group-label">{t.mineTitle}</h2>
             {data.own.length === 0 ? (
               <p className="pl-empty">{t.mineEmpty}</p>
             ) : (

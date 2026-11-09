@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { SignOutIcon } from '../components/icons/AccountIcons'
-import { ActionMenu } from '../components/common/ActionMenu'
+import { ActionMenu, type ActionMenuItem } from '../components/common/ActionMenu'
 import { BookCard } from '../components/library/BookCard'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import {
@@ -16,9 +16,11 @@ import { StudyNoticeCard } from '../components/library/StudyNoticeCard'
 import { BOOK } from '../i18n/strings/book'
 import { COMMON } from '../i18n/strings/common'
 import { HOME } from '../i18n/strings/home'
+import { PLAYLISTS } from '../i18n/strings/playlists'
 import { useStrings } from '../i18n/useStrings'
 import type { BookSummary, SecretCategory, Vegetable } from '../types'
 import { downloadPdf, printPdf } from '../utils/bookPdf'
+import type { BookPlaylistMode } from '../utils/routes'
 
 // Home screen: a heading that says who is using the site, the two create
 // buttons, then the books.
@@ -41,7 +43,8 @@ import { downloadPdf, printPdf } from '../utils/bookPdf'
 // vegetable's; for a Secrets Book it is the category's (the toaster, the
 // cart), as on the original app's home screen. Every card opens its book,
 // for a guest as well as an account. Actions on a book live in the ⋮ on its
-// card: Print book, Download book, and Delete book.
+// card: for a VeggieBook with recipes, Make a playlist and Add to a
+// playlist; then Print book, Download book, and Delete book.
 //
 // While the books load, two gray card shapes hold their place, so the list
 // does not pop in under a line of text.
@@ -74,6 +77,7 @@ type Props = {
   onAbout: () => void
   onDeleteBook: (id: string) => Promise<void>
   onViewBook: (id: string) => void
+  onMakePlaylist: (bookId: string, mode: BookPlaylistMode) => void
 }
 
 const SKELETON_CARDS = 2
@@ -108,10 +112,12 @@ export function HomeLibrary({
   onAbout,
   onDeleteBook,
   onViewBook,
+  onMakePlaylist,
 }: Props) {
   const t = useStrings(HOME)
   const bookWords = useStrings(BOOK)
   const common = useStrings(COMMON)
+  const pl = useStrings(PLAYLISTS)
   const isGuest = email === null
 
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -180,6 +186,35 @@ export function HomeLibrary({
       subtitle: t.veggieSubtitle,
       countNoun: 'recipe',
     }
+  }
+
+  function bookActions(book: BookSummary, info: CardInfo): ActionMenuItem[] {
+    const items: ActionMenuItem[] = []
+    if (book.kind !== 'secrets' && book.recipeCount > 0) {
+      items.push(
+        { label: pl.makeFromBook, icon: 'playlist', onSelect: () => onMakePlaylist(book.id, 'new') },
+        { label: pl.addFromBook, icon: 'add', onSelect: () => onMakePlaylist(book.id, 'add') },
+      )
+    }
+    items.push(
+      {
+        label: bookWords.printBook,
+        icon: 'print',
+        onSelect: () => printPdf({ bookId: book.id }),
+      },
+      {
+        label: bookWords.downloadBook,
+        icon: 'download',
+        onSelect: () => downloadPdf({ bookId: book.id }),
+      },
+      {
+        label: t.deleteBook,
+        danger: true,
+        icon: 'trash',
+        onSelect: () => setPending({ id: book.id, name: info.bookName }),
+      },
+    )
+    return items
   }
 
   async function confirmDelete() {
@@ -303,24 +338,7 @@ export function HomeLibrary({
               <ActionMenu
                 className="book-item-menu"
                 label={t.options(info.bookName)}
-                items={[
-                  {
-                    label: bookWords.printBook,
-                    icon: 'print',
-                    onSelect: () => printPdf({ bookId: book.id }),
-                  },
-                  {
-                    label: bookWords.downloadBook,
-                    icon: 'download',
-                    onSelect: () => downloadPdf({ bookId: book.id }),
-                  },
-                  {
-                    label: t.deleteBook,
-                    danger: true,
-                    icon: 'trash',
-                    onSelect: () => setPending({ id: book.id, name: info.bookName }),
-                  },
-                ]}
+                items={bookActions(book, info)}
               />
             </li>
           )

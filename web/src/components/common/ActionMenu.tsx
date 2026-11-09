@@ -13,8 +13,10 @@ import { useEffect, useRef, useState } from 'react'
 //   image     changing a picture, such as a book's cover
 //   print     printing a book, recipe or secret
 //   download  saving one as a PDF
+//   playlist  making a playlist
+//   add       adding to a playlist
 
-export type ActionMenuIcon = 'trash' | 'image' | 'print' | 'download'
+export type ActionMenuIcon = 'trash' | 'image' | 'print' | 'download' | 'playlist' | 'add'
 
 export type ActionMenuItem = {
   label: string
@@ -70,6 +72,23 @@ function MenuIcon({ icon }: { icon: ActionMenuIcon }) {
           <path d="M12 3v12" />
           <path d="M7 10l5 5 5-5" />
           <path d="M4 19h16" />
+        </>
+      )}
+      {icon === 'playlist' && (
+        <>
+          <path d="M4 6h16" />
+          <path d="M4 12h16" />
+          <path d="M4 18h10" />
+          <circle cx="18.5" cy="18" r="1.5" />
+        </>
+      )}
+      {icon === 'add' && (
+        <>
+          <path d="M4 6h12" />
+          <path d="M4 12h12" />
+          <path d="M4 18h7" />
+          <path d="M18 14v8" />
+          <path d="M14 18h8" />
         </>
       )}
     </svg>
