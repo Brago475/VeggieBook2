@@ -13,7 +13,7 @@ import {
 } from '../playlists/playlistFormat'
 import { ChooseItems } from './ChooseItems'
 import { MealPills } from './MealPills'
-import { KIND_LABELS, type PlaylistChoice, type PlaylistKindChoice } from './playlistChoice'
+import { KIND_LABELS, type PlaylistChoice } from './playlistChoice'
 import { PlaylistResult } from './PlaylistResult'
 import { VegetableStrip } from './VegetableStrip'
 
@@ -27,11 +27,11 @@ type Props = {
   onChange: (next: PlaylistChoice) => void
 }
 
-const KINDS: { id: PlaylistKindChoice; hint: string; icon: string }[] = [
+const KINDS = [
   { id: 'saved', hint: 'Send one made before', icon: 'playlist' },
   { id: 'auto', hint: 'Vegetable plus meal', icon: 'leaf' },
   { id: 'pick', hint: 'Choose the items', icon: 'plus' },
-]
+] as const
 
 function Step({ n, title, done = false }: { n: number; title: string; done?: boolean }) {
   return (
