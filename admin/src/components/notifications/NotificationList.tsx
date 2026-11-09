@@ -8,9 +8,10 @@ import { LinkedText } from './LinkedText'
 import { audienceText, hasLink, repeatText, statusLabel } from './notificationFormat'
 import '../../styles/notification-schedule.css'
 import '../../styles/notification-names.css'
+import '../../styles/notification-compact.css'
 
-// One compact card per notification: status and actions, the title, the
-// message and the playlist it opens as labeled rows, a live countdown, then
+// One compact card per notification: status, title and actions on one line,
+// the message, the playlist it opens as a chip, a live countdown, then
 // Details, which opens to the dates, audience, language and the four counts.
 // The closed Details row still shows the counts in one line. Counts are people.
 
@@ -92,15 +93,24 @@ export function NotificationList({ items, onEdit, onCopy, onRename, onStop }: Pr
         const pct = n.counts.shown > 0 ? Math.round((n.counts.opened / n.counts.shown) * 100) : 0
 
         return (
-          <article key={n.id} className={`nt-item nt-card is-${n.status}`}>
+          <article key={n.id} className={`nt-item nt-card nt-compact is-${n.status}`}>
             <header className="nt-item-top">
-              <div className="nt-item-tags">
+              <div className="nt-compact-head">
                 <span className={`nt-pill is-${n.status}`}>
                   {n.status === 'live' && <i />}
                   {statusLabel[n.status]}
                 </span>
+                {n.title ? (
+                  <strong className="nt-compact-title">{n.title}</strong>
+                ) : (
+                  <span className="nt-compact-title is-empty">
+                    No title
+                    <button type="button" className="nt-name-add" onClick={() => onRename(n)}>
+                      Add a title
+                    </button>
+                  </span>
+                )}
                 {n.templateKey && <span className="nt-tag">Template</span>}
-                {n.playlist && <span className="nt-tag">Playlist</span>}
               </div>
               <div className="nt-actions">
                 {n.status !== 'stopped' && (
@@ -122,36 +132,21 @@ export function NotificationList({ items, onEdit, onCopy, onRename, onStop }: Pr
               </div>
             </header>
 
-            <dl className="nt-card-fields">
-              <dt>Title</dt>
-              <dd className={n.title ? 'nt-card-title' : 'nt-card-title is-empty'}>
-                {n.title ?? (
-                  <>
-                    No title
-                    <button type="button" className="nt-name-add" onClick={() => onRename(n)}>
-                      Add a title
-                    </button>
-                  </>
-                )}
-              </dd>
-              <dt>Message</dt>
-              <dd className="nt-card-body">
-                <LinkedText text={n.bodyEn} />
-              </dd>
-              {n.playlist && (
-                <>
-                  <dt>Playlist</dt>
-                  <dd className="nt-card-body">
-                    {n.playlist.name}
-                    <span className="nt-card-playlist-meta">
-                      {countText(n.playlist.tips, n.playlist.recipes)}
-                      {n.playlist.auto ? ', automatic' : ''}
-                      {n.playlist.archived ? ', archived' : ''}
-                    </span>
-                  </dd>
-                </>
-              )}
-            </dl>
+            <p className="nt-compact-body">
+              <LinkedText text={n.bodyEn} />
+            </p>
+
+            {n.playlist && (
+              <span className="nt-compact-playlist">
+                <NavIcon name="playlist" size={14} />
+                <strong>{n.playlist.name}</strong>
+                <span>
+                  {countText(n.playlist.tips, n.playlist.recipes)}
+                  {n.playlist.auto ? ', automatic' : ''}
+                  {n.playlist.archived ? ', archived' : ''}
+                </span>
+              </span>
+            )}
 
             <Countdown item={n} now={now} />
 
