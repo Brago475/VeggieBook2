@@ -31,6 +31,12 @@ const en = {
   secretGone: 'This secret is no longer in this book.',
   backToBookButton: 'BACK TO BOOK',
 
+  tipsCount: (n: number) => (n === 1 ? '1 tip' : `${n} tips`),
+  tipsTitle: (vegetable: string) => `${vegetable} tips`,
+  tipOf: (vegetable: string, at: number, of: number) => `${vegetable} tip ${at} of ${of}`,
+  previousTip: 'Previous tip',
+  nextTip: 'Next tip',
+
   newCoverVeggie: (vegetable: string) => `Choose a new cover for your ${vegetable} VeggieBook.`,
   newCoverSecrets: (category: string) => `Choose a new cover for your ${category} book.`,
   cancel: 'CANCEL',
@@ -66,6 +72,12 @@ const es: typeof en = {
   recipeNotLoaded: 'No se pudo cargar esta receta.',
   secretGone: 'Este secreto ya no está en este libro.',
   backToBookButton: 'VOLVER AL LIBRO',
+
+  tipsCount: (n: number) => (n === 1 ? '1 consejo' : `${n} consejos`),
+  tipsTitle: (vegetable: string) => `Consejos: ${vegetable}`,
+  tipOf: (vegetable: string, at: number, of: number) => `${vegetable}: consejo ${at} de ${of}`,
+  previousTip: 'Consejo anterior',
+  nextTip: 'Siguiente consejo',
 
   newCoverVeggie: (vegetable: string) =>
     `Escoge una nueva portada para tu VeggieBook de ${vegetable}.`,

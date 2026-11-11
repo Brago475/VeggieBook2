@@ -17,6 +17,7 @@ namespace VeggieBook.Api.Books;
 //
 //   GET    /api/books                        this account's books, newest first
 //   GET    /api/books/{id}                   one book in full, with recipe titles
+//                                            and, for a VeggieBook, its tips
 //   POST   /api/books                        save a finished book
 //   DELETE /api/books/{id}                   delete a book
 //   DELETE /api/books/{id}/recipes/{recipe}  take one recipe out of a book
@@ -105,7 +106,8 @@ public class BooksController(
         }));
     }
 
-    // One book with its kept recipes, their titles and finished-dish photo.
+    // One book with its kept recipes, their titles and finished-dish photo,
+    // and for a VeggieBook the tips that match its answers (BookTips).
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, [FromQuery] string? lang)
     {
@@ -171,6 +173,10 @@ public class BooksController(
             .ThenBy(r => r.id)
             .ToList();
 
+        List<object> tips = book.VegetableCode is null
+            ? []
+            : await BookTips.LoadAsync(content, book.VegetableCode, book.Attributes, spanish);
+
         return Ok(new
         {
             id = book.Id,
@@ -180,7 +186,8 @@ public class BooksController(
             cover = CoverUrl(book.Id, book.CoverPath, book.HasUpload),
             createdAt = book.CreatedAt,
             attributes = book.Attributes,
-            recipes
+            recipes,
+            tips
         });
     }
 

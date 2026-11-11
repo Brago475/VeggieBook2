@@ -3,6 +3,7 @@ import { useLang } from '../i18n/languageContext'
 import { BOOK } from '../i18n/strings/book'
 import { useStrings } from '../i18n/useStrings'
 import { ApiError, apiFetch } from '../utils/api'
+import type { PlaylistTip } from '../utils/playlistsApi'
 
 // One saved book with its recipes, for the screen that opens a book from
 // the home library.
@@ -10,8 +11,10 @@ import { ApiError, apiFetch } from '../utils/api'
 // The recipes arrive with their titles (in the current language) and first
 // photo, so the list needs no further requests. Opening one recipe still
 // loads its full content through useRecipeDetail, the same way the review
-// step does. A language change reloads the titles; the old ones stay on
-// screen until the new ones arrive.
+// step does. A VeggieBook also brings its tips (the vegetable's tips that
+// match its answers) in full, in the same shape as a playlist tip. A
+// language change reloads both; the old ones stay on screen until the new
+// ones arrive.
 //
 // Takes the book id, or null when no book is open. A book belonging to
 // another account answers 404, the same as one that does not exist, so
@@ -35,6 +38,8 @@ export type BookDetail = {
   createdAt: string
   attributes: string[]
   recipes: BookRecipeSummary[]
+  // Missing from servers older than the tips change.
+  tips?: PlaylistTip[]
 }
 
 type Loaded = { id: string; book: BookDetail }

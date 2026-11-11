@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ActionMenu, type ActionMenuItem } from '../components/common/ActionMenu'
 import { BookCard } from '../components/library/BookCard'
 import { BookHeading } from '../components/library/BookHeading'
 import { BookSkeleton } from '../components/library/BookSkeleton'
+import { TipsSheet } from '../components/library/TipsSheet'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
+import { ChevronRightIcon } from '../components/icons/LibraryIcons'
 import { NavBar } from '../components/layout/NavBar'
+import { TipView } from '../components/playlists/TipView'
 import { RecipeSections } from '../components/veggie/RecipeSections'
 import { RecipeSkeleton } from '../components/veggie/RecipeSkeleton'
 import { SafeImage } from '../components/common/SafeImage'
@@ -29,6 +32,12 @@ import { downloadPdf, printPdf } from '../utils/bookPdf'
 //
 // Which recipe is open is held by App rather than here, so the Back button
 // in the green header can close a recipe before it leaves the book.
+//
+// The book's tips (the vegetable's tips that match its answers, the same
+// ones its download prints) sit behind a small chip beside the recipe
+// count. The chip opens a short list (TipsSheet); a tip opens here with
+// Previous and Next. Which tip is open is held here, so it is not in the
+// address.
 //
 // Actions live in ⋮ menus: on the cover card, Change cover, Print book,
 // Download book and Delete book; on each recipe, Print recipe, Download
@@ -80,7 +89,12 @@ export function BookViewer({
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
-  // Where the list was scrolled when a recipe was opened.
+  // The tips list, and the tip open (its place in the list).
+  const [tipsOpen, setTipsOpen] = useState(false)
+  const [openTip, setOpenTip] = useState<number | null>(null)
+  const closeTips = useCallback(() => setTipsOpen(false), [])
+
+  // Where the list was scrolled when a recipe or tip was opened.
   const listScroll = useRef(0)
 
   // When a recipe closes, put the list back where it was, after it renders.
@@ -94,15 +108,40 @@ export function BookViewer({
     wasOpen.current = isOpen
   }, [openRecipe])
 
+  // Another book starts with its tips closed.
+  useEffect(() => {
+    setTipsOpen(false)
+    setOpenTip(null)
+  }, [bookId])
+
   const vegetable = vegetables.find((v) => v.code === book?.vegetableCode)
   const vegetableName = vegetable?.name ?? ''
   const vegetableShortCode = vegetable?.shortCode ?? ''
   const bookName = vegetableName ? home.veggieBookName(vegetableName) : home.veggieBook
+  const tips = book?.tips ?? []
 
   function openRecipeAt(id: number) {
     listScroll.current = window.scrollY
     onOpenRecipe(id)
     window.scrollTo(0, 0)
+  }
+
+  function openTipAt(index: number) {
+    listScroll.current = window.scrollY
+    setTipsOpen(false)
+    setOpenTip(index)
+    window.scrollTo(0, 0)
+  }
+
+  function stepTip(index: number) {
+    setOpenTip(index)
+    window.scrollTo(0, 0)
+  }
+
+  function closeTip() {
+    setOpenTip(null)
+    const y = listScroll.current
+    requestAnimationFrame(() => window.scrollTo(0, y))
   }
 
   async function confirm() {
@@ -167,6 +206,31 @@ export function BookViewer({
         {/* Kept alongside the header's Back: after scrolling through a long
             recipe, this is the one within reach. */}
         <NavBar primaryLabel={t.backToBookButton} onPrimary={() => onOpenRecipe(null)} />
+      </>
+    )
+  }
+
+  // One tip, opened from the tips list.
+  const tip = openTip !== null ? tips[openTip] : undefined
+  if (openTip !== null && tip) {
+    return (
+      <>
+        <TipView tip={tip} kicker={t.tipOf(vegetableName || tip.vegetableName, openTip + 1, tips.length)}>
+          <div className="bt-steps">
+            <button type="button" className="account-btn" disabled={openTip === 0} onClick={() => stepTip(openTip - 1)}>
+              {t.previousTip}
+            </button>
+            <button
+              type="button"
+              className="create-btn"
+              disabled={openTip === tips.length - 1}
+              onClick={() => stepTip(openTip + 1)}
+            >
+              {t.nextTip}
+            </button>
+          </div>
+        </TipView>
+        <NavBar primaryLabel={t.backToBookButton} onPrimary={closeTip} />
       </>
     )
   }
@@ -243,9 +307,16 @@ export function BookViewer({
         </div>
       </div>
 
-      {/* A chip for a fact about the book, on its own tint under the cover. */}
+      {/* A chip for a fact about the book, on its own tint under the cover,
+          and the tips chip beside it when the book has tips. */}
       <p className="book-count">
         <span className="book-count-pill">{common.items(book.recipes.length, 'recipe')}</span>
+        {tips.length > 0 && (
+          <button type="button" className="bt-chip" onClick={() => setTipsOpen(true)}>
+            {t.tipsCount(tips.length)}
+            <ChevronRightIcon />
+          </button>
+        )}
       </p>
 
       {actionError && <p className="message">{actionError}</p>}
@@ -290,6 +361,15 @@ export function BookViewer({
           </li>
         ))}
       </ul>
+
+      {tipsOpen && (
+        <TipsSheet
+          title={t.tipsTitle(vegetableName || (tips[0]?.vegetableName ?? ''))}
+          tips={tips}
+          onOpen={openTipAt}
+          onClose={closeTips}
+        />
+      )}
 
       <ConfirmDialog
         open={pending !== null}
