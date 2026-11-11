@@ -1,0 +1,36 @@
+/* Playlist card outlines for the Notifications page, sized like the real
+   cards in playlist-cards.css. The shimmer and line shapes come from
+   shimmer.css. */
+
+.ntsk-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e3e8e2;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.ntsk-photo {
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: 13px 13px 0 0;
+}
+
+.ntsk-body {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px 10px;
+}
+
+.ntsk-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+.ntsk-actions .sk {
+  display: block;
+  flex: 1;
+  height: 36px;
+  border-radius: 10px;
+}

@@ -6,6 +6,7 @@ import type { PlaylistDetail, PlaylistDraft, PlaylistSummary } from '../../types
 import { fetchPlaylist } from '../../utils/playlistsApi'
 import { NavIcon } from '../icons/NavIcons'
 import { TopbarActions } from '../layout/TopbarSlot'
+import { PlaylistsSkeleton } from '../skeletons/PlaylistsSkeleton'
 import { StudyToast } from '../studies/StudyToast'
 import { MealLabels } from './MealLabels'
 import { PlaylistEditor } from './PlaylistEditor'
@@ -16,7 +17,7 @@ import { PlaylistList } from './PlaylistList'
 // playlists as photo cards, and the meal labels both kinds use. The chosen
 // filter is kept in the address. Send on a card opens a new notification
 // with that playlist chosen. Archived playlists stay with the people who
-// kept them and can be restored.
+// kept them and can be restored. While loading, the section's outline shows.
 
 type Editing = { from: PlaylistDetail | null }
 
@@ -51,7 +52,7 @@ export function PlaylistsSection({ onSend }: Props) {
     )
   }
 
-  if (firstLoad || !list || !options) return <p className="st-muted">Loading playlists...</p>
+  if (firstLoad || !list || !options) return <PlaylistsSkeleton />
 
   const shown = list.filter((p) => inView(p, view))
   const openNew = () => setEditing({ from: null })

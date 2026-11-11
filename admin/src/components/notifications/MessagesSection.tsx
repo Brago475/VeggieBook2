@@ -5,6 +5,7 @@ import { useNotifications } from '../../hooks/useNotifications'
 import type { AdminNotification, NotificationDraft } from '../../types/notifications'
 import { NavIcon } from '../icons/NavIcons'
 import { TopbarActions } from '../layout/TopbarSlot'
+import { MessagesSkeleton } from '../skeletons/MessagesSkeleton'
 import { StudyToast } from '../studies/StudyToast'
 import { NotificationEditor } from './NotificationEditor'
 import { notificationName } from './notificationFormat'
@@ -17,7 +18,7 @@ import { StopNotificationDialog } from './StopNotificationDialog'
 // card per message under Live and scheduled / Ended and stopped; the chosen
 // list is kept in the address. Each message can carry an admin-only title.
 // A playlist sent from the Playlists section opens a new message with that
-// playlist chosen.
+// playlist chosen. While loading, the section's outline shows.
 
 type Editing = { mode: 'create' | 'edit'; from: AdminNotification | null; playlistId?: number | null }
 type View = 'current' | 'past'
@@ -57,7 +58,7 @@ export function MessagesSection({ sendPlaylistId = null, onSendOpened }: Props) 
     )
   }
 
-  if (firstLoad || !list || !templates) return <p className="st-muted">Loading notifications...</p>
+  if (firstLoad || !list || !templates) return <MessagesSkeleton />
 
   const current = list.filter((n) => n.status === 'live' || n.status === 'scheduled')
   const past = list.filter((n) => n.status === 'ended' || n.status === 'stopped')
