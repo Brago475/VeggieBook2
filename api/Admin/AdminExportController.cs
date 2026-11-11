@@ -19,11 +19,13 @@ namespace VeggieBook.Api.Admin;
 //   GET /api/admin/export/codebook?format=xlsx|csv
 //   GET /api/admin/export/content?format=xlsx|csv
 //
-// Filters: see ExportQuery.cs. Same rules as All Data. Admins only.
+// Filters: see ExportQuery.cs. Same rules as All Data. Admins only. Every
+// file downloaded is written to the activity log (LogAdminDownload).
 
 [ApiController]
 [Route("api/admin/export")]
 [Authorize(Policy = Roles.AdminPolicy)]
+[LogAdminDownload]
 public class AdminExportController(AccountsContext db, VeggieBookContext content) : ControllerBase
 {
     private const string XlsxType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";

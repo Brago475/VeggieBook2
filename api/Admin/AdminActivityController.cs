@@ -16,16 +16,11 @@ namespace VeggieBook.Api.Admin;
 ///
 ///   GET /api/admin/activity?study={number}
 ///
-/// Event types: book_saved, joined, book_deleted, item_removed, book_printed,
-/// book_downloaded, account_deleted, research_erased, tracking_on,
-/// tracking_off, study_started, study_ended, study_renamed, study_deleted,
-/// notice_joined, notice_declined, notification_shown, notification_opened,
-/// notification_link, notification_dismissed, notification_created,
-/// notification_edited, notification_stopped, playlist_created,
-/// playlist_edited, playlist_archived, playlist_opened, playlist_kept,
-/// playlist_skipped, playlist_removed, playlist_item_opened,
-/// user_playlist_created, user_playlist_edited, user_playlist_deleted,
-/// meal_labels_changed.
+/// Every event has byAdmin (true for admin actions) and admin (the admin's
+/// username, Former admin for an account that is gone, or null when the line
+/// was written before admins were recorded). Every admin sees every admin
+/// action. Root-only actions are not logged here, apart from role changes,
+/// account removals and erases.
 ///
 /// Participant events show only if tracking was on when they happened
 /// (ResearchScope.CountsBook). Account deletions and erases always show.
@@ -43,7 +38,14 @@ namespace VeggieBook.Api.Admin;
 [Authorize(Policy = Roles.AdminPolicy)]
 public class AdminActivityController(AccountsContext db, VeggieBookContext content) : ControllerBase
 {
-    private record Event(string Type, string? ResearchId, string Title, string Detail, DateTime At);
+    private record Event(
+        string Type,
+        string? ResearchId,
+        string Title,
+        string Detail,
+        DateTime At,
+        bool ByAdmin = false,
+        Guid? AdminId = null);
 
     private const int PreviewLength = 80;
 
@@ -242,12 +244,15 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             u.CreatedAt)));
 
         // Activity log: deletions, take-outs, prints, downloads, erases, admin
-        // study actions, notifications, playlists, meal labels, and saves of
-        // books no longer in the book table.
+        // actions, notifications, playlists, meal labels, and saves of books
+        // no longer in the book table.
         var logged = await db.ActivityLog.AsNoTracking().ToListAsync();
 
         bool OwnerTracked(ActivityEntry a, DateTime at) =>
             !userOf.TryGetValue(a.ParticipantId, out var owner) || scope.CountsBook(owner, at);
+
+        Event AdminLine(ActivityEntry a, string title, string detail) =>
+            new(a.Kind, null, title, detail, a.At, true, a.AdminId);
 
         foreach (var a in logged)
         {
@@ -256,11 +261,35 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
 
             if (a.Kind == ActivityLog.StudyRenamed)
             {
-                events.Add(new Event("study_renamed", null, $"Renamed Study {a.ItemCount}", a.Detail ?? "", a.At));
+                events.Add(AdminLine(a, $"Renamed Study {a.ItemCount}", a.Detail ?? ""));
             }
             else if (a.Kind == ActivityLog.StudyDeleted)
             {
-                events.Add(new Event("study_deleted", null, $"Deleted Study {a.ItemCount}", a.Detail ?? "", a.At));
+                events.Add(AdminLine(a, $"Deleted Study {a.ItemCount}", a.Detail ?? ""));
+            }
+            else if (a.Kind == ActivityLog.AdminRoleGiven)
+            {
+                events.Add(AdminLine(a, $"Made {a.Detail} an admin", "Admin access given"));
+            }
+            else if (a.Kind == ActivityLog.AdminRoleRemoved)
+            {
+                events.Add(AdminLine(a, $"Removed admin access from {a.Detail}", "Admin access removed"));
+            }
+            else if (a.Kind == ActivityLog.RecoveryUnlocked)
+            {
+                events.Add(AdminLine(a, "Reopened password reset", a.Detail ?? ""));
+            }
+            else if (a.Kind == ActivityLog.GuestModeChanged)
+            {
+                events.Add(AdminLine(a, a.Detail ?? "Changed guest visits", "Site setting"));
+            }
+            else if (a.Kind == ActivityLog.SignedOutEverywhere)
+            {
+                events.Add(AdminLine(a, "Signed out on every device", "Own account"));
+            }
+            else if (a.Kind == ActivityLog.AdminDownload)
+            {
+                events.Add(AdminLine(a, "Downloaded a file", a.Detail ?? ""));
             }
             else if (ParticipantNotification.TryGetValue(a.Kind, out var did))
             {
@@ -270,18 +299,16 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             }
             else if (AdminNotification.TryGetValue(a.Kind, out var adminDid))
             {
-                events.Add(new Event(a.Kind, null, $"{adminDid}: {NotificationName(a.ContentId)}",
-                    a.Detail ?? "", a.At));
+                events.Add(AdminLine(a, $"{adminDid}: {NotificationName(a.ContentId)}", a.Detail ?? ""));
             }
             else if (AdminPlaylist.TryGetValue(a.Kind, out var adminPlaylistDid))
             {
-                events.Add(new Event(a.Kind, null, $"{adminPlaylistDid}: {PlaylistName(a.ContentId)}",
-                    a.Detail ?? "", a.At));
+                events.Add(AdminLine(a, $"{adminPlaylistDid}: {PlaylistName(a.ContentId)}", a.Detail ?? ""));
             }
             else if (a.Kind == PlaylistActivity.MealLabelsChanged)
             {
                 var (title, detail) = LabelLine(a);
-                events.Add(new Event(a.Kind, null, title, detail, a.At));
+                events.Add(AdminLine(a, title, detail));
             }
             else if (ParticipantPlaylist.TryGetValue(a.Kind, out var playlistDid))
             {
@@ -321,13 +348,13 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                     _ => ("Books erased by the main admin",
                         $"{booksText} erased, account kept, tracking turned off")
                 };
-                events.Add(new Event("research_erased", a.ParticipantId, title, detail, a.At));
+                events.Add(new Event("research_erased", a.ParticipantId, title, detail, a.At, true, a.AdminId));
             }
             else if (a.Kind == ActivityLog.AccountDeleted)
             {
                 events.Add(ActivityLog.IsRemovedByAdmin(a)
                     ? new Event("account_deleted", a.ParticipantId, "Account removed by an admin",
-                        "Admin action, research data kept", a.At)
+                        "Admin action, research data kept", a.At, true, a.AdminId)
                     : new Event("account_deleted", a.ParticipantId, "Deleted their account",
                         "Account removed, research data kept", a.At));
             }
@@ -368,26 +395,31 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             }
         }
 
-        // Tracking changes.
+        // Tracking changes. A change made by an admin names that admin.
         var peopleIds = await people.Select(u => u.Id).ToListAsync();
         var changes = await db.TrackingChanges.AsNoTracking().Where(c => peopleIds.Contains(c.UserId)).ToListAsync();
-        events.AddRange(changes.Select(c => new Event(
-            c.TrackingOn ? "tracking_on" : "tracking_off",
-            ids.GetValueOrDefault(c.UserId),
-            c.ChangedBy == "admin"
-                ? (c.TrackingOn ? "Tracking turned back on by an admin" : "Tracking turned off by an admin")
-                : (c.TrackingOn ? "Turned tracking on" : "Turned tracking off"),
-            c.ChangedBy == "admin" ? "Admin action" : "In Settings, by the participant",
-            c.At)));
+        events.AddRange(changes.Select(c => c.ChangedBy == "admin"
+            ? new Event(
+                c.TrackingOn ? "tracking_on" : "tracking_off",
+                ids.GetValueOrDefault(c.UserId),
+                c.TrackingOn ? "Tracking turned back on by an admin" : "Tracking turned off by an admin",
+                "Admin action",
+                c.At, true, c.AdminId)
+            : new Event(
+                c.TrackingOn ? "tracking_on" : "tracking_off",
+                ids.GetValueOrDefault(c.UserId),
+                c.TrackingOn ? "Turned tracking on" : "Turned tracking off",
+                "In Settings, by the participant",
+                c.At)));
 
-        // Studies.
+        // Studies, with who switched them on and off.
         var studies = await db.Studies.AsNoTracking().ToListAsync();
         foreach (var s in studies)
         {
             var title = $"{StudyData.TitleOf(s)}" + (string.IsNullOrWhiteSpace(s.Name) ? "" : $" (Study {s.Number})");
-            events.Add(new Event("study_started", null, $"Started {title}", "Switched on by an admin", s.StartedAt));
+            events.Add(new Event("study_started", null, $"Started {title}", "Study switched on", s.StartedAt, true, s.StartedBy));
             if (s.EndedAt is DateTime ended)
-                events.Add(new Event("study_ended", null, $"Ended {title}", "Switched off by an admin", ended));
+                events.Add(new Event("study_ended", null, $"Ended {title}", "Study switched off", ended, true, s.EndedBy));
         }
 
         // Study notice answers.
@@ -404,6 +436,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             "Study notice answered",
             n.AnsweredAt!.Value)));
 
+        var names = await AdminNames.LoadAsync(db, events.Select(e => e.AdminId));
+
         var result = events
             .Where(e => window is null || (e.At >= window.StartedAt && (window.EndedAt is null || e.At <= window.EndedAt)))
             .OrderByDescending(e => e.At)
@@ -413,7 +447,9 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
                 researchId = e.ResearchId,
                 title = e.Title,
                 detail = e.Detail,
-                at = DateTime.SpecifyKind(e.At, DateTimeKind.Utc)
+                at = DateTime.SpecifyKind(e.At, DateTimeKind.Utc),
+                byAdmin = e.ByAdmin,
+                admin = AdminNames.Of(names, e.AdminId)
             })
             .ToList();
 
