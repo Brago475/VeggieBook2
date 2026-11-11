@@ -1,8 +1,12 @@
 import type { ActivityEvent } from '../../types/activity'
 import { ActivityIcon } from './ActivityIcon'
-import { dayLabel, localDate, timeLabel } from './activityFormat'
+import { adminLabel, dayLabel, localDate, timeLabel } from './activityFormat'
 
 // Activity events grouped by local day, newest first.
+//
+// The chip shows the research ID, or for an admin action with no
+// participant, the admin's username. When an admin acted on a participant,
+// the line also says who.
 
 type Props = {
   events: ActivityEvent[]
@@ -29,10 +33,15 @@ export function ActivityFeed({ events }: Props) {
             {d.items.map((e, i) => (
               <li key={`${e.at}-${e.type}-${i}`} className="av-row">
                 <ActivityIcon type={e.type} />
-                <span className={e.researchId ? 'av-id' : 'av-id is-admin'}>{e.researchId ?? 'Admin'}</span>
+                <span className={e.researchId ? 'av-id' : 'av-id is-admin'}>
+                  {e.researchId ?? e.admin ?? 'Admin'}
+                </span>
                 <span className="av-text">
                   <strong>{e.title}</strong>
-                  <span>{e.detail}</span>
+                  <span>
+                    {e.detail}
+                    {e.byAdmin && e.researchId && `${e.detail ? ', ' : ''}by ${adminLabel(e)}`}
+                  </span>
                 </span>
                 <time className="av-time" dateTime={e.at}>
                   {timeLabel(e.at)}

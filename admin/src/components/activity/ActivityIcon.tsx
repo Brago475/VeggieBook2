@@ -38,9 +38,17 @@ const tone: Record<ActivityType, string> = {
   user_playlist_edited: 'is-study',
   user_playlist_deleted: 'is-deleted',
   meal_labels_changed: 'is-study',
+  admin_role_given: 'is-study',
+  admin_role_removed: 'is-deleted',
+  recovery_unlocked: 'is-tracking',
+  guest_mode_changed: 'is-study',
+  signed_out_everywhere: 'is-account',
+  admin_download: 'is-saved',
 }
 
 const LIST = 'M4 6h12M4 11h12M4 16h7'
+const SHIELD = 'M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z'
+const DOWNLOAD = 'M12 3v12M7 10l5 5 5-5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2'
 
 const paths: Record<ActivityType, React.ReactNode> = {
   book_saved: <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5zM4 19.5A1.5 1.5 0 0 0 5.5 21H20" />,
@@ -48,7 +56,7 @@ const paths: Record<ActivityType, React.ReactNode> = {
   book_deleted: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
   item_removed: <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v15H5.5A1.5 1.5 0 0 0 4 19.5zM4 19.5A1.5 1.5 0 0 0 5.5 21H20M9 10.5h6" />,
   book_printed: <path d="M7 9V3h10v6M7 18H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7z" />,
-  book_downloaded: <path d="M12 3v12M7 10l5 5 5-5M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />,
+  book_downloaded: <path d={DOWNLOAD} />,
   account_deleted: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4 3.6-7 8-7s8 3 8 7M17 3l4 4M21 3l-4 4" />,
   research_erased: <path d="M4 7h16M6 7l1 13h10l1-13M9 7V4h6v3M9.5 11.5l5 5M14.5 11.5l-5 5" />,
   tracking_on: <path d="M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01" />,
@@ -78,11 +86,17 @@ const paths: Record<ActivityType, React.ReactNode> = {
   user_playlist_edited: <path d="M4 6h12M4 11h7M4 16h4M11 20h3l7-7-3-3-7 7z" />,
   user_playlist_deleted: <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />,
   meal_labels_changed: <path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8zM7.5 7.5h.01" />,
+  admin_role_given: <path d={`${SHIELD}M9 12l2 2 4-4`} />,
+  admin_role_removed: <path d={`${SHIELD}M9 12h6`} />,
+  recovery_unlocked: <path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 7.5-2M12 15v2" />,
+  guest_mode_changed: <path d="M7 7h10a5 5 0 0 1 0 10H7A5 5 0 0 1 7 7zM16 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />,
+  signed_out_everywhere: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />,
+  admin_download: <path d={DOWNLOAD} />,
 }
 
 export function ActivityIcon({ type }: { type: ActivityType }) {
   return (
-    <span className={`av-icon ${tone[type]}`} aria-hidden="true">
+    <span className={`av-icon ${tone[type] ?? 'is-study'}`} aria-hidden="true">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
         {paths[type]}
       </svg>

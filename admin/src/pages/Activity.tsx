@@ -1,6 +1,15 @@
 import { useMemo, useState } from 'react'
 import { ActivityFeed } from '../components/activity/ActivityFeed'
-import { csvRows, groups, inGroup, localDate, type ActivityGroup } from '../components/activity/activityFormat'
+import {
+  byWho,
+  csvRows,
+  groups,
+  inGroup,
+  localDate,
+  whoOptions,
+  type ActivityGroup,
+  type ActivityWho,
+} from '../components/activity/activityFormat'
 import { AllDataIcon } from '../components/alldata/AllDataIcons'
 import { StudyView } from '../components/alldata/StudyView'
 import { StatCard } from '../components/common/StatCard'
@@ -15,7 +24,8 @@ import '../styles/books.css'
 import '../styles/activity.css'
 
 // Admin Activity page: the full, permanent activity history with type,
-// research ID, date, and study filters. Filtering and paging are client-side.
+// who, research ID or admin, date, and study filters. Filtering and paging
+// are client-side.
 
 const PAGE = 50
 const DAY = 24 * 60 * 60 * 1000
@@ -29,6 +39,7 @@ export function Activity() {
   const [study, setStudy] = useState<number | null>(null)
   const { data, error, loading, reload } = useActivity(study)
   const [group, setGroup] = useState<ActivityGroup>('all')
+  const [who, setWho] = useState<ActivityWho>('all')
   const [search, setSearch] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
@@ -39,14 +50,18 @@ export function Activity() {
 
   const all = useMemo(() => data?.events ?? [], [data])
 
-  // Search and dates apply before the type chips, so chip counts match.
+  // Search, who, and dates apply before the type chips, so chip counts match.
   const base = useMemo(() => {
     const needle = search.trim().toUpperCase()
     return all.filter((e) => {
       const day = localDate(e.at)
-      return (!needle || (e.researchId ?? '').includes(needle)) && (!from || day >= from) && (!to || day <= to)
+      const matches =
+        !needle ||
+        (e.researchId ?? '').includes(needle) ||
+        (e.admin ?? '').toUpperCase().includes(needle)
+      return matches && byWho(e, who) && (!from || day >= from) && (!to || day <= to)
     })
-  }, [all, search, from, to])
+  }, [all, search, who, from, to])
 
   const shown = useMemo(() => base.filter((e) => inGroup(e, group)), [base, group])
 
@@ -76,7 +91,7 @@ export function Activity() {
     setLimit(PAGE)
   }
 
-  const filtered = group !== 'all' || search || from || to
+  const filtered = group !== 'all' || who !== 'all' || search || from || to
 
   return (
     <div className="av-page">
@@ -143,14 +158,30 @@ export function Activity() {
               <AllDataIcon name="search" size={16} />
               <input
                 type="search"
-                placeholder="Search by research ID..."
-                aria-label="Search by research ID"
+                placeholder="Search by research ID or admin..."
+                aria-label="Search by research ID or admin username"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value)
                   setLimit(PAGE)
                 }}
               />
+            </label>
+            <label className="bk-select">
+              <span>Who</span>
+              <select
+                value={who}
+                onChange={(e) => {
+                  setWho(e.target.value as ActivityWho)
+                  setLimit(PAGE)
+                }}
+              >
+                {whoOptions.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="bk-select">
               <span>From</span>
@@ -166,6 +197,7 @@ export function Activity() {
                 className="st-button"
                 onClick={() => {
                   setGroup('all')
+                  setWho('all')
                   setSearch('')
                   setFrom('')
                   setTo('')

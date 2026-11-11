@@ -36,13 +36,21 @@ export type ActivityType =
   | 'user_playlist_edited'
   | 'user_playlist_deleted'
   | 'meal_labels_changed'
+  | 'admin_role_given'
+  | 'admin_role_removed'
+  | 'recovery_unlocked'
+  | 'guest_mode_changed'
+  | 'signed_out_everywhere'
+  | 'admin_download'
 
 export type ActivityEvent = {
   type: ActivityType
-  researchId: string | null // null for admin actions
+  researchId: string | null // null for admin actions with no participant
   title: string
   detail: string
   at: string // ISO, UTC
+  byAdmin: boolean
+  admin: string | null // username, "Former admin", or null on older lines
 }
 
 export type ActivityResponse = { events: ActivityEvent[] }

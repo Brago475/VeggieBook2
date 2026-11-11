@@ -5,15 +5,23 @@
 // API is on the same origin, so no token is ever handled here.
 //
 // On an error the API's own message ({ error: "..." }) is thrown, so screens
-// can show it as is.
+// can show it as is. changed is true when another admin saved the same thing
+// first; the screen should reload it.
 
 export class ApiError extends Error {
   status: number
+  changed: boolean
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, changed = false) {
     super(message)
     this.status = status
+    this.changed = changed
   }
+}
+
+// True when the error means another admin saved first.
+export function isChanged(err: unknown): boolean {
+  return err instanceof ApiError && err.changed
 }
 
 // PUT replaces a value that already exists, such as a site setting.
@@ -34,13 +42,15 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
 
   if (!res.ok) {
     let message = 'Something went wrong. Please try again.'
+    let changed = false
     try {
       const data = await res.json()
       if (typeof data?.error === 'string') message = data.error
+      changed = data?.changed === true
     } catch {
       // No JSON body, keep the general message.
     }
-    throw new ApiError(res.status, message)
+    throw new ApiError(res.status, message, changed)
   }
 
   if (res.status === 204) return undefined as T
