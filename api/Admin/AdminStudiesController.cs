@@ -15,6 +15,7 @@ namespace VeggieBook.Api.Admin;
 //
 //   GET    /api/admin/studies             every study, newest first, with
 //                                         its numbers (StudyData.Summary),
+//                                         who started and ended each one,
 //                                         plus a preview of who a study
 //                                         switched on now would include
 //   POST   /api/admin/studies/start       switch a study on: Study N+1
@@ -37,9 +38,9 @@ namespace VeggieBook.Api.Admin;
 // deleted; switch it off first. The confirm text must match the study's
 // name (or "Study N" if it has none), the same check the page asks for.
 //
-// Renames and deletions are written to the activity log (Activity/ActivityLog.cs)
-// so they stay visible on the Activity page after the study row changes or
-// is removed.
+// Who started and ended a study is kept on the study itself. Renames and
+// deletions are written to the activity log with the admin who did them,
+// so they stay visible after the study row changes or is removed.
 //
 // See Research/StudyTracking.cs for who is tracked and who sees the notice.
 
@@ -67,6 +68,8 @@ public class AdminStudiesController(
             .OrderByDescending(s => s.Number)
             .ToListAsync();
 
+        var names = await AdminNames.LoadAsync(db, studies.SelectMany(s => new[] { s.StartedBy, s.EndedBy }));
+
         Response.Headers.CacheControl = "no-store";
 
         return Ok(new
@@ -74,7 +77,13 @@ public class AdminStudiesController(
             running = studies.Any(s => s.EndedAt is null),
             nextNumber = (studies.Count == 0 ? 0 : studies.Max(s => s.Number)) + 1,
             preview = data.Preview(now),
-            studies = studies.Select(s => data.Summary(s, now)).ToList()
+            studies = studies.Select(s => data.Summary(s, now)).ToList(),
+            admins = studies.Select(s => new
+            {
+                id = s.Id,
+                startedBy = AdminNames.Of(names, s.StartedBy),
+                endedBy = AdminNames.Of(names, s.EndedBy)
+            }).ToList()
         });
     }
 
@@ -141,7 +150,7 @@ public class AdminStudiesController(
         var after = StudyData.TitleOf(study);
         if (before != after)
             await ActivityLog.SaveAsync(db, logger, ActivityLog.ForStudy(
-                ActivityLog.StudyRenamed, study.Number, $"From \"{before}\" to \"{after}\""));
+                ActivityLog.StudyRenamed, study.Number, $"From \"{before}\" to \"{after}\"", AdminId()));
 
         var data = await StudyData.LoadAsync(db);
         return Ok(data.Summary(study, DateTime.UtcNow));
@@ -168,7 +177,7 @@ public class AdminStudiesController(
         await db.SaveChangesAsync();
 
         await ActivityLog.SaveAsync(db, logger, ActivityLog.ForStudy(
-            ActivityLog.StudyDeleted, study.Number, $"\"{title}\", ran {ran}"));
+            ActivityLog.StudyDeleted, study.Number, $"\"{title}\", ran {ran}", AdminId()));
 
         return Ok(new { deleted = id, title });
     }

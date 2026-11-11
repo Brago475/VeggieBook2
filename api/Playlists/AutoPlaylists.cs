@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using VeggieBook.Api.Data;
 
 namespace VeggieBook.Api.Playlists;
@@ -7,9 +8,14 @@ namespace VeggieBook.Api.Playlists;
 // vegetable. Tips come first, then recipes, in code order. One playlist per
 // vegetable and meal; sending it again refreshes its items and restores it
 // if it was archived.
+//
+// Two admins making the same automatic playlist at once: the database keeps
+// one (playlist_auto_unique, 026) and the slower request uses that one.
 
 public static class AutoPlaylists
 {
+    private const string UniqueIndex = "playlist_auto_unique";
+
     public static async Task<List<PlaylistRef>> MatchAsync(
         AccountsContext db,
         VeggieBookContext content,
@@ -69,9 +75,7 @@ public static class AutoPlaylists
         var (nameEn, nameEs) = Meals.PlaylistNames(meal, veg.NameEn, veg.NameEs);
         var now = DateTime.UtcNow;
 
-        var p = await db.Playlists
-            .Include(x => x.Items)
-            .FirstOrDefaultAsync(x => x.AutoVegetable == veg.Code && x.AutoMeal == meal.Key);
+        var p = await FindAsync(db, veg.Code, meal.Key);
 
         if (p is null)
         {
@@ -86,10 +90,23 @@ public static class AutoPlaylists
                 Items = PlaylistHelpers.ToItems(refs)
             };
             db.Playlists.Add(p);
-            await db.SaveChangesAsync();
+
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (IsDuplicate(ex))
+            {
+                // Another admin made it a moment ago; use theirs.
+                Detach(db, p);
+                var theirs = await FindAsync(db, veg.Code, meal.Key);
+                return theirs is null
+                    ? (null, "The playlist could not be made. Please try again.")
+                    : (theirs, null);
+            }
 
             await PlaylistActivity.RecordAdminAsync(
-                db, logger, PlaylistActivity.Created, p, $"Automatic, {PlaylistHelpers.Summary(p)}");
+                db, logger, PlaylistActivity.Created, p, $"Automatic, {PlaylistHelpers.Summary(p)}", adminId);
             return (p, null);
         }
 
@@ -107,10 +124,41 @@ public static class AutoPlaylists
         p.ArchivedAt = null;
         p.UpdatedAt = now;
         p.UpdatedBy = adminId;
-        await db.SaveChangesAsync();
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Another admin refreshed it at the same moment with the same labels.
+            Detach(db, p);
+            var latest = await FindAsync(db, veg.Code, meal.Key);
+            return latest is null
+                ? (null, "The playlist could not be updated. Please try again.")
+                : (latest, null);
+        }
 
         await PlaylistActivity.RecordAdminAsync(
-            db, logger, PlaylistActivity.Edited, p, $"Updated automatically, {PlaylistHelpers.Summary(p)}");
+            db, logger, PlaylistActivity.Edited, p, $"Updated automatically, {PlaylistHelpers.Summary(p)}", adminId);
         return (p, null);
+    }
+
+    private static Task<Playlist?> FindAsync(AccountsContext db, string vegetable, string meal) =>
+        db.Playlists
+            .Include(x => x.Items)
+            .FirstOrDefaultAsync(x => x.AutoVegetable == vegetable && x.AutoMeal == meal);
+
+    private static bool IsDuplicate(DbUpdateException ex) =>
+        ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } pg
+        && pg.ConstraintName == UniqueIndex;
+
+    // Drops the failed playlist and its items from the context, so later
+    // saves in the same request don't try them again.
+    private static void Detach(AccountsContext db, Playlist p)
+    {
+        foreach (var entry in db.ChangeTracker.Entries<PlaylistItem>().Where(e => e.Entity.PlaylistId == p.Id || p.Items.Contains(e.Entity)).ToList())
+            entry.State = EntityState.Detached;
+        db.Entry(p).State = EntityState.Detached;
     }
 }

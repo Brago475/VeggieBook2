@@ -27,6 +27,10 @@ namespace VeggieBook.Api.Admin;
 // The title is an admin-only label; the app never shows it. Activity names
 // the message by its title, so the log details here hold only the facts.
 //
+// Edit and rename take the version the page loaded. If another admin saved
+// since, the change is refused with changed: true so the page can reload.
+// Without a version (older pages) no check is made.
+//
 // Playlist: "none", "made" (a saved playlist by id) or "auto" (a vegetable
 // and a meal; AutoPlaylists builds or refreshes it). Timing and audience are
 // the notification's own.
@@ -35,9 +39,10 @@ namespace VeggieBook.Api.Admin;
 // requested start that has already passed also starts now, except the
 // unchanged start of a message that has already started, which is kept.
 //
-// Admins only. Accounts are chosen by research ID; no email or username is
-// read or sent. Counts are people (distinct accounts), guests included.
-// Every create, edit, rename and stop is written to the activity log.
+// Admins only. Accounts are chosen by research ID; no email or username of a
+// participant is read or sent. Counts are people (distinct accounts), guests
+// included. Every create, edit, rename and stop is written to the activity
+// log with the admin who did it.
 
 public record NotificationRequest(
     string? Title,
@@ -55,9 +60,10 @@ public record NotificationRequest(
     string? PlaylistMode,
     int? PlaylistId,
     string? PlaylistVegetable,
-    string? PlaylistMeal);
+    string? PlaylistMeal,
+    uint? Version);
 
-public record NotificationTitleRequest(string? Title);
+public record NotificationTitleRequest(string? Title, uint? Version);
 
 [ApiController]
 [Route("api/admin/notifications")]
@@ -71,6 +77,9 @@ public class AdminNotificationsController(
     private const int MaxBody = 500;
     private const int MaxTitle = 80;
     private const int MaxRepeatDays = 365;
+
+    private const string Changed =
+        "Another admin changed this notification. Refresh to see the latest.";
 
     private sealed record Parsed(
         string? Title,
@@ -146,7 +155,7 @@ public class AdminNotificationsController(
         await db.SaveChangesAsync();
 
         await NotificationActivity.RecordAdminAsync(
-            db, logger, NotificationActivity.Created, n, Summary(n, playlistName));
+            db, logger, NotificationActivity.Created, n, Summary(n, playlistName), AdminId());
         return Ok((await DescribeAsync([n]))[0]);
     }
 
@@ -155,6 +164,7 @@ public class AdminNotificationsController(
     {
         var n = await db.Notifications.Include(x => x.Targets).FirstOrDefaultAsync(x => x.Id == id);
         if (n is null) return NotFound(new { error = "That notification no longer exists. Refresh the page." });
+        if (IsStale(n, req.Version)) return Conflict(new { error = Changed, changed = true });
         if (n.CancelledAt is not null)
             return Conflict(new { error = "This notification was stopped and can't be edited. Create a new one instead." });
 
@@ -168,10 +178,10 @@ public class AdminNotificationsController(
         n.PlaylistId = playlistId;
         n.UpdatedAt = DateTime.UtcNow;
         n.UpdatedBy = AdminId();
-        await db.SaveChangesAsync();
+        if (!await SaveAsync()) return Conflict(new { error = Changed, changed = true });
 
         await NotificationActivity.RecordAdminAsync(
-            db, logger, NotificationActivity.Edited, n, Summary(n, playlistName));
+            db, logger, NotificationActivity.Edited, n, Summary(n, playlistName), AdminId());
         return Ok((await DescribeAsync([n]))[0]);
     }
 
@@ -180,6 +190,7 @@ public class AdminNotificationsController(
     {
         var n = await db.Notifications.Include(x => x.Targets).FirstOrDefaultAsync(x => x.Id == id);
         if (n is null) return NotFound(new { error = "That notification no longer exists. Refresh the page." });
+        if (IsStale(n, req.Version)) return Conflict(new { error = Changed, changed = true });
 
         var (title, error) = ParseTitle(req.Title);
         if (error is not null) return BadRequest(new { error });
@@ -189,13 +200,14 @@ public class AdminNotificationsController(
         n.Title = title;
         n.UpdatedAt = DateTime.UtcNow;
         n.UpdatedBy = AdminId();
-        await db.SaveChangesAsync();
+        if (!await SaveAsync()) return Conflict(new { error = Changed, changed = true });
 
         await NotificationActivity.RecordAdminAsync(
-            db, logger, NotificationActivity.Edited, n, $"Renamed from {Quoted(before)} to {Quoted(title)}");
+            db, logger, NotificationActivity.Edited, n, $"Renamed from {Quoted(before)} to {Quoted(title)}", AdminId());
         return Ok((await DescribeAsync([n]))[0]);
     }
 
+    // Stopping twice is harmless, so no version is needed.
     [HttpPost("{id:int}/stop")]
     public async Task<IActionResult> Stop(int id)
     {
@@ -207,12 +219,30 @@ public class AdminNotificationsController(
         n.CancelledAt = now;
         n.UpdatedAt = now;
         n.UpdatedBy = AdminId();
-        await db.SaveChangesAsync();
+        if (!await SaveAsync()) return Conflict(new { error = Changed, changed = true });
 
         await NotificationActivity.RecordAdminAsync(
             db, logger, NotificationActivity.Stopped, n,
-            $"Taken down {Eastern(now)}, was set to end {Eastern(n.ExpiresAt)}");
+            $"Taken down {Eastern(now)}, was set to end {Eastern(n.ExpiresAt)}", AdminId());
         return Ok((await DescribeAsync([n]))[0]);
+    }
+
+    // True when the page sent a version and the row has changed since.
+    private static bool IsStale(Notification n, uint? version) =>
+        version is uint v && v != n.Version;
+
+    // False when another save landed between reading and saving.
+    private async Task<bool> SaveAsync()
+    {
+        try
+        {
+            await db.SaveChangesAsync();
+            return true;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return false;
+        }
     }
 
     // The playlist this notification opens. A saved playlist that is now
@@ -371,6 +401,7 @@ public class AdminNotificationsController(
         var now = DateTime.UtcNow;
         var ids = await ParticipantIds.EnsureAsync(db);
         var noteIds = list.Select(n => n.Id).ToList();
+        var names = await AdminNames.LoadAsync(db, list.SelectMany(n => new[] { n.CreatedBy, n.UpdatedBy }));
 
         var receipts = await db.NotificationReceipts
             .AsNoTracking()
@@ -418,6 +449,7 @@ public class AdminNotificationsController(
             return (object)new
             {
                 id = n.Id,
+                version = n.Version,
                 title = n.Title,
                 bodyEn = n.BodyEn,
                 hasSpanish = n.BodyEs is not null,
@@ -434,7 +466,9 @@ public class AdminNotificationsController(
                 status = NotificationRules.StatusOf(n, now),
                 round = NotificationRules.RoundAt(n, now),
                 createdAt = n.CreatedAt,
+                createdBy = AdminNames.Of(names, n.CreatedBy),
                 updatedAt = n.UpdatedAt,
+                updatedBy = AdminNames.Of(names, n.UpdatedBy),
                 stoppedAt = n.CancelledAt,
                 counts = new
                 {

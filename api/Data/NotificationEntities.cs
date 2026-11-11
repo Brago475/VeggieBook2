@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace VeggieBook.Api.Data;
@@ -44,6 +45,12 @@ public class Notification
     public Guid? CreatedBy { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public Guid? UpdatedBy { get; set; }
+
+    // Postgres row version. Changes on every save; used to refuse an edit
+    // made from an older copy.
+    [Timestamp]
+    [Column("xmin")]
+    public uint Version { get; set; }
 
     public List<NotificationTarget> Targets { get; set; } = [];
 }

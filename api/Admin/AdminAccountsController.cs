@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 
@@ -21,7 +22,8 @@ namespace VeggieBook.Api.Admin;
 //
 // Email is shown only as the account's label. First and last name, password
 // hash, recovery PIN, security question and answer are never read here.
-// Research IDs are never returned here.
+// Research IDs are never returned here. Reopening password reset is written
+// to the activity log by username, never with a research ID.
 
 [ApiController]
 [Route("api/admin/accounts")]
@@ -29,7 +31,8 @@ namespace VeggieBook.Api.Admin;
 public class AdminAccountsController(
     AccountsContext db,
     UserManager<AppUser> users,
-    IConfiguration config) : ControllerBase
+    IConfiguration config,
+    ILogger<AdminAccountsController> logger) : ControllerBase
 {
     private const int DefaultTake = 25;
     private const int MaxTake = 200;
@@ -168,6 +171,10 @@ public class AdminAccountsController(
         var result = await users.UpdateAsync(user);
         if (!result.Succeeded)
             return StatusCode(500, new { error = "The account could not be unlocked. Please try again." });
+
+        var who = string.IsNullOrWhiteSpace(user.DisplayName) ? "an account with no username" : user.DisplayName;
+        await ActivityLog.SaveAdminAsync(db, logger, ActivityLog.RecoveryUnlocked, AuthSetup.UserId(User),
+            $"Password reset reopened for {who}");
 
         return NoContent();
     }

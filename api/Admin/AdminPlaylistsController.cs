@@ -25,13 +25,17 @@ namespace VeggieBook.Api.Admin;
 //   POST /api/admin/playlists/{id}/archive no longer offered for new sends
 //   POST /api/admin/playlists/{id}/restore offered again
 //
+// Edit takes the version the page loaded. If another admin saved since, the
+// change is refused with changed: true so the page can reload. Without a
+// version (older pages) no check is made.
+//
 // Automatic playlists are made from the notification editor (AutoPlaylists).
 // Playlists are archived, never deleted. Admins only. Every change is
-// written to the activity log.
+// written to the activity log with the admin who did it.
 
 public record PlaylistItemRequest(string? Kind, int Id);
 
-public record PlaylistRequest(string? NameEn, string? NameEs, List<PlaylistItemRequest>? Items);
+public record PlaylistRequest(string? NameEn, string? NameEs, List<PlaylistItemRequest>? Items, uint? Version);
 
 public record PlaylistPreviewRequest(List<PlaylistItemRequest>? Items, string? Lang);
 
@@ -47,6 +51,9 @@ public class AdminPlaylistsController(
     private const int MaxName = 80;
     private const int SnippetLength = 140;
 
+    private const string Changed =
+        "Another admin changed this playlist. Refresh to see the latest.";
+
     private sealed record Parsed(string NameEn, string? NameEs, List<PlaylistRef> Items);
 
     [HttpGet]
@@ -57,17 +64,22 @@ public class AdminPlaylistsController(
             .Select(p => new
             {
                 p.Id,
+                p.Version,
                 p.NameEn,
                 p.NameEs,
                 p.AutoVegetable,
                 p.AutoMeal,
                 p.ArchivedAt,
                 p.CreatedAt,
+                p.CreatedBy,
                 p.UpdatedAt,
+                p.UpdatedBy,
                 Tips = p.Items.Count(i => i.Kind == PlaylistKinds.Tip),
                 Recipes = p.Items.Count(i => i.Kind == PlaylistKinds.Recipe)
             })
             .ToListAsync();
+
+        var names = await AdminNames.LoadAsync(db, playlists.SelectMany(p => new[] { p.CreatedBy, p.UpdatedBy }));
 
         var choices = await db.PlaylistChoices
             .AsNoTracking()
@@ -94,6 +106,7 @@ public class AdminPlaylistsController(
             .Select(p => new
             {
                 id = p.Id,
+                version = p.Version,
                 nameEn = p.NameEn,
                 nameEs = p.NameEs,
                 auto = p.AutoMeal != null,
@@ -102,7 +115,9 @@ public class AdminPlaylistsController(
                 archived = p.ArchivedAt != null,
                 archivedAt = p.ArchivedAt,
                 createdAt = p.CreatedAt,
+                createdBy = AdminNames.Of(names, p.CreatedBy),
                 updatedAt = p.UpdatedAt,
+                updatedBy = AdminNames.Of(names, p.UpdatedBy),
                 tips = p.Tips,
                 recipes = p.Recipes,
                 kept = choices.TryGetValue(p.Id, out var c) ? c.Kept : 0,
@@ -326,7 +341,8 @@ public class AdminPlaylistsController(
         db.Playlists.Add(p);
         await db.SaveChangesAsync();
 
-        await PlaylistActivity.RecordAdminAsync(db, logger, PlaylistActivity.Created, p, PlaylistHelpers.Summary(p));
+        await PlaylistActivity.RecordAdminAsync(
+            db, logger, PlaylistActivity.Created, p, PlaylistHelpers.Summary(p), AdminId());
         return Ok(await DescribeAsync(p));
     }
 
@@ -335,6 +351,7 @@ public class AdminPlaylistsController(
     {
         var p = await db.Playlists.Include(x => x.Items).FirstOrDefaultAsync(x => x.Id == id);
         if (p is null) return NotFound(new { error = "That playlist no longer exists. Refresh the page." });
+        if (req.Version is uint v && v != p.Version) return Conflict(new { error = Changed, changed = true });
 
         var (parsed, error) = await ParseAsync(req);
         if (parsed is null) return BadRequest(new { error });
@@ -353,13 +370,14 @@ public class AdminPlaylistsController(
         p.AutoMeal = null;
         p.UpdatedAt = DateTime.UtcNow;
         p.UpdatedBy = AdminId();
-        await db.SaveChangesAsync();
+        if (!await SaveAsync()) return Conflict(new { error = Changed, changed = true });
 
         var parts = new List<string>();
         if (before != p.NameEn) parts.Add($"Renamed from \"{before}\" to \"{p.NameEn}\"");
         if (wasAuto) parts.Add("now hand-made");
         parts.Add(PlaylistHelpers.Summary(p));
-        await PlaylistActivity.RecordAdminAsync(db, logger, PlaylistActivity.Edited, p, string.Join(", ", parts));
+        await PlaylistActivity.RecordAdminAsync(
+            db, logger, PlaylistActivity.Edited, p, string.Join(", ", parts), AdminId());
         return Ok(await DescribeAsync(p));
     }
 
@@ -374,11 +392,12 @@ public class AdminPlaylistsController(
         p.ArchivedAt = now;
         p.UpdatedAt = now;
         p.UpdatedBy = AdminId();
-        await db.SaveChangesAsync();
+        if (!await SaveAsync()) return Conflict(new { error = Changed, changed = true });
 
         var kept = await db.PlaylistChoices.CountAsync(c => c.PlaylistId == id && c.Kept);
         var people = kept == 1 ? "1 person" : $"{kept} people";
-        await PlaylistActivity.RecordAdminAsync(db, logger, PlaylistActivity.Archived, p, $"Archived, kept by {people}");
+        await PlaylistActivity.RecordAdminAsync(
+            db, logger, PlaylistActivity.Archived, p, $"Archived, kept by {people}", AdminId());
         return Ok(await DescribeAsync(p));
     }
 
@@ -392,11 +411,25 @@ public class AdminPlaylistsController(
         p.ArchivedAt = null;
         p.UpdatedAt = DateTime.UtcNow;
         p.UpdatedBy = AdminId();
-        await db.SaveChangesAsync();
+        if (!await SaveAsync()) return Conflict(new { error = Changed, changed = true });
 
         await PlaylistActivity.RecordAdminAsync(
-            db, logger, PlaylistActivity.Edited, p, $"Restored, {PlaylistHelpers.Summary(p)}");
+            db, logger, PlaylistActivity.Edited, p, $"Restored, {PlaylistHelpers.Summary(p)}", AdminId());
         return Ok(await DescribeAsync(p));
+    }
+
+    // False when another save landed between reading and saving.
+    private async Task<bool> SaveAsync()
+    {
+        try
+        {
+            await db.SaveChangesAsync();
+            return true;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return false;
+        }
     }
 
     private async Task<(Parsed? Value, string? Error)> ParseAsync(PlaylistRequest req)
@@ -431,20 +464,27 @@ public class AdminPlaylistsController(
         return (new Parsed(nameEn, nameEs.Length == 0 ? null : nameEs, refs), null);
     }
 
-    private async Task<object> DescribeAsync(Playlist p) => new
+    private async Task<object> DescribeAsync(Playlist p)
     {
-        id = p.Id,
-        nameEn = p.NameEn,
-        nameEs = p.NameEs,
-        auto = p.AutoMeal != null,
-        autoVegetable = p.AutoVegetable,
-        autoMeal = p.AutoMeal,
-        archived = p.ArchivedAt != null,
-        archivedAt = p.ArchivedAt,
-        createdAt = p.CreatedAt,
-        updatedAt = p.UpdatedAt,
-        items = await PlaylistContent.LoadAsync(content, PlaylistHelpers.RefsOf(p), "en")
-    };
+        var names = await AdminNames.LoadAsync(db, [p.CreatedBy, p.UpdatedBy]);
+        return new
+        {
+            id = p.Id,
+            version = p.Version,
+            nameEn = p.NameEn,
+            nameEs = p.NameEs,
+            auto = p.AutoMeal != null,
+            autoVegetable = p.AutoVegetable,
+            autoMeal = p.AutoMeal,
+            archived = p.ArchivedAt != null,
+            archivedAt = p.ArchivedAt,
+            createdAt = p.CreatedAt,
+            createdBy = AdminNames.Of(names, p.CreatedBy),
+            updatedAt = p.UpdatedAt,
+            updatedBy = AdminNames.Of(names, p.UpdatedBy),
+            items = await PlaylistContent.LoadAsync(content, PlaylistHelpers.RefsOf(p), "en")
+        };
+    }
 
     private static string? Clip(string? text)
     {

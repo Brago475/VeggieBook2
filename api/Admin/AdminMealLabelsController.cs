@@ -17,7 +17,9 @@ namespace VeggieBook.Api.Admin;
 //                                          body { meals: ["lunch", "dinner"] }
 //
 // Labels live in meal_label; recipe and tip tables are never changed.
-// Admins only. Every change is written to the activity log.
+// Admins only. Every change is written to the activity log with the admin
+// who made it. If two admins save the same item at the same moment, the
+// slower one is asked to refresh.
 
 public record MealLabelsRequest(List<string>? Meals);
 
@@ -150,11 +152,24 @@ public class AdminMealLabelsController(
         foreach (var meal in after.Where(m => current.All(c => c.Meal != m)))
             db.MealLabels.Add(new MealLabel { Kind = kind, ItemId = id, Meal = meal, CreatedAt = now, CreatedBy = admin });
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Another admin saved this item at the same moment.
+            db.ChangeTracker.Clear();
+            return Conflict(new
+            {
+                error = "Another admin changed this item's labels at the same moment. Refresh to see them.",
+                changed = true
+            });
+        }
 
         await PlaylistActivity.RecordAdminLineAsync(
             db, logger, PlaylistActivity.MealLabelsChanged, id,
-            $"{kind}|{Meals.Names(after)}|{Meals.Names(before)}");
+            $"{kind}|{Meals.Names(after)}|{Meals.Names(before)}", admin);
 
         return Ok(new { kind, id, meals = after });
     }
