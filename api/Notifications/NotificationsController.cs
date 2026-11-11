@@ -21,7 +21,8 @@ namespace VeggieBook.Api.Notifications;
 //                                       counts.
 //
 // Visitors and admins get an empty list. Read means opened or closed.
-// Research lines follow NotificationActivity. Playlists: api/Playlists.
+// Activity lines: shown, link, and dismissed. Open only marks the receipt
+// as read. Research lines follow NotificationActivity. Playlists: api/Playlists.
 
 public record NotificationStepRequest(int? Round);
 
@@ -180,7 +181,9 @@ public class NotificationsController(
         // Any step implies the message was shown first.
         if (isNew && kind != NotificationActivity.Shown)
             await NotificationActivity.RecordAsync(db, logger, viewer.Id, NotificationActivity.Shown, n, round);
-        if (isNew || kind != NotificationActivity.Shown)
+
+        // Opening is a view, not an action: it marks the receipt read but writes no line.
+        if ((isNew || kind != NotificationActivity.Shown) && kind != NotificationActivity.Opened)
             await NotificationActivity.RecordAsync(db, logger, viewer.Id, kind, n, round);
 
         return NoContent();
