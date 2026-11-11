@@ -52,6 +52,9 @@ public static class ErrorCodes
     public const string RecoveryLocked = "recovery_locked";
     public const string ResetExpired = "reset_expired";
 
+    // Deleting an account
+    public const string AdminAccountDelete = "admin_account_delete";
+
     // Saving and editing books, and their covers
     public const string BookLimit = "book_limit";
     public const string UnknownVegetable = "unknown_vegetable";

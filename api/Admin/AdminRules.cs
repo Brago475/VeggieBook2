@@ -1,17 +1,18 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
+using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 
 namespace VeggieBook.Api.Admin;
 
-// Rules about admin accounts that more than one admin endpoint needs.
+// Rules about admin accounts shared by admin endpoints.
 //
 // There is one root (main) admin, set by Admin__RootEmail in the server's
 // .env, not in the code. Program.cs calls RequireRootEmail at startup, so the
 // API refuses to start without it.
 //
-// Only the root admin can see other admins, add or remove admins, and open
-// identity records. Regular admins never see admin accounts at all.
+// Being root needs both the root email and the Admin role. Only the root
+// admin can manage admins and open identity records.
 
 public static class AdminRules
 {
@@ -23,17 +24,21 @@ public static class AdminRules
             throw new InvalidOperationException("Admin__RootEmail is not set.");
     }
 
+    // True when this email is the root email. Used for labels only; access
+    // checks go through IsRootAsync.
     public static bool IsRoot(IConfiguration config, string? email) =>
         email is not null
         && string.Equals(email, config[Setting], StringComparison.OrdinalIgnoreCase);
 
-    // True when the signed-in user is the root admin.
+    // True when the signed-in user has the root email and the Admin role.
     public static async Task<bool> IsRootAsync(
         ClaimsPrincipal principal,
         UserManager<AppUser> users,
         IConfiguration config)
     {
         var user = await users.GetUserAsync(principal);
-        return user is not null && IsRoot(config, user.Email);
+        return user is not null
+            && IsRoot(config, user.Email)
+            && await users.IsInRoleAsync(user, Roles.Admin);
     }
 }

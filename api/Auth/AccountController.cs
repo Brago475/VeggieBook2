@@ -12,7 +12,9 @@ namespace VeggieBook.Api.Auth;
 //
 //   POST /api/auth/delete   delete the account
 //
-// Real accounts only. A guest is deleted by signing out.
+// Real accounts only. A guest is deleted by signing out. Admin accounts,
+// the root admin included, are refused; the root admin removes admin access
+// first, then the account can be deleted.
 //
 // Asks for the password again so a device left signed in cannot be used to
 // delete someone's account. Personal details are wiped and research data
@@ -31,6 +33,9 @@ public class AccountController(
     AccountsContext db,
     ILogger<AccountController> logger) : ControllerBase
 {
+    private static readonly ApiError AdminAccount =
+        new(ErrorCodes.AdminAccountDelete, "Admin accounts can't be deleted from the site.");
+
     [HttpPost("delete")]
     [Authorize(Policy = Roles.MemberPolicy)]
     [EnableRateLimiting(AuthSetup.RateLimitPolicy)]
@@ -38,6 +43,9 @@ public class AccountController(
     {
         var user = await users.GetUserAsync(User);
         if (user is null) return Unauthorized();
+
+        if (await users.IsInRoleAsync(user, Roles.Admin))
+            return Conflict(AdminAccount.Body());
 
         var password = req.Password ?? "";
         if (password.Length == 0 || password.Length > AuthSetup.MaxPasswordLength

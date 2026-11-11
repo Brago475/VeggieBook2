@@ -5,8 +5,9 @@ namespace VeggieBook.Api.Auth;
 //   Guest  a temporary account from "Continue as guest". Can make, save, and
 //          read books. Deleted on sign out, or 24 hours after it was made.
 //   User   every real account.
-//   Admin  given only by hand on the server, always together with User, so
-//          no screen or endpoint can make someone an admin.
+//   Admin  always held together with User. Given or removed by the root
+//          admin in the admin site; the root admin is set on the server
+//          (Admin__RootEmail) and can't lose the role from the site.
 public static class Roles
 {
     public const string Guest = "Guest";
