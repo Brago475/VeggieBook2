@@ -16,11 +16,12 @@ namespace VeggieBook.Api.Playlists;
 //   POST   /api/playlists/{id}/keep                   body { notificationId }
 //   POST   /api/playlists/{id}/skip                   body { notificationId }
 //   DELETE /api/playlists/{id}/keep                   take a kept playlist out
-//   POST   /api/playlists/{id}/opened/{kind}/{itemId} a tip or recipe opened from it
+//   POST   /api/playlists/{id}/opened/{kind}/{itemId} accepted, not recorded
 //
 // An admin playlist opens only when a live notification that reaches this
-// account links to it, or when the account kept it. Every step writes an
-// activity line (PlaylistActivity). Own playlists: OwnPlaylistsController.
+// account links to it, or when the account kept it. Only decisions (kept,
+// skipped, removed) write activity lines; viewing does not.
+// Own playlists: OwnPlaylistsController.
 
 public record PlaylistDecisionRequest(int? NotificationId);
 
@@ -124,8 +125,6 @@ public class PlaylistsController(
         if (choice?.Kept != true && !await OfferedAsync(uid, id)) return NotFound();
 
         var items = await PlaylistContent.LoadAsync(content, PlaylistHelpers.RefsOf(p), lang);
-        await PlaylistActivity.RecordAsync(
-            db, logger, uid, PlaylistActivity.Opened, id, PlaylistActivity.SourceAdmin, items.Count);
 
         Response.Headers.CacheControl = "no-store";
         return Ok(new
@@ -146,20 +145,9 @@ public class PlaylistsController(
     [HttpDelete("{id:int}/keep")]
     public Task<IActionResult> Remove(int id) => DecideAsync(id, false, null);
 
+    // Still called by the main site when a tip or recipe opens; views are not recorded.
     [HttpPost("{id:int}/opened/{kind}/{itemId:int}")]
-    public async Task<IActionResult> ItemOpened(int id, string kind, int itemId)
-    {
-        if (!PlaylistKinds.IsKnown(kind)) return NotFound();
-        var uid = CurrentUserId;
-
-        var inList = await db.PlaylistItems.AnyAsync(i => i.PlaylistId == id && i.Kind == kind && i.ItemId == itemId);
-        if (!inList) return NoContent();
-
-        await PlaylistActivity.RecordAsync(
-            db, logger, uid, PlaylistActivity.ItemOpened, id,
-            PlaylistActivity.ItemDetail(PlaylistActivity.SourceAdmin, kind, itemId));
-        return NoContent();
-    }
+    public IActionResult ItemOpened(int id, string kind, int itemId) => NoContent();
 
     // Keep, skip, or take out. Only a change writes a line: kept, skipped, or
     // removed when a kept playlist is let go.

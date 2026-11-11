@@ -9,8 +9,9 @@ namespace VeggieBook.Api.Playlists;
 //
 // Participant lines follow the same rules as notification lines: real,
 // non-admin accounts with tracking on while a study is running. ContentId
-// holds the playlist number and Detail the source ("admin" or "own"); for an
-// opened item, Detail is "source:kind:id" (for example "admin:recipe:212").
+// holds the playlist number and Detail the source ("admin" or "own").
+// Only actions are recorded (kept, skipped, removed, own created, edited,
+// deleted). Opened and ItemOpened remain so older lines still display.
 //
 // Admin lines carry the admin in AdminId. Playlist lines hold the playlist
 // number in ContentId and a readable summary in Detail. Meal label lines
