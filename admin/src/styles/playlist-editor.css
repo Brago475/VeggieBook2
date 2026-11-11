@@ -1,0 +1,138 @@
+/* Step-by-step playlist editor. The dialog, fields, item list and preview
+   come from the Studies, Notifications and Playlists styles. */
+
+/* Step bar */
+.pe-steps {
+  list-style: none;
+  margin: 0;
+  padding: 10px 24px 0;
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #eef1ed;
+}
+
+.pe-steps li {
+  flex: 1;
+}
+
+.pe-step {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px 10px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.pe-step:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.pe-step:hover:not(:disabled):not(.is-current) {
+  color: #1f6b35;
+}
+
+.pe-step.is-current {
+  border-bottom-color: #1f6b35;
+  color: #111827;
+}
+
+.pe-step.is-done {
+  color: #1f6b35;
+}
+
+.pe-step-num {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e8f3ea;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f6b35;
+}
+
+.pe-step.is-current .pe-step-num,
+.pe-step.is-done .pe-step-num {
+  background: #1f6b35;
+  color: #fff;
+}
+
+/* Step 1 */
+.pe-name {
+  max-width: 560px;
+}
+
+/* Step 2 */
+.pe-add {
+  display: grid;
+  gap: 12px;
+}
+
+.pe-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pe-count {
+  font-size: 13px;
+  color: #4b5563;
+}
+
+/* Step 3 */
+.pe-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e3e8e2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.pe-summary-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.pe-summary-text strong {
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pe-summary-text span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Footer */
+.pe-spacer {
+  flex: 1;
+}
+
+@media (max-width: 640px) {
+  .pe-steps {
+    padding: 8px 12px 0;
+  }
+
+  .pe-step {
+    font-size: 12px;
+  }
+}

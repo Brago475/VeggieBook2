@@ -1,14 +1,18 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import type { BrowseItem, PickedItem, PlaylistDetail, PlaylistDraft, PlaylistOptions } from '../../types/playlists'
+import '../../styles/playlist-steps.css'
+import '../../styles/playlist-editor.css'
+import type { PickedItem, PlaylistDetail, PlaylistDraft, PlaylistOptions } from '../../types/playlists'
 import { NavIcon } from '../icons/NavIcons'
+import { ItemChooser } from '../notifications/ItemChooser'
 import { StudyIcon } from '../studies/StudyIcons'
-import { ContentBrowser } from './ContentBrowser'
 import { PlaylistItems } from './PlaylistItems'
 import { PlaylistPreview } from './PlaylistPreview'
-import { itemKey, MAX_ITEMS, MAX_NAME, pickedFromBrowse, pickedFromEntry } from './playlistFormat'
+import { PlaylistSteps } from './PlaylistSteps'
+import { countText, MAX_ITEMS, MAX_NAME, pickedFromEntry } from './playlistFormat'
 
-// Create or edit a playlist, in the Studies dialog style: names, quick start
-// and View all, the ordered list, and a live preview. Closes on Cancel, the
+// Create or edit a playlist in three steps: name, add tips and recipes as
+// photo cards, then review the order with a live preview and save. New
+// playlists open on step 1, existing ones on Review. Closes on Cancel, the
 // X, Escape, or a click outside.
 //
 // Editing sends the version it opened with, so a save is refused if another
@@ -22,6 +26,9 @@ type Props = {
   onClose: () => void
 }
 
+const STEPS = ['Name', 'Add tips and recipes', 'Review and save']
+const REVIEW = 2
+
 // "Made by alex, last edited by sam", or null when nobody is recorded.
 function whoLine(from: PlaylistDetail): string | null {
   const parts: string[] = []
@@ -34,6 +41,7 @@ function whoLine(from: PlaylistDetail): string | null {
 
 export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
   const editing = from !== null
+  const [step, setStep] = useState(editing ? REVIEW : 0)
   const [nameEn, setNameEn] = useState(from?.nameEn ?? '')
   const [nameEs, setNameEs] = useState(from?.nameEs ?? '')
   const [items, setItems] = useState<PickedItem[]>(() => from?.items.map(pickedFromEntry) ?? [])
@@ -41,7 +49,6 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
   const [version] = useState<number | null>(() => from?.version ?? null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [note, setNote] = useState<string | null>(null)
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -51,16 +58,23 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
     return () => document.removeEventListener('keydown', onKey)
   }, [busy, onClose])
 
-  const picked = new Set(items.map((i) => itemKey(i.kind, i.id)))
+  const nameProblem = nameEn.trim() ? null : 'Give the playlist a name.'
+  const itemsProblem =
+    items.length === 0
+      ? 'Add at least one tip or recipe.'
+      : items.length > MAX_ITEMS
+        ? `A playlist holds up to ${MAX_ITEMS} items. Remove ${items.length - MAX_ITEMS} to go on.`
+        : null
+  // The furthest step that can be opened.
+  const reachable = nameProblem ? 0 : itemsProblem ? 1 : REVIEW
 
-  function add(list: BrowseItem[]) {
-    const fresh = list.filter((i) => !picked.has(itemKey(i.kind, i.id)))
-    const room = Math.max(MAX_ITEMS - items.length, 0)
-    const taken = fresh.slice(0, room)
-    setItems([...items, ...taken.map(pickedFromBrowse)])
-    const left = fresh.length - taken.length
-    setNote(left > 0 ? `A playlist holds up to ${MAX_ITEMS} items, so ${left} were not added.` : null)
+  function go(target: number) {
+    if (target > reachable) {
+      setError(nameProblem ?? itemsProblem)
+      return
+    }
     setError(null)
+    setStep(target)
   }
 
   function move(index: number, by: -1 | 1) {
@@ -73,27 +87,26 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
 
   function remove(index: number) {
     setItems(items.filter((_, i) => i !== index))
-    setNote(null)
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy) return
-
-    const en = nameEn.trim()
-    if (!en) {
-      setError('Give the playlist a name.')
+    if (step < REVIEW) {
+      go(step + 1)
       return
     }
-    if (items.length === 0) {
-      setError('Add at least one tip or recipe.')
+
+    const problem = nameProblem ?? itemsProblem
+    if (problem) {
+      setError(problem)
       return
     }
 
     setBusy(true)
     setError(null)
     const message = await onSave({
-      nameEn: en,
+      nameEn: nameEn.trim(),
       nameEs: nameEs.trim() || null,
       items: items.map((i) => ({ kind: i.kind, id: i.id })),
       version,
@@ -105,6 +118,7 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
   const heading = editing ? `Edit "${from.nameEn}"` : 'New playlist'
   const subtitle =
     (editing ? whoLine(from) : null) ?? 'People get it from a notification and choose Keep or Skip.'
+  const tips = items.filter((i) => i.kind === 'tip').length
 
   return (
     <div className="st-overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
@@ -129,66 +143,114 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
           </button>
         </div>
 
+        <PlaylistSteps steps={STEPS} current={step} reachable={reachable} onGo={go} />
+
         <div className="st-dialog-body nt-dialog-body">
-          <div className="pl-editor">
-            <div className="pl-editor-main">
-              <section className="st-dialog-section nt-section">
-                <span className="st-section-title">Name</span>
-                <div className="nt-row">
-                  <label className="nt-field">
-                    <span className="nt-label">English</span>
-                    <input
-                      className="nt-input"
-                      maxLength={MAX_NAME}
-                      value={nameEn}
-                      placeholder="For example: Zucchini snacks"
-                      onChange={(e) => setNameEn(e.target.value)}
-                    />
-                  </label>
-                  <label className="nt-field">
-                    <span className="nt-label">Spanish</span>
-                    <input
-                      className="nt-input"
-                      maxLength={MAX_NAME}
-                      value={nameEs}
-                      placeholder="Optional"
-                      onChange={(e) => setNameEs(e.target.value)}
-                    />
-                  </label>
-                </div>
-              </section>
+          {step === 0 && (
+            <section className="st-dialog-section nt-section pe-name">
+              <span className="st-section-title">Name</span>
+              <label className="nt-field">
+                <span className="nt-label">English</span>
+                <input
+                  className="nt-input"
+                  maxLength={MAX_NAME}
+                  value={nameEn}
+                  autoFocus
+                  placeholder="For example: Zucchini snacks"
+                  onChange={(e) => setNameEn(e.target.value)}
+                />
+              </label>
+              <label className="nt-field">
+                <span className="nt-label">Spanish</span>
+                <input
+                  className="nt-input"
+                  maxLength={MAX_NAME}
+                  value={nameEs}
+                  placeholder="Optional"
+                  onChange={(e) => setNameEs(e.target.value)}
+                />
+                <span className="nt-hint">Left empty, Spanish readers see the English name.</span>
+              </label>
+            </section>
+          )}
 
-              <section className="st-dialog-section nt-section">
+          {step === 1 && (
+            <section className="st-dialog-section nt-section pe-add">
+              <div className="pe-section-head">
                 <span className="st-section-title">Add tips and recipes</span>
-                <ContentBrowser options={options} picked={picked} onAdd={add} />
-              </section>
+                <span className="pe-count">
+                  {items.length} of up to {MAX_ITEMS} picked
+                </span>
+              </div>
+              <ItemChooser options={options} chosen={items} onChange={setItems} />
+            </section>
+          )}
 
-              <section className="st-dialog-section nt-section">
-                <span className="st-section-title">In this playlist ({items.length})</span>
-                {note && <p className="pl-note">{note}</p>}
-                <PlaylistItems items={items} onMove={move} onRemove={remove} />
-              </section>
+          {step === REVIEW && (
+            <div className="pl-editor">
+              <div className="pl-editor-main">
+                <div className="pe-summary">
+                  <div className="pe-summary-text">
+                    <strong>{nameEn.trim() || 'Untitled playlist'}</strong>
+                    <span>
+                      {nameEs.trim() ? `Spanish: ${nameEs.trim()}` : 'No Spanish name'}
+                      {', '}
+                      {countText(tips, items.length - tips)}
+                    </span>
+                  </div>
+                  <button type="button" className="ps-link" onClick={() => go(0)}>
+                    Change
+                  </button>
+                </div>
 
-              {error && (
-                <p className="error" role="alert">
-                  {error}
-                </p>
-              )}
+                <section className="st-dialog-section nt-section">
+                  <div className="pe-section-head">
+                    <span className="st-section-title">In this playlist ({items.length})</span>
+                    <button type="button" className="ps-link" onClick={() => go(1)}>
+                      Add more
+                    </button>
+                  </div>
+                  <span className="nt-hint">People see the items in this order.</span>
+                  <PlaylistItems items={items} onMove={move} onRemove={remove} />
+                </section>
+              </div>
+
+              <aside className="pl-editor-side">
+                <PlaylistPreview nameEn={nameEn} nameEs={nameEs} items={items} />
+              </aside>
             </div>
+          )}
 
-            <aside className="pl-editor-side">
-              <PlaylistPreview nameEn={nameEn} nameEs={nameEs} items={items} />
-            </aside>
-          </div>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
         </div>
 
         <div className="st-dialog-actions nt-dialog-foot">
-          <button type="button" className="st-button" disabled={busy} onClick={onClose}>
-            Cancel
-          </button>
+          {step === 0 ? (
+            <button type="button" className="st-button" disabled={busy} onClick={onClose}>
+              Cancel
+            </button>
+          ) : (
+            <button type="button" className="st-button" disabled={busy} onClick={() => go(step - 1)}>
+              <NavIcon name="back" size={16} />
+              Back
+            </button>
+          )}
+          <span className="pe-spacer" />
           <button type="submit" className="st-button is-green" disabled={busy}>
-            <NavIcon name="playlist" size={16} />
-            {busy ? 'Saving...' : editing ? 'Save changes' : 'Save playlist'}
+            {step === REVIEW ? (
+              <>
+                <NavIcon name="playlist" size={16} />
+                {busy ? 'Saving...' : editing ? 'Save changes' : 'Save playlist'}
+              </>
+            ) : step === 0 ? (
+              'Next: add items'
+            ) : (
+              `Next: review (${items.length})`
+            )}
           </button>
         </div>
       </form>
