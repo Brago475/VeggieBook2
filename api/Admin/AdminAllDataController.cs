@@ -20,11 +20,13 @@ namespace VeggieBook.Api.Admin;
 //                                        one file by itself
 //
 // Filters: see ExportQuery.cs. A study that doesn't exist gives 404.
-// Admins only. Every row is keyed by the anonymous research ID.
+// Admins only. Every row is keyed by the anonymous research ID. Every file
+// downloaded is written to the activity log (LogAdminDownload).
 
 [ApiController]
 [Route("api/admin/all-data")]
 [Authorize(Policy = Roles.AdminPolicy)]
+[LogAdminDownload]
 public class AdminAllDataController(AccountsContext db, VeggieBookContext content) : ControllerBase
 {
     private const string XlsxType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";

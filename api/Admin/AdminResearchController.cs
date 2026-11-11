@@ -26,11 +26,13 @@ namespace VeggieBook.Api.Admin;
 // Admins only (Roles.AdminPolicy). The sheets are built in
 // Research/ResearchSheets.cs and Research/ChoiceTally.cs, and the files in
 // Research/Export/. Every row is keyed by the anonymous research ID or, for
-// Most chosen, by answer; no email or name is read.
+// Most chosen, by answer; no email or name is read. Every file downloaded is
+// written to the activity log (LogAdminDownload).
 
 [ApiController]
 [Route("api/admin/research")]
 [Authorize(Policy = Roles.AdminPolicy)]
+[LogAdminDownload]
 public class AdminResearchController(AccountsContext db, VeggieBookContext content)
     : ControllerBase
 {
