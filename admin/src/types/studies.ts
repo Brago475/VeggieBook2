@@ -28,6 +28,9 @@ export type StudySummary = {
     stayedOut: number
   }
   booksSaved: number
+  // Admin usernames, merged in by useStudies; null when not recorded.
+  startedBy?: string | null
+  endedBy?: string | null
 }
 
 // Who a study switched on right now would include.
@@ -38,10 +41,18 @@ export type StudyPreview = {
   offIds: OffPerson[]
 }
 
+// Who switched each study on and off.
+export type StudyAdmins = {
+  id: number
+  startedBy: string | null
+  endedBy: string | null
+}
+
 // GET /api/admin/studies
 export type StudiesResponse = {
   running: boolean
   nextNumber: number
   preview: StudyPreview
   studies: StudySummary[] // newest first
+  admins?: StudyAdmins[]
 }

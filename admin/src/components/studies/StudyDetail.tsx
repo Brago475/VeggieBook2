@@ -3,8 +3,9 @@ import { OffIdList } from './OffIdList'
 import { StudyIcon, type StudyIconName } from './StudyIcons'
 import { fullDateTime, plural } from './studyFormat'
 
-// One study: when it ran, its four numbers, the research IDs of people with
-// tracking off, and links to the people and the data.
+// One study: when it ran and who switched it on and off, its four numbers,
+// the research IDs of people with tracking off, and links to the people and
+// the data.
 //
 // For the running study the numbers are as of now; for an ended one, as of
 // the moment it was switched off.
@@ -23,8 +24,19 @@ type Stat = {
   tone: 'green' | 'orange' | 'blue'
 }
 
+// "Switched on by alex, switched off by sam", or null when not recorded.
+function whoLine(study: StudySummary): string | null {
+  const parts: string[] = []
+  if (study.startedBy) parts.push(`Switched on by ${study.startedBy}`)
+  if (!study.running && study.endedBy) parts.push(`switched off by ${study.endedBy}`)
+  if (parts.length === 0) return null
+  const line = parts.join(', ')
+  return line.charAt(0).toUpperCase() + line.slice(1)
+}
+
 export function StudyDetail({ study, onOpenParticipants, onOpenData }: Props) {
   const offBySelf = study.offIds.filter((p) => p.by === 'self').length
+  const who = whoLine(study)
 
   const stats: Stat[] = [
     {
@@ -83,6 +95,12 @@ export function StudyDetail({ study, onOpenParticipants, onOpenData }: Props) {
               </>
             )}
           </span>
+          {who && (
+            <span className="st-detail-when">
+              <StudyIcon name="users" size={14} />
+              {who}
+            </span>
+          )}
         </div>
       </div>
 

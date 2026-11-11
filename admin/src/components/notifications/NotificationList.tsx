@@ -10,10 +10,11 @@ import '../../styles/notification-schedule.css'
 import '../../styles/notification-names.css'
 import '../../styles/notification-compact.css'
 
-// One compact card per notification: status, title and actions on one line,
-// the message, the playlist it opens as a chip, a live countdown, then
-// Details, which opens to the dates, audience, language and the four counts.
-// The closed Details row still shows the counts in one line. Counts are people.
+// One compact card per notification: status, title, who made it, and
+// actions on one line, the message, the playlist it opens as a chip, a live
+// countdown, then Details, which opens to the dates, audience, language, who
+// made and last edited it, and the four counts. The closed Details row still
+// shows the counts in one line. Counts are people.
 
 type Props = {
   items: AdminNotification[]
@@ -111,6 +112,7 @@ export function NotificationList({ items, onEdit, onCopy, onRename, onStop }: Pr
                   </span>
                 )}
                 {n.templateKey && <span className="nt-tag">Template</span>}
+                {n.createdBy && <span className="nt-tag">By {n.createdBy}</span>}
               </div>
               <div className="nt-actions">
                 {n.status !== 'stopped' && (
@@ -162,6 +164,10 @@ export function NotificationList({ items, onEdit, onCopy, onRename, onStop }: Pr
                   <Fact icon="activity" text={repeatText(n.repeatDays)} />
                   <Fact icon="users" text={audienceText(n)} />
                   <Fact icon="content" text={n.hasSpanish ? 'English and Spanish' : 'English only'} />
+                  {n.createdBy && <Fact icon="users" text={`Made by ${n.createdBy}`} />}
+                  {n.updatedBy && n.updatedAt && (
+                    <Fact icon="users" text={`Last edited by ${n.updatedBy}, ${formatDateTime(n.updatedAt)}`} />
+                  )}
                   {n.stoppedAt && <Fact icon="lock" text={`Stopped ${formatDateTime(n.stoppedAt)}`} />}
                   <Fact icon="content" text={`Number ${n.id}`} />
                 </div>

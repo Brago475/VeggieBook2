@@ -6,6 +6,7 @@ export type MealKey = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
 export type PlaylistSummary = {
   id: number
+  version: number
   nameEn: string
   nameEs: string | null
   auto: boolean
@@ -14,7 +15,10 @@ export type PlaylistSummary = {
   archived: boolean
   archivedAt: string | null
   createdAt: string
+  // Admin usernames; null on older playlists.
+  createdBy: string | null
   updatedAt: string | null
+  updatedBy: string | null
   tips: number
   recipes: number
   kept: number
@@ -54,6 +58,7 @@ export type PlaylistEntry = RecipeEntry | TipEntry
 
 export type PlaylistDetail = {
   id: number
+  version: number
   nameEn: string
   nameEs: string | null
   auto: boolean
@@ -62,7 +67,9 @@ export type PlaylistDetail = {
   archived: boolean
   archivedAt: string | null
   createdAt: string
+  createdBy: string | null
   updatedAt: string | null
+  updatedBy: string | null
   items: PlaylistEntry[]
 }
 
@@ -108,10 +115,12 @@ export type PickedItem = {
   photo: string | null
 }
 
+// version is the one the editor opened with; left out when creating.
 export type PlaylistDraft = {
   nameEn: string
   nameEs: string | null
   items: PlaylistItemRef[]
+  version?: number | null
 }
 
 // Meal labels screen.

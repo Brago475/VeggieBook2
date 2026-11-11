@@ -27,6 +27,8 @@ export type NotificationPlaylist = {
 
 export type AdminNotification = {
   id: number
+  // Row version; sent back on edit so a stale copy is refused.
+  version: number
   // Admin-only label; the app never shows it.
   title: string | null
   bodyEn: string
@@ -44,7 +46,10 @@ export type AdminNotification = {
   status: NotificationStatus
   round: number
   createdAt: string
+  // Admin usernames; null on older messages.
+  createdBy: string | null
   updatedAt: string | null
+  updatedBy: string | null
   stoppedAt: string | null
   counts: NotificationCounts
 }
@@ -74,7 +79,8 @@ export type PickPerson = {
 }
 
 // What the editor sends. Dates are ISO strings. With startNow the server
-// sets the start to the moment it saves, and startsAt is null.
+// sets the start to the moment it saves, and startsAt is null. version is
+// the one the editor opened with; null when creating.
 export type NotificationDraft = {
   title: string | null
   bodyEn: string
@@ -92,4 +98,5 @@ export type NotificationDraft = {
   playlistId: number | null
   playlistVegetable: string | null
   playlistMeal: MealKey | null
+  version: number | null
 }

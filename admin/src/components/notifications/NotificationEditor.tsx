@@ -22,6 +22,9 @@ import { ScheduleSection } from './ScheduleSection'
 // is saved first, then sent like a saved playlist. Closes on Cancel, the X,
 // Escape, or a click outside.
 //
+// Editing sends the version it opened with, so a save is refused if another
+// admin saved first. The header names who made it and who edited it last.
+//
 // Send again (a copy) keeps the title, text, playlist, audience and repeat,
 // and leaves the dates empty so they are picked fresh.
 
@@ -67,6 +70,16 @@ function initialTitle(from: AdminNotification | null, editing: boolean): string 
   return editing ? from.title : from.title.replace(COPY_ENDINGS, '').trim()
 }
 
+// "Made by alex, last edited by sam", or null when nobody is recorded.
+function whoLine(from: AdminNotification): string | null {
+  const parts: string[] = []
+  if (from.createdBy) parts.push(`Made by ${from.createdBy}`)
+  if (from.updatedBy) parts.push(`last edited by ${from.updatedBy}`)
+  if (parts.length === 0) return null
+  const line = parts.join(', ')
+  return line.charAt(0).toUpperCase() + line.slice(1)
+}
+
 export function NotificationEditor({ mode, from, templates, onSave, onClose }: Props) {
   const editing = mode === 'edit' && from !== null
   const now = useNow(1000)
@@ -84,6 +97,8 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
   const [includeGuests, setIncludeGuests] = useState(from?.includeGuests ?? false)
   const [includeIds, setIncludeIds] = useState<string[]>(from?.includeIds ?? [])
   const [excludeIds, setExcludeIds] = useState<string[]>(from?.excludeIds ?? [])
+  // The version this editor opened with; refreshing the list does not change it.
+  const [version] = useState<number | null>(() => (editing ? from.version : null))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -200,6 +215,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
       playlistId: playlistMode === 'made' ? playlistId : null,
       playlistVegetable: playlistMode === 'auto' ? playlist.vegetable : null,
       playlistMeal: playlistMode === 'auto' && playlist.meal ? playlist.meal : null,
+      version,
     })
     setBusy(false)
     if (message) setError(message)
@@ -207,7 +223,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
 
   const heading = editing ? `Edit ${notificationName(from)}` : from ? 'Send again' : 'New notification'
   const subtitle = editing
-    ? 'Changes apply right away. What people already did with it stays recorded.'
+    ? (whoLine(from) ?? 'Changes apply right away. What people already did with it stays recorded.')
     : 'Shown in the app as a pop-up and in Notifications.'
   const saveLabel = editing ? 'Save changes' : startsNow ? 'Send now' : 'Schedule'
 

@@ -10,6 +10,9 @@ import { itemKey, MAX_ITEMS, MAX_NAME, pickedFromBrowse, pickedFromEntry } from 
 // Create or edit a playlist, in the Studies dialog style: names, quick start
 // and View all, the ordered list, and a live preview. Closes on Cancel, the
 // X, Escape, or a click outside.
+//
+// Editing sends the version it opened with, so a save is refused if another
+// admin saved first. The header names who made it and who edited it last.
 
 type Props = {
   // Edit: the playlist. Create: null.
@@ -19,11 +22,23 @@ type Props = {
   onClose: () => void
 }
 
+// "Made by alex, last edited by sam", or null when nobody is recorded.
+function whoLine(from: PlaylistDetail): string | null {
+  const parts: string[] = []
+  if (from.createdBy) parts.push(`Made by ${from.createdBy}`)
+  if (from.updatedBy) parts.push(`last edited by ${from.updatedBy}`)
+  if (parts.length === 0) return null
+  const line = parts.join(', ')
+  return line.charAt(0).toUpperCase() + line.slice(1)
+}
+
 export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
   const editing = from !== null
   const [nameEn, setNameEn] = useState(from?.nameEn ?? '')
   const [nameEs, setNameEs] = useState(from?.nameEs ?? '')
   const [items, setItems] = useState<PickedItem[]>(() => from?.items.map(pickedFromEntry) ?? [])
+  // The version this editor opened with; refreshing the list does not change it.
+  const [version] = useState<number | null>(() => from?.version ?? null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
@@ -81,13 +96,15 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
       nameEn: en,
       nameEs: nameEs.trim() || null,
       items: items.map((i) => ({ kind: i.kind, id: i.id })),
+      version,
     })
     setBusy(false)
     if (message) setError(message)
   }
 
   const heading = editing ? `Edit "${from.nameEn}"` : 'New playlist'
-  const subtitle = 'People get it from a notification and choose Keep or Skip.'
+  const subtitle =
+    (editing ? whoLine(from) : null) ?? 'People get it from a notification and choose Keep or Skip.'
 
   return (
     <div className="st-overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>

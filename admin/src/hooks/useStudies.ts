@@ -5,9 +5,24 @@ import { api } from '../utils/api'
 // Loads the Studies page, switches a study on or off, and renames or
 // deletes a study.
 //
+// Who switched each study on and off is merged into each study, so the
+// screens read it from the study itself.
+//
 // After each change, the whole page loads again, so the list, the numbers,
 // and the preview all agree with the server. A failed change keeps the page
 // as it was and returns the API's message for the page to show.
+
+function withAdmins(res: StudiesResponse): StudiesResponse {
+  const by = new Map((res.admins ?? []).map((a) => [a.id, a]))
+  return {
+    ...res,
+    studies: res.studies.map((s) => ({
+      ...s,
+      startedBy: by.get(s.id)?.startedBy ?? null,
+      endedBy: by.get(s.id)?.endedBy ?? null,
+    })),
+  }
+}
 
 export function useStudies() {
   const [data, setData] = useState<StudiesResponse | null>(null)
@@ -17,7 +32,7 @@ export function useStudies() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      setData(await api<StudiesResponse>('/admin/studies'))
+      setData(withAdmins(await api<StudiesResponse>('/admin/studies')))
       setError(null)
     } catch (err) {
       setError((err as Error).message)

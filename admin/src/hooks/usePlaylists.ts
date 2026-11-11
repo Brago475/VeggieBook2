@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { PlaylistDraft, PlaylistOptions, PlaylistSummary } from '../types/playlists'
-import { api } from '../utils/api'
+import { api, isChanged } from '../utils/api'
 
 // Loads the Playlists page and runs create, edit, archive, and restore.
 // The list reloads after each change and every minute while the tab is
 // visible. A failed change returns the API's message for the page to show.
+// If another admin saved the same playlist first, the change is refused and
+// the message asks to reopen it.
 
 const REFRESH_MS = 60_000
+
+const CHANGED =
+  'Another admin saved changes to this playlist first. Close this window and open it again to see them.'
 
 export function usePlaylists() {
   const [list, setList] = useState<PlaylistSummary[] | null>(null)
@@ -43,7 +48,7 @@ export function usePlaylists() {
         return null
       } catch (err) {
         await load()
-        return (err as Error).message
+        return isChanged(err) ? CHANGED : (err as Error).message
       }
     },
     [load],

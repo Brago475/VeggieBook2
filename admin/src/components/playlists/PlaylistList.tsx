@@ -2,7 +2,7 @@ import type { PlaylistSummary } from '../../types/playlists'
 import { NavIcon } from '../icons/NavIcons'
 import { plural } from './playlistFormat'
 
-// One compact card per playlist.
+// One compact card per playlist, with who made it and who edited it last.
 
 type Props = {
   items: PlaylistSummary[]
@@ -33,6 +33,8 @@ export function PlaylistList({ items, opening, onEdit, onArchive, onRestore }: P
               </span>
               <span className="pl-chip">Kept by {p.kept}</span>
               <span className="pl-chip">Not kept by {p.notKept}</span>
+              {p.createdBy && <span className="pl-chip">By {p.createdBy}</span>}
+              {p.updatedBy && <span className="pl-chip">Edited by {p.updatedBy}</span>}
             </div>
           </div>
 

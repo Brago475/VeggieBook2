@@ -1,14 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { AdminNotification, NotificationDraft, TemplatesResponse } from '../types/notifications'
-import { api } from '../utils/api'
+import { api, isChanged } from '../utils/api'
 
 // Loads the Notifications page and runs create, edit, rename, and stop.
 // After each change the list loads again so counts and statuses match the
 // server. It also reloads every minute while the tab is visible, so a
 // scheduled message turns live and counts move without a refresh. A failed
 // change returns the API's message for the page to show.
+//
+// Edit and rename send the version the admin was looking at. If another
+// admin saved first, the change is refused, the list reloads, and the
+// message asks to reopen it.
 
 const REFRESH_MS = 60_000
+
+const CHANGED =
+  'Another admin saved changes to this notification first. Close this window and open it again to see them.'
 
 export function useNotifications() {
   const [list, setList] = useState<AdminNotification[] | null>(null)
@@ -45,7 +52,7 @@ export function useNotifications() {
         return null
       } catch (err) {
         await load()
-        return (err as Error).message
+        return isChanged(err) ? CHANGED : (err as Error).message
       }
     },
     [load],
@@ -63,10 +70,15 @@ export function useNotifications() {
     [change],
   )
 
+  // Uses the version of the message as the page shows it.
   const rename = useCallback(
-    (id: number, title: string | null) =>
-      change(() => api(`/admin/notifications/${id}/title`, { method: 'PUT', body: { title } })),
-    [change],
+    (id: number, title: string | null) => {
+      const version = list?.find((n) => n.id === id)?.version ?? null
+      return change(() =>
+        api(`/admin/notifications/${id}/title`, { method: 'PUT', body: { title, version } }),
+      )
+    },
+    [change, list],
   )
 
   const stop = useCallback(
