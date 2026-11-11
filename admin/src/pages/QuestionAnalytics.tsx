@@ -9,6 +9,7 @@ import { QuestionsTab } from '../components/questions/QuestionsTab'
 import { StatisticsTab } from '../components/questions/StatisticsTab'
 import { applyFilters, noQaFilters, shares, veggieOf, type QaFilters } from '../components/questions/questionMath'
 import { QuestionsSkeleton } from '../components/skeletons/QuestionsSkeleton'
+import { useHashParam } from '../hooks/useHashParam'
 import { useHeld } from '../hooks/useHeld'
 import { useQuestionData } from '../hooks/useQuestionData'
 import { questionName, shortAnswer } from '../utils/answerNames'
@@ -19,8 +20,9 @@ import '../styles/books.css'
 import '../styles/questions.css'
 
 // Admin Question Analytics page: answer shares per question, picks,
-// two-question comparison, and descriptive statistics. Data is loaded once
-// per study and filtered client-side.
+// two-question comparison, and descriptive statistics. The open view is
+// kept in the address. Data is loaded once per study and filtered
+// client-side.
 
 type Tab = 'questions' | 'picks' | 'compare' | 'statistics'
 
@@ -30,6 +32,8 @@ const tabs: { id: Tab; label: string }[] = [
   { id: 'compare', label: 'Compare' },
   { id: 'statistics', label: 'Statistics' },
 ]
+
+const TAB_IDS: readonly Tab[] = tabs.map((t) => t.id)
 
 /** Monday of the current week, "yyyy-MM-dd", local time. */
 function thisWeek(): string {
@@ -43,7 +47,7 @@ export function QuestionAnalytics() {
   const [study, setStudy] = useState<number | null>(null)
   const { data, error, loading, reload } = useQuestionData(study)
   const [filters, setFilters] = useState<QaFilters>(noQaFilters)
-  const [tab, setTab] = useState<Tab>('questions')
+  const [tab, setTab] = useHashParam('tab', TAB_IDS)
   // Outline stays up briefly even on a fast load.
   const firstLoad = useHeld(!data && !error)
   const ready = !!data && !firstLoad

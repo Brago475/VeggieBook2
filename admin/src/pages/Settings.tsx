@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { AccountsTab } from '../components/settings/AccountsTab'
 import { SiteSettingsTab } from '../components/settings/SiteSettingsTab'
+import { useHashParam } from '../hooks/useHashParam'
 import { useHeld } from '../hooks/useHeld'
 import { useSiteSettings } from '../hooks/useSiteSettings'
 import '../styles/studies.css'
@@ -8,9 +8,12 @@ import '../styles/books.css'
 import '../styles/settings.css'
 
 // Admin Settings: Accounts and Site settings. What each admin sees depends
-// on their role; the API enforces the same rules.
+// on their role; the API enforces the same rules. The open tab is kept in
+// the address.
 
 type Tab = 'accounts' | 'site'
+
+const TABS: readonly Tab[] = ['accounts', 'site']
 
 type Props = {
   email: string
@@ -19,7 +22,7 @@ type Props = {
 }
 
 export function Settings({ email, isRoot, onSignOut }: Props) {
-  const [tab, setTab] = useState<Tab>('accounts')
+  const [tab, setTab] = useHashParam('tab', TABS)
   const { data, error, reload } = useSiteSettings()
   const ready = !useHeld(!data && !error)
 
