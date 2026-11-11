@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { SignOutIcon, UserIcon } from '../components/icons/AccountIcons'
+import { AdminDeleteNote } from '../components/account/AdminDeleteNote'
 import { ChangePasswordForm } from '../components/account/ChangePasswordForm'
 import { DeleteAccountForm } from '../components/account/DeleteAccountForm'
 import { LeafDecor } from '../components/layout/LeafDecor'
@@ -19,10 +20,13 @@ import { useStrings } from '../i18n/useStrings'
 // never hides another. Sign out sits below them on its own: it is one
 // button with no settings behind it. It is also in the home screen's Menu.
 //
+// Admin accounts see a note instead of Delete account; the API refuses it.
+//
 // The two faint leaves in the bottom corner are decoration only.
 
 type Props = {
   email: string
+  isAdmin: boolean
   onSignOut: () => Promise<void>
   onChangePassword: (ticket: string, newPassword: string) => Promise<void>
   onDeleteAccount: (password: string) => Promise<void>
@@ -30,6 +34,7 @@ type Props = {
 
 export function AccountSettings({
   email,
+  isAdmin,
   onSignOut,
   onChangePassword,
   onDeleteAccount,
@@ -78,7 +83,7 @@ export function AccountSettings({
 
       <ResearchCard />
 
-      <DeleteAccountForm onDeleteAccount={onDeleteAccount} />
+      {isAdmin ? <AdminDeleteNote /> : <DeleteAccountForm onDeleteAccount={onDeleteAccount} />}
 
       <hr className="account-divider" />
 

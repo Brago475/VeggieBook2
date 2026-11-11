@@ -7,7 +7,7 @@ import { SiteFooter } from './components/layout/SiteFooter'
 import { NotificationNotice } from './components/notifications/NotificationNotice'
 import { PRIVACY } from './content/privacy'
 import { TERMS } from './content/terms'
-import { useAuth, type RegisterForm } from './hooks/useAuth'
+import { isAdmin, useAuth, type RegisterForm } from './hooks/useAuth'
 import { useBookFlow } from './hooks/useBookFlow'
 import { useBooks } from './hooks/useBooks'
 import { SKELETON_MIN_MS, useHeld } from './hooks/useHeld'
@@ -131,6 +131,8 @@ export default function App() {
   // The username shown on home; null for a guest or an older account.
   const displayName = auth.status === 'signedIn' ? auth.displayName : null
   const isGuest = auth.status === 'guest'
+  // Admin accounts can't delete themselves from the site.
+  const admin = isAdmin(auth)
   // A guest or an account: someone whose books the server keeps.
   const hasSession = email !== null || isGuest
 
@@ -605,6 +607,7 @@ export default function App() {
             {current === 'account' && email && (
               <AccountSettings
                 email={email}
+                isAdmin={admin}
                 onSignOut={signOut}
                 onChangePassword={account.changePassword}
                 onDeleteAccount={deleteAccount}

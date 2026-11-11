@@ -53,6 +53,9 @@ export const SERVER_MESSAGES_ES: Record<string, Message> = {
     'El cambio de contraseña está bloqueado para esta cuenta. Comunícate con el administrador de VeggieBook.',
   reset_expired: 'Este cambio de contraseña venció. Empieza de nuevo.',
 
+  // Deleting an account
+  admin_account_delete: 'Las cuentas de administrador no se pueden eliminar desde el sitio.',
+
   // Saving and editing books, and their covers
   book_limit: (v) => `Puedes guardar hasta ${v.max} libros. Elimina uno para hacer espacio.`,
   unknown_vegetable: 'No reconocemos esa verdura.',

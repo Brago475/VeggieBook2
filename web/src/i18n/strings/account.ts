@@ -80,6 +80,8 @@ const en = {
   delEnterPassword: 'Enter your password to confirm.',
   deleting: 'Deleting...',
   delFinal: 'Permanently delete my account',
+  delAdminNote:
+    "Admin accounts can't be deleted here. The main admin can remove admin access first, then the account can be deleted.",
 }
 
 const es: typeof en = {
@@ -160,6 +162,8 @@ const es: typeof en = {
   delEnterPassword: 'Escribe tu contraseña para confirmar.',
   deleting: 'Eliminando...',
   delFinal: 'Eliminar mi cuenta para siempre',
+  delAdminNote:
+    'Las cuentas de administrador no se pueden eliminar aquí. El administrador principal puede quitar primero el acceso de administrador y luego se puede eliminar la cuenta.',
 }
 
 export const ACCOUNT = { en, es }
