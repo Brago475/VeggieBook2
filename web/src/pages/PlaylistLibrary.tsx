@@ -1,4 +1,5 @@
 import { LeafDecor } from '../components/layout/LeafDecor'
+import { CardListSkeleton } from '../components/notifications/NotificationSkeletons'
 import { SectionSwitch } from '../components/notifications/SectionSwitch'
 import { PlaylistRow } from '../components/playlists/PlaylistRow'
 import { useHeld } from '../hooks/useHeld'
@@ -10,6 +11,7 @@ import type { PlaylistSource } from '../utils/routes'
 
 // The Playlists tab of Notifications: playlists kept from notifications,
 // then the account's own playlists. Own playlists are made from a book's ⋮.
+// While loading, playlist card outlines show.
 
 type Props = {
   onMessages: () => void
@@ -37,18 +39,7 @@ export function PlaylistLibrary({ onMessages, onOpen }: Props) {
 
       <SectionSwitch active="playlists" onMessages={onMessages} onPlaylists={() => {}} />
 
-      {showSkeleton && (
-        <div role="status" aria-busy="true">
-          <span className="visually-hidden">{t.loading}</span>
-          <ul className="nf-list" aria-hidden="true">
-            {Array.from({ length: SKELETON_CARDS }, (_, i) => (
-              <li key={i}>
-                <div className="skeleton nf-skel-card" />
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {showSkeleton && <CardListSkeleton label={t.loading} kind="playlist" count={SKELETON_CARDS} />}
 
       {!showSkeleton && error && <p className="message">{t.couldNotLoad}</p>}
 
