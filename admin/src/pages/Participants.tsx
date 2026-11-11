@@ -7,13 +7,17 @@ import { PersonCard } from '../components/participants/PersonCard'
 import { PersonPanel } from '../components/participants/PersonPanel'
 import { StatusTabs, type StatusFilter } from '../components/participants/StatusTabs'
 import { ParticipantsSkeleton } from '../components/skeletons/ParticipantsSkeleton'
+import { useHashParam } from '../hooks/useHashParam'
 import { useHeld } from '../hooks/useHeld'
 import { useParticipants } from '../hooks/useParticipants'
 import '../styles/studies.css'
 import '../styles/participants.css'
 
 // Admin Participants page: research IDs with tracking status, filters, and
-// the per-person panel. Admin and guest accounts never appear.
+// the per-person panel. The status tab is kept in the address. Admin and
+// guest accounts never appear.
+
+const FILTERS: readonly StatusFilter[] = ['all', 'on', 'off_self', 'off_admin']
 
 type Props = {
   onOpen: (tab: AdminTab) => void
@@ -23,7 +27,7 @@ type Props = {
 
 export function Participants({ onOpen, onOpenPersonData }: Props) {
   const { data, error, loading, reload, setTracking } = useParticipants()
-  const [filter, setFilter] = useState<StatusFilter>('all')
+  const [filter, setFilter] = useHashParam('status', FILTERS)
   const [search, setSearch] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
   const [panelClosed, setPanelClosed] = useState(false)
