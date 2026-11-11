@@ -34,6 +34,7 @@ const en = {
   tipsCount: (n: number) => (n === 1 ? '1 tip' : `${n} tips`),
   tipsTitle: (vegetable: string) => `${vegetable} tips`,
   tipOf: (vegetable: string, at: number, of: number) => `${vegetable} tip ${at} of ${of}`,
+  allTips: 'All tips',
   previousTip: 'Previous tip',
   nextTip: 'Next tip',
 
@@ -76,6 +77,7 @@ const es: typeof en = {
   tipsCount: (n: number) => (n === 1 ? '1 consejo' : `${n} consejos`),
   tipsTitle: (vegetable: string) => `Consejos: ${vegetable}`,
   tipOf: (vegetable: string, at: number, of: number) => `${vegetable}: consejo ${at} de ${of}`,
+  allTips: 'Todos los consejos',
   previousTip: 'Consejo anterior',
   nextTip: 'Siguiente consejo',
 
