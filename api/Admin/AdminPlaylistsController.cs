@@ -11,7 +11,8 @@ namespace VeggieBook.Api.Admin;
 
 // Playlists, in the Notifications page.
 //
-//   GET  /api/admin/playlists              every playlist with counts
+//   GET  /api/admin/playlists              every playlist with counts and the
+//                                          first photos for its card
 //   GET  /api/admin/playlists/{id}         one playlist with its items
 //   GET  /api/admin/playlists/options      vegetables with pictures, the four
 //                                          meals, and how many tips and
@@ -80,6 +81,7 @@ public class AdminPlaylistsController(
             .ToListAsync();
 
         var names = await AdminNames.LoadAsync(db, playlists.SelectMany(p => new[] { p.CreatedBy, p.UpdatedBy }));
+        var photos = await PlaylistPhotos.ForPlaylistsAsync(db, content, playlists.Select(p => p.Id).ToList());
 
         var choices = await db.PlaylistChoices
             .AsNoTracking()
@@ -120,6 +122,7 @@ public class AdminPlaylistsController(
                 updatedBy = AdminNames.Of(names, p.UpdatedBy),
                 tips = p.Tips,
                 recipes = p.Recipes,
+                photos = photos.GetValueOrDefault(p.Id) ?? [],
                 kept = choices.TryGetValue(p.Id, out var c) ? c.Kept : 0,
                 notKept = choices.TryGetValue(p.Id, out var c2) ? c2.NotKept : 0,
                 sent = sends[p.Id].Count(),
