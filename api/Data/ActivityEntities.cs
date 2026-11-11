@@ -1,21 +1,26 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace VeggieBook.Api.Data;
 
-// One line of the activity log (db/migrations/007, 010, 013, 015 and 016).
-// Lines are permanent: nothing edits or deletes them.
+// One line of the activity log (db/migrations/007, 010, 013, 015, 016, 024
+// and 027). Lines are permanent: nothing edits or deletes them.
 //
-// Participant events carry a research ID; admin study actions leave it empty
-// and store the study number in ItemCount and a readable summary in Detail.
+// Participant lines carry a research ID and no AdminId. Admin lines leave
+// the research ID empty and set AdminId to the admin who did the action.
 
 public class ActivityEntry
 {
     public long Id { get; set; }
     public DateTime At { get; set; }
 
-    // book_saved, book_deleted, item_removed, book_printed, book_downloaded,
-    // account_deleted, study_renamed, study_deleted
+    // Allowed kinds are listed in db/migrations/027_activity_admin.sql.
     public string Kind { get; set; } = "";
 
     public string ParticipantId { get; set; } = "";
+
+    // The admin who did this. Null on participant lines and older lines.
+    [Column("admin_id")]
+    public Guid? AdminId { get; set; }
 
     // Book lines only.
     public string? BookKind { get; set; }
@@ -35,7 +40,7 @@ public class ActivityEntry
     // Print and download lines: the recipe or secret, when one item was used.
     public int? ContentId { get; set; }
 
-    // Study lines: a readable summary. Print and download lines: what was
-    // used (book, extras, recipe, secret).
+    // Study and admin lines: a readable summary. Print and download lines:
+    // what was used (book, extras, recipe, secret).
     public string? Detail { get; set; }
 }
