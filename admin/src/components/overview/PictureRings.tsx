@@ -1,6 +1,6 @@
 import type { PictureCount } from '../../types/admin'
-import { imageUrl } from '../../utils/images'
 import '../../styles/overview-rings.css'
+import { ZoomImage } from '../playlists/ZoomImage'
 
 // Books by vegetable, or Secrets Books by category, as pictures.
 //
@@ -10,7 +10,8 @@ import '../../styles/overview-rings.css'
 // as small picture chips, so the zeros take little room but stay visible.
 //
 // Green for VeggieBooks, violet for Secrets Books (the page's four colors).
-// A picture that is missing or fails to load shows the first letter instead.
+// A picture that is missing shows the first letter instead; pictures
+// enlarge on hover.
 
 type Props = {
   rows: PictureCount[]
@@ -28,11 +29,9 @@ function Picture({ row, className }: { row: PictureCount; className: string }) {
     )
   }
   return (
-    <img
+    <ZoomImage
       className={className}
-      src={imageUrl(row.image)}
-      alt=""
-      loading="lazy"
+      photo={row.image}
       onError={(e) => {
         e.currentTarget.style.visibility = 'hidden'
       }}

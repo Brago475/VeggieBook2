@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useMealLabels } from '../../hooks/useMealLabels'
 import type { PlaylistKind } from '../../types/playlists'
-import { imageUrl } from '../../utils/images'
 import { NavIcon } from '../icons/NavIcons'
 import { itemKey } from './playlistFormat'
 import { VegetableTiles } from './VegetableTiles'
+import { ZoomImage } from './ZoomImage'
 
 // Meal labels screen: every recipe and tip as a photo card with Breakfast,
 // Lunch, Dinner and Snack chips. A tap saves right away. Labels feed both
@@ -81,7 +81,7 @@ export function MealLabels() {
             return (
               <li key={key} className={item.meals.length === 0 ? 'ml-card is-empty' : 'ml-card'}>
                 {item.photo ? (
-                  <img className="ml-photo" src={imageUrl(item.photo)} alt="" loading="lazy" />
+                  <ZoomImage className="ml-photo" photo={item.photo} />
                 ) : (
                   <span className="ml-photo" aria-hidden="true">
                     <NavIcon name="leaf" size={28} />

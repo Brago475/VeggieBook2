@@ -1,8 +1,9 @@
-import { imageUrl } from '../../utils/images'
 import '../../styles/content.css'
+import { ZoomImage } from '../playlists/ZoomImage'
 
 // Picture cards in a grid: image, name, the number, and a thin green bar.
 // Used for vegetables, Secrets categories, recipes, secrets, and covers.
+// Small pictures enlarge on hover.
 //
 // When onSelect is given, each card is a button that opens that item
 // (recipes and secrets open in a side panel).
@@ -32,9 +33,7 @@ export function PictureGrid({ items, emptyText, onSelect }: Props) {
       {items.map((item) => {
         const body = (
           <>
-            <div className="picture-img">
-              {item.image && <img src={imageUrl(item.image)} alt="" loading="lazy" />}
-            </div>
+            <div className="picture-img">{item.image && <ZoomImage photo={item.image} />}</div>
             <p className="picture-title">
               {item.code && <span className="picture-code">{item.code}</span>}
               {item.title}
