@@ -12,9 +12,9 @@ namespace VeggieBook.Api.Playlists;
 // holds the playlist number and Detail the source ("admin" or "own"); for an
 // opened item, Detail is "source:kind:id" (for example "admin:recipe:212").
 //
-// Admin lines have no participant. Playlist lines hold the playlist number
-// in ContentId and a readable summary in Detail. Meal label lines hold the
-// item id in ContentId and "kind|after|before" in Detail.
+// Admin lines carry the admin in AdminId. Playlist lines hold the playlist
+// number in ContentId and a readable summary in Detail. Meal label lines
+// hold the item id in ContentId and "kind|after|before" in Detail.
 
 public static class PlaylistActivity
 {
@@ -82,20 +82,16 @@ public static class PlaylistActivity
         ILogger logger,
         string kind,
         Playlist p,
-        string summary) =>
-        RecordAdminLineAsync(db, logger, kind, p.Id, summary);
+        string summary,
+        Guid? adminId = null) =>
+        RecordAdminLineAsync(db, logger, kind, p.Id, summary, adminId);
 
     public static Task RecordAdminLineAsync(
         AccountsContext db,
         ILogger logger,
         string kind,
         int contentId,
-        string detail) =>
-        ActivityLog.SaveAsync(db, logger, new ActivityEntry
-        {
-            Kind = kind,
-            ParticipantId = "",
-            ContentId = contentId,
-            Detail = detail
-        });
+        string detail,
+        Guid? adminId = null) =>
+        ActivityLog.SaveAdminAsync(db, logger, kind, adminId, detail, contentId: contentId);
 }

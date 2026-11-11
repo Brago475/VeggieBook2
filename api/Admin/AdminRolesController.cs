@@ -18,14 +18,18 @@ namespace VeggieBook.Api.Admin;
 //   - No one can remove their own Admin role.
 //   - The root admin cannot lose the role here; that is done on the server.
 //
-// A removed role takes effect on that person's next request.
+// Both changes are written to the activity log (AdminRoleChanges). A removed
+// role takes effect on that person's next request.
 
 [ApiController]
 [Route("api/admin/accounts/{id:guid}/admin")]
 [Authorize(Policy = Roles.AdminPolicy)]
 [RootAdminOnly]
-public class AdminRolesController(UserManager<AppUser> users, IConfiguration config)
-    : ControllerBase
+public class AdminRolesController(
+    UserManager<AppUser> users,
+    AccountsContext db,
+    IConfiguration config,
+    ILogger<AdminRolesController> logger) : ControllerBase
 {
     [HttpPost]
     public async Task<IActionResult> Grant(Guid id)
@@ -36,14 +40,12 @@ public class AdminRolesController(UserManager<AppUser> users, IConfiguration con
         if (!await users.IsInRoleAsync(user, Roles.User))
             return Conflict(new { error = "Only a full account can be made an admin." });
 
-        if (await users.IsInRoleAsync(user, Roles.Admin))
-            return Conflict(new { error = "This account is already an admin." });
-
-        var result = await users.AddToRoleAsync(user, Roles.Admin);
-        if (!result.Succeeded)
-            return StatusCode(500, new { error = "The role could not be added. Please try again." });
-
-        return NoContent();
+        return await AdminRoleChanges.GrantAsync(users, db, logger, user, AuthSetup.UserId(User)) switch
+        {
+            AdminRoleChanges.Result.Done => NoContent(),
+            AdminRoleChanges.Result.AlreadyAdmin => Conflict(new { error = "This account is already an admin." }),
+            _ => StatusCode(500, new { error = "The role could not be added. Please try again." })
+        };
     }
 
     [HttpDelete]
@@ -58,13 +60,11 @@ public class AdminRolesController(UserManager<AppUser> users, IConfiguration con
         if (AdminRules.IsRoot(config, user.Email))
             return Conflict(new { error = "The main admin can only be changed on the server." });
 
-        if (!await users.IsInRoleAsync(user, Roles.Admin))
-            return Conflict(new { error = "This account is not an admin." });
-
-        var result = await users.RemoveFromRoleAsync(user, Roles.Admin);
-        if (!result.Succeeded)
-            return StatusCode(500, new { error = "The role could not be removed. Please try again." });
-
-        return NoContent();
+        return await AdminRoleChanges.RevokeAsync(users, db, logger, user, AuthSetup.UserId(User)) switch
+        {
+            AdminRoleChanges.Result.Done => NoContent(),
+            AdminRoleChanges.Result.NotAdmin => Conflict(new { error = "This account is not an admin." }),
+            _ => StatusCode(500, new { error = "The role could not be removed. Please try again." })
+        };
     }
 }

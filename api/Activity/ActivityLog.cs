@@ -5,14 +5,13 @@ using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Activity;
 
-// Writes the activity log (db/migrations/007, 010, 013, 015 and 016): books
-// saved, deleted, printed and downloaded, items taken out of saved books,
-// accounts deleted, and studies renamed or deleted. Entries are permanent and
-// back the admin Activity page; nothing edits or deletes them.
+// Writes the activity log (db/migrations/007 to 027). Entries are permanent
+// and back the admin Activity page; nothing edits or deletes them.
 //
 // Participant lines are prepared while the account still exists (null for
-// guests and admins), then stored with SaveAsync. Logging never blocks the
-// main action; failures go to the server log.
+// guests and admins), then stored with SaveAsync. Admin lines have no
+// research ID and carry the admin's account ID in AdminId. Logging never
+// blocks the main action; failures go to the server log.
 //
 // An account deleted from the admin site is an account_deleted line with
 // Detail set to RemovedByAdmin.
@@ -27,6 +26,14 @@ public static class ActivityLog
     public const string AccountDeleted = "account_deleted";
     public const string StudyRenamed = "study_renamed";
     public const string StudyDeleted = "study_deleted";
+
+    // Admin actions (027).
+    public const string AdminRoleGiven = "admin_role_given";
+    public const string AdminRoleRemoved = "admin_role_removed";
+    public const string RecoveryUnlocked = "recovery_unlocked";
+    public const string GuestModeChanged = "guest_mode_changed";
+    public const string SignedOutEverywhere = "signed_out_everywhere";
+    public const string AdminDownload = "admin_download";
 
     // What a print or download line covers, stored in Detail.
     public const string ScopeBook = "book";
@@ -102,11 +109,13 @@ public static class ActivityLog
         return entry;
     }
 
+    /// <summary>An account deletion line. adminId is set when an admin removed it.</summary>
     public static async Task<ActivityEntry?> ForAccountAsync(
         AccountsContext db,
         ILogger logger,
         Guid userId,
-        bool byAdmin = false)
+        bool byAdmin = false,
+        Guid? adminId = null)
     {
         try
         {
@@ -115,7 +124,8 @@ public static class ActivityLog
             {
                 Kind = AccountDeleted,
                 ParticipantId = await ParticipantIds.ForUserAsync(db, userId),
-                Detail = byAdmin ? RemovedByAdmin : null
+                Detail = byAdmin ? RemovedByAdmin : null,
+                AdminId = byAdmin ? adminId : null
             };
         }
         catch (Exception ex)
@@ -129,14 +139,42 @@ public static class ActivityLog
     public static bool IsRemovedByAdmin(ActivityEntry entry) =>
         entry.Kind == AccountDeleted && entry.Detail == RemovedByAdmin;
 
-    /// <summary>An admin study action. No participant; the study number goes in ItemCount.</summary>
-    public static ActivityEntry ForStudy(string kind, int studyNumber, string detail) => new()
+    /// <summary>An admin study action. The study number goes in ItemCount.</summary>
+    public static ActivityEntry ForStudy(string kind, int studyNumber, string detail, Guid? adminId = null) => new()
     {
         Kind = kind,
         ParticipantId = "",
+        AdminId = adminId,
         ItemCount = studyNumber,
         Detail = detail
     };
+
+    /// <summary>An admin action line. Detail is a readable summary.</summary>
+    public static ActivityEntry ForAdmin(
+        string kind,
+        Guid? adminId,
+        string? detail,
+        int? contentId = null,
+        int? itemCount = null) => new()
+    {
+        Kind = kind,
+        ParticipantId = "",
+        AdminId = adminId,
+        Detail = detail,
+        ContentId = contentId,
+        ItemCount = itemCount
+    };
+
+    /// <summary>Builds and stores an admin action line.</summary>
+    public static Task SaveAdminAsync(
+        AccountsContext db,
+        ILogger logger,
+        string kind,
+        Guid? adminId,
+        string? detail,
+        int? contentId = null,
+        int? itemCount = null) =>
+        SaveAsync(db, logger, ForAdmin(kind, adminId, detail, contentId, itemCount));
 
     /// <summary>Stores the entry. At defaults to now; a save entry sets it to the book's CreatedAt.</summary>
     public static async Task SaveAsync(AccountsContext db, ILogger logger, ActivityEntry? entry)

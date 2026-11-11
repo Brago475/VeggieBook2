@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using VeggieBook.Api.Activity;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
 using VeggieBook.Api.Research;
@@ -25,8 +26,10 @@ namespace VeggieBook.Api.Admin;
 //                                             one research ID, on request (recorded)
 //   GET  /api/admin/settings/identity/history the latest recorded opens and reveals
 //
-// Opening Identity records and revealing a research ID are written to the
-// identity history (IdentityAudit.cs). If that write fails, nothing is shown.
+// The guest switch, the guest CSV download, sign out everywhere, and adding
+// an admin are written to the activity log. Identity actions are root only
+// and go to the identity history instead (IdentityAudit.cs). If that write
+// fails, nothing is shown.
 //
 // Removing an admin: DELETE /api/admin/accounts/{id}/admin (root only).
 // Account counts leave admins out for every admin but the root admin.
@@ -116,17 +119,26 @@ public class AdminSettingsController(
         });
     }
 
+    // Logged only when the setting actually changes.
     [HttpPut("guests")]
     public async Task<IActionResult> SetGuests([FromBody] GuestsRequest req)
     {
+        var before = await SiteSettings.GuestsAllowedAsync(db);
+        var adminId = AuthSetup.UserId(User);
+
         try
         {
-            await SiteSettings.SetGuestsAllowedAsync(db, req.Allowed, AuthSetup.UserId(User));
+            await SiteSettings.SetGuestsAllowedAsync(db, req.Allowed, adminId);
         }
         catch
         {
             return StatusCode(500, new { error = "The setting could not be saved. Has migration 011 run?" });
         }
+
+        if (before != req.Allowed)
+            await ActivityLog.SaveAdminAsync(db, logger, ActivityLog.GuestModeChanged, adminId,
+                req.Allowed ? "Guest visits turned on" : "Guest visits turned off");
+
         return NoContent();
     }
 
@@ -137,6 +149,9 @@ public class AdminSettingsController(
         var csv = new StringBuilder("date,guest_visits\n");
         foreach (var (day, count) in days.OrderBy(d => d.Key))
             csv.Append(day.ToString("yyyy-MM-dd")).Append(',').Append(count).Append('\n');
+
+        await ActivityLog.SaveAdminAsync(db, logger, ActivityLog.AdminDownload, AuthSetup.UserId(User),
+            "Guest visits per day (CSV)");
 
         Response.Headers.CacheControl = "no-store";
         return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv; charset=utf-8",
@@ -149,6 +164,9 @@ public class AdminSettingsController(
     {
         var me = await users.GetUserAsync(User);
         if (me is null) return Unauthorized();
+
+        await ActivityLog.SaveAdminAsync(db, logger, ActivityLog.SignedOutEverywhere, me.Id,
+            "Signed out on every device");
 
         await users.UpdateSecurityStampAsync(me);
         await signIn.SignOutAsync();
@@ -196,14 +214,12 @@ public class AdminSettingsController(
         if (!await users.IsInRoleAsync(user, Roles.User))
             return Conflict(new { error = "Only a full account can be made an admin." });
 
-        if (await users.IsInRoleAsync(user, Roles.Admin))
-            return Conflict(new { error = "This account is already an admin." });
-
-        var result = await users.AddToRoleAsync(user, Roles.Admin);
-        if (!result.Succeeded)
-            return StatusCode(500, new { error = "The role could not be added. Please try again." });
-
-        return NoContent();
+        return await AdminRoleChanges.GrantAsync(users, db, logger, user, AuthSetup.UserId(User)) switch
+        {
+            AdminRoleChanges.Result.Done => NoContent(),
+            AdminRoleChanges.Result.AlreadyAdmin => Conflict(new { error = "This account is already an admin." }),
+            _ => StatusCode(500, new { error = "The role could not be added. Please try again." })
+        };
     }
 
     [HttpGet("identity")]

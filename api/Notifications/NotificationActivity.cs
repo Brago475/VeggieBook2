@@ -13,8 +13,8 @@ namespace VeggieBook.Api.Notifications;
 // the round, and Detail the template and vegetable ("in_season:lettuce") or
 // "custom".
 //
-// Admin lines (created, edited, stopped) have no participant; ContentId holds
-// the notification number and Detail a readable summary.
+// Admin lines (created, edited, stopped) carry the admin in AdminId;
+// ContentId holds the notification number and Detail a readable summary.
 
 public static class NotificationActivity
 {
@@ -66,14 +66,9 @@ public static class NotificationActivity
         ILogger logger,
         string kind,
         Notification n,
-        string summary) =>
-        ActivityLog.SaveAsync(db, logger, new ActivityEntry
-        {
-            Kind = kind,
-            ParticipantId = "",
-            ContentId = n.Id,
-            Detail = summary
-        });
+        string summary,
+        Guid? adminId = null) =>
+        ActivityLog.SaveAdminAsync(db, logger, kind, adminId, summary, contentId: n.Id);
 
     private static string DetailOf(Notification n) =>
         n.TemplateKey is null ? "custom"
