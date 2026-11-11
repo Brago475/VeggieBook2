@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import type { PickedItem, PlaylistEntry, PlaylistKind } from '../../types/playlists'
-import { imageUrl } from '../../utils/images'
 import { previewItems } from '../../utils/playlistsApi'
 import { NavIcon } from '../icons/NavIcons'
 import { itemKey } from './playlistFormat'
+import { ZoomImage } from './ZoomImage'
 
 // The playlist as the app shows it, in English or Spanish, with the text
 // from the server.
@@ -21,9 +21,22 @@ const WORDS = {
   es: { kicker: 'Lista', tip: 'consejo', tips: 'consejos', recipe: 'receta', recipes: 'recetas', skip: 'Omitir', keep: 'Guardar' },
 }
 
+// "10 recipes, 2 tips", leaving out a kind with none.
 function countLine(lang: Lang, tips: number, recipes: number): string {
   const w = WORDS[lang]
-  return `${tips} ${tips === 1 ? w.tip : w.tips}, ${recipes} ${recipes === 1 ? w.recipe : w.recipes}`
+  const parts: string[] = []
+  if (recipes > 0) parts.push(`${recipes} ${recipes === 1 ? w.recipe : w.recipes}`)
+  if (tips > 0) parts.push(`${tips} ${tips === 1 ? w.tip : w.tips}`)
+  return parts.join(', ')
+}
+
+function Photo({ photo }: { photo: string | null | undefined }) {
+  if (photo) return <ZoomImage photo={photo} />
+  return (
+    <span className="pl-phone-leaf">
+      <NavIcon name="leaf" size={20} />
+    </span>
+  )
 }
 
 export function PlaylistPreview({ nameEn, nameEs, items }: Props) {
@@ -102,13 +115,7 @@ export function PlaylistPreview({ nameEn, nameEs, items }: Props) {
               {entries.map((e) =>
                 e.kind === 'recipe' ? (
                   <li key={itemKey(e.kind, e.id)} className="pl-phone-card">
-                    {e.photo ? (
-                      <img src={imageUrl(e.photo)} alt="" loading="lazy" />
-                    ) : (
-                      <span className="pl-phone-leaf">
-                        <NavIcon name="leaf" size={20} />
-                      </span>
-                    )}
+                    <Photo photo={e.photo} />
                     <div>
                       <span className="pl-phone-meta">{e.vegetableName}</span>
                       <strong>{e.title}</strong>
@@ -117,9 +124,7 @@ export function PlaylistPreview({ nameEn, nameEs, items }: Props) {
                   </li>
                 ) : (
                   <li key={itemKey(e.kind, e.id)} className="pl-phone-card">
-                    <span className="pl-phone-leaf">
-                      <NavIcon name="leaf" size={20} />
-                    </span>
+                    <Photo photo={e.blocks.find((b) => b.image)?.image} />
                     <div>
                       <span className="pl-phone-meta">{e.vegetableName}</span>
                       <strong>{e.title}</strong>

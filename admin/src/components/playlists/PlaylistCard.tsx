@@ -1,7 +1,7 @@
 import type { PlaylistSummary } from '../../types/playlists'
-import { imageUrl } from '../../utils/images'
 import { NavIcon } from '../icons/NavIcons'
 import { CardMenu } from './CardMenu'
+import { PlaylistCollage } from './PlaylistCollage'
 import { shortCount } from './playlistFormat'
 
 // One playlist as a photo card: a collage of its first photos, its names,
@@ -17,35 +17,6 @@ type Props = {
   onEdit: () => void
   onArchive: () => void
   onRestore: () => void
-}
-
-function Collage({ photos }: { photos: string[] }) {
-  if (photos.length === 0) {
-    return (
-      <div className="plc-collage is-single is-empty" aria-hidden="true">
-        <NavIcon name="leaf" size={32} />
-      </div>
-    )
-  }
-  if (photos.length === 1) {
-    return (
-      <div className="plc-collage is-single">
-        <img src={imageUrl(photos[0])} alt="" loading="lazy" />
-      </div>
-    )
-  }
-  const tiles = [0, 1, 2, 3].map((i) => photos[i] ?? null)
-  return (
-    <div className="plc-collage">
-      {tiles.map((photo, i) =>
-        photo ? (
-          <img key={i} src={imageUrl(photo)} alt="" loading="lazy" />
-        ) : (
-          <span key={i} className="plc-tile" aria-hidden="true" />
-        ),
-      )}
-    </div>
-  )
 }
 
 function sentText(sent: number): string {
@@ -67,7 +38,7 @@ export function PlaylistCard({ playlist: p, opening, busy, onSend, onEdit, onArc
   return (
     <li className={p.archived ? 'plc-card is-archived' : 'plc-card'}>
       <div className="plc-top">
-        <Collage photos={p.photos} />
+        <PlaylistCollage photos={p.photos} />
         {(p.live || p.auto || p.archived) && (
           <div className="plc-badges">
             {p.live && <span className="plc-badge is-live">In a live notification</span>}

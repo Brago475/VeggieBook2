@@ -122,6 +122,12 @@
   color: #6b7280;
 }
 
+.pe-summary-text .pe-summary-count {
+  margin-top: 2px;
+  font-weight: 600;
+  color: #1f6b35;
+}
+
 /* Footer */
 .pe-spacer {
   flex: 1;

@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react'
+import '../../styles/item-chooser.css'
 import type { BrowseResult, MealKey, PickedItem, PlaylistOptions } from '../../types/playlists'
-import { imageUrl } from '../../utils/images'
 import { browseContent } from '../../utils/playlistsApi'
 import { NavIcon } from '../icons/NavIcons'
-import { KindTag } from '../playlists/ItemBits'
-import { countText, itemKey, MAX_ITEMS, mealCount, pickedFromBrowse } from '../playlists/playlistFormat'
+import { ItemThumb, KindTag } from '../playlists/ItemBits'
+import { itemKey, MAX_ITEMS, mealCount, pickedFromBrowse } from '../playlists/playlistFormat'
+import { ZoomImage } from '../playlists/ZoomImage'
 import { MealPills } from './MealPills'
 import { VegetableStrip } from './VegetableStrip'
-import { ZoomThumb } from './ZoomThumb'
 
-// Search, vegetable and meal filters, the picked tray, and the results as
-// photo cards; a click on a card adds or removes it. The parent holds the
-// picked items. Used by Choose items and the playlist editor.
+// Search, vegetable, meal and kind filters, the picked tray, and the results
+// as photo cards; a click on a card adds or removes it. With no filter it
+// shows everything. The parent holds the picked items. Used by Choose items
+// and the playlist editor.
+
+type KindFilter = 'all' | 'recipe' | 'tip'
+
+const KINDS: { id: KindFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'recipe', label: 'Recipes' },
+  { id: 'tip', label: 'Tips' },
+]
 
 type Props = {
   options: PlaylistOptions
@@ -22,6 +31,7 @@ type Props = {
 export function ItemChooser({ options, chosen, onChange }: Props) {
   const [vegetable, setVegetable] = useState('')
   const [meal, setMeal] = useState<MealKey | ''>('')
+  const [kind, setKind] = useState<KindFilter>('all')
   const [q, setQ] = useState('')
   const [search, setSearch] = useState('')
   const [result, setResult] = useState<BrowseResult | null>(null)
@@ -34,10 +44,6 @@ export function ItemChooser({ options, chosen, onChange }: Props) {
   }, [q])
 
   useEffect(() => {
-    if (!vegetable && !meal && !search) {
-      setResult(null)
-      return
-    }
     let live = true
     setLoading(true)
     browseContent({ vegetable, meal, q: search })
@@ -60,8 +66,13 @@ export function ItemChooser({ options, chosen, onChange }: Props) {
   }, [vegetable, meal, search])
 
   const chosenKeys = new Set(chosen.map((i) => itemKey(i.kind, i.id)))
-  const found = result ? [...result.tips, ...result.recipes].map(pickedFromBrowse) : []
+  const recipes = result ? result.recipes.map(pickedFromBrowse) : []
+  const tips = result ? result.tips.map(pickedFromBrowse) : []
+  const found = kind === 'recipe' ? recipes : kind === 'tip' ? tips : [...recipes, ...tips]
   const notChosen = found.filter((i) => !chosenKeys.has(itemKey(i.kind, i.id)))
+  const room = Math.max(MAX_ITEMS - chosen.length, 0)
+
+  const countOf = (k: KindFilter) => (k === 'recipe' ? recipes.length : k === 'tip' ? tips.length : recipes.length + tips.length)
 
   const add = (items: PickedItem[]) => onChange([...chosen, ...items])
   const remove = (item: PickedItem) =>
@@ -101,8 +112,13 @@ export function ItemChooser({ options, chosen, onChange }: Props) {
 
       {chosen.length > 0 && (
         <div className="ps-group">
-          <span className="nt-label">Picked ({chosen.length})</span>
-          <div className="ps-tray">
+          <div className="ps-group-head">
+            <span className="nt-label">Picked ({chosen.length})</span>
+            <button type="button" className="ps-link" onClick={() => onChange([])}>
+              Remove all
+            </button>
+          </div>
+          <div className="ps-tray ic-tray">
             {chosen.map((i) => (
               <button
                 key={itemKey(i.kind, i.id)}
@@ -111,13 +127,17 @@ export function ItemChooser({ options, chosen, onChange }: Props) {
                 title={`Remove ${i.title}`}
                 onClick={() => remove(i)}
               >
-                <ZoomThumb kind={i.kind} photo={i.photo} />
+                <ItemThumb kind={i.kind} photo={i.photo} />
                 <span className="ps-chip-text">{i.title}</span>
                 <span aria-hidden="true">&#10005;</span>
               </button>
             ))}
           </div>
-          {chosen.length > MAX_ITEMS && <p className="pl-note">A playlist holds up to {MAX_ITEMS} items.</p>}
+          {chosen.length > MAX_ITEMS && (
+            <p className="pl-note">
+              A playlist holds up to {MAX_ITEMS} items. Remove {chosen.length - MAX_ITEMS} to go on.
+            </p>
+          )}
         </div>
       )}
 
@@ -127,16 +147,30 @@ export function ItemChooser({ options, chosen, onChange }: Props) {
         </p>
       )}
 
-      {!result && !loading && <p className="st-muted">Pick a vegetable or a meal, or search, to see items.</p>}
-      {loading && !result && <p className="st-muted">Loading...</p>}
+      {!result && loading && <p className="st-muted">Loading...</p>}
 
       {result && (
         <div className="ps-group">
           <div className="ps-group-head">
-            <span className="nt-label">
-              {countText(result.tipCount, result.recipeCount)} found{loading ? ', updating...' : ''}
-            </span>
-            {notChosen.length > 0 && (
+            <div className="ic-head-left">
+              <div className="ic-kinds" role="tablist" aria-label="Show">
+                {KINDS.map((k) => (
+                  <button
+                    key={k.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={kind === k.id}
+                    className={kind === k.id ? 'ic-kind is-active' : 'ic-kind'}
+                    onClick={() => setKind(k.id)}
+                  >
+                    {k.label}
+                    <span>{countOf(k.id)}</span>
+                  </button>
+                ))}
+              </div>
+              {loading && <span className="ic-updating">Updating...</span>}
+            </div>
+            {notChosen.length > 0 && notChosen.length <= room && (
               <button type="button" className="ps-link" onClick={() => add(notChosen)}>
                 Add all {notChosen.length}
               </button>
@@ -144,7 +178,7 @@ export function ItemChooser({ options, chosen, onChange }: Props) {
           </div>
 
           {found.length === 0 ? (
-            <p className="st-muted">Nothing matches. Try another vegetable or meal.</p>
+            <p className="st-muted">Nothing matches. Try another vegetable, meal or search.</p>
           ) : (
             <ul className="ps-cards">
               {found.map((i) => {
@@ -158,7 +192,7 @@ export function ItemChooser({ options, chosen, onChange }: Props) {
                       onClick={() => (on ? remove(i) : add([i]))}
                     >
                       {i.photo ? (
-                        <img className="ps-card-img" src={imageUrl(i.photo)} alt="" loading="lazy" />
+                        <ZoomImage className="ps-card-img" photo={i.photo} />
                       ) : (
                         <span className="ps-card-img" aria-hidden="true">
                           <NavIcon name="leaf" size={24} />

@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import type { PickedItem } from '../../types/playlists'
 import { ItemThumb, KindTag } from '../playlists/ItemBits'
-import { countText, itemKey, MAX_ITEMS } from '../playlists/playlistFormat'
-import { ZoomThumb } from './ZoomThumb'
+import { itemKey, MAX_ITEMS, shortCount } from '../playlists/playlistFormat'
 
 // The one line every playlist choice ends with: name, what goes out, and
 // View all to list the items.
@@ -30,7 +29,7 @@ export function PlaylistResult({ name, items, loading, capped = false }: Props) 
         <ItemThumb kind="recipe" photo={photo} />
         <div className="ps-result-text">
           <strong>{name}</strong>
-          <span>{items.length === 0 ? 'Nothing matches yet' : `${countText(tips, recipes)} go out`}</span>
+          <span>{items.length === 0 ? 'Nothing matches yet' : `${shortCount(tips, recipes)} go out`}</span>
         </div>
         {items.length > 0 && (
           <button type="button" className="ps-link" aria-expanded={open} onClick={() => setOpen(!open)}>
@@ -45,7 +44,7 @@ export function PlaylistResult({ name, items, loading, capped = false }: Props) 
         <ul className="ps-list">
           {items.map((i) => (
             <li key={itemKey(i.kind, i.id)}>
-              <ZoomThumb kind={i.kind} photo={i.photo} />
+              <ItemThumb kind={i.kind} photo={i.photo} />
               <KindTag kind={i.kind} />
               <span className="ps-title">{i.title}</span>
               {i.code && <span className="ps-code">{i.code}</span>}

@@ -8,7 +8,7 @@ import { StudyIcon } from '../studies/StudyIcons'
 import { PlaylistItems } from './PlaylistItems'
 import { PlaylistPreview } from './PlaylistPreview'
 import { PlaylistSteps } from './PlaylistSteps'
-import { countText, MAX_ITEMS, MAX_NAME, pickedFromEntry } from './playlistFormat'
+import { MAX_ITEMS, MAX_NAME, pickedFromEntry, shortCount } from './playlistFormat'
 
 // Create or edit a playlist in three steps: name, add tips and recipes as
 // photo cards, then review the order with a live preview and save. New
@@ -192,11 +192,10 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
                 <div className="pe-summary">
                   <div className="pe-summary-text">
                     <strong>{nameEn.trim() || 'Untitled playlist'}</strong>
-                    <span>
-                      {nameEs.trim() ? `Spanish: ${nameEs.trim()}` : 'No Spanish name'}
-                      {', '}
-                      {countText(tips, items.length - tips)}
+                    <span lang={nameEs.trim() ? 'es' : undefined}>
+                      {nameEs.trim() ? nameEs.trim() : 'No Spanish name, so Spanish readers see the English name'}
                     </span>
+                    <span className="pe-summary-count">{shortCount(tips, items.length - tips)}</span>
                   </div>
                   <button type="button" className="ps-link" onClick={() => go(0)}>
                     Change

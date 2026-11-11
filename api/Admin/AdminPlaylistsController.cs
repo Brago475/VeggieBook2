@@ -17,7 +17,8 @@ namespace VeggieBook.Api.Admin;
 //   GET  /api/admin/playlists/options      vegetables with pictures, the four
 //                                          meals, and how many tips and
 //                                          recipes each pair has
-//   GET  /api/admin/playlists/content      browse by ?vegetable=, ?meal= and ?q=
+//   GET  /api/admin/playlists/content      browse by ?vegetable=, ?meal= and
+//                                          ?q=; with none, everything
 //   POST /api/admin/playlists/preview      items as the app shows them,
 //                                          body { items, lang }
 //   POST /api/admin/playlists              create a hand-made playlist
@@ -195,8 +196,7 @@ public class AdminPlaylistsController(
         });
     }
 
-    // Everything that matches, for View all before adding. At least one
-    // filter is required.
+    // Tips and recipes that match every filter given; with no filter, all of them.
     [HttpGet("content")]
     public async Task<IActionResult> Browse(
         [FromQuery] string? vegetable,
@@ -206,8 +206,6 @@ public class AdminPlaylistsController(
         var veg = string.IsNullOrWhiteSpace(vegetable) ? null : vegetable.Trim();
         var mealKey = Meals.Find(meal)?.Key;
         var search = string.IsNullOrWhiteSpace(q) ? null : $"%{q.Trim()}%";
-        if (veg is null && mealKey is null && search is null)
-            return BadRequest(new { error = "Pick a vegetable, a meal, or type a search." });
 
         var labels = await db.MealLabels
             .AsNoTracking()
