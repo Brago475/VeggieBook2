@@ -1,48 +1,8 @@
-/* Playlists page and editor. Dialog, buttons, tabs and fields come from the
-   Studies and Notifications styles. */
+/* Playlist chips, the editor's Review step, and the phone preview. Cards
+   are in playlist-cards.css, editor steps in playlist-editor.css. Dialog,
+   buttons, tabs and fields come from the Studies and Notifications styles. */
 
-/* List */
-.pl-cards {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.pl-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
-  border: 1px solid #e3e8e2;
-  border-radius: 12px;
-  background: #fff;
-}
-
-.pl-card-main {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  gap: 6px;
-}
-
-.pl-card-name {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.pl-card-name strong {
-  font-size: 15px;
-}
-
-.pl-card-es {
-  font-size: 13px;
-  color: #6b7280;
-}
-
+/* Chips on cards */
 .pl-chips {
   display: flex;
   flex-wrap: wrap;
@@ -55,26 +15,6 @@
   border-radius: 999px;
   background: #f2f5f1;
   color: #4b5563;
-}
-
-.pl-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #eef0f2;
-  color: #4b5563;
-}
-
-.pl-badge.is-live {
-  background: #e3f3e6;
-  color: #1f6b35;
-}
-
-.pl-card-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
 }
 
 /* Editor layout */
@@ -101,102 +41,13 @@
   top: 0;
 }
 
-/* Browse */
-.pl-browse {
-  display: grid;
-  gap: 10px;
-}
-
-.pl-browse-filters {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr;
-  gap: 10px;
-}
-
-.pl-browse-search {
-  display: flex;
-  gap: 8px;
-}
-
-.pl-browse-search .nt-input {
-  flex: 1;
-}
-
-.pl-results {
-  border: 1px solid #e3e8e2;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.pl-results-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #f7f9f6;
-  border-bottom: 1px solid #e3e8e2;
-  font-size: 13px;
-  color: #4b5563;
-}
-
-.pl-results-empty {
-  padding: 12px;
-  margin: 0;
-}
-
-.pl-result-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  max-height: 320px;
-  overflow: auto;
-}
-
-.pl-result,
-.pl-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-}
-
-.pl-result + .pl-result,
-.pl-item + .pl-item {
-  border-top: 1px solid #eef1ed;
-}
-
-.pl-result-text,
-.pl-item-text {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.pl-result-text strong,
-.pl-item-text strong {
-  font-size: 14px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+/* Item bits */
 .pl-result-meta {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
   color: #6b7280;
-}
-
-.pl-result-snippet {
-  font-size: 12px;
-  color: #6b7280;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .pl-kind {
@@ -230,15 +81,6 @@
   place-items: center;
 }
 
-.st-button.pl-add {
-  justify-content: center;
-  min-width: 72px;
-}
-
-.st-button.pl-add.is-added {
-  opacity: 0.55;
-}
-
 /* Ordered list */
 .pl-items {
   list-style: none;
@@ -246,6 +88,32 @@
   padding: 0;
   border: 1px solid #e3e8e2;
   border-radius: 10px;
+}
+
+.pl-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.pl-item + .pl-item {
+  border-top: 1px solid #eef1ed;
+}
+
+.pl-item-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.pl-item-text strong {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pl-item-pos {
@@ -462,14 +330,5 @@
 
   .pl-editor-side {
     position: static;
-  }
-
-  .pl-browse-filters {
-    grid-template-columns: 1fr;
-  }
-
-  .pl-card {
-    flex-direction: column;
-    align-items: stretch;
   }
 }
