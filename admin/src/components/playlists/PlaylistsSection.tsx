@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { useHashParam } from '../../hooks/useHashParam'
 import { useHeld } from '../../hooks/useHeld'
 import { usePlaylists } from '../../hooks/usePlaylists'
 import type { PlaylistDetail, PlaylistDraft, PlaylistSummary } from '../../types/playlists'
@@ -12,15 +13,18 @@ import { inView, PlaylistFilters, type PlaylistView } from './PlaylistFilters'
 import { PlaylistList } from './PlaylistList'
 
 // Playlists section of the Notifications page: hand-made and automatic
-// playlists as photo cards, and the meal labels both kinds use. Send on a
-// card opens a new notification with that playlist chosen. Archived
-// playlists stay with the people who kept them and can be restored.
+// playlists as photo cards, and the meal labels both kinds use. The chosen
+// filter is kept in the address. Send on a card opens a new notification
+// with that playlist chosen. Archived playlists stay with the people who
+// kept them and can be restored.
 
 type Editing = { from: PlaylistDetail | null }
 
 type Props = {
   onSend: (p: PlaylistSummary) => void
 }
+
+const VIEWS: readonly PlaylistView[] = ['active', 'auto', 'hand', 'archived', 'labels']
 
 const EMPTY: Record<Exclude<PlaylistView, 'labels'>, string> = {
   active: 'No playlists yet.',
@@ -31,7 +35,7 @@ const EMPTY: Record<Exclude<PlaylistView, 'labels'>, string> = {
 
 export function PlaylistsSection({ onSend }: Props) {
   const { list, options, error, create, save, archive, restore } = usePlaylists()
-  const [view, setView] = useState<PlaylistView>('active')
+  const [view, setView] = useHashParam('view', VIEWS)
   const [editing, setEditing] = useState<Editing | null>(null)
   const [opening, setOpening] = useState<number | null>(null)
   const [toast, setToast] = useState<string | null>(null)

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { MessagesSection } from '../components/notifications/MessagesSection'
 import { PlaylistsSection } from '../components/playlists/PlaylistsSection'
+import { useHashParam } from '../hooks/useHashParam'
 import type { PlaylistSummary } from '../types/playlists'
 import '../styles/studies.css'
 import '../styles/studies-edit.css'
@@ -13,12 +14,15 @@ import '../styles/meal-labels.css'
 // Notifications page, in two sections: Messages (shown in the main site as a
 // pop-up and in its Notifications section, and able to open a playlist) and
 // Playlists (hand-made and automatic playlists, and their meal labels). Each
-// section has its own top bar button. Send on a playlist card switches to
+// section has its own top bar button. The open section is kept in the
+// address, so a refresh stays on it. Send on a playlist card switches to
 // Messages and opens a new notification with that playlist chosen.
 // APIs: api/Admin/AdminNotificationsController.cs, AdminPlaylistsController.cs
 // and AdminMealLabelsController.cs.
 
 type Section = 'messages' | 'playlists'
+
+const SECTION_IDS: readonly Section[] = ['messages', 'playlists']
 
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'messages', label: 'Messages' },
@@ -26,7 +30,7 @@ const SECTIONS: { id: Section; label: string }[] = [
 ]
 
 export function Notifications() {
-  const [section, setSection] = useState<Section>('messages')
+  const [section, setSection] = useHashParam('tab', SECTION_IDS)
   const [sendPlaylistId, setSendPlaylistId] = useState<number | null>(null)
   const clearSend = useCallback(() => setSendPlaylistId(null), [])
 

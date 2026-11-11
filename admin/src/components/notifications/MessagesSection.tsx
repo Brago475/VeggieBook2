@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useHashParam } from '../../hooks/useHashParam'
 import { useHeld } from '../../hooks/useHeld'
 import { useNotifications } from '../../hooks/useNotifications'
 import type { AdminNotification, NotificationDraft } from '../../types/notifications'
@@ -13,12 +14,15 @@ import { RenameNotificationDialog } from './RenameNotificationDialog'
 import { StopNotificationDialog } from './StopNotificationDialog'
 
 // Messages section of the Notifications page. Stat cards on top, then one
-// card per message under Live and scheduled / Ended and stopped. Each
-// message can carry an admin-only title. A playlist sent from the Playlists
-// section opens a new message with that playlist chosen.
+// card per message under Live and scheduled / Ended and stopped; the chosen
+// list is kept in the address. Each message can carry an admin-only title.
+// A playlist sent from the Playlists section opens a new message with that
+// playlist chosen.
 
 type Editing = { mode: 'create' | 'edit'; from: AdminNotification | null; playlistId?: number | null }
 type View = 'current' | 'past'
+
+const VIEWS: readonly View[] = ['current', 'past']
 
 type Props = {
   // A playlist to start a new message with, from Send on a playlist card.
@@ -28,7 +32,7 @@ type Props = {
 
 export function MessagesSection({ sendPlaylistId = null, onSendOpened }: Props) {
   const { list, templates, error, create, save, rename, stop } = useNotifications()
-  const [view, setView] = useState<View>('current')
+  const [view, setView] = useHashParam('list', VIEWS)
   const [editing, setEditing] = useState<Editing | null>(null)
   const [renaming, setRenaming] = useState<AdminNotification | null>(null)
   const [stopping, setStopping] = useState<AdminNotification | null>(null)
