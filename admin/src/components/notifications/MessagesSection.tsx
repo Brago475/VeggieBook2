@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useHeld } from '../../hooks/useHeld'
 import { useNotifications } from '../../hooks/useNotifications'
 import type { AdminNotification, NotificationDraft } from '../../types/notifications'
@@ -14,12 +14,19 @@ import { StopNotificationDialog } from './StopNotificationDialog'
 
 // Messages section of the Notifications page. Stat cards on top, then one
 // card per message under Live and scheduled / Ended and stopped. Each
-// message can carry an admin-only title.
+// message can carry an admin-only title. A playlist sent from the Playlists
+// section opens a new message with that playlist chosen.
 
-type Editing = { mode: 'create' | 'edit'; from: AdminNotification | null }
+type Editing = { mode: 'create' | 'edit'; from: AdminNotification | null; playlistId?: number | null }
 type View = 'current' | 'past'
 
-export function MessagesSection() {
+type Props = {
+  // A playlist to start a new message with, from Send on a playlist card.
+  sendPlaylistId?: number | null
+  onSendOpened?: () => void
+}
+
+export function MessagesSection({ sendPlaylistId = null, onSendOpened }: Props) {
   const { list, templates, error, create, save, rename, stop } = useNotifications()
   const [view, setView] = useState<View>('current')
   const [editing, setEditing] = useState<Editing | null>(null)
@@ -31,6 +38,12 @@ export function MessagesSection() {
   const closeRename = useCallback(() => setRenaming(null), [])
   const closeStop = useCallback(() => setStopping(null), [])
   const firstLoad = useHeld(!list && !error)
+
+  useEffect(() => {
+    if (sendPlaylistId === null) return
+    setEditing({ mode: 'create', from: null, playlistId: sendPlaylistId })
+    onSendOpened?.()
+  }, [sendPlaylistId, onSendOpened])
 
   if (!list && error) {
     return (
@@ -142,6 +155,7 @@ export function MessagesSection() {
         <NotificationEditor
           mode={editing.mode}
           from={editing.from}
+          playlistId={editing.playlistId ?? null}
           templates={templates}
           onSave={saveDraft}
           onClose={closeEditor}

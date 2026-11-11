@@ -8,18 +8,30 @@ import { TopbarActions } from '../layout/TopbarSlot'
 import { StudyToast } from '../studies/StudyToast'
 import { MealLabels } from './MealLabels'
 import { PlaylistEditor } from './PlaylistEditor'
+import { inView, PlaylistFilters, type PlaylistView } from './PlaylistFilters'
 import { PlaylistList } from './PlaylistList'
 
 // Playlists section of the Notifications page: hand-made and automatic
-// playlists a message can open, and the meal labels both kinds use.
-// Archived playlists stay with the people who kept them and can be restored.
+// playlists as photo cards, and the meal labels both kinds use. Send on a
+// card opens a new notification with that playlist chosen. Archived
+// playlists stay with the people who kept them and can be restored.
 
 type Editing = { from: PlaylistDetail | null }
-type View = 'active' | 'archived' | 'labels'
 
-export function PlaylistsSection() {
+type Props = {
+  onSend: (p: PlaylistSummary) => void
+}
+
+const EMPTY: Record<Exclude<PlaylistView, 'labels'>, string> = {
+  active: 'No playlists yet.',
+  auto: 'No automatic playlists. They are made when a notification uses a vegetable and a meal.',
+  hand: 'No hand-made playlists yet.',
+  archived: 'No archived playlists.',
+}
+
+export function PlaylistsSection({ onSend }: Props) {
   const { list, options, error, create, save, archive, restore } = usePlaylists()
-  const [view, setView] = useState<View>('active')
+  const [view, setView] = useState<PlaylistView>('active')
   const [editing, setEditing] = useState<Editing | null>(null)
   const [opening, setOpening] = useState<number | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -37,9 +49,7 @@ export function PlaylistsSection() {
 
   if (firstLoad || !list || !options) return <p className="st-muted">Loading playlists...</p>
 
-  const active = list.filter((p) => !p.archived)
-  const archived = list.filter((p) => p.archived)
-  const shown = view === 'archived' ? archived : active
+  const shown = list.filter((p) => inView(p, view))
   const openNew = () => setEditing({ from: null })
 
   async function openEdit(p: PlaylistSummary) {
@@ -75,12 +85,6 @@ export function PlaylistsSection() {
     setToast(message ?? `Restored "${p.nameEn}".`)
   }
 
-  const tabs: { id: View; label: string; count: number | null }[] = [
-    { id: 'active', label: 'Active', count: active.length },
-    { id: 'archived', label: 'Archived', count: archived.length },
-    { id: 'labels', label: 'Meal labels', count: null },
-  ]
-
   return (
     <>
       <TopbarActions>
@@ -99,29 +103,15 @@ export function PlaylistsSection() {
       <section className="nt-list">
         <div className="nt-list-head">
           <strong className="nt-list-title">Playlists</strong>
-          <div className="nt-tabs" role="tablist" aria-label="Playlist lists">
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={view === t.id}
-                className={view === t.id ? 'nt-tab is-active' : 'nt-tab'}
-                onClick={() => setView(t.id)}
-              >
-                {t.label}
-                {t.count !== null && <span className="nt-tab-count">{t.count}</span>}
-              </button>
-            ))}
-          </div>
+          <PlaylistFilters list={list} value={view} onChange={setView} />
         </div>
 
         {view === 'labels' ? (
           <MealLabels />
         ) : shown.length === 0 ? (
           <div className="nt-empty">
-            <p className="st-muted">{view === 'active' ? 'No playlists yet.' : 'No archived playlists.'}</p>
-            {view === 'active' && (
+            <p className="st-muted">{EMPTY[view]}</p>
+            {(view === 'active' || view === 'hand') && (
               <button type="button" className="st-button is-green" onClick={openNew}>
                 <NavIcon name="playlist" size={16} />
                 New playlist
@@ -132,6 +122,7 @@ export function PlaylistsSection() {
           <PlaylistList
             items={shown}
             opening={opening}
+            onSend={onSend}
             onEdit={(p) => void openEdit(p)}
             onArchive={(p) => void archiveOne(p)}
             onRestore={(p) => void restoreOne(p)}

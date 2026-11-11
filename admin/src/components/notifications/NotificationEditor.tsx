@@ -26,12 +26,15 @@ import { ScheduleSection } from './ScheduleSection'
 // admin saved first. The header names who made it and who edited it last.
 //
 // Send again (a copy) keeps the title, text, playlist, audience and repeat,
-// and leaves the dates empty so they are picked fresh.
+// and leaves the dates empty so they are picked fresh. Send on a playlist
+// card opens a new message with that saved playlist chosen.
 
 type Props = {
   mode: 'create' | 'edit'
   // Edit: the message. Create: a message to copy, or null for a blank one.
   from: AdminNotification | null
+  // A saved playlist to start with when from has none.
+  playlistId?: number | null
   templates: TemplatesResponse
   onSave: (draft: NotificationDraft) => Promise<string | null>
   onClose: () => void
@@ -80,7 +83,7 @@ function whoLine(from: AdminNotification): string | null {
   return line.charAt(0).toUpperCase() + line.slice(1)
 }
 
-export function NotificationEditor({ mode, from, templates, onSave, onClose }: Props) {
+export function NotificationEditor({ mode, from, playlistId: startPlaylistId = null, templates, onSave, onClose }: Props) {
   const editing = mode === 'edit' && from !== null
   const now = useNow(1000)
 
@@ -88,7 +91,7 @@ export function NotificationEditor({ mode, from, templates, onSave, onClose }: P
   const [templateKey, setTemplateKey] = useState(from?.templateKey ?? '')
   const [vegetable, setVegetable] = useState(from?.vegetable ?? templates.vegetables[0]?.key ?? '')
   const [body, setBody] = useState(from?.bodyEn ?? '')
-  const [playlist, setPlaylist] = useState<PlaylistChoice>(() => initialChoice(from))
+  const [playlist, setPlaylist] = useState<PlaylistChoice>(() => initialChoice(from, startPlaylistId))
   const [schedule, setSchedule] = useState<Schedule>(() => initialSchedule(from, editing))
   const [fixedStart] = useState<Date | null>(() =>
     editing && new Date(from.startsAt).getTime() <= Date.now() ? new Date(from.startsAt) : null,

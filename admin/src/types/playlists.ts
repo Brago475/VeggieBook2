@@ -21,6 +21,8 @@ export type PlaylistSummary = {
   updatedBy: string | null
   tips: number
   recipes: number
+  // Up to four image paths, in playlist order, for the card collage.
+  photos: string[]
   kept: number
   notKept: number
   sent: number
