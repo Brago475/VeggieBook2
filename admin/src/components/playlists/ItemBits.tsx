@@ -1,4 +1,4 @@
-import type { MealKey, PlaylistKind, PlaylistMeal } from '../../types/playlists'
+import type { PlaylistKind } from '../../types/playlists'
 import { imageUrl } from '../../utils/images'
 import { NavIcon } from '../icons/NavIcons'
 
@@ -15,19 +15,6 @@ export function ItemThumb({ kind, photo }: { kind: PlaylistKind; photo: string |
   return (
     <span className="pl-thumb" aria-hidden="true">
       <NavIcon name={kind === 'tip' ? 'leaf' : 'content'} size={18} />
-    </span>
-  )
-}
-
-export function MealTags({ meals, names }: { meals: MealKey[]; names: PlaylistMeal[] }) {
-  if (meals.length === 0) return null
-  return (
-    <span className="pl-meals">
-      {meals.map((m) => (
-        <span key={m} className="pl-meal">
-          {names.find((n) => n.key === m)?.en ?? m}
-        </span>
-      ))}
     </span>
   )
 }
