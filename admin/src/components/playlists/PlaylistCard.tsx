@@ -8,8 +8,9 @@ import { shortCount } from './playlistFormat'
 // One playlist as a photo card:
 //
 //   Top      a collage of its first photos and its badges
-//   Middle   the name, the Spanish name tagged ES, what it holds, then
-//            Sent, Kept and Not kept as three boxes, and who made it
+//   Middle   the name, the Spanish name tagged ES, what it holds, the
+//            messages it is the default for, then Sent, Kept and Not kept
+//            as three boxes, and who made it
 //   Bottom   Send, Edit, and a menu: Download (English or Spanish), Archive
 //            or Restore, and Delete for one never sent, kept or skipped
 
@@ -53,6 +54,7 @@ export function PlaylistCard({
 }: Props) {
   const who = whoText(p)
   const empty = p.tips + p.recipes === 0
+  const defaults = p.defaultFor ?? []
 
   const menu: MenuItem[] = [
     ...(empty
@@ -95,6 +97,13 @@ export function PlaylistCard({
           <NavIcon name="playlist" size={15} />
           {empty ? 'No items' : shortCount(p.tips, p.recipes)}
         </span>
+
+        {defaults.length > 0 && (
+          <span className="plc-default" title={defaults.map((x) => x.label).join('\n')}>
+            <NavIcon name="bell" size={14} />
+            <span>Default for: {defaults.map((x) => x.label).join('; ')}</span>
+          </span>
+        )}
 
         <dl className="plc-stats">
           <div>

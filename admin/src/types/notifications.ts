@@ -1,6 +1,7 @@
 import type { MealKey } from './playlists'
 
-// Shapes from api/Admin/AdminNotificationsController.cs.
+// Shapes from api/Admin/AdminNotificationsController.cs and
+// AdminTemplatePlaylistsController.cs.
 
 export type NotificationStatus = 'scheduled' | 'live' | 'ended' | 'stopped'
 export type Audience = 'all' | 'selected'
@@ -61,15 +62,27 @@ export type NotificationTemplate = {
   needsVegetable: boolean
 }
 
+// en fills the {vegetable} slot (lowercase); name is shown in menus.
 export type NotificationVegetable = {
   key: string
   en: string
+  name: string
 }
 
 export type TemplatesResponse = {
   templates: NotificationTemplate[]
   vegetables: NotificationVegetable[]
   slot: string
+}
+
+// A template's default playlist. vegetable is '' for a template without a
+// vegetable, or for any vegetable.
+export type TemplateDefaultLink = {
+  templateKey: string
+  vegetable: string
+  playlistId: number
+  label: string
+  archived: boolean
 }
 
 export type PickPerson = {

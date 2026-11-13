@@ -1,11 +1,20 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useNow } from '../../hooks/useNow'
 import type { NotificationDraftData, StoredSchedule } from '../../types/drafts'
-import type { AdminNotification, Audience, NotificationDraft, TemplatesResponse } from '../../types/notifications'
+import type {
+  AdminNotification,
+  Audience,
+  NotificationDraft,
+  NotificationVegetable,
+  TemplateDefaultLink,
+  TemplatesResponse,
+} from '../../types/notifications'
 import { startOfDay, timeOf } from '../../utils/calendarDates'
 import { createPlaylist } from '../../utils/playlistsApi'
+import { fetchTemplateDefaults, setTemplateDefault } from '../../utils/templateDefaultsApi'
 import { NavIcon } from '../icons/NavIcons'
 import { StudyIcon } from '../studies/StudyIcons'
+import { DefaultPlaylistOption, type DefaultScope } from './DefaultPlaylistOption'
 import { LinkedText } from './LinkedText'
 import { LiveClock } from './LiveClock'
 import { fillTemplate, MAX_BODY, MAX_TITLE, notificationName } from './notificationFormat'
@@ -14,6 +23,7 @@ import { PlaylistPicker } from './PlaylistPicker'
 import { ResearchIdPicker } from './ResearchIdPicker'
 import { endAt, startAt, startPassed, type Schedule } from './schedule'
 import { ScheduleSection } from './ScheduleSection'
+import { ANY_VEGETABLE, defaultChoice } from './templateDefaults'
 
 // Create, edit, or copy a notification, in the Studies dialog style. The
 // header and the buttons stay in view; the sections scroll between them.
@@ -22,6 +32,11 @@ import { ScheduleSection } from './ScheduleSection'
 // and this shows which it will be. A playlist is optional; a hand-picked one
 // is saved first, then sent like a saved playlist. Closes on Cancel, the X,
 // Escape, or a click outside.
+//
+// In a new message, picking a template (or its vegetable) fills in the
+// template's default playlist until the admin changes the playlist by hand.
+// The playlist can be made the template's default; that is saved with the
+// message.
 //
 // A new message can be saved as a draft at any time, half finished; a draft
 // reopens exactly as it was left. Nothing is sent or created for a draft,
@@ -129,6 +144,15 @@ export function NotificationEditor({
   const [playlist, setPlaylist] = useState<PlaylistChoice>(() =>
     d ? d.playlist : initialChoice(from, startPlaylistId),
   )
+  // True once the playlist was chosen by hand (or came with the message).
+  const [byHand, setByHand] = useState(() =>
+    editing || (d ? d.playlist.on : initialChoice(from, startPlaylistId).on),
+  )
+  // The playlist was filled in from the template's default.
+  const [preselected, setPreselected] = useState(false)
+  const [links, setLinks] = useState<TemplateDefaultLink[]>([])
+  const [makeDefault, setMakeDefault] = useState(false)
+  const [defaultScope, setDefaultScope] = useState<DefaultScope>('any')
   const [schedule, setSchedule] = useState<Schedule>(() =>
     d ? restoreSchedule(d.schedule) : initialSchedule(from, editing),
   )
@@ -144,6 +168,16 @@ export function NotificationEditor({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const loadLinks = useCallback(() => {
+    fetchTemplateDefaults()
+      .then(setLinks)
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    loadLinks()
+  }, [loadLinks])
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape' && !busy) onClose()
@@ -152,8 +186,14 @@ export function NotificationEditor({
     return () => document.removeEventListener('keydown', onKey)
   }, [busy, onClose])
 
+  // A vegetable from the first pilot list stays choosable on an older message.
+  const vegOptions: NotificationVegetable[] =
+    !vegetable || templates.vegetables.some((v) => v.key === vegetable)
+      ? templates.vegetables
+      : [...templates.vegetables, { key: vegetable, en: vegetable, name: vegetable }]
+
   const template = templates.templates.find((t) => t.key === templateKey) ?? null
-  const veg = templates.vegetables.find((v) => v.key === vegetable) ?? null
+  const veg = vegOptions.find((v) => v.key === vegetable) ?? null
   const text = body.trim()
   const spanishApplies =
     template !== null && fillTemplate(template, veg, templates.slot) === text && !text.includes(templates.slot)
@@ -161,17 +201,46 @@ export function NotificationEditor({
   const passed = startPassed(schedule, now)
   const startsNow = schedule.startMode === 'now' || passed
   const canDraft = !editing && onSaveDraft !== undefined
+  const showDefault =
+    template !== null &&
+    playlist.on &&
+    ((playlist.kind === 'saved' && playlist.playlistId !== null) || playlist.kind === 'pick')
+
+  // Fills in the template's default playlist unless one was chosen by hand.
+  function applyDefault(key: string, vegKey: string) {
+    if (byHand) return
+    const t = templates.templates.find((x) => x.key === key)
+    const next = t ? defaultChoice(links, t, vegKey) : null
+    if (next) {
+      setPlaylist(next)
+      setPreselected(true)
+    } else if (preselected) {
+      setPlaylist(EMPTY_CHOICE)
+      setPreselected(false)
+    }
+  }
 
   function chooseTemplate(key: string) {
     setTemplateKey(key)
     const t = templates.templates.find((x) => x.key === key)
     setBody(t ? fillTemplate(t, veg, templates.slot) : '')
+    setMakeDefault(false)
+    applyDefault(key, vegetable)
   }
 
   function chooseVegetable(key: string) {
     setVegetable(key)
-    const v = templates.vegetables.find((x) => x.key === key) ?? null
-    if (template?.needsVegetable) setBody(fillTemplate(template, v, templates.slot))
+    const v = vegOptions.find((x) => x.key === key) ?? null
+    if (template?.needsVegetable) {
+      setBody(fillTemplate(template, v, templates.slot))
+      applyDefault(template.key, key)
+    }
+  }
+
+  function pickPlaylist(next: PlaylistChoice) {
+    setPlaylist(next)
+    setByHand(true)
+    setPreselected(false)
   }
 
   function check(): string | null {
@@ -251,6 +320,20 @@ export function NotificationEditor({
       }
     }
 
+    const playlistMode = choiceMode(playlist)
+
+    if (makeDefault && template && playlistMode === 'made' && playlistId !== null) {
+      try {
+        const vegKey = template.needsVegetable && defaultScope === 'vegetable' ? vegetable : ANY_VEGETABLE
+        await setTemplateDefault(template.key, vegKey, playlistId)
+        setMakeDefault(false)
+      } catch (err) {
+        setBusy(false)
+        setError((err as Error).message)
+        return
+      }
+    }
+
     const current = new Date()
     const sendNow = schedule.startMode === 'now' || startPassed(schedule, current)
     const startsAt =
@@ -259,7 +342,6 @@ export function NotificationEditor({
         : sendNow
           ? null
           : startAt(schedule, current, fixedStart)!.toISOString()
-    const playlistMode = choiceMode(playlist)
 
     const message = await onSave({
       title: title.trim() || null,
@@ -297,6 +379,10 @@ export function NotificationEditor({
       ? 'Nothing is sent until you choose Send now or Schedule.'
       : 'Shown in the app as a pop-up and in Notifications.'
   const saveLabel = editing ? 'Save changes' : startsNow ? 'Send now' : 'Schedule'
+  const preselectHint =
+    playlist.kind === 'auto'
+      ? `Starts with the automatic playlist for ${veg?.name ?? 'this vegetable'}. Pick a meal, or change it.`
+      : "Filled in from this message's default playlist. You can change it."
 
   return (
     <div className="st-overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
@@ -332,7 +418,7 @@ export function NotificationEditor({
                 className="nt-input"
                 maxLength={MAX_TITLE}
                 value={title}
-                placeholder="For example: Cucumber season, fall 2026"
+                placeholder="For example: Broccoli season, fall 2026"
                 onChange={(e) => setTitle(e.target.value)}
               />
             </label>
@@ -354,9 +440,9 @@ export function NotificationEditor({
                 <label className="nt-field">
                   <span className="nt-label">Vegetable in season</span>
                   <select className="nt-input" value={vegetable} onChange={(e) => chooseVegetable(e.target.value)}>
-                    {templates.vegetables.map((v) => (
+                    {vegOptions.map((v) => (
                       <option key={v.key} value={v.key}>
-                        {v.en}
+                        {v.name}
                       </option>
                     ))}
                   </select>
@@ -405,11 +491,26 @@ export function NotificationEditor({
 
           <section className="st-dialog-section nt-section">
             <span className="st-section-title">Playlist</span>
+            {preselected && <span className="nt-hint">{preselectHint}</span>}
             <PlaylistPicker
               value={playlist}
               currentPlaylistId={editing ? (from.playlist?.id ?? null) : null}
-              onChange={setPlaylist}
+              onChange={pickPlaylist}
             />
+            {showDefault && template && (
+              <DefaultPlaylistOption
+                template={template}
+                vegetable={vegetable}
+                vegetableName={veg?.name ?? null}
+                playlistId={playlist.kind === 'saved' ? playlist.playlistId : null}
+                links={links}
+                checked={makeDefault}
+                scope={defaultScope}
+                onCheck={setMakeDefault}
+                onScope={setDefaultScope}
+                onCleared={loadLinks}
+              />
+            )}
           </section>
 
           <ScheduleSection value={schedule} onChange={setSchedule} now={now} fixedStart={fixedStart} />

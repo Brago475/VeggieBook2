@@ -318,3 +318,24 @@
     grid-template-columns: 1fr;
   }
 }
+.plc-default {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12.5px;
+  line-height: 1.35;
+  opacity: 0.8;
+}
+
+.plc-default svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.plc-default > span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

@@ -11,8 +11,9 @@ namespace VeggieBook.Api.Admin;
 
 // Playlists, in the Notifications page.
 //
-//   GET    /api/admin/playlists              every playlist with counts and the
-//                                            first photos for its card
+//   GET    /api/admin/playlists              every playlist with counts, the
+//                                            first photos for its card, and
+//                                            the messages it is default for
 //   GET    /api/admin/playlists/{id}         one playlist with its items
 //   GET    /api/admin/playlists/options      vegetables with pictures, the four
 //                                            meals, and how many tips and
@@ -33,9 +34,10 @@ namespace VeggieBook.Api.Admin;
 // version (older pages) no check is made.
 //
 // Automatic playlists are made from the notification editor (AutoPlaylists).
-// A playlist that reached anyone is archived, never deleted, so people keep
-// what they kept and research lines stay whole. Admins only. Every change is
-// written to the activity log with the admin who did it.
+// Template defaults are set in AdminTemplatePlaylistsController. A playlist
+// that reached anyone is archived, never deleted, so people keep what they
+// kept and research lines stay whole. Admins only. Every change is written
+// to the activity log with the admin who did it.
 
 public record PlaylistItemRequest(string? Kind, int Id);
 
@@ -85,6 +87,7 @@ public class AdminPlaylistsController(
 
         var names = await AdminNames.LoadAsync(db, playlists.SelectMany(p => new[] { p.CreatedBy, p.UpdatedBy }));
         var photos = await PlaylistPhotos.ForPlaylistsAsync(db, content, playlists.Select(p => p.Id).ToList());
+        var defaults = (await TemplateDefaults.LoadAsync(db, content)).ToLookup(d => d.PlaylistId);
 
         var choices = await db.PlaylistChoices
             .AsNoTracking()
@@ -129,7 +132,13 @@ public class AdminPlaylistsController(
                 kept = choices.TryGetValue(p.Id, out var c) ? c.Kept : 0,
                 notKept = choices.TryGetValue(p.Id, out var c2) ? c2.NotKept : 0,
                 sent = sends[p.Id].Count(),
-                live = sends[p.Id].Any(s => s.Live)
+                live = sends[p.Id].Any(s => s.Live),
+                defaultFor = defaults[p.Id].Select(d => new
+                {
+                    templateKey = d.TemplateKey,
+                    vegetable = d.Vegetable,
+                    label = d.Label
+                })
             }));
     }
 
@@ -422,7 +431,8 @@ public class AdminPlaylistsController(
     }
 
     // Only a playlist no notification ever used, and nobody kept or skipped,
-    // can be deleted. Deleting one already gone is harmless.
+    // can be deleted. Deleting one already gone is harmless. Its template
+    // defaults go with it (ON DELETE CASCADE).
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
