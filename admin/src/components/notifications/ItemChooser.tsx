@@ -11,8 +11,10 @@ import { VegetableStrip } from './VegetableStrip'
 
 // Search, vegetable, meal and kind filters, the picked tray, and the results
 // as photo cards; a click on a card adds or removes it. With no filter it
-// shows everything. The parent holds the picked items. Used by Choose items
-// and the playlist editor.
+// shows everything. The meal filter applies to tips too, and most tips have
+// no meal label, so a note offers to clear the meal when it hides every tip.
+// The parent holds the picked items. Used by Choose items and the playlist
+// editor.
 
 type KindFilter = 'all' | 'recipe' | 'tip'
 
@@ -71,6 +73,10 @@ export function ItemChooser({ options, chosen, onChange }: Props) {
   const found = kind === 'recipe' ? recipes : kind === 'tip' ? tips : [...recipes, ...tips]
   const notChosen = found.filter((i) => !chosenKeys.has(itemKey(i.kind, i.id)))
   const room = Math.max(MAX_ITEMS - chosen.length, 0)
+
+  const mealName = options.meals.find((m) => m.key === meal)?.en ?? ''
+  // The meal filter is what hides every tip.
+  const mealHidesTips = meal !== '' && tips.length === 0 && kind !== 'recipe'
 
   const countOf = (k: KindFilter) => (k === 'recipe' ? recipes.length : k === 'tip' ? tips.length : recipes.length + tips.length)
 
@@ -177,8 +183,17 @@ export function ItemChooser({ options, chosen, onChange }: Props) {
             )}
           </div>
 
+          {mealHidesTips && (
+            <p className="pl-note">
+              No tips are labeled {mealName}, so the meal filter hides them all.{' '}
+              <button type="button" className="ps-link" onClick={() => setMeal('')}>
+                Clear the meal to see every tip
+              </button>
+            </p>
+          )}
+
           {found.length === 0 ? (
-            <p className="st-muted">Nothing matches. Try another vegetable, meal or search.</p>
+            !mealHidesTips && <p className="st-muted">Nothing matches. Try another vegetable, meal or search.</p>
           ) : (
             <ul className="ps-cards">
               {found.map((i) => {
