@@ -185,7 +185,6 @@
 }
 
 .plc-menu {
-  position: relative;
   flex-shrink: 0;
 }
 
@@ -206,12 +205,16 @@
   background: #f2f5f1;
 }
 
+.plc-menu-button:focus-visible {
+  outline: 2px solid #1f6b35;
+  outline-offset: 2px;
+}
+
+/* Drawn on the page body; CardMenu sets top or bottom and right. */
 .plc-menu-list {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 20;
-  min-width: 160px;
+  position: fixed;
+  z-index: 1000;
+  min-width: 180px;
   padding: 4px;
   border: 1px solid #e3e8e2;
   border-radius: 10px;
@@ -235,8 +238,10 @@
   cursor: pointer;
 }
 
-.plc-menu-item:hover {
+.plc-menu-item:hover,
+.plc-menu-item:focus-visible {
   background: #f2f5f1;
+  outline: none;
 }
 
 @media (max-width: 640px) {
