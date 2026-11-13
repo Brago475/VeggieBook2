@@ -3,6 +3,7 @@ import { useHashParam } from '../../hooks/useHashParam'
 import { useHeld } from '../../hooks/useHeld'
 import { usePlaylists } from '../../hooks/usePlaylists'
 import type { PlaylistDetail, PlaylistDraft, PlaylistSummary } from '../../types/playlists'
+import { downloadPlaylistPdf, type PdfLanguage } from '../../utils/playlistPdf'
 import { fetchPlaylist } from '../../utils/playlistsApi'
 import { NavIcon } from '../icons/NavIcons'
 import { TopbarActions } from '../layout/TopbarSlot'
@@ -16,8 +17,9 @@ import { PlaylistList } from './PlaylistList'
 // Playlists section of the Notifications page: hand-made and automatic
 // playlists as photo cards, and the meal labels both kinds use. The chosen
 // filter is kept in the address. Send on a card opens a new notification
-// with that playlist chosen. Archived playlists stay with the people who
-// kept them and can be restored. While loading, the section's outline shows.
+// with that playlist chosen. A card's menu downloads the playlist as a PDF.
+// Archived playlists stay with the people who kept them and can be
+// restored. While loading, the section's outline shows.
 
 type Editing = { from: PlaylistDetail | null }
 
@@ -90,6 +92,12 @@ export function PlaylistsSection({ onSend }: Props) {
     setToast(message ?? `Restored "${p.nameEn}".`)
   }
 
+  async function downloadOne(p: PlaylistSummary, lang: PdfLanguage) {
+    setToast(`Preparing "${p.nameEn}" as a PDF...`)
+    const message = await downloadPlaylistPdf(p.id, lang)
+    setToast(message ?? `Downloaded "${p.nameEn}".`)
+  }
+
   return (
     <>
       <TopbarActions>
@@ -131,6 +139,7 @@ export function PlaylistsSection({ onSend }: Props) {
             onEdit={(p) => void openEdit(p)}
             onArchive={(p) => void archiveOne(p)}
             onRestore={(p) => void restoreOne(p)}
+            onDownload={(p, lang) => void downloadOne(p, lang)}
           />
         )}
       </section>

@@ -1,11 +1,13 @@
 import type { PlaylistSummary } from '../../types/playlists'
+import type { PdfLanguage } from '../../utils/playlistPdf'
 import { NavIcon } from '../icons/NavIcons'
-import { CardMenu } from './CardMenu'
+import { CardMenu, type MenuItem } from './CardMenu'
 import { PlaylistCollage } from './PlaylistCollage'
 import { shortCount } from './playlistFormat'
 
 // One playlist as a photo card: a collage of its first photos, its names,
-// counts, who made it, and Send, Edit, and a menu for Archive or Restore.
+// counts, who made it, and Send, Edit, and a menu for Download (English or
+// Spanish) and Archive or Restore.
 
 type Props = {
   playlist: PlaylistSummary
@@ -17,6 +19,7 @@ type Props = {
   onEdit: () => void
   onArchive: () => void
   onRestore: () => void
+  onDownload: (lang: PdfLanguage) => void
 }
 
 function sentText(sent: number): string {
@@ -32,8 +35,21 @@ function whoText(p: PlaylistSummary): string | null {
   return parts.length > 0 ? parts.join(', ') : null
 }
 
-export function PlaylistCard({ playlist: p, opening, busy, onSend, onEdit, onArchive, onRestore }: Props) {
+export function PlaylistCard({ playlist: p, opening, busy, onSend, onEdit, onArchive, onRestore, onDownload }: Props) {
   const who = whoText(p)
+  const empty = p.tips + p.recipes === 0
+
+  const menu: MenuItem[] = [
+    ...(empty
+      ? []
+      : [
+          { label: 'Download English', icon: 'download' as const, onClick: () => onDownload('en') },
+          { label: 'Download Spanish', icon: 'download' as const, onClick: () => onDownload('es') },
+        ]),
+    p.archived
+      ? { label: 'Restore', icon: 'restore', onClick: onRestore }
+      : { label: 'Archive', icon: 'archive', onClick: onArchive },
+  ]
 
   return (
     <li className={p.archived ? 'plc-card is-archived' : 'plc-card'}>
@@ -74,14 +90,7 @@ export function PlaylistCard({ playlist: p, opening, busy, onSend, onEdit, onArc
         <button type="button" className="st-button" disabled={busy} onClick={onEdit}>
           {opening ? 'Opening...' : 'Edit'}
         </button>
-        <CardMenu
-          label={`More for ${p.nameEn}`}
-          items={[
-            p.archived
-              ? { label: 'Restore', icon: 'restore', onClick: onRestore }
-              : { label: 'Archive', icon: 'archive', onClick: onArchive },
-          ]}
-        />
+        <CardMenu label={`More for ${p.nameEn}`} items={menu} />
       </div>
     </li>
   )

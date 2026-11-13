@@ -1,8 +1,9 @@
 namespace VeggieBook.Api.Books.Print;
 
-// The fixed words printed in book PDFs, in English and Spanish (tú).
+// The fixed words printed in book and playlist PDFs, in English and Spanish (tú).
+// A record, so a variant can swap a word (for example the contents tab).
 
-internal sealed class BookWords
+internal sealed record BookWords
 {
     public required string Prep { get; init; }
     public required string Cook { get; init; }
@@ -17,6 +18,8 @@ internal sealed class BookWords
     public required string WhyItWorks { get; init; }
     public required string LearnMore { get; init; }
     public required string InThisBook { get; init; }
+    public required string InThisPlaylist { get; init; }
+    public required string PlaylistLabel { get; init; }
     public required string Continued { get; init; }
     public required string Page { get; init; }
     public required string Of { get; init; }
@@ -24,6 +27,8 @@ internal sealed class BookWords
     public required string RecipeMany { get; init; }
     public required string SecretOne { get; init; }
     public required string SecretMany { get; init; }
+    public required string TipOne { get; init; }
+    public required string TipMany { get; init; }
     public required string[] Months { get; init; }
     public bool Spanish { get; init; }
 
@@ -42,6 +47,8 @@ internal sealed class BookWords
         WhyItWorks = "Why it works",
         LearnMore = "Learn more",
         InThisBook = "In this book",
+        InThisPlaylist = "In this playlist",
+        PlaylistLabel = "VeggieBook playlist",
         Continued = "{0} (continued)",
         Page = "Page",
         Of = "of",
@@ -49,6 +56,8 @@ internal sealed class BookWords
         RecipeMany = "{0} recipes",
         SecretOne = "1 secret",
         SecretMany = "{0} secrets",
+        TipOne = "1 tip",
+        TipMany = "{0} tips",
         Months =
         [
             "January", "February", "March", "April", "May", "June",
@@ -72,6 +81,8 @@ internal sealed class BookWords
         WhyItWorks = "Por qué funciona",
         LearnMore = "Más información",
         InThisBook = "En este libro",
+        InThisPlaylist = "En esta lista",
+        PlaylistLabel = "Lista de VeggieBook",
         Continued = "{0} (continuación)",
         Page = "Página",
         Of = "de",
@@ -79,6 +90,8 @@ internal sealed class BookWords
         RecipeMany = "{0} recetas",
         SecretOne = "1 secreto",
         SecretMany = "{0} secretos",
+        TipOne = "1 consejo",
+        TipMany = "{0} consejos",
         Months =
         [
             "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -92,6 +105,8 @@ internal sealed class BookWords
         n == 1
             ? (secrets ? SecretOne : RecipeOne)
             : string.Format(secrets ? SecretMany : RecipeMany, n);
+
+    public string Tips(int n) => n == 1 ? TipOne : string.Format(TipMany, n);
 
     // "made October 14, 2026" or "creado el 14 de octubre de 2026", Eastern.
     public string MadeOn(DateTime utc)
