@@ -1,10 +1,14 @@
 import { useCallback, useState } from 'react'
+import { useDrafts } from '../../hooks/useDrafts'
 import { useHashParam } from '../../hooks/useHashParam'
 import { useHeld } from '../../hooks/useHeld'
 import { usePlaylists } from '../../hooks/usePlaylists'
+import type { PlaylistDraftData, SavedDraft } from '../../types/drafts'
 import type { PlaylistDetail, PlaylistDraft, PlaylistSummary } from '../../types/playlists'
+import { formatDateTime } from '../../utils/format'
 import { downloadPlaylistPdf, type PdfLanguage } from '../../utils/playlistPdf'
 import { fetchPlaylist } from '../../utils/playlistsApi'
+import { DraftList, type DraftRow } from '../drafts/DraftList'
 import { NavIcon } from '../icons/NavIcons'
 import { TopbarActions } from '../layout/TopbarSlot'
 import { PlaylistsSkeleton } from '../skeletons/PlaylistsSkeleton'
@@ -13,31 +17,46 @@ import { MealLabels } from './MealLabels'
 import { PlaylistEditor } from './PlaylistEditor'
 import { inView, PlaylistFilters, type PlaylistView } from './PlaylistFilters'
 import { PlaylistList } from './PlaylistList'
+import { shortCount } from './playlistFormat'
 
 // Playlists section of the Notifications page: hand-made and automatic
-// playlists as photo cards, and the meal labels both kinds use. The chosen
-// filter is kept in the address. Send on a card opens a new notification
-// with that playlist chosen. A card's menu downloads the playlist as a PDF.
-// Archived playlists stay with the people who kept them and can be
-// restored. While loading, the section's outline shows.
+// playlists as photo cards, saved drafts, and the meal labels both kinds
+// use. The chosen filter is kept in the address. Send on a card opens a new
+// notification with that playlist chosen. A card's menu downloads the
+// playlist as a PDF. A draft finished and saved becomes a playlist and the
+// draft is removed. Archived playlists stay with the people who kept them
+// and can be restored. While loading, the section's outline shows.
 
-type Editing = { from: PlaylistDetail | null }
+type Editing = { from: PlaylistDetail | null; draft: SavedDraft<PlaylistDraftData> | null }
 
 type Props = {
   onSend: (p: PlaylistSummary) => void
 }
 
-const VIEWS: readonly PlaylistView[] = ['active', 'auto', 'hand', 'archived', 'labels']
+const VIEWS: readonly PlaylistView[] = ['active', 'auto', 'hand', 'drafts', 'archived', 'labels']
 
-const EMPTY: Record<Exclude<PlaylistView, 'labels'>, string> = {
+const EMPTY: Record<Exclude<PlaylistView, 'labels' | 'drafts'>, string> = {
   active: 'No playlists yet.',
   auto: 'No automatic playlists. They are made when a notification uses a vegetable and a meal.',
   hand: 'No hand-made playlists yet.',
   archived: 'No archived playlists.',
 }
 
+function draftRow(d: SavedDraft<PlaylistDraftData>): DraftRow {
+  const items = d.payload.items ?? []
+  const tips = items.filter((i) => i.kind === 'tip').length
+  const who = d.updatedBy ?? d.createdBy
+  return {
+    id: d.id,
+    title: d.payload.nameEn?.trim() || 'Untitled draft',
+    detail: items.length === 0 ? 'No items yet' : shortCount(tips, items.length - tips),
+    saved: `Saved${who ? ` by ${who}` : ''}, ${formatDateTime(d.updatedAt ?? d.createdAt)}`,
+  }
+}
+
 export function PlaylistsSection({ onSend }: Props) {
   const { list, options, error, create, save, archive, restore } = usePlaylists()
+  const drafts = useDrafts<PlaylistDraftData>('playlist')
   const [view, setView] = useHashParam('view', VIEWS)
   const [editing, setEditing] = useState<Editing | null>(null)
   const [opening, setOpening] = useState<number | null>(null)
@@ -56,14 +75,15 @@ export function PlaylistsSection({ onSend }: Props) {
 
   if (firstLoad || !list || !options) return <PlaylistsSkeleton />
 
+  const draftList = drafts.drafts ?? []
   const shown = list.filter((p) => inView(p, view))
-  const openNew = () => setEditing({ from: null })
+  const openNew = () => setEditing({ from: null, draft: null })
 
   async function openEdit(p: PlaylistSummary) {
     if (opening !== null) return
     setOpening(p.id)
     try {
-      setEditing({ from: await fetchPlaylist(p.id) })
+      setEditing({ from: await fetchPlaylist(p.id), draft: null })
     } catch (err) {
       setToast((err as Error).message)
     } finally {
@@ -71,15 +91,36 @@ export function PlaylistsSection({ onSend }: Props) {
     }
   }
 
-  async function saveDraft(draft: PlaylistDraft) {
+  function openDraft(id: number) {
+    const d = draftList.find((x) => x.id === id)
+    if (d) setEditing({ from: null, draft: d })
+  }
+
+  async function savePlaylist(draft: PlaylistDraft) {
     if (!editing) return null
     const id = editing.from?.id ?? null
+    const fromDraft = editing.draft?.id ?? null
     const message = id !== null ? await save(id, draft) : await create(draft)
     if (!message) {
+      if (fromDraft !== null) await drafts.remove(fromDraft)
       setEditing(null)
       setToast(`Saved "${draft.nameEn}".`)
     }
     return message
+  }
+
+  async function saveAsDraft(data: PlaylistDraftData) {
+    if (!editing) return null
+    const result = await drafts.save(editing.draft?.id ?? null, data.nameEn || null, data)
+    if (typeof result === 'string') return result
+    setEditing(null)
+    setToast(`Saved "${data.nameEn || 'Untitled draft'}" as a draft.`)
+    return null
+  }
+
+  async function discardDraft(id: number) {
+    const message = await drafts.remove(id)
+    setToast(message ?? 'Draft discarded.')
   }
 
   async function archiveOne(p: PlaylistSummary) {
@@ -116,11 +157,25 @@ export function PlaylistsSection({ onSend }: Props) {
       <section className="nt-list">
         <div className="nt-list-head">
           <strong className="nt-list-title">Playlists</strong>
-          <PlaylistFilters list={list} value={view} onChange={setView} />
+          <PlaylistFilters list={list} draftCount={draftList.length} value={view} onChange={setView} />
         </div>
 
         {view === 'labels' ? (
           <MealLabels />
+        ) : view === 'drafts' ? (
+          <>
+            {drafts.error && (
+              <p className="error" role="alert">
+                {drafts.error}
+              </p>
+            )}
+            <DraftList
+              rows={draftList.map(draftRow)}
+              empty="No drafts. Use Save as draft in the editor to keep an unfinished playlist."
+              onContinue={openDraft}
+              onDiscard={discardDraft}
+            />
+          </>
         ) : shown.length === 0 ? (
           <div className="nt-empty">
             <p className="st-muted">{EMPTY[view]}</p>
@@ -145,7 +200,15 @@ export function PlaylistsSection({ onSend }: Props) {
       </section>
 
       {editing && (
-        <PlaylistEditor from={editing.from} options={options} onSave={saveDraft} onClose={closeEditor} />
+        <PlaylistEditor
+          key={editing.draft ? `draft-${editing.draft.id}` : (editing.from?.id ?? 'new')}
+          from={editing.from}
+          draft={editing.draft?.payload ?? null}
+          options={options}
+          onSave={savePlaylist}
+          onSaveDraft={saveAsDraft}
+          onClose={closeEditor}
+        />
       )}
 
       {toast && <StudyToast message={toast} onClose={closeToast} />}

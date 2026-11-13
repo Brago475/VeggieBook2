@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import '../../styles/playlist-steps.css'
 import '../../styles/playlist-editor.css'
+import type { PlaylistDraftData } from '../../types/drafts'
 import type { PickedItem, PlaylistDetail, PlaylistDraft, PlaylistOptions } from '../../types/playlists'
 import { NavIcon } from '../icons/NavIcons'
 import { ItemChooser } from '../notifications/ItemChooser'
@@ -12,8 +13,12 @@ import { MAX_ITEMS, MAX_NAME, pickedFromEntry, shortCount } from './playlistForm
 
 // Create or edit a playlist in three steps: name, add tips and recipes as
 // photo cards, then review the order with a live preview and save. New
-// playlists open on step 1, existing ones on Review. Closes on Cancel, the
-// X, Escape, or a click outside.
+// playlists open on step 1, existing ones on Review, a draft on the
+// furthest step it can reach. Closes on Cancel, the X, Escape, or a click
+// outside.
+//
+// A new playlist (or a draft) can be saved as a draft at any step, even
+// half finished. Saving it for real runs the normal checks.
 //
 // Editing sends the version it opened with, so a save is refused if another
 // admin saved first. The header names who made it and who edited it last.
@@ -21,8 +26,11 @@ import { MAX_ITEMS, MAX_NAME, pickedFromEntry, shortCount } from './playlistForm
 type Props = {
   // Edit: the playlist. Create: null.
   from: PlaylistDetail | null
+  // A saved draft to continue.
+  draft?: PlaylistDraftData | null
   options: PlaylistOptions
   onSave: (draft: PlaylistDraft) => Promise<string | null>
+  onSaveDraft?: (data: PlaylistDraftData) => Promise<string | null>
   onClose: () => void
 }
 
@@ -39,12 +47,20 @@ function whoLine(from: PlaylistDetail): string | null {
   return line.charAt(0).toUpperCase() + line.slice(1)
 }
 
-export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
+function startStep(from: PlaylistDetail | null, draft: PlaylistDraftData | null): number {
+  if (from) return REVIEW
+  if (!draft || !draft.nameEn.trim()) return 0
+  return draft.items.length === 0 ? 1 : REVIEW
+}
+
+export function PlaylistEditor({ from, draft = null, options, onSave, onSaveDraft, onClose }: Props) {
   const editing = from !== null
-  const [step, setStep] = useState(editing ? REVIEW : 0)
-  const [nameEn, setNameEn] = useState(from?.nameEn ?? '')
-  const [nameEs, setNameEs] = useState(from?.nameEs ?? '')
-  const [items, setItems] = useState<PickedItem[]>(() => from?.items.map(pickedFromEntry) ?? [])
+  const [step, setStep] = useState(() => startStep(from, draft))
+  const [nameEn, setNameEn] = useState(draft?.nameEn ?? from?.nameEn ?? '')
+  const [nameEs, setNameEs] = useState(draft?.nameEs ?? from?.nameEs ?? '')
+  const [items, setItems] = useState<PickedItem[]>(
+    () => draft?.items ?? from?.items.map(pickedFromEntry) ?? [],
+  )
   // The version this editor opened with; refreshing the list does not change it.
   const [version] = useState<number | null>(() => from?.version ?? null)
   const [busy, setBusy] = useState(false)
@@ -67,6 +83,7 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
         : null
   // The furthest step that can be opened.
   const reachable = nameProblem ? 0 : itemsProblem ? 1 : REVIEW
+  const canDraft = !editing && onSaveDraft !== undefined
 
   function go(target: number) {
     if (target > reachable) {
@@ -87,6 +104,15 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
 
   function remove(index: number) {
     setItems(items.filter((_, i) => i !== index))
+  }
+
+  async function saveAsDraft() {
+    if (busy || !onSaveDraft) return
+    setBusy(true)
+    setError(null)
+    const message = await onSaveDraft({ nameEn: nameEn.trim(), nameEs: nameEs.trim(), items })
+    setBusy(false)
+    if (message) setError(message)
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -115,9 +141,12 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
     if (message) setError(message)
   }
 
-  const heading = editing ? `Edit "${from.nameEn}"` : 'New playlist'
-  const subtitle =
-    (editing ? whoLine(from) : null) ?? 'People get it from a notification and choose Keep or Skip.'
+  const heading = editing ? `Edit "${from.nameEn}"` : draft ? 'Draft playlist' : 'New playlist'
+  const subtitle = editing
+    ? (whoLine(from) ?? 'People get it from a notification and choose Keep or Skip.')
+    : draft
+      ? 'Finish it and save, or keep it as a draft for later.'
+      : 'People get it from a notification and choose Keep or Skip.'
   const tips = items.filter((i) => i.kind === 'tip').length
 
   return (
@@ -239,6 +268,11 @@ export function PlaylistEditor({ from, options, onSave, onClose }: Props) {
             </button>
           )}
           <span className="pe-spacer" />
+          {canDraft && (
+            <button type="button" className="st-button" disabled={busy} onClick={() => void saveAsDraft()}>
+              Save as draft
+            </button>
+          )}
           <button type="submit" className="st-button is-green" disabled={busy}>
             {step === REVIEW ? (
               <>

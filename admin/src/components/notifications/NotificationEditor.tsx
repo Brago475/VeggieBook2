@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNow } from '../../hooks/useNow'
+import type { NotificationDraftData, StoredSchedule } from '../../types/drafts'
 import type { AdminNotification, Audience, NotificationDraft, TemplatesResponse } from '../../types/notifications'
 import { startOfDay, timeOf } from '../../utils/calendarDates'
 import { createPlaylist } from '../../utils/playlistsApi'
@@ -22,6 +23,10 @@ import { ScheduleSection } from './ScheduleSection'
 // is saved first, then sent like a saved playlist. Closes on Cancel, the X,
 // Escape, or a click outside.
 //
+// A new message can be saved as a draft at any time, half finished; a draft
+// reopens exactly as it was left. Nothing is sent or created for a draft,
+// including a hand-picked playlist. Sending runs the normal checks.
+//
 // Editing sends the version it opened with, so a save is refused if another
 // admin saved first. The header names who made it and who edited it last.
 //
@@ -35,8 +40,11 @@ type Props = {
   from: AdminNotification | null
   // A saved playlist to start with when from has none.
   playlistId?: number | null
+  // A saved draft to continue.
+  draft?: NotificationDraftData | null
   templates: TemplatesResponse
   onSave: (draft: NotificationDraft) => Promise<string | null>
+  onSaveDraft?: (data: NotificationDraftData) => Promise<string | null>
   onClose: () => void
 }
 
@@ -68,6 +76,21 @@ function initialSchedule(from: AdminNotification | null, editing: boolean): Sche
   }
 }
 
+// Days as text for a draft, and back to Dates when it opens. A draft is
+// always a new message, so a fixed start becomes Send now.
+function storeSchedule(s: Schedule): StoredSchedule {
+  return { ...s, startDay: s.startDay?.toISOString() ?? null, endDay: s.endDay?.toISOString() ?? null }
+}
+
+function restoreSchedule(s: StoredSchedule): Schedule {
+  return {
+    ...s,
+    startMode: s.startMode === 'fixed' ? 'now' : s.startMode,
+    startDay: s.startDay ? new Date(s.startDay) : null,
+    endDay: s.endDay ? new Date(s.endDay) : null,
+  }
+}
+
 function initialTitle(from: AdminNotification | null, editing: boolean): string {
   if (!from?.title) return ''
   return editing ? from.title : from.title.replace(COPY_ENDINGS, '').trim()
@@ -83,23 +106,39 @@ function whoLine(from: AdminNotification): string | null {
   return line.charAt(0).toUpperCase() + line.slice(1)
 }
 
-export function NotificationEditor({ mode, from, playlistId: startPlaylistId = null, templates, onSave, onClose }: Props) {
+export function NotificationEditor({
+  mode,
+  from,
+  playlistId: startPlaylistId = null,
+  draft = null,
+  templates,
+  onSave,
+  onSaveDraft,
+  onClose,
+}: Props) {
   const editing = mode === 'edit' && from !== null
   const now = useNow(1000)
+  const d = editing ? null : draft
 
-  const [title, setTitle] = useState(() => initialTitle(from, editing))
-  const [templateKey, setTemplateKey] = useState(from?.templateKey ?? '')
-  const [vegetable, setVegetable] = useState(from?.vegetable ?? templates.vegetables[0]?.key ?? '')
-  const [body, setBody] = useState(from?.bodyEn ?? '')
-  const [playlist, setPlaylist] = useState<PlaylistChoice>(() => initialChoice(from, startPlaylistId))
-  const [schedule, setSchedule] = useState<Schedule>(() => initialSchedule(from, editing))
+  const [title, setTitle] = useState(() => (d ? d.title : initialTitle(from, editing)))
+  const [templateKey, setTemplateKey] = useState(d ? d.templateKey : (from?.templateKey ?? ''))
+  const [vegetable, setVegetable] = useState(
+    d ? d.vegetable : (from?.vegetable ?? templates.vegetables[0]?.key ?? ''),
+  )
+  const [body, setBody] = useState(d ? d.body : (from?.bodyEn ?? ''))
+  const [playlist, setPlaylist] = useState<PlaylistChoice>(() =>
+    d ? d.playlist : initialChoice(from, startPlaylistId),
+  )
+  const [schedule, setSchedule] = useState<Schedule>(() =>
+    d ? restoreSchedule(d.schedule) : initialSchedule(from, editing),
+  )
   const [fixedStart] = useState<Date | null>(() =>
     editing && new Date(from.startsAt).getTime() <= Date.now() ? new Date(from.startsAt) : null,
   )
-  const [audience, setAudience] = useState<Audience>(from?.audience ?? 'all')
-  const [includeGuests, setIncludeGuests] = useState(from?.includeGuests ?? false)
-  const [includeIds, setIncludeIds] = useState<string[]>(from?.includeIds ?? [])
-  const [excludeIds, setExcludeIds] = useState<string[]>(from?.excludeIds ?? [])
+  const [audience, setAudience] = useState<Audience>(d ? d.audience : (from?.audience ?? 'all'))
+  const [includeGuests, setIncludeGuests] = useState(d ? d.includeGuests : (from?.includeGuests ?? false))
+  const [includeIds, setIncludeIds] = useState<string[]>(d ? d.includeIds : (from?.includeIds ?? []))
+  const [excludeIds, setExcludeIds] = useState<string[]>(d ? d.excludeIds : (from?.excludeIds ?? []))
   // The version this editor opened with; refreshing the list does not change it.
   const [version] = useState<number | null>(() => (editing ? from.version : null))
   const [busy, setBusy] = useState(false)
@@ -121,6 +160,7 @@ export function NotificationEditor({ mode, from, playlistId: startPlaylistId = n
 
   const passed = startPassed(schedule, now)
   const startsNow = schedule.startMode === 'now' || passed
+  const canDraft = !editing && onSaveDraft !== undefined
 
   function chooseTemplate(key: string) {
     setTemplateKey(key)
@@ -152,12 +192,32 @@ export function NotificationEditor({ mode, from, playlistId: startPlaylistId = n
     if (end <= current) return 'The end time has already passed.'
 
     if (schedule.repeatOn) {
-      const d = Number(schedule.repeatDays)
-      if (!Number.isInteger(d) || d < 1 || d > 365) return 'Repeat every 1 to 365 days.'
+      const days = Number(schedule.repeatDays)
+      if (!Number.isInteger(days) || days < 1 || days > 365) return 'Repeat every 1 to 365 days.'
     }
     if (audience === 'selected' && includeIds.length === 0)
       return 'Pick at least one research ID, or send to everyone.'
     return null
+  }
+
+  async function saveAsDraft() {
+    if (busy || !onSaveDraft) return
+    setBusy(true)
+    setError(null)
+    const message = await onSaveDraft({
+      title: title.trim(),
+      templateKey,
+      vegetable,
+      body,
+      playlist,
+      schedule: storeSchedule(schedule),
+      audience,
+      includeGuests,
+      includeIds,
+      excludeIds,
+    })
+    setBusy(false)
+    if (message) setError(message)
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -224,10 +284,18 @@ export function NotificationEditor({ mode, from, playlistId: startPlaylistId = n
     if (message) setError(message)
   }
 
-  const heading = editing ? `Edit ${notificationName(from)}` : from ? 'Send again' : 'New notification'
+  const heading = editing
+    ? `Edit ${notificationName(from)}`
+    : d
+      ? 'Draft notification'
+      : from
+        ? 'Send again'
+        : 'New notification'
   const subtitle = editing
     ? (whoLine(from) ?? 'Changes apply right away. What people already did with it stays recorded.')
-    : 'Shown in the app as a pop-up and in Notifications.'
+    : d
+      ? 'Nothing is sent until you choose Send now or Schedule.'
+      : 'Shown in the app as a pop-up and in Notifications.'
   const saveLabel = editing ? 'Save changes' : startsNow ? 'Send now' : 'Schedule'
 
   return (
@@ -399,6 +467,11 @@ export function NotificationEditor({ mode, from, playlistId: startPlaylistId = n
           <button type="button" className="st-button" disabled={busy} onClick={onClose}>
             Cancel
           </button>
+          {canDraft && (
+            <button type="button" className="st-button" disabled={busy} onClick={() => void saveAsDraft()}>
+              Save as draft
+            </button>
+          )}
           <button type="submit" className="st-button is-green" disabled={busy}>
             <StudyIcon name="bell" size={16} />
             {busy ? 'Saving...' : saveLabel}
