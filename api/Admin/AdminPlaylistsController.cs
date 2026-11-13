@@ -11,28 +11,30 @@ namespace VeggieBook.Api.Admin;
 
 // Playlists, in the Notifications page.
 //
-//   GET  /api/admin/playlists              every playlist with counts and the
-//                                          first photos for its card
-//   GET  /api/admin/playlists/{id}         one playlist with its items
-//   GET  /api/admin/playlists/options      vegetables with pictures, the four
-//                                          meals, and how many tips and
-//                                          recipes each pair has
-//   GET  /api/admin/playlists/content      browse by ?vegetable=, ?meal= and
-//                                          ?q=; with none, everything
-//   POST /api/admin/playlists/preview      items as the app shows them,
-//                                          body { items, lang }
-//   POST /api/admin/playlists              create a hand-made playlist
-//   PUT  /api/admin/playlists/{id}         edit names and items; an automatic
-//                                          playlist becomes hand-made
-//   POST /api/admin/playlists/{id}/archive no longer offered for new sends
-//   POST /api/admin/playlists/{id}/restore offered again
+//   GET    /api/admin/playlists              every playlist with counts and the
+//                                            first photos for its card
+//   GET    /api/admin/playlists/{id}         one playlist with its items
+//   GET    /api/admin/playlists/options      vegetables with pictures, the four
+//                                            meals, and how many tips and
+//                                            recipes each pair has
+//   GET    /api/admin/playlists/content      browse by ?vegetable=, ?meal= and
+//                                            ?q=; with none, everything
+//   POST   /api/admin/playlists/preview      items as the app shows them,
+//                                            body { items, lang }
+//   POST   /api/admin/playlists              create a hand-made playlist
+//   PUT    /api/admin/playlists/{id}         edit names and items; an automatic
+//                                            playlist becomes hand-made
+//   POST   /api/admin/playlists/{id}/archive no longer offered for new sends
+//   POST   /api/admin/playlists/{id}/restore offered again
+//   DELETE /api/admin/playlists/{id}         only one never sent, kept or skipped
 //
 // Edit takes the version the page loaded. If another admin saved since, the
 // change is refused with changed: true so the page can reload. Without a
 // version (older pages) no check is made.
 //
 // Automatic playlists are made from the notification editor (AutoPlaylists).
-// Playlists are archived, never deleted. Admins only. Every change is
+// A playlist that reached anyone is archived, never deleted, so people keep
+// what they kept and research lines stay whole. Admins only. Every change is
 // written to the activity log with the admin who did it.
 
 public record PlaylistItemRequest(string? Kind, int Id);
@@ -417,6 +419,28 @@ public class AdminPlaylistsController(
         await PlaylistActivity.RecordAdminAsync(
             db, logger, PlaylistActivity.Edited, p, $"Restored, {PlaylistHelpers.Summary(p)}", AdminId());
         return Ok(await DescribeAsync(p));
+    }
+
+    // Only a playlist no notification ever used, and nobody kept or skipped,
+    // can be deleted. Deleting one already gone is harmless.
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var p = await db.Playlists.Include(x => x.Items).FirstOrDefaultAsync(x => x.Id == id);
+        if (p is null) return Ok(new { ok = true });
+
+        if (await db.Notifications.AnyAsync(n => n.PlaylistId == id))
+            return BadRequest(new { error = "This playlist was used in a notification, so it can only be archived." });
+        if (await db.PlaylistChoices.AnyAsync(c => c.PlaylistId == id))
+            return BadRequest(new { error = "People have kept or skipped this playlist, so it can only be archived." });
+
+        var detail = $"\"{p.NameEn}\", {PlaylistHelpers.Summary(p)}";
+        db.PlaylistItems.RemoveRange(p.Items);
+        db.Playlists.Remove(p);
+        if (!await SaveAsync()) return Conflict(new { error = Changed, changed = true });
+
+        await PlaylistActivity.RecordAdminLineAsync(db, logger, PlaylistActivity.Deleted, id, detail, AdminId());
+        return Ok(new { ok = true });
     }
 
     // False when another save landed between reading and saving.

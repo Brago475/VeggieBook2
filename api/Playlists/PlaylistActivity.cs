@@ -14,8 +14,9 @@ namespace VeggieBook.Api.Playlists;
 // deleted). Opened and ItemOpened remain so older lines still display.
 //
 // Admin lines carry the admin in AdminId. Playlist lines hold the playlist
-// number in ContentId and a readable summary in Detail. Meal label lines
-// hold the item id in ContentId and "kind|after|before" in Detail.
+// number in ContentId and a readable summary in Detail; a deleted
+// playlist's line names it in Detail, since the playlist is gone. Meal
+// label lines hold the item id in ContentId and "kind|after|before" in Detail.
 
 public static class PlaylistActivity
 {
@@ -23,6 +24,7 @@ public static class PlaylistActivity
     public const string Created = "playlist_created";
     public const string Edited = "playlist_edited";
     public const string Archived = "playlist_archived";
+    public const string Deleted = "playlist_deleted";
     public const string MealLabelsChanged = "meal_labels_changed";
 
     // Participant, admin playlists

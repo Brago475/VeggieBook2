@@ -30,7 +30,8 @@ namespace VeggieBook.Api.Admin;
 /// recorded yet); later take-outs are their own lines. Notification lines
 /// read "What happened: Title", using the message's current title, and show
 /// the start of its text, with the round (counted from 1) for a repeating
-/// message. Playlist lines use the playlist's current English name.
+/// message. Playlist lines use the playlist's current English name; a
+/// deleted playlist's line keeps the name it had.
 ///
 /// Only actions are shown. Older view lines (a notification read, a playlist
 /// or an item in it opened) stay in the log but are left out here.
@@ -285,6 +286,10 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             else if (AdminNotification.TryGetValue(a.Kind, out var adminDid))
             {
                 events.Add(AdminLine(a, $"{adminDid}: {NotificationName(a.ContentId)}", a.Detail ?? ""));
+            }
+            else if (a.Kind == PlaylistActivity.Deleted)
+            {
+                events.Add(AdminLine(a, "Deleted playlist", a.Detail ?? ""));
             }
             else if (AdminPlaylist.TryGetValue(a.Kind, out var adminPlaylistDid))
             {

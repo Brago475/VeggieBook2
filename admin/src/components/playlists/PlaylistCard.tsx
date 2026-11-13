@@ -5,9 +5,13 @@ import { CardMenu, type MenuItem } from './CardMenu'
 import { PlaylistCollage } from './PlaylistCollage'
 import { shortCount } from './playlistFormat'
 
-// One playlist as a photo card: a collage of its first photos, its names,
-// counts, who made it, and Send, Edit, and a menu for Download (English or
-// Spanish) and Archive or Restore.
+// One playlist as a photo card:
+//
+//   Top      a collage of its first photos and its badges
+//   Middle   the name, the Spanish name tagged ES, what it holds, then
+//            Sent, Kept and Not kept as three boxes, and who made it
+//   Bottom   Send, Edit, and a menu: Download (English or Spanish), Archive
+//            or Restore, and Delete for one never sent, kept or skipped
 
 type Props = {
   playlist: PlaylistSummary
@@ -20,22 +24,33 @@ type Props = {
   onArchive: () => void
   onRestore: () => void
   onDownload: (lang: PdfLanguage) => void
+  onDelete: () => void
 }
 
-function sentText(sent: number): string {
-  if (sent === 0) return 'Not sent yet'
-  return sent === 1 ? 'Sent once' : `Sent ${sent} times`
-}
-
-// "By alex, edited by sam", or null when nobody is recorded.
+// "By alex", "By alex, edited by sam", or null when nobody is recorded.
 function whoText(p: PlaylistSummary): string | null {
-  const parts: string[] = []
-  if (p.createdBy) parts.push(`By ${p.createdBy}`)
-  if (p.updatedBy) parts.push(p.createdBy ? `edited by ${p.updatedBy}` : `Edited by ${p.updatedBy}`)
-  return parts.length > 0 ? parts.join(', ') : null
+  if (p.createdBy && p.updatedBy && p.createdBy !== p.updatedBy) return `By ${p.createdBy}, edited by ${p.updatedBy}`
+  if (p.createdBy) return `By ${p.createdBy}`
+  if (p.updatedBy) return `Edited by ${p.updatedBy}`
+  return null
 }
 
-export function PlaylistCard({ playlist: p, opening, busy, onSend, onEdit, onArchive, onRestore, onDownload }: Props) {
+// Never sent and never kept or skipped, so nobody has it.
+export function canDelete(p: PlaylistSummary): boolean {
+  return p.sent === 0 && p.kept === 0 && p.notKept === 0
+}
+
+export function PlaylistCard({
+  playlist: p,
+  opening,
+  busy,
+  onSend,
+  onEdit,
+  onArchive,
+  onRestore,
+  onDownload,
+  onDelete,
+}: Props) {
   const who = whoText(p)
   const empty = p.tips + p.recipes === 0
 
@@ -49,6 +64,7 @@ export function PlaylistCard({ playlist: p, opening, busy, onSend, onEdit, onArc
     p.archived
       ? { label: 'Restore', icon: 'restore', onClick: onRestore }
       : { label: 'Archive', icon: 'archive', onClick: onArchive },
+    ...(canDelete(p) ? [{ label: 'Delete', icon: 'delete' as const, onClick: onDelete, danger: true }] : []),
   ]
 
   return (
@@ -67,16 +83,34 @@ export function PlaylistCard({ playlist: p, opening, busy, onSend, onEdit, onArc
       <div className="plc-body">
         <strong className="plc-name">{p.nameEn}</strong>
         {p.nameEs && (
-          <span className="plc-es" lang="es">
-            {p.nameEs}
+          <span className="plc-es">
+            <span className="plc-lang" aria-label="Spanish name">
+              ES
+            </span>
+            <span lang="es">{p.nameEs}</span>
           </span>
         )}
-        <div className="pl-chips">
-          <span className="pl-chip">{shortCount(p.tips, p.recipes)}</span>
-          <span className="pl-chip">{sentText(p.sent)}</span>
-          <span className="pl-chip">Kept by {p.kept}</span>
-          <span className="pl-chip">Not kept by {p.notKept}</span>
-        </div>
+
+        <span className="plc-count">
+          <NavIcon name="playlist" size={15} />
+          {empty ? 'No items' : shortCount(p.tips, p.recipes)}
+        </span>
+
+        <dl className="plc-stats">
+          <div>
+            <dt>Sent</dt>
+            <dd>{p.sent}</dd>
+          </div>
+          <div>
+            <dt>Kept</dt>
+            <dd>{p.kept}</dd>
+          </div>
+          <div>
+            <dt>Not kept</dt>
+            <dd>{p.notKept}</dd>
+          </div>
+        </dl>
+
         {who && <span className="plc-who">{who}</span>}
       </div>
 

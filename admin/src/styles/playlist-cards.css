@@ -1,5 +1,4 @@
-/* Playlist cards and filter chips. Buttons and chips come from the Studies
-   and Playlists styles. */
+/* Playlist cards and filter chips. Buttons come from the Studies styles. */
 
 /* Filters */
 .plc-filters {
@@ -134,13 +133,13 @@
   color: #fff;
 }
 
-/* Text */
+/* Middle: name, Spanish name, what it holds, stats, who made it */
 .plc-body {
   flex: 1;
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  padding: 12px 14px 10px;
+  padding: 12px 14px 12px;
 }
 
 .plc-name {
@@ -155,18 +154,79 @@
 }
 
 .plc-es {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
   font-size: 13px;
   color: #6b7280;
+}
+
+.plc-es > span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.plc-body .pl-chips {
+.plc-lang {
+  flex: none;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: #eef2ef;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  color: #4b5563;
+}
+
+.plc-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f6b35;
+}
+
+.plc-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 4px 0 0;
+  overflow: hidden;
+  border: 1px solid #eef1ee;
+  border-radius: 10px;
+}
+
+.plc-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 10px;
+}
+
+.plc-stats > div + div {
+  border-left: 1px solid #eef1ee;
+}
+
+.plc-stats dt {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.plc-stats dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
 }
 
 .plc-who {
+  margin-top: 2px;
   font-size: 12px;
   color: #6b7280;
 }
@@ -242,6 +302,15 @@
 .plc-menu-item:focus-visible {
   background: #f2f5f1;
   outline: none;
+}
+
+.plc-menu-item.is-danger {
+  color: #b4400f;
+}
+
+.plc-menu-item.is-danger:hover,
+.plc-menu-item.is-danger:focus-visible {
+  background: #fff4ed;
 }
 
 @media (max-width: 640px) {

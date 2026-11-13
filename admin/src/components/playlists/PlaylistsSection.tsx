@@ -13,6 +13,7 @@ import { NavIcon } from '../icons/NavIcons'
 import { TopbarActions } from '../layout/TopbarSlot'
 import { PlaylistsSkeleton } from '../skeletons/PlaylistsSkeleton'
 import { StudyToast } from '../studies/StudyToast'
+import { DeletePlaylistDialog } from './DeletePlaylistDialog'
 import { MealLabels } from './MealLabels'
 import { PlaylistEditor } from './PlaylistEditor'
 import { inView, PlaylistFilters, type PlaylistView } from './PlaylistFilters'
@@ -23,9 +24,9 @@ import { shortCount } from './playlistFormat'
 // playlists as photo cards, saved drafts, and the meal labels both kinds
 // use. The chosen filter is kept in the address. Send on a card opens a new
 // notification with that playlist chosen. A card's menu downloads the
-// playlist as a PDF. A draft finished and saved becomes a playlist and the
-// draft is removed. Archived playlists stay with the people who kept them
-// and can be restored. While loading, the section's outline shows.
+// playlist as a PDF, archives or restores it, and deletes one that nobody
+// has. A draft finished and saved becomes a playlist and the draft is
+// removed. While loading, the section's outline shows.
 
 type Editing = { from: PlaylistDetail | null; draft: SavedDraft<PlaylistDraftData> | null }
 
@@ -55,14 +56,16 @@ function draftRow(d: SavedDraft<PlaylistDraftData>): DraftRow {
 }
 
 export function PlaylistsSection({ onSend }: Props) {
-  const { list, options, error, create, save, archive, restore } = usePlaylists()
+  const { list, options, error, create, save, archive, restore, remove } = usePlaylists()
   const drafts = useDrafts<PlaylistDraftData>('playlist')
   const [view, setView] = useHashParam('view', VIEWS)
   const [editing, setEditing] = useState<Editing | null>(null)
+  const [deleting, setDeleting] = useState<PlaylistSummary | null>(null)
   const [opening, setOpening] = useState<number | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const closeToast = useCallback(() => setToast(null), [])
   const closeEditor = useCallback(() => setEditing(null), [])
+  const closeDelete = useCallback(() => setDeleting(null), [])
   const firstLoad = useHeld(!list && !error)
 
   if (!list && error) {
@@ -133,6 +136,15 @@ export function PlaylistsSection({ onSend }: Props) {
     setToast(message ?? `Restored "${p.nameEn}".`)
   }
 
+  async function deleteOne(p: PlaylistSummary) {
+    const message = await remove(p.id)
+    if (!message) {
+      setDeleting(null)
+      setToast(`Deleted "${p.nameEn}".`)
+    }
+    return message
+  }
+
   async function downloadOne(p: PlaylistSummary, lang: PdfLanguage) {
     setToast(`Preparing "${p.nameEn}" as a PDF...`)
     const message = await downloadPlaylistPdf(p.id, lang)
@@ -195,6 +207,7 @@ export function PlaylistsSection({ onSend }: Props) {
             onArchive={(p) => void archiveOne(p)}
             onRestore={(p) => void restoreOne(p)}
             onDownload={(p, lang) => void downloadOne(p, lang)}
+            onDelete={setDeleting}
           />
         )}
       </section>
@@ -209,6 +222,10 @@ export function PlaylistsSection({ onSend }: Props) {
           onSaveDraft={saveAsDraft}
           onClose={closeEditor}
         />
+      )}
+
+      {deleting && (
+        <DeletePlaylistDialog playlist={deleting} onDelete={() => deleteOne(deleting)} onClose={closeDelete} />
       )}
 
       {toast && <StudyToast message={toast} onClose={closeToast} />}

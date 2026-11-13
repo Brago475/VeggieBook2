@@ -12,9 +12,10 @@ type Props = {
   onArchive: (p: PlaylistSummary) => void
   onRestore: (p: PlaylistSummary) => void
   onDownload: (p: PlaylistSummary, lang: PdfLanguage) => void
+  onDelete: (p: PlaylistSummary) => void
 }
 
-export function PlaylistList({ items, opening, onSend, onEdit, onArchive, onRestore, onDownload }: Props) {
+export function PlaylistList({ items, opening, onSend, onEdit, onArchive, onRestore, onDownload, onDelete }: Props) {
   return (
     <ul className="plc-grid">
       {items.map((p) => (
@@ -28,6 +29,7 @@ export function PlaylistList({ items, opening, onSend, onEdit, onArchive, onRest
           onArchive={() => onArchive(p)}
           onRestore={() => onRestore(p)}
           onDownload={(lang) => onDownload(p, lang)}
+          onDelete={() => onDelete(p)}
         />
       ))}
     </ul>

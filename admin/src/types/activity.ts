@@ -27,6 +27,7 @@ export type ActivityType =
   | 'playlist_created'
   | 'playlist_edited'
   | 'playlist_archived'
+  | 'playlist_deleted'
   | 'playlist_opened'
   | 'playlist_kept'
   | 'playlist_skipped'
