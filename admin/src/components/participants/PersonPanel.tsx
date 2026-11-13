@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Participant } from '../../types/participants'
 import type { StudySummary } from '../../types/studies'
 import { StudyIcon } from '../studies/StudyIcons'
@@ -23,11 +23,14 @@ import {
 //                off_admin   Turn tracking back on (undoes an admin)
 //                off_self    nothing: only they can turn it back on
 //
+// The confirm is controlled by the page, so a card's switch can open it.
 // Research ID only; no name or email exists here.
 
 type Props = {
   person: Participant
   study: StudySummary | null
+  confirming: boolean
+  onConfirmingChange: (confirming: boolean) => void
   onSetTracking: (on: boolean) => Promise<string | null>
   onOpenData: () => void
   onClose: () => void
@@ -41,10 +44,23 @@ const explain: Record<Participant['status'], string> = {
     'An admin turned tracking off, so nothing they save is used for research. They get no study notice. Only an admin can turn it back on.',
 }
 
-export function PersonPanel({ person, study, onSetTracking, onOpenData, onClose }: Props) {
-  const [confirming, setConfirming] = useState(false)
+export function PersonPanel({
+  person,
+  study,
+  confirming,
+  onConfirmingChange,
+  onSetTracking,
+  onOpenData,
+  onClose,
+}: Props) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const confirmRef = useRef<HTMLDivElement>(null)
+
+  // Brings the confirm into view when a card's switch opens it.
+  useEffect(() => {
+    if (confirming) confirmRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [confirming])
 
   async function change(on: boolean) {
     setBusy(true)
@@ -52,10 +68,11 @@ export function PersonPanel({ person, study, onSetTracking, onOpenData, onClose 
     const message = await onSetTracking(on)
     setBusy(false)
     if (message) setError(message)
-    else setConfirming(false)
+    else onConfirmingChange(false)
   }
 
   const notice = noticeText(person)
+  const showConfirm = confirming && person.status === 'on'
 
   return (
     <aside className={`pt-panel is-${person.status}`} aria-label={`Research ID ${person.researchId}`}>
@@ -155,8 +172,8 @@ export function PersonPanel({ person, study, onSetTracking, onOpenData, onClose 
             See their data in All Data
           </button>
 
-          {person.status === 'on' && !confirming && (
-            <button type="button" className="st-button is-orange" onClick={() => setConfirming(true)}>
+          {person.status === 'on' && !showConfirm && (
+            <button type="button" className="st-button is-orange" onClick={() => onConfirmingChange(true)}>
               <StudyIcon name="off" size={16} />
               Turn off tracking for this person
             </button>
@@ -174,15 +191,15 @@ export function PersonPanel({ person, study, onSetTracking, onOpenData, onClose 
           )}
         </div>
 
-        {confirming && (
-          <div className="pt-confirm" role="alertdialog" aria-labelledby="pt-confirm-title">
+        {showConfirm && (
+          <div ref={confirmRef} className="pt-confirm" role="alertdialog" aria-labelledby="pt-confirm-title">
             <strong id="pt-confirm-title">Turn off tracking for {person.researchId}?</strong>
             <p>
               Starting now, nothing they save is used for research, and they get no study notice. Books they saved
               before stay. Only an admin can turn it back on.
             </p>
             <div className="pt-confirm-actions">
-              <button type="button" className="st-button" disabled={busy} onClick={() => setConfirming(false)}>
+              <button type="button" className="st-button" disabled={busy} onClick={() => onConfirmingChange(false)}>
                 Cancel
               </button>
               <button type="button" className="st-button is-orange" disabled={busy} onClick={() => void change(false)}>

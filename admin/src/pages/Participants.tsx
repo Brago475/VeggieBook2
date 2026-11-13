@@ -15,7 +15,8 @@ import '../styles/participants.css'
 
 // Admin Participants page: research IDs with tracking status, filters, and
 // the per-person panel. The status tab is kept in the address. Admin and
-// guest accounts never appear.
+// guest accounts never appear. Turning tracking off, from a card's switch or
+// the panel, always goes through the panel's confirm.
 
 const FILTERS: readonly StatusFilter[] = ['all', 'on', 'off_self', 'off_admin']
 
@@ -31,6 +32,8 @@ export function Participants({ onOpen, onOpenPersonData }: Props) {
   const [search, setSearch] = useState('')
   const [picked, setPicked] = useState<string | null>(null)
   const [panelClosed, setPanelClosed] = useState(false)
+  const [confirmingId, setConfirmingId] = useState<string | null>(null)
+  const [switchError, setSwitchError] = useState<string | null>(null)
   // Outline stays up briefly even on a fast load.
   const firstLoad = useHeld(!data && !error)
 
@@ -59,6 +62,21 @@ export function Participants({ onOpen, onOpenPersonData }: Props) {
   function pick(researchId: string) {
     setPicked(researchId)
     setPanelClosed(false)
+    if (confirmingId !== researchId) setConfirmingId(null)
+  }
+
+  // From a card's switch: open that person and ask first.
+  function askTurnOff(researchId: string) {
+    setPicked(researchId)
+    setPanelClosed(false)
+    setConfirmingId(researchId)
+  }
+
+  async function turnOn(researchId: string) {
+    setSwitchError(null)
+    const message = await setTracking(researchId, true)
+    if (message) setSwitchError(message)
+    return message
   }
 
   return (
@@ -70,15 +88,13 @@ export function Participants({ onOpen, onOpenPersonData }: Props) {
         </button>
       </TopbarActions>
 
-      {error && (
+      {(error || switchError) && (
         <p className="error" role="alert">
-          {error}
+          {error ?? switchError}
         </p>
       )}
 
-      <ParticipantsBanner data={data} onOpenStudies={() => onOpen('studies')} />
-
-      <div className="pt-bar-row">
+      <ParticipantsBanner data={data} onOpenStudies={() => onOpen('studies')}>
         <StatusTabs counts={data.counts} value={filter} onChange={setFilter} />
         <label className="pt-search">
           <AllDataIcon name="search" size={16} />
@@ -90,7 +106,7 @@ export function Participants({ onOpen, onOpenPersonData }: Props) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </label>
-      </div>
+      </ParticipantsBanner>
 
       <div className={person ? 'pt-split has-panel' : 'pt-split'}>
         {shown.length === 0 ? (
@@ -105,6 +121,8 @@ export function Participants({ onOpen, onOpenPersonData }: Props) {
                 person={p}
                 selected={p.researchId === person?.researchId}
                 onSelect={() => pick(p.researchId)}
+                onTurnOff={() => askTurnOff(p.researchId)}
+                onTurnOn={() => turnOn(p.researchId)}
               />
             ))}
           </div>
@@ -115,9 +133,14 @@ export function Participants({ onOpen, onOpenPersonData }: Props) {
             key={person.researchId}
             person={person}
             study={data.study}
+            confirming={confirmingId === person.researchId}
+            onConfirmingChange={(on) => setConfirmingId(on ? person.researchId : null)}
             onSetTracking={(on) => setTracking(person.researchId, on)}
             onOpenData={() => onOpenPersonData(person.researchId)}
-            onClose={() => setPanelClosed(true)}
+            onClose={() => {
+              setPanelClosed(true)
+              setConfirmingId(null)
+            }}
           />
         )}
       </div>
