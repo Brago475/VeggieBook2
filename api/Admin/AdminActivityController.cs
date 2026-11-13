@@ -30,8 +30,10 @@ namespace VeggieBook.Api.Admin;
 /// recorded yet); later take-outs are their own lines. Notification lines
 /// read "What happened: Title", using the message's current title, and show
 /// the start of its text, with the round (counted from 1) for a repeating
-/// message. Playlist lines use the playlist's current English name; a
-/// participant's own playlist is never named, since its name is typed by them.
+/// message. Playlist lines use the playlist's current English name.
+///
+/// Only actions are shown. Older view lines (a notification read, a playlist
+/// or an item in it opened) stay in the log but are left out here.
 /// </summary>
 [ApiController]
 [Route("api/admin/activity")]
@@ -53,7 +55,6 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
     private static readonly Dictionary<string, string> ParticipantNotification = new()
     {
         [NotificationActivity.Shown] = "Got the pop-up",
-        [NotificationActivity.Opened] = "Read the message",
         [NotificationActivity.Link] = "Tapped the link",
         [NotificationActivity.Dismissed] = "Closed the pop-up"
     };
@@ -77,7 +78,6 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
     // What a participant did with a playlist made by an admin.
     private static readonly Dictionary<string, string> ParticipantPlaylist = new()
     {
-        [PlaylistActivity.Opened] = "Opened the playlist",
         [PlaylistActivity.Kept] = "Kept the playlist",
         [PlaylistActivity.Skipped] = "Skipped the playlist",
         [PlaylistActivity.Removed] = "Removed the playlist"
@@ -163,31 +163,16 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
         string PlaylistName(int? playlistId) =>
             playlistId is int i && playlists.TryGetValue(i, out var p) ? p.NameEn : $"Playlist #{playlistId}";
 
-        // "2 tips and 4 recipes", from what the playlist holds now.
+        // "4 tips", "3 recipes", or "2 tips and 3 recipes", from what the playlist holds now.
         string PlaylistDetail(int? playlistId) =>
             playlistId is int i && playlists.TryGetValue(i, out var p)
-                ? $"{Count(p.Tips, "tip")} and {Count(p.Recipes, "recipe")}"
+                ? ItemsSummary(p.Tips, p.Recipes)
                 : "Playlist no longer available";
 
         string ItemName(string? itemKind, int? itemId) =>
             itemId is not int x ? ""
             : itemKind == PlaylistKinds.Tip ? tipNames.GetValueOrDefault(x, $"Tip {x}")
             : recipeNames.GetValueOrDefault(x, $"Recipe {x}");
-
-        // Detail is "source:kind:id", for example "admin:recipe:212".
-        (string Title, string Detail) ItemLine(ActivityEntry a)
-        {
-            var parts = (a.Detail ?? "").Split(':');
-            var source = parts.ElementAtOrDefault(0);
-            var itemKind = parts.ElementAtOrDefault(1);
-            int? itemId = int.TryParse(parts.ElementAtOrDefault(2), out var n) ? n : null;
-
-            var what = itemKind == PlaylistKinds.Tip ? "a tip" : "a recipe";
-            var title = source == PlaylistActivity.SourceOwn
-                ? $"Opened {what} in their own playlist"
-                : $"Opened {what} in the playlist: {PlaylistName(a.ContentId)}";
-            return (title, ItemName(itemKind, itemId));
-        }
 
         // Detail is "kind|after|before", for example "recipe|Lunch and Dinner|Dinner".
         (string Title, string Detail) LabelLine(ActivityEntry a)
@@ -245,7 +230,7 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
 
         // Activity log: deletions, take-outs, prints, downloads, erases, admin
         // actions, notifications, playlists, meal labels, and saves of books
-        // no longer in the book table.
+        // no longer in the book table. Kinds with no branch here are skipped.
         var logged = await db.ActivityLog.AsNoTracking().ToListAsync();
 
         bool OwnerTracked(ActivityEntry a, DateTime at) =>
@@ -313,21 +298,8 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
             else if (ParticipantPlaylist.TryGetValue(a.Kind, out var playlistDid))
             {
                 if (OwnerTracked(a, a.At))
-                {
-                    var own = a.Detail == PlaylistActivity.SourceOwn;
-                    events.Add(new Event(a.Kind, a.ParticipantId,
-                        own ? "Opened their own playlist" : $"{playlistDid}: {PlaylistName(a.ContentId)}",
-                        own ? (a.ItemCount is int c ? Count(c, "recipe") : "") : PlaylistDetail(a.ContentId),
-                        a.At));
-                }
-            }
-            else if (a.Kind == PlaylistActivity.ItemOpened)
-            {
-                if (OwnerTracked(a, a.At))
-                {
-                    var (title, detail) = ItemLine(a);
-                    events.Add(new Event(a.Kind, a.ParticipantId, title, detail, a.At));
-                }
+                    events.Add(new Event(a.Kind, a.ParticipantId, $"{playlistDid}: {PlaylistName(a.ContentId)}",
+                        PlaylistDetail(a.ContentId), a.At));
             }
             else if (OwnPlaylist.TryGetValue(a.Kind, out var ownDid))
             {
@@ -486,6 +458,15 @@ public class AdminActivityController(AccountsContext db, VeggieBookContext conte
     }
 
     private static string Count(int n, string word) => n == 1 ? $"1 {word}" : $"{n} {word}s";
+
+    // Zero counts are left out: "4 tips", "3 recipes", "2 tips and 3 recipes".
+    private static string ItemsSummary(int tips, int recipes)
+    {
+        var parts = new List<string>();
+        if (tips > 0) parts.Add(Count(tips, "tip"));
+        if (recipes > 0) parts.Add(Count(recipes, "recipe"));
+        return parts.Count == 0 ? "No items" : string.Join(" and ", parts);
+    }
 
     // The message on one line, cut to PreviewLength characters.
     private static string Preview(string text)
