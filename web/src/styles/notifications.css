@@ -410,145 +410,216 @@
   border-radius: 24px;
 }
 
-/* Pop-up */
+/* Pop-up: a stack of cards (NotificationNotice.tsx). The dialog itself is
+   only the frame; the cards draw their own surfaces. */
 .dialog.nf-sheet {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
   max-width: 440px;
 }
 
-.nf-sheet-head {
+.dialog.nf-sheet.nf-stack {
+  position: relative;
+  display: block;
+  padding: 28px 0 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.nf-stack-back {
+  position: absolute;
+  top: 13px;
+  left: 10px;
+  right: 10px;
+  height: 60px;
+  overflow: hidden;
+  background: #eef5e3;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.14);
+}
+
+.nf-stack-back.is-far {
+  top: 0;
+  left: 22px;
+  right: 22px;
+  opacity: 0.85;
+}
+
+.nf-stack-back-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nf-stack-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: 22px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.nf-stack-top {
+  position: relative;
+  height: 120px;
+  background: #eef5e3;
+}
+
+.nf-stack-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* No photo: the loading screen's vegetables on soft green. */
+.is-veg {
   display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.nf-sheet-title {
-  flex: 1;
-  min-width: 0;
-  margin: 0;
-  font-size: 17px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--text);
-}
-
-.nf-steppers {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.nf-step {
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: var(--green-deep);
-  background: var(--green-tint);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
+  gap: 12px;
+  background: #eef5e3;
 }
 
-.nf-step svg {
+.is-veg img {
+  width: 36px;
+  height: 36px;
+}
+
+.nf-stack-back .is-veg {
+  align-items: flex-start;
+  padding-top: 6px;
+  gap: 8px;
+}
+
+.nf-stack-back .is-veg img {
   width: 18px;
   height: 18px;
 }
 
-.nf-step:disabled {
-  color: #c4c3ba;
-  background: transparent;
-  cursor: default;
+.nf-stack-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 999px;
 }
 
-.nf-step:focus-visible {
+.nf-stack-badge svg {
+  width: 15px;
+  height: 15px;
+}
+
+.nf-stack-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.94);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.nf-stack-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.nf-stack-close:focus-visible {
   outline: 2px solid var(--green-dark);
   outline-offset: 2px;
 }
 
-.nf-step-count {
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
-}
-
-.nf-sheet-card {
+.nf-stack-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  padding: 16px;
-  font: inherit;
-  text-align: left;
-  color: var(--text);
-  background: #f6f9f1;
-  border: 1px solid #d5e6c0;
-  border-radius: 16px;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  gap: 12px;
+  padding: 16px 18px 14px;
 }
 
-.nf-sheet-card:hover {
-  border-color: var(--green-dark);
-  box-shadow: 0 4px 14px rgba(59, 94, 31, 0.12);
-}
-
-.nf-sheet-card:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-}
-
-.nf-sheet-text {
+.nf-stack-text {
   display: -webkit-box;
   -webkit-line-clamp: 4;
   line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  padding: 0;
+  font: inherit;
   font-size: 17px;
   line-height: 1.5;
+  text-align: left;
+  color: var(--text);
+  background: none;
+  border: 0;
+  cursor: pointer;
   overflow-wrap: anywhere;
 }
 
-.nf-sheet-foot {
+.nf-stack-text:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.nf-stack-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-}
-
-.nf-sheet-time {
   font-size: 13px;
   color: var(--text-muted);
 }
 
-.nf-sheet-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 14px;
+.nf-stack-count {
   font-weight: 700;
   color: var(--green-deep);
 }
 
-.nf-sheet-more svg {
-  width: 16px;
-  height: 16px;
-}
-
-.nf-sheet-actions {
+.nf-stack-actions {
   display: flex;
   gap: 10px;
 }
 
-.nf-sheet-actions > * {
+.nf-stack-actions > * {
   flex: 1;
   margin: 0;
+}
+
+.nf-stack-all {
+  align-self: center;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.nf-stack-all:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.nf-stack-all:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 /* On a phone the pop-up sits at the bottom, within thumb reach. */
@@ -558,8 +629,8 @@
     padding: 12px;
   }
 
-  .dialog.nf-sheet {
-    border-radius: 24px;
+  .nf-stack-top {
+    height: 104px;
   }
 
   .nf-detail {
@@ -574,8 +645,7 @@
 @media (prefers-reduced-motion: reduce) {
   .nf-card,
   .nf-tab,
-  .nf-open-link,
-  .nf-sheet-card {
+  .nf-open-link {
     transition: none;
   }
 }

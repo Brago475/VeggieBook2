@@ -27,6 +27,8 @@ const en = {
 
   newTitle: (n: number): string => (n === 1 ? 'New notification' : 'New notifications'),
   readMore: 'Read more',
+  nextOne: 'Next one',
+  seeAllNotifications: 'See all notifications',
   stepOf: (i: number, n: number) => `${i} of ${n}`,
   previous: 'Previous notification',
   next: 'Next notification',
@@ -62,6 +64,8 @@ const es: typeof en = {
 
   newTitle: (n: number) => (n === 1 ? 'Notificación nueva' : 'Notificaciones nuevas'),
   readMore: 'Leer más',
+  nextOne: 'Siguiente',
+  seeAllNotifications: 'Ver todas las notificaciones',
   stepOf: (i: number, n: number) => `${i} de ${n}`,
   previous: 'Notificación anterior',
   next: 'Notificación siguiente',

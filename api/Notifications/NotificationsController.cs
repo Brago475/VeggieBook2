@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.Recipes;
 using VeggieBook.Api.Research;
 
 namespace VeggieBook.Api.Notifications;
@@ -14,7 +15,8 @@ namespace VeggieBook.Api.Notifications;
 //                                       newest first: text, round, whether
 //                                       the pop-up has shown, whether read,
 //                                       and the playlist it opens, if any,
-//                                       with this account's Keep or Skip
+//                                       with this account's Keep or Skip and
+//                                       its first recipe's photo
 //   POST /api/notifications/{id}/{step}  step: seen (the pop-up showed), open,
 //                                       link, or close. Body: { "round": n }.
 //                                       Only the first of each step per round
@@ -30,6 +32,7 @@ public record NotificationStepRequest(int? Round);
 [Route("api/notifications")]
 public class NotificationsController(
     AccountsContext db,
+    VeggieBookContext content,
     UserManager<AppUser> users,
     ILogger<NotificationsController> logger) : ControllerBase
 {
@@ -65,13 +68,27 @@ public class NotificationsController(
                 p.NameEn,
                 p.NameEs,
                 Tips = p.Items.Count(i => i.Kind == PlaylistKinds.Tip),
-                Recipes = p.Items.Count(i => i.Kind == PlaylistKinds.Recipe)
+                Recipes = p.Items.Count(i => i.Kind == PlaylistKinds.Recipe),
+                FirstRecipe = p.Items
+                    .Where(i => i.Kind == PlaylistKinds.Recipe)
+                    .OrderBy(i => i.Position)
+                    .Select(i => (int?)i.ItemId)
+                    .FirstOrDefault()
             })
             .ToDictionaryAsync(p => p.Id);
         var choices = await db.PlaylistChoices
             .AsNoTracking()
             .Where(c => c.UserId == viewer.Id && playlistIds.Contains(c.PlaylistId))
             .ToDictionaryAsync(c => c.PlaylistId, c => c.Kept);
+
+        // The pop-up shows each playlist's first recipe photo.
+        var recipeIds = playlists.Values.Select(p => p.FirstRecipe).OfType<int>().Distinct().ToArray();
+        var photos = (await content.Recipes
+                .AsNoTracking()
+                .Where(r => recipeIds.Contains(r.Id))
+                .Select(r => new { r.Id, Photos = r.Photos.OrderBy(x => x.Position).Select(x => x.ImagePath).ToList() })
+                .ToListAsync())
+            .ToDictionary(r => r.Id, r => RecipePhotos.Finished(r.Photos));
 
         object? PlaylistOf(Notification n)
         {
@@ -82,7 +99,8 @@ public class NotificationsController(
                 name = language == "es" && !string.IsNullOrEmpty(p.NameEs) ? p.NameEs : p.NameEn,
                 tips = p.Tips,
                 recipes = p.Recipes,
-                choice = choices.TryGetValue(pid, out var kept) ? (kept ? "kept" : "skipped") : null
+                choice = choices.TryGetValue(pid, out var kept) ? (kept ? "kept" : "skipped") : null,
+                photo = p.FirstRecipe is int rid ? photos.GetValueOrDefault(rid) : null
             };
         }
 

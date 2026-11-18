@@ -3,15 +3,22 @@ import { useLang } from '../../i18n/languageContext'
 import { COMMON } from '../../i18n/strings/common'
 import { NOTIFICATIONS } from '../../i18n/strings/notifications'
 import { useStrings } from '../../i18n/useStrings'
+import { coverSrc } from '../../utils/coverSrc'
 import { listTime } from '../../utils/notificationDates'
 import type { NotificationItem } from '../../utils/notificationsApi'
-import { BellIcon, ChevronLeftIcon, ChevronRightIcon } from '../icons/LibraryIcons'
+import { SafeImage } from '../common/SafeImage'
+import { BellIcon } from '../icons/LibraryIcons'
 
-// The pop-up for new notifications: a title row with arrows when there is
-// more than one, one card for the current notification, and Close and See
-// all. Tapping the card opens that notification on its own page, where its
-// link is. Built on the confirm dialog's styles (dialog.css); on a phone it
-// sits at the bottom of the screen. Close, a tap outside, or Escape closes it.
+// The pop-up for new notifications, as a stack of cards. The front card has
+// a photo strip with the title and a close button, the message, its time
+// and place in the stack, Next one (Close on the last) and Read more, and a
+// link to all notifications. Up to two cards peek out behind it, each with
+// its own photo. The photo is the linked playlist's first recipe, or the
+// loading screen's vegetables when there is none. Tapping the message or
+// Read more opens that notification's page. On a phone it sits at the
+// bottom of the screen. Close, a tap outside, or Escape closes it.
+//
+// Vegetable icons: Microsoft Fluent Emoji, MIT license (public/icons/veg).
 
 type Props = {
   items: NotificationItem[]
@@ -20,19 +27,43 @@ type Props = {
   onClose: () => void
 }
 
+const VEGGIES = ['carrot', 'broccoli', 'tomato', 'leafy-green']
+
+function Photo({ item, className }: { item: NotificationItem; className: string }) {
+  const photo = item.playlist?.photo
+  if (photo) return <SafeImage className={className} src={coverSrc(photo)} />
+  return (
+    <span className={`${className} is-veg`}>
+      {VEGGIES.map((v) => (
+        <img key={v} src={`/icons/veg/${v}.svg`} alt="" />
+      ))}
+    </span>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function NotificationNotice({ items, onSeeAll, onOpen, onClose }: Props) {
   const t = useStrings(NOTIFICATIONS)
   const common = useStrings(COMMON)
   const { lang } = useLang()
   const [index, setIndex] = useState(0)
-  const cardRef = useRef<HTMLButtonElement>(null)
+  const textRef = useRef<HTMLButtonElement>(null)
 
   const position = Math.min(index, items.length - 1)
   const item = items[position]
   const many = items.length > 1
+  const hasNext = position < items.length - 1
+  const behind = items.slice(position + 1, position + 3)
 
   useEffect(() => {
-    cardRef.current?.focus()
+    textRef.current?.focus()
 
     function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose()
@@ -53,64 +84,66 @@ export function NotificationNotice({ items, onSeeAll, onOpen, onClose }: Props) 
   return (
     <div className="dialog-overlay nf-overlay" onClick={onClose}>
       <div
-        className="dialog nf-sheet"
+        className="dialog nf-sheet nf-stack"
         role="dialog"
         aria-modal="true"
         aria-labelledby="nf-sheet-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="nf-sheet-head">
-          <span className="nf-icon is-small" aria-hidden="true">
-            <BellIcon />
+        {behind[1] && (
+          <span className="nf-stack-back is-far" aria-hidden="true">
+            <Photo item={behind[1]} className="nf-stack-back-photo" />
           </span>
-          <h2 className="nf-sheet-title" id="nf-sheet-title">
-            {t.newTitle(items.length)}
-          </h2>
-          {many && (
-            <div className="nf-steppers">
+        )}
+        {behind[0] && (
+          <span className="nf-stack-back is-near" aria-hidden="true">
+            <Photo item={behind[0]} className="nf-stack-back-photo" />
+          </span>
+        )}
+
+        <div className="nf-stack-card">
+          <div className="nf-stack-top">
+            <Photo item={item} className="nf-stack-photo" />
+            <h2 className="nf-stack-badge" id="nf-sheet-title">
+              <BellIcon />
+              {t.newTitle(items.length)}
+            </h2>
+            <button type="button" className="nf-stack-close" aria-label={common.close} onClick={onClose}>
+              <CloseIcon />
+            </button>
+          </div>
+
+          <div className="nf-stack-body">
+            <button ref={textRef} type="button" className="nf-stack-text" onClick={() => onOpen(item)}>
+              {item.text}
+            </button>
+
+            <div className="nf-stack-meta">
+              <span>{listTime(item.sentAt, lang)}</span>
+              {many && (
+                <span className="nf-stack-count" aria-live="polite">
+                  {t.stepOf(position + 1, items.length)}
+                </span>
+              )}
+            </div>
+
+            <div className="nf-stack-actions">
               <button
                 type="button"
-                className="nf-step"
-                aria-label={t.previous}
-                disabled={position === 0}
-                onClick={() => setIndex(position - 1)}
+                className="account-btn"
+                onClick={hasNext ? () => setIndex(position + 1) : onClose}
               >
-                <ChevronLeftIcon />
+                {hasNext ? t.nextOne : common.close}
               </button>
-              <span className="nf-step-count" aria-live="polite">
-                {t.stepOf(position + 1, items.length)}
-              </span>
-              <button
-                type="button"
-                className="nf-step"
-                aria-label={t.next}
-                disabled={position === items.length - 1}
-                onClick={() => setIndex(position + 1)}
-              >
-                <ChevronRightIcon />
+              <button type="button" className="create-btn" onClick={() => onOpen(item)}>
+                {t.readMore}
               </button>
             </div>
-          )}
-        </div>
 
-        <button ref={cardRef} type="button" className="nf-sheet-card" onClick={() => onOpen(item)}>
-          <span className="nf-sheet-text">{item.text}</span>
-          <span className="nf-sheet-foot">
-            <span className="nf-sheet-time">{listTime(item.sentAt, lang)}</span>
-            <span className="nf-sheet-more">
-              {t.readMore}
-              <ChevronRightIcon />
-            </span>
-          </span>
-        </button>
-
-        <div className="nf-sheet-actions">
-          <button type="button" className="account-btn" onClick={onClose}>
-            {common.close}
-          </button>
-          <button type="button" className="create-btn" onClick={onSeeAll}>
-            {t.seeAll}
-          </button>
+            <button type="button" className="nf-stack-all" onClick={onSeeAll}>
+              {t.seeAllNotifications}
+            </button>
+          </div>
         </div>
       </div>
     </div>

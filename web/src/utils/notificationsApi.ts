@@ -7,13 +7,14 @@ import { apiFetch } from './api'
 export type NotificationId = number | string
 
 // The playlist a message opens, in the site language, with this account's
-// Keep or Skip so far.
+// Keep or Skip so far and its first recipe's photo.
 export type NotificationPlaylist = {
   id: number
   name: string
   tips: number
   recipes: number
   choice: 'kept' | 'skipped' | null
+  photo?: string | null
 }
 
 export type NotificationItem = {
