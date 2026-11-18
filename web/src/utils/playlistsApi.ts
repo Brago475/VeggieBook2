@@ -47,6 +47,8 @@ export type KeptPlaylist = {
   tips: number
   recipes: number
   cover: string | null
+  // Up to five recipe photos for the card's slideshow.
+  photos?: string[]
   keptAt: string
 }
 
@@ -55,6 +57,8 @@ export type OwnPlaylistSummary = {
   name: string
   recipes: number
   cover: string | null
+  // Up to five recipe photos for the card's slideshow.
+  photos?: string[]
   updatedAt: string
 }
 

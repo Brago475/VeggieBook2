@@ -2,7 +2,7 @@ import { LeafDecor } from '../components/layout/LeafDecor'
 import { GhostEmpty } from '../components/notifications/GhostEmpty'
 import { CardListSkeleton } from '../components/notifications/NotificationSkeletons'
 import { SectionSwitch } from '../components/notifications/SectionSwitch'
-import { PlaylistRow } from '../components/playlists/PlaylistRow'
+import { PlaylistCard } from '../components/playlists/PlaylistCard'
 import { useHeld } from '../hooks/useHeld'
 import { usePlaylistLibrary } from '../hooks/usePlaylists'
 import { NOTIFICATIONS } from '../i18n/strings/notifications'
@@ -10,10 +10,11 @@ import { PLAYLISTS } from '../i18n/strings/playlists'
 import { useStrings } from '../i18n/useStrings'
 import type { PlaylistSource } from '../utils/routes'
 
-// The Playlists tab of Notifications: playlists kept from notifications,
-// then the account's own playlists. Own playlists are made from a book's ⋮.
-// While loading, playlist card outlines show. With no playlists at all,
-// faded rows show with a button to the books.
+// The Playlists tab of Notifications: one list, newest first, of playlists
+// kept from notifications and the account's own playlists, each shown as a
+// card with a badge saying where it came from. Own playlists are made from
+// a book's ⋮. While loading, playlist card outlines show. With no playlists
+// at all, faded rows show with a button to the books.
 
 type Props = {
   onMessages: () => void
@@ -21,7 +22,19 @@ type Props = {
   onHome: () => void
 }
 
+type Card = {
+  key: string
+  source: PlaylistSource
+  id: number
+  name: string
+  count: string
+  photos: string[]
+  at: number
+}
+
 const SKELETON_CARDS = 2
+// Cards start their slideshows this far apart.
+const STAGGER_MS = 5000
 
 export function PlaylistLibrary({ onMessages, onOpen, onHome }: Props) {
   const t = useStrings(PLAYLISTS)
@@ -29,7 +42,30 @@ export function PlaylistLibrary({ onMessages, onOpen, onHome }: Props) {
   const { data, error, loading } = usePlaylistLibrary()
   const showSkeleton = useHeld(loading)
 
-  const isEmpty = data !== null && data !== undefined && data.kept.length === 0 && data.own.length === 0
+  const cards: Card[] = data
+    ? [
+        ...data.kept.map((p) => ({
+          key: `admin-${p.id}`,
+          source: 'admin' as const,
+          id: p.id,
+          name: p.name,
+          count: t.counts(p.tips, p.recipes),
+          photos: p.photos ?? (p.cover ? [p.cover] : []),
+          at: Date.parse(p.keptAt) || 0,
+        })),
+        ...data.own.map((p) => ({
+          key: `own-${p.id}`,
+          source: 'own' as const,
+          id: p.id,
+          name: p.name,
+          count: t.counts(0, p.recipes),
+          photos: p.photos ?? (p.cover ? [p.cover] : []),
+          at: Date.parse(p.updatedAt) || 0,
+        })),
+      ].sort((a, b) => b.at - a.at)
+    : []
+
+  const isEmpty = data !== null && cards.length === 0
 
   return (
     <div className="account-screen nf-screen">
@@ -57,48 +93,24 @@ export function PlaylistLibrary({ onMessages, onOpen, onHome }: Props) {
         />
       )}
 
-      {!showSkeleton && data && !isEmpty && (
-        <>
-          <section className="nf-section">
-            <h2 className="nf-group-label">{t.keptTitle}</h2>
-            {data.kept.length === 0 ? (
-              <p className="nf-empty-line">{t.keptEmpty}</p>
-            ) : (
-              <ul className="nf-list">
-                {data.kept.map((p) => (
-                  <li key={p.id}>
-                    <PlaylistRow
-                      name={p.name}
-                      detail={t.counts(p.tips, p.recipes)}
-                      cover={p.cover}
-                      onOpen={() => onOpen('admin', p.id)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="nf-section">
-            <h2 className="nf-group-label">{t.mineTitle}</h2>
-            {data.own.length === 0 ? (
-              <p className="nf-empty-line">{t.mineEmpty}</p>
-            ) : (
-              <ul className="nf-list">
-                {data.own.map((p) => (
-                  <li key={p.id}>
-                    <PlaylistRow
-                      name={p.name}
-                      detail={t.counts(0, p.recipes)}
-                      cover={p.cover}
-                      onOpen={() => onOpen('own', p.id)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </>
+      {!showSkeleton && cards.length > 0 && (
+        <ul className="pl-cards">
+          {cards.map((c, i) => (
+            <li key={c.key}>
+              <PlaylistCard
+                name={c.name}
+                label={t.kicker}
+                count={c.count}
+                badge={c.source === 'own' ? t.badgeYours : t.badgeTeam}
+                source={c.source === 'own' ? 'own' : 'team'}
+                openLabel={t.open}
+                photos={c.photos}
+                delay={i * STAGGER_MS}
+                onOpen={() => onOpen(c.source, c.id)}
+              />
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   )

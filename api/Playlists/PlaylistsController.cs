@@ -33,6 +33,9 @@ public class PlaylistsController(
     VeggieBookContext content,
     ILogger<PlaylistsController> logger) : ControllerBase
 {
+    // Recipe photos sent per playlist for the card's slideshow.
+    private const int PhotoLimit = 5;
+
     private Guid CurrentUserId =>
         AuthSetup.UserId(User) ?? throw new InvalidOperationException("Signed-in user has no id.");
 
@@ -55,11 +58,12 @@ public class PlaylistsController(
                     c.DecidedAt,
                     Tips = p.Items.Count(i => i.Kind == PlaylistKinds.Tip),
                     Recipes = p.Items.Count(i => i.Kind == PlaylistKinds.Recipe),
-                    Cover = p.Items
+                    RecipeIds = p.Items
                         .Where(i => i.Kind == PlaylistKinds.Recipe)
                         .OrderBy(i => i.Position)
-                        .Select(i => (int?)i.ItemId)
-                        .FirstOrDefault()
+                        .Select(i => i.ItemId)
+                        .Take(PhotoLimit)
+                        .ToList()
                 })
             .AsNoTracking()
             .ToListAsync();
@@ -75,39 +79,58 @@ public class PlaylistsController(
                 u.CreatedAt,
                 u.UpdatedAt,
                 Recipes = u.Items.Count,
-                Cover = u.Items.OrderBy(i => i.Position).Select(i => (int?)i.RecipeId).FirstOrDefault()
+                RecipeIds = u.Items
+                    .OrderBy(i => i.Position)
+                    .Select(i => i.RecipeId)
+                    .Take(PhotoLimit)
+                    .ToList()
             })
             .ToListAsync();
 
-        var coverIds = kept.Select(k => k.Cover).Concat(own.Select(o => o.Cover)).OfType<int>().Distinct().ToArray();
-        var covers = (await content.Recipes
+        var recipeIds = kept.SelectMany(k => k.RecipeIds)
+            .Concat(own.SelectMany(o => o.RecipeIds))
+            .Distinct()
+            .ToArray();
+        var finished = (await content.Recipes
                 .AsNoTracking()
-                .Where(r => coverIds.Contains(r.Id))
+                .Where(r => recipeIds.Contains(r.Id))
                 .Select(r => new { r.Id, Photos = r.Photos.OrderBy(p => p.Position).Select(p => p.ImagePath).ToList() })
                 .ToListAsync())
             .ToDictionary(r => r.Id, r => RecipePhotos.Finished(r.Photos));
 
-        string? CoverOf(int? id) => id is int i ? covers.GetValueOrDefault(i) : null;
+        // One finished photo per recipe, in playlist order, skipping recipes without one.
+        List<string> PhotosOf(IEnumerable<int> ids) =>
+            ids.Select(i => finished.GetValueOrDefault(i)).OfType<string>().Distinct().ToList();
 
         Response.Headers.CacheControl = "no-store";
         return Ok(new
         {
-            kept = kept.Select(k => new
+            kept = kept.Select(k =>
             {
-                id = k.Id,
-                name = es && !string.IsNullOrEmpty(k.NameEs) ? k.NameEs : k.NameEn,
-                tips = k.Tips,
-                recipes = k.Recipes,
-                cover = CoverOf(k.Cover),
-                keptAt = k.DecidedAt
+                var photos = PhotosOf(k.RecipeIds);
+                return new
+                {
+                    id = k.Id,
+                    name = es && !string.IsNullOrEmpty(k.NameEs) ? k.NameEs : k.NameEn,
+                    tips = k.Tips,
+                    recipes = k.Recipes,
+                    cover = photos.FirstOrDefault(),
+                    photos,
+                    keptAt = k.DecidedAt
+                };
             }),
-            own = own.Select(o => new
+            own = own.Select(o =>
             {
-                id = o.Id,
-                name = o.Name,
-                recipes = o.Recipes,
-                cover = CoverOf(o.Cover),
-                updatedAt = o.UpdatedAt ?? o.CreatedAt
+                var photos = PhotosOf(o.RecipeIds);
+                return new
+                {
+                    id = o.Id,
+                    name = o.Name,
+                    recipes = o.Recipes,
+                    cover = photos.FirstOrDefault(),
+                    photos,
+                    updatedAt = o.UpdatedAt ?? o.CreatedAt
+                };
             })
         });
     }

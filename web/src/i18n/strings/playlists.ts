@@ -27,6 +27,9 @@ const en = {
 
   emptyTitle: 'Your playlists live here',
   emptyBody: 'Keep one from a notification, or make your own from a VeggieBook.',
+  badgeYours: 'Yours',
+  badgeTeam: 'From the team',
+  open: 'Open',
   keptTitle: 'Kept from notifications',
   keptEmpty: 'Playlists you keep from a notification show here.',
   mineTitle: 'My playlists',
@@ -101,6 +104,9 @@ const es: typeof en = {
 
   emptyTitle: 'Aquí viven tus listas',
   emptyBody: 'Guarda una desde una notificación, o haz la tuya desde un VeggieBook.',
+  badgeYours: 'Tuya',
+  badgeTeam: 'Del equipo',
+  open: 'Abrir',
   keptTitle: 'Guardadas desde notificaciones',
   keptEmpty: 'Las listas que guardes desde una notificación aparecen aquí.',
   mineTitle: 'Mis listas',
