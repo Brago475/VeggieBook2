@@ -1,10 +1,10 @@
 /* The screen shown right after a book is saved (pages/BookSaved.tsx). */
 
-/* Fills the page up to 720px so the book card can match its size on home.
-   The width is set because the parent is a flex layout, which would
-   otherwise shrink this column to its content. Buttons, lists and hints
-   stay in a narrower column below the card. */
+/* The book card, buttons, lists and hints all share one width, set by
+   --saved-width. The column has an explicit width because its parent is a
+   flex layout, which would otherwise shrink it to its content. */
 .book-saved {
+  --saved-width: 420px;
   width: 100%;
   max-width: 720px;
   box-sizing: border-box;
@@ -44,9 +44,9 @@
   color: #4b5545;
 }
 
-/* The full width of the column, the same size as on home. */
 .book-saved-card {
   width: 100%;
+  max-width: var(--saved-width);
   margin: 8px 0;
   text-align: left;
 }
@@ -54,7 +54,7 @@
 /* One extra copy: the recipe or secret as a card. */
 .book-saved-extra {
   width: 100%;
-  max-width: 420px;
+  max-width: var(--saved-width);
   background: #ffffff;
   border: 1px solid #e5e7e3;
   border-radius: 12px;
@@ -84,7 +84,7 @@
 /* Several extra copies: a list of names. */
 .book-saved-extras {
   width: 100%;
-  max-width: 420px;
+  max-width: var(--saved-width);
   margin: 0;
   padding: 4px 16px;
   list-style: none;
@@ -122,7 +122,7 @@
 
 .book-saved-actions {
   width: 100%;
-  max-width: 420px;
+  max-width: var(--saved-width);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -167,7 +167,7 @@
 
 .book-saved-done {
   width: 100%;
-  max-width: 420px;
+  max-width: var(--saved-width);
   margin-top: 8px;
   display: flex;
   flex-direction: column;
