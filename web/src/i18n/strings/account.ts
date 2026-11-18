@@ -1,6 +1,6 @@
-// Profile and settings: the page and its cards (profile, change password,
-// password recovery, help with research, delete account). Shared field
-// labels come from auth.ts and forgot.ts. Spanish uses tú.
+// Profile and settings: the page and its cards (profile, password and
+// recovery, help with research, delete account). Shared field labels come
+// from auth.ts and forgot.ts. Spanish uses tú.
 
 const en = {
   tagline: 'Manage your account and preferences.',
@@ -20,26 +20,33 @@ const en = {
   profileSaved: 'Profile saved.',
   saveProfile: 'Save profile',
 
+  prTitle: 'Password and recovery',
+  prSub: 'Keep your account safe.',
+  prPassword: 'Password',
+  prPin: 'Recovery PIN',
+  prQuestion: 'Security question',
+  prSet: 'Set',
+  prNotSet: 'Not set',
+  prForgot: 'Forgot password',
+
   cpTitle: 'Change password',
-  cpVerify: 'First, confirm it is you.',
-  cpChoose: 'Now choose your new password.',
+  cpSub: 'Enter your current password, then choose a new one.',
   currentPassword: 'Current password',
   enterCurrent: 'Enter your current password.',
-  yourPin: 'Your 6-digit recovery PIN',
-  checking: 'Checking...',
-  usePin: 'Forgot your current password? Use your PIN instead',
-  usePassword: 'Use my current password instead',
+  forgotCurrent: 'Forgot your current password?',
   newPasswordPlaceholder: 'Enter a new password',
+  checking: 'Checking...',
   changing: 'Changing...',
   cpDone: 'Password changed. You were signed out on your other devices.',
 
-  rcTitle: 'Password recovery',
+  fgTitle: 'Forgot password',
+  fgSub: 'Use your recovery PIN to set a new password.',
+  yourPin: 'Your 6-digit recovery PIN',
+
   rcLoading: 'Your recovery PIN and security question.',
-  rcSet:
-    'Your recovery PIN and security question are set. You use them if you forget your password.',
   rcNotSet:
     'Set a recovery PIN and security question so you can reset a forgotten password.',
-  rcYourQuestion: 'Your question:',
+  rcSub: 'Confirm with your current password first.',
   rcSaved: 'Saved. Use your new PIN and question if you forget your password.',
   rcChange: 'Change PIN and question',
   rcSetButton: 'Set PIN and question',
@@ -102,26 +109,33 @@ const es: typeof en = {
   profileSaved: 'Perfil guardado.',
   saveProfile: 'Guardar perfil',
 
+  prTitle: 'Contraseña y recuperación',
+  prSub: 'Mantén tu cuenta segura.',
+  prPassword: 'Contraseña',
+  prPin: 'PIN de recuperación',
+  prQuestion: 'Pregunta de seguridad',
+  prSet: 'Configurado',
+  prNotSet: 'Sin configurar',
+  prForgot: 'Olvidé mi contraseña',
+
   cpTitle: 'Cambiar contraseña',
-  cpVerify: 'Primero, confirma que eres tú.',
-  cpChoose: 'Ahora elige tu nueva contraseña.',
+  cpSub: 'Escribe tu contraseña actual y luego elige una nueva.',
   currentPassword: 'Contraseña actual',
   enterCurrent: 'Escribe tu contraseña actual.',
-  yourPin: 'Tu PIN de recuperación de 6 dígitos',
-  checking: 'Verificando...',
-  usePin: '¿Olvidaste tu contraseña actual? Usa tu PIN',
-  usePassword: 'Usar mi contraseña actual',
+  forgotCurrent: '¿Olvidaste tu contraseña actual?',
   newPasswordPlaceholder: 'Escribe una nueva contraseña',
+  checking: 'Verificando...',
   changing: 'Cambiando...',
   cpDone: 'Contraseña cambiada. Se cerró tu sesión en tus otros dispositivos.',
 
-  rcTitle: 'Recuperación de contraseña',
+  fgTitle: 'Olvidé mi contraseña',
+  fgSub: 'Usa tu PIN de recuperación para crear una nueva contraseña.',
+  yourPin: 'Tu PIN de recuperación de 6 dígitos',
+
   rcLoading: 'Tu PIN de recuperación y tu pregunta de seguridad.',
-  rcSet:
-    'Tu PIN de recuperación y tu pregunta de seguridad están listos. Los usas si olvidas tu contraseña.',
   rcNotSet:
     'Configura un PIN de recuperación y una pregunta de seguridad para poder cambiar una contraseña olvidada.',
-  rcYourQuestion: 'Tu pregunta:',
+  rcSub: 'Primero confirma con tu contraseña actual.',
   rcSaved: 'Guardado. Usa tu nuevo PIN y tu nueva pregunta si olvidas tu contraseña.',
   rcChange: 'Cambiar PIN y pregunta',
   rcSetButton: 'Configurar PIN y pregunta',

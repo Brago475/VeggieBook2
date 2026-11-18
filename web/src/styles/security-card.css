@@ -1,0 +1,57 @@
+/* Password and recovery card on the account settings screen. */
+
+.security-rows {
+  margin: 0;
+  border: 1px solid var(--line, #e6e6df);
+  border-radius: 16px;
+}
+
+.security-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.security-row + .security-row {
+  border-top: 1px solid var(--line, #e6e6df);
+}
+
+.security-row dt {
+  font-weight: 600;
+}
+
+.security-row dd {
+  margin: 0;
+  text-align: right;
+  color: var(--text-muted, #5d6157);
+}
+
+.security-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.security-actions.is-single {
+  grid-template-columns: 1fr;
+}
+
+.account-primary.security-secondary {
+  background: transparent;
+  color: var(--green-deep, #2f5d2f);
+  border: 2px solid var(--green-deep, #2f5d2f);
+}
+
+.security-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 420px) {
+  .security-actions {
+    grid-template-columns: 1fr;
+  }
+}

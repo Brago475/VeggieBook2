@@ -1,19 +1,18 @@
 import { useState } from 'react'
 import { SignOutIcon, UserIcon } from '../components/icons/AccountIcons'
 import { AdminDeleteNote } from '../components/account/AdminDeleteNote'
-import { ChangePasswordForm } from '../components/account/ChangePasswordForm'
 import { DeleteAccountForm } from '../components/account/DeleteAccountForm'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { ProfileCard } from '../components/account/ProfileCard'
-import { RecoveryCard } from '../components/account/RecoveryCard'
 import { ResearchCard } from '../components/account/ResearchCard'
+import { SecurityCard } from '../components/account/SecurityCard'
 import { ACCOUNT } from '../i18n/strings/account'
 import { COMMON } from '../i18n/strings/common'
 import { HOME } from '../i18n/strings/home'
 import { useStrings } from '../i18n/useStrings'
 
-// Profile and settings: the profile (name and username), change password,
-// password recovery (PIN and security question), help with research
+// Profile and settings: the profile (username), password and recovery
+// (password, PIN and security question in one card), help with research
 // (research tracking), delete account, and sign out.
 //
 // Each section is a card, with its own error message, so a problem in one
@@ -77,9 +76,7 @@ export function AccountSettings({
 
       <ProfileCard />
 
-      <ChangePasswordForm email={email} onChangePassword={onChangePassword} />
-
-      <RecoveryCard />
+      <SecurityCard email={email} onChangePassword={onChangePassword} />
 
       <ResearchCard />
 
