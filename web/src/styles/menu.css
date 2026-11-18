@@ -1,5 +1,5 @@
-/* The ⋮ action menu. Shared: book cards on the home screen now, recipe
-   rows inside a book later. */
+/* The ⋮ action menu. Shared: book cards on the home screen, the book card
+   inside a saved book, and each recipe or secret row inside a book. */
 
 .menu {
   position: relative;
@@ -50,6 +50,14 @@
   border-radius: 12px;
   box-shadow: 0 10px 28px rgba(20, 20, 15, 0.18);
   animation: menu-in 0.12s ease-out;
+}
+
+/* A row's open menu draws over the rows below it. Opening a menu moves
+   focus into its list, so the row holding focus is lifted above its
+   neighbors until the menu closes. */
+.book-recipes li:focus-within {
+  position: relative;
+  z-index: 2;
 }
 
 .menu-item {
