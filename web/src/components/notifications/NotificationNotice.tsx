@@ -3,6 +3,7 @@ import { useLang } from '../../i18n/languageContext'
 import { COMMON } from '../../i18n/strings/common'
 import { NOTIFICATIONS } from '../../i18n/strings/notifications'
 import { useStrings } from '../../i18n/useStrings'
+import type { Lang } from '../../i18n/language'
 import { coverSrc } from '../../utils/coverSrc'
 import { listTime } from '../../utils/notificationDates'
 import type { NotificationItem } from '../../utils/notificationsApi'
@@ -14,11 +15,9 @@ import { BellIcon } from '../icons/LibraryIcons'
 // and place in the stack, Next one (Close on the last) and Read more, and a
 // link to all notifications. Up to two cards peek out behind it, each with
 // its own photo. The photo is the linked playlist's first recipe, or the
-// loading screen's vegetables when there is none. Tapping the message or
+// VeggieBook logo on header green when there is none. Tapping the message or
 // Read more opens that notification's page. On a phone it sits at the
 // bottom of the screen. Close, a tap outside, or Escape closes it.
-//
-// Vegetable icons: Microsoft Fluent Emoji, MIT license (public/icons/veg).
 
 type Props = {
   items: NotificationItem[]
@@ -27,16 +26,12 @@ type Props = {
   onClose: () => void
 }
 
-const VEGGIES = ['carrot', 'broccoli', 'tomato', 'leafy-green']
-
-function Photo({ item, className }: { item: NotificationItem; className: string }) {
+function Photo({ item, lang, className }: { item: NotificationItem; lang: Lang; className: string }) {
   const photo = item.playlist?.photo
   if (photo) return <SafeImage className={className} src={coverSrc(photo)} />
   return (
-    <span className={`${className} is-veg`}>
-      {VEGGIES.map((v) => (
-        <img key={v} src={`/icons/veg/${v}.svg`} alt="" />
-      ))}
+    <span className={`${className} is-logo`}>
+      <img src={`/brand/logo-negative-${lang}.png`} alt="" />
     </span>
   )
 }
@@ -54,7 +49,7 @@ export function NotificationNotice({ items, onSeeAll, onOpen, onClose }: Props) 
   const common = useStrings(COMMON)
   const { lang } = useLang()
   const [index, setIndex] = useState(0)
-  const textRef = useRef<HTMLButtonElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
 
   const position = Math.min(index, items.length - 1)
   const item = items[position]
@@ -63,7 +58,8 @@ export function NotificationNotice({ items, onSeeAll, onOpen, onClose }: Props) 
   const behind = items.slice(position + 1, position + 3)
 
   useEffect(() => {
-    textRef.current?.focus()
+    // Focus lands on the card itself, so no ring shows until Tab is used.
+    cardRef.current?.focus()
 
     function onKey(event: KeyboardEvent) {
       if (event.key === 'Escape') onClose()
@@ -92,18 +88,18 @@ export function NotificationNotice({ items, onSeeAll, onOpen, onClose }: Props) 
       >
         {behind[1] && (
           <span className="nf-stack-back is-far" aria-hidden="true">
-            <Photo item={behind[1]} className="nf-stack-back-photo" />
+            <Photo item={behind[1]} lang={lang} className="nf-stack-back-photo" />
           </span>
         )}
         {behind[0] && (
           <span className="nf-stack-back is-near" aria-hidden="true">
-            <Photo item={behind[0]} className="nf-stack-back-photo" />
+            <Photo item={behind[0]} lang={lang} className="nf-stack-back-photo" />
           </span>
         )}
 
-        <div className="nf-stack-card">
+        <div ref={cardRef} className="nf-stack-card" tabIndex={-1}>
           <div className="nf-stack-top">
-            <Photo item={item} className="nf-stack-photo" />
+            <Photo item={item} lang={lang} className="nf-stack-photo" />
             <h2 className="nf-stack-badge" id="nf-sheet-title">
               <BellIcon />
               {t.newTitle(items.length)}
@@ -114,7 +110,7 @@ export function NotificationNotice({ items, onSeeAll, onOpen, onClose }: Props) 
           </div>
 
           <div className="nf-stack-body">
-            <button ref={textRef} type="button" className="nf-stack-text" onClick={() => onOpen(item)}>
+            <button type="button" className="nf-stack-text" onClick={() => onOpen(item)}>
               {item.text}
             </button>
 
