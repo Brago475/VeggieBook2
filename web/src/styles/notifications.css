@@ -73,41 +73,72 @@
   border-radius: 999px;
 }
 
-/* List */
-.nf-tabs {
-  display: flex;
+/* List: All and Unread as folder tabs on a panel that holds the list. The
+   chosen tab joins the panel and carries a green top edge. */
+.nf-folder {
   margin: 0 0 var(--sp-5);
-  padding: 4px;
-  background: #e9e8e0;
-  border-radius: 12px;
 }
 
-.nf-tab {
-  flex: 1;
-  min-height: 44px;
+.nf-folder-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding-left: 14px;
+}
+
+.nf-folder-tab {
+  position: relative;
+  min-height: 40px;
+  margin-top: 6px;
+  padding: 0 18px;
   font: inherit;
   font-size: var(--font-label);
   font-weight: 600;
   color: var(--text-muted);
-  background: transparent;
-  border: none;
-  border-radius: 9px;
+  background: #ecebe3;
+  border: 0;
+  border-radius: 12px 12px 0 0;
   cursor: pointer;
   transition:
     background 0.15s ease,
     color 0.15s ease;
 }
 
-.nf-tab[aria-selected='true'] {
-  font-weight: 700;
+.nf-folder-tab:hover {
   color: var(--green-deep);
-  background: var(--surface);
-  box-shadow: 0 1px 3px rgba(20, 20, 15, 0.12);
 }
 
-.nf-tab:focus-visible {
+.nf-folder-tab[aria-selected='true'] {
+  z-index: 1;
+  min-height: 46px;
+  margin-top: 0;
+  margin-bottom: -1px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: #fbfbf7;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  box-shadow: inset 0 3px 0 #97c459;
+}
+
+.nf-folder-tab:focus {
+  outline: none;
+}
+
+.nf-folder-tab:focus-visible {
   outline: 2px solid var(--green-dark);
   outline-offset: 2px;
+}
+
+.nf-folder-panel {
+  padding: var(--sp-4);
+  background: #fbfbf7;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.nf-folder-panel > :last-child {
+  margin-bottom: 0;
 }
 
 .nf-section {
@@ -800,7 +831,8 @@
   border-radius: 6px;
 }
 
-/* On a phone the pop-up sits at the bottom, within thumb reach. */
+/* On a phone the pop-up sits at the bottom, within thumb reach, and the
+   folder panel uses tighter edges. */
 @media (max-width: 600px) {
   .dialog-overlay.nf-overlay {
     align-items: flex-end;
@@ -809,6 +841,18 @@
 
   .nf-stack-top {
     height: 104px;
+  }
+
+  .nf-folder-tabs {
+    padding-left: 8px;
+  }
+
+  .nf-folder-tab {
+    padding: 0 14px;
+  }
+
+  .nf-folder-panel {
+    padding: var(--sp-3);
   }
 
   .nf-detail {
@@ -823,7 +867,7 @@
 @media (prefers-reduced-motion: reduce) {
   .nf-card,
   .nf-page,
-  .nf-tab,
+  .nf-folder-tab,
   .nf-open-link {
     transition: none;
   }
