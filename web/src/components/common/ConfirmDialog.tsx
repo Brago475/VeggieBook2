@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { COMMON } from '../../i18n/strings/common'
 import { useStrings } from '../../i18n/useStrings'
 
@@ -10,6 +11,9 @@ import { useStrings } from '../../i18n/useStrings'
 // Built from a div rather than <dialog>. The native element would give
 // focus trapping and Escape for free, but it needs iOS 15.4 or newer, and
 // this app is aimed at people on phones they have had for a while.
+//
+// Drawn into document.body through a portal, so a card or panel that sets
+// its own stacking (position, z-index, transform) can never cover it.
 //
 // Focus lands on the safe option, not the destructive one, so a stray tap
 // or a held Return key cannot delete anything. Default button words follow
@@ -65,7 +69,7 @@ export function ConfirmDialog({
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="dialog-overlay" onClick={onCancel}>
       <div
         className="dialog"
@@ -106,6 +110,7 @@ export function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

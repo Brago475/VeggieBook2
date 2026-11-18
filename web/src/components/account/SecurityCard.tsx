@@ -21,7 +21,8 @@ import '../../styles/security-card.css'
 //   recovery  current password, then a new PIN and question
 //
 // Only one form is open at a time. Finishing or cancelling returns to the
-// summary, with a short message after a change.
+// summary, with a short message after a change. The recovery-card class
+// keeps the form styles in recovery-card.css.
 
 type Mode = 'summary' | 'change' | 'forgot' | 'recovery'
 
@@ -83,7 +84,7 @@ export function SecurityCard({ email, onChangePassword }: Props) {
   }[mode]
 
   return (
-    <div className="account-card security-card" aria-busy={held}>
+    <div className="account-card security-card recovery-card" aria-busy={held}>
       <div className="account-card-head">
         <span className="account-card-icon">
           {mode === 'recovery' ? <KeyIcon /> : <LockIcon />}
