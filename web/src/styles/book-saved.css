@@ -1,7 +1,9 @@
 /* The screen shown right after a book is saved (pages/BookSaved.tsx). */
 
+/* Wide enough for the book card to match its size on home. Buttons,
+   lists and hints stay in a narrower column below it. */
 .book-saved {
-  max-width: 460px;
+  max-width: 720px;
   margin: 0 auto;
   padding: 32px 20px 40px;
   display: flex;
@@ -38,24 +40,17 @@
   color: #4b5545;
 }
 
+/* The full width of the column, the same size as on home. */
 .book-saved-card {
   width: 100%;
   margin: 8px 0;
   text-align: left;
 }
 
-/* The column is narrow, so a 2:1 card would be short. A fixed height
-   keeps the card large and leaves room for a name on two lines. */
-.book-saved-card .book-card {
-  aspect-ratio: auto;
-  height: 300px;
-  max-height: none;
-  margin-bottom: 0;
-}
-
 /* One extra copy: the recipe or secret as a card. */
 .book-saved-extra {
   width: 100%;
+  max-width: 420px;
   background: #ffffff;
   border: 1px solid #e5e7e3;
   border-radius: 12px;
@@ -85,6 +80,7 @@
 /* Several extra copies: a list of names. */
 .book-saved-extras {
   width: 100%;
+  max-width: 420px;
   margin: 0;
   padding: 4px 16px;
   list-style: none;
@@ -122,6 +118,7 @@
 
 .book-saved-actions {
   width: 100%;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -166,6 +163,7 @@
 
 .book-saved-done {
   width: 100%;
+  max-width: 420px;
   margin-top: 8px;
   display: flex;
   flex-direction: column;
@@ -205,10 +203,4 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-}
-
-@media (max-width: 480px) {
-  .book-saved-card .book-card {
-    height: 260px;
-  }
 }
