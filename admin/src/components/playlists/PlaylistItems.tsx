@@ -13,7 +13,7 @@ type Props = {
 
 export function PlaylistItems({ items, onMove, onRemove }: Props) {
   if (items.length === 0) {
-    return <p className="st-muted">Nothing added yet. Pick a vegetable or a topic above and choose View all.</p>
+    return <p className="st-muted">Nothing added yet. Go back to step 2 to pick tips and recipes.</p>
   }
 
   return (

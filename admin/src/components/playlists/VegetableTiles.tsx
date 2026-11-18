@@ -1,6 +1,6 @@
 import type { PlaylistVegetable } from '../../types/playlists'
-import { imageUrl } from '../../utils/images'
 import { NavIcon } from '../icons/NavIcons'
+import { ZoomImage } from './ZoomImage'
 
 // Vegetable picker as photo tiles. With allowAny, the first tile means all
 // vegetables (value '').
@@ -39,7 +39,7 @@ export function VegetableTiles({ vegetables, value, onChange, allowAny = false }
           onClick={() => onChange(v.code)}
         >
           {v.image ? (
-            <img className="vt-img" src={imageUrl(v.image)} alt="" loading="lazy" />
+            <ZoomImage className="vt-img" photo={v.image} />
           ) : (
             <span className="vt-img" aria-hidden="true">
               <NavIcon name="leaf" size={24} />

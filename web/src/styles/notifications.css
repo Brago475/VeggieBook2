@@ -1,7 +1,7 @@
 /* Notifications: the list (pages/Notifications.tsx), one notification's
    page (pages/NotificationDetail.tsx) and the pop-up
    (components/notifications/NotificationNotice.tsx). The pop-up builds on
-   .dialog (dialog.css). */
+   .dialog (dialog.css). Loading outlines: notification-skeletons.css. */
 
 /* Shared */
 .nf-icon {
@@ -182,6 +182,7 @@
 .nf-card-text {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: var(--font-label);
@@ -208,11 +209,6 @@
   width: 18px;
   height: 18px;
   color: #b7b6ad;
-}
-
-.nf-skel-card {
-  height: 76px;
-  border-radius: 16px;
 }
 
 /* One notification: a single soft card */
@@ -289,6 +285,7 @@
   width: 100%;
 }
 
+/* Loading block, used by BookPlaylist and PlaylistMaker. */
 .nf-skel-detail {
   height: 220px;
   margin-bottom: var(--sp-5);
@@ -392,6 +389,7 @@
 .nf-sheet-text {
   display: -webkit-box;
   -webkit-line-clamp: 4;
+  line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-size: 17px;

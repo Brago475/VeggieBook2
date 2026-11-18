@@ -4,6 +4,13 @@
 export type PlaylistKind = 'tip' | 'recipe'
 export type MealKey = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
+// A message this playlist is the default for.
+export type PlaylistDefaultFor = {
+  templateKey: string
+  vegetable: string
+  label: string
+}
+
 export type PlaylistSummary = {
   id: number
   version: number
@@ -21,10 +28,13 @@ export type PlaylistSummary = {
   updatedBy: string | null
   tips: number
   recipes: number
+  // Up to four image paths, in playlist order, for the card collage.
+  photos: string[]
   kept: number
   notKept: number
   sent: number
   live: boolean
+  defaultFor: PlaylistDefaultFor[]
 }
 
 export type PlaylistItemRef = { kind: PlaylistKind; id: number }

@@ -21,14 +21,20 @@ import './styles/motion.css'
 
 // Admin site root (admin.veggiebook2.com). Access requires the API's Admin
 // role. The open page is kept in the URL hash (#books), so a refresh reopens
-// it and Back/Forward move between pages. Sections listed in `upcoming` show
-// ComingSoon. dataStudy and dataSearch preselect a study or research ID when
-// another page opens All Data.
+// it and Back/Forward move between pages. A page's own tabs and filters
+// follow it in the hash (#notifications?tab=playlists, see
+// hooks/useHashParam.ts). Sections listed in `upcoming` show ComingSoon.
+// dataStudy and dataSearch preselect a study or research ID when another
+// page opens All Data.
 
 const upcoming: Partial<Record<AdminTab, { title: string; text: string }>> = {}
 
+function pageInHash(): string {
+  return window.location.hash.slice(1).split('?')[0]
+}
+
 function tabFromHash(): AdminTab {
-  const id = window.location.hash.slice(1)
+  const id = pageInHash()
   return navItems.some((i) => i.id === id) ? (id as AdminTab) : 'overview'
 }
 
@@ -49,8 +55,9 @@ export function App() {
 
   const soon = upcoming[tab]
 
+  // A new page starts on its own defaults, so its address has no tabs yet.
   function go(next: AdminTab) {
-    if (window.location.hash !== `#${next}`) window.history.pushState(null, '', `#${next}`)
+    if (pageInHash() !== next) window.history.pushState(null, '', `#${next}`)
     setTab(next)
   }
 

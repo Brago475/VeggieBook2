@@ -33,9 +33,13 @@ export const KIND_LABELS: Record<PlaylistKindChoice, string> = {
   pick: 'Pick myself',
 }
 
-export function initialChoice(from: AdminNotification | null): PlaylistChoice {
+// The message's own playlist first; otherwise a saved playlist to start
+// with (Send on a playlist card); otherwise none.
+export function initialChoice(from: AdminNotification | null, startWith: number | null = null): PlaylistChoice {
   const p = from?.playlist
-  if (!p) return EMPTY_CHOICE
+  if (!p) {
+    return startWith !== null ? { ...EMPTY_CHOICE, on: true, kind: 'saved', playlistId: startWith } : EMPTY_CHOICE
+  }
   if (p.auto && p.vegetable && p.meal) {
     return { ...EMPTY_CHOICE, on: true, kind: 'auto', vegetable: p.vegetable, meal: p.meal }
   }

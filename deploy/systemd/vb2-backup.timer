@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly VeggieBook2 backup
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 America/New_York
+Persistent=true
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target

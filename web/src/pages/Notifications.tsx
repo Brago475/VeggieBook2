@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { InboxRow } from '../components/notifications/InboxRow'
+import { CardListSkeleton } from '../components/notifications/NotificationSkeletons'
 import { SectionSwitch } from '../components/notifications/SectionSwitch'
+import { useHeld } from '../hooks/useHeld'
 import { notificationKey } from '../hooks/useNotifications'
 import { NOTIFICATIONS } from '../i18n/strings/notifications'
 import { useStrings } from '../i18n/useStrings'
@@ -11,7 +13,8 @@ import type { NotificationItem } from '../utils/notificationsApi'
 // The Notifications list: every live notification, newest first, as
 // separate cards grouped into Today and Earlier, with All and Unread tabs.
 // A card opens that notification's own page. The list alone does not mark
-// anything opened. The switch on top leads to the Playlists tab.
+// anything opened. The switch on top leads to the Playlists tab. While
+// loading, card outlines show for at least the usual short minimum.
 
 type Props = {
   items: NotificationItem[]
@@ -26,6 +29,7 @@ const SKELETON_CARDS = 3
 export function Notifications({ items, loaded, error, onOpen, onPlaylists }: Props) {
   const t = useStrings(NOTIFICATIONS)
   const [unreadOnly, setUnreadOnly] = useState(false)
+  const showSkeleton = useHeld(!loaded)
 
   const unread = items.filter((item) => !item.read)
   const list = unreadOnly ? unread : items
@@ -82,28 +86,19 @@ export function Notifications({ items, loaded, error, onOpen, onPlaylists }: Pro
         </button>
       </div>
 
-      {!loaded && (
-        <div role="status" aria-busy="true">
-          <span className="visually-hidden">{t.loading}</span>
-          <ul className="nf-list" aria-hidden="true">
-            {Array.from({ length: SKELETON_CARDS }, (_, i) => (
-              <li key={i}>
-                <div className="skeleton nf-skel-card" />
-              </li>
-            ))}
-          </ul>
-        </div>
+      {showSkeleton && <CardListSkeleton label={t.loading} kind="message" count={SKELETON_CARDS} />}
+
+      {!showSkeleton && (
+        <>
+          {error && items.length === 0 && <p className="message">{t.couldNotLoad}</p>}
+          {!error && list.length === 0 && <p className="message">{unreadOnly ? t.emptyUnread : t.emptyAll}</p>}
+
+          {group(t.today, today)}
+          {group(t.earlier, earlier)}
+
+          {items.length > 0 && <p className="nf-note">{t.expireNote}</p>}
+        </>
       )}
-
-      {loaded && error && items.length === 0 && <p className="message">{t.couldNotLoad}</p>}
-      {loaded && !error && list.length === 0 && (
-        <p className="message">{unreadOnly ? t.emptyUnread : t.emptyAll}</p>
-      )}
-
-      {group(t.today, today)}
-      {group(t.earlier, earlier)}
-
-      {items.length > 0 && <p className="nf-note">{t.expireNote}</p>}
     </div>
   )
 }

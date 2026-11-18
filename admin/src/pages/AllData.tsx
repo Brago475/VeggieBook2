@@ -14,6 +14,7 @@ import { TopbarActions, TopbarBelow } from '../components/layout/TopbarSlot'
 import { AllDataSkeleton } from '../components/skeletons/AllDataSkeleton'
 import { CardRowSkeleton } from '../components/skeletons/CardRowSkeleton'
 import { useAllData } from '../hooks/useAllData'
+import { useHashParam } from '../hooks/useHashParam'
 import { useHeld } from '../hooks/useHeld'
 import type { AllDataFile, AnswersView, BookTypeFilter, ColumnGroup, ItemStatusFilter } from '../types/allData'
 import type { ResearchFilters, ResearchOptions, SheetRow } from '../types/research'
@@ -31,14 +32,19 @@ import '../styles/alldata-look.css'
 import '../styles/alldata-responsive.css'
 
 // All Data page: Books (one row per book) and Recipes and secrets (one row
-// per item). Rows are keyed by research ID only. Downloads and Refresh sit
-// in the top bar. initialStudy and initialSearch preset the view when
+// per item). Rows are keyed by research ID only. The open file, the answers
+// view and the status filter are kept in the address. Downloads and Refresh
+// sit in the top bar. initialStudy and initialSearch preset the view when
 // opened from Studies or Participants.
 
 const fileTabs: { id: AllDataFile; label: string; icon: 'book' | 'pot' }[] = [
   { id: 'books', label: 'Books', icon: 'book' },
   { id: 'items', label: 'Recipes and secrets', icon: 'pot' },
 ]
+
+const FILES: readonly AllDataFile[] = ['books', 'items']
+const ANSWER_VIEWS: readonly AnswersView[] = ['chips', 'binary']
+const STATUSES: readonly ItemStatusFilter[] = ['all', 'kept', 'out']
 
 const allGroups: Record<ColumnGroup, boolean> = { person: true, book: true, answers: true, items: true }
 
@@ -55,7 +61,7 @@ type Props = {
 }
 
 export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
-  const [file, setFile] = useState<AllDataFile>('books')
+  const [file, setFile] = useHashParam('file', FILES)
   const [filters, setFilters] = useState<ResearchFilters>(noFilters)
   const [options, setOptions] = useState<ResearchOptions | null>(null)
   const [version, setVersion] = useState(0)
@@ -63,10 +69,10 @@ export function AllData({ initialStudy = null, initialSearch = '' }: Props) {
   const [bookType, setBookType] = useState<BookTypeFilter>('')
   const [selected, setSelected] = useState<string | null>(null)
   const [panelClosed, setPanelClosed] = useState(false)
-  const [answersView, setAnswersView] = useState<AnswersView>('chips')
+  const [answersView, setAnswersView] = useHashParam('answers', ANSWER_VIEWS)
   const [groups, setGroups] = useState<Record<ColumnGroup, boolean>>(allGroups)
   const [columnsOpen, setColumnsOpen] = useState(false)
-  const [status, setStatus] = useState<ItemStatusFilter>('all')
+  const [status, setStatus] = useHashParam('status', STATUSES)
   const [itemAnswers, setItemAnswers] = useState(false)
   const [study, setStudy] = useState<number | null>(initialStudy)
 

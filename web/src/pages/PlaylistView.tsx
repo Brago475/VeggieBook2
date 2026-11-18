@@ -4,6 +4,7 @@ import { SafeImage } from '../components/common/SafeImage'
 import { LeafIcon } from '../components/icons/LibraryIcons'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { NavBar } from '../components/layout/NavBar'
+import { PlaylistSkeleton } from '../components/notifications/NotificationSkeletons'
 import { TipView } from '../components/playlists/TipView'
 import { RecipeSections } from '../components/veggie/RecipeSections'
 import { RecipeSkeleton } from '../components/veggie/RecipeSkeleton'
@@ -28,7 +29,8 @@ import type { PlaylistOpen, PlaylistSource } from '../utils/routes'
 // One playlist: its tips and recipes as rows. A recipe opens in the same
 // view a saved book uses (RecipeSections); a tip opens on its own page.
 // A playlist from the team ends with Skip and Keep; an own playlist has Edit
-// and Delete. Which item is open is held by App, in the address.
+// and Delete. Which item is open is held by App, in the address. While
+// loading, the playlist's outline shows.
 
 type Props = {
   source: PlaylistSource
@@ -118,14 +120,7 @@ export function PlaylistView({
     setConfirming(false)
   }
 
-  if (showSkeleton) {
-    return (
-      <div className="account-screen nf-screen" role="status" aria-busy="true">
-        <span className="visually-hidden">{t.loading}</span>
-        <div className="skeleton nf-skel-detail" aria-hidden="true" />
-      </div>
-    )
-  }
+  if (showSkeleton) return <PlaylistSkeleton label={t.loading} />
 
   if (error || !data) {
     return (

@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace VeggieBook.Api.Data;
 
 // Database context for user data: accounts, roles, saved books, research
-// IDs, studies and tracking, the activity log, notifications, playlists, and
-// meal labels.
+// IDs, studies and tracking, the activity log, notifications, playlists,
+// meal labels, admin drafts, and template defaults.
 //
 // Separate from VeggieBookContext, which is read-only with tracking switched
 // off. Keeping writes in their own context means the content endpoints never
@@ -38,6 +38,8 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
     public DbSet<UserPlaylist> UserPlaylists => Set<UserPlaylist>();
     public DbSet<UserPlaylistItem> UserPlaylistItems => Set<UserPlaylistItem>();
     public DbSet<MealLabel> MealLabels => Set<MealLabel>();
+    public DbSet<AdminDraft> AdminDrafts => Set<AdminDraft>();
+    public DbSet<TemplatePlaylist> TemplatePlaylists => Set<TemplatePlaylist>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -317,6 +319,33 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.Meal).HasColumnName("meal");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
             e.Property(x => x.CreatedBy).HasColumnName("created_by");
+        });
+
+        // See db/migrations/028_admin_draft.sql.
+        b.Entity<AdminDraft>(e =>
+        {
+            e.ToTable("admin_draft");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.Kind).HasColumnName("kind");
+            e.Property(x => x.Title).HasColumnName("title");
+            e.Property(x => x.Payload).HasColumnName("payload").HasColumnType("jsonb");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.CreatedBy).HasColumnName("created_by");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            e.Property(x => x.UpdatedBy).HasColumnName("updated_by");
+        });
+
+        // See db/migrations/029_template_playlist.sql.
+        b.Entity<TemplatePlaylist>(e =>
+        {
+            e.ToTable("template_playlist");
+            e.HasKey(x => new { x.TemplateKey, x.Vegetable });
+            e.Property(x => x.TemplateKey).HasColumnName("template_key");
+            e.Property(x => x.Vegetable).HasColumnName("vegetable");
+            e.Property(x => x.PlaylistId).HasColumnName("playlist_id");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            e.Property(x => x.UpdatedBy).HasColumnName("updated_by");
         });
     }
 

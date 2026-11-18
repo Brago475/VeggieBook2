@@ -1,0 +1,173 @@
+/* Loading outlines for Notifications, one notification, the Playlists tab
+   and a playlist, sized like the real cards so nothing jumps when they
+   arrive. The shimmer comes from .skeleton in skeleton.css; these classes
+   set only shapes, sizes and grays (darker on the page, lighter inside a
+   white card, the same as the book outline in reading.css). */
+
+.nf-skel .skeleton {
+  display: block;
+  background-color: #e6e6de;
+}
+
+.nf-skel .nf-skel-row .skeleton,
+.nf-skel .nf-skel-card .skeleton,
+.nf-skel .skel-row .skeleton {
+  background-color: #eeeee8;
+}
+
+/* Group label above a list ("Today", "Kept") */
+.nf-skel-label {
+  width: 80px;
+  height: 14px;
+  margin-bottom: 10px;
+  border-radius: 7px;
+}
+
+/* One card in a list: same padding, corners and white as .nf-card */
+.nf-skel-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 14px 14px 16px;
+  background: var(--surface);
+  border: 1px solid #ebeae3;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(20, 20, 15, 0.05);
+}
+
+.nf-skel-icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.nf-skel-cover {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+}
+
+.nf-skel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nf-skel-line {
+  width: 85%;
+  height: 14px;
+  border-radius: 7px;
+}
+
+.nf-skel-line.is-mid {
+  width: 55%;
+  height: 16px;
+}
+
+.nf-skel-line.is-short {
+  width: 35%;
+  height: 12px;
+}
+
+.nf-skel-chevron {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+/* One notification: same soft card as .nf-detail */
+.nf-skel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: var(--sp-5);
+  padding: 24px;
+  background: var(--surface);
+  border-radius: 24px;
+  box-shadow:
+    0 1px 2px rgba(20, 20, 15, 0.04),
+    0 6px 20px rgba(20, 20, 15, 0.05);
+}
+
+.nf-skel-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nf-skel-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.nf-skel-date {
+  width: 140px;
+  height: 14px;
+  border-radius: 7px;
+}
+
+.nf-skel-text {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nf-skel-text .nf-skel-line {
+  width: 100%;
+  height: 18px;
+}
+
+.nf-skel-text .nf-skel-line:nth-child(2) {
+  width: 92%;
+}
+
+.nf-skel-text .nf-skel-line:nth-child(3) {
+  width: 65%;
+}
+
+.nf-skel-button {
+  width: 200px;
+  max-width: 100%;
+  height: 48px;
+  border-radius: 999px;
+}
+
+/* A playlist: heading, rows, and Skip and Keep */
+.nf-skel-kicker {
+  width: 70px;
+  height: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.nf-skel-title {
+  width: 60%;
+  max-width: 320px;
+  height: 30px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+
+.nf-skel-sub {
+  width: 140px;
+  height: 14px;
+  border-radius: 7px;
+}
+
+.nf-skel-decide {
+  display: flex;
+  gap: 12px;
+  margin-top: var(--sp-5);
+}
+
+.nf-skel-decide .skeleton {
+  flex: 1;
+  height: 48px;
+  border-radius: 999px;
+}

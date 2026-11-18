@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAccountSearch } from '../../hooks/useAccountSearch'
+import { useHashParam } from '../../hooks/useHashParam'
 import { useHeld } from '../../hooks/useHeld'
 import type { AccountFilter, SiteSettingsInfo } from '../../types/settings'
 import { formatDate } from '../../utils/format'
@@ -9,8 +10,8 @@ import { TableSkeleton } from '../skeletons/TableSkeleton'
 import { AccountPanel } from './AccountPanel'
 
 // Settings, Accounts tab: account numbers, the searchable list, and the
-// opened account. Regular admins never see admin accounts (the API leaves
-// them out).
+// opened account. The chosen filter is kept in the address. Regular admins
+// never see admin accounts (the API leaves them out).
 
 type Props = {
   info: SiteSettingsInfo | null
@@ -27,9 +28,11 @@ const filters: { id: AccountFilter; label: string }[] = [
   { id: 'signin', label: 'Sign-in locked' },
 ]
 
+const FILTER_IDS: readonly AccountFilter[] = filters.map((f) => f.id)
+
 export function AccountsTab({ info, isRoot, currentEmail, onChanged }: Props) {
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<AccountFilter>('all')
+  const [filter, setFilter] = useHashParam('accounts', FILTER_IDS)
   const [take, setTake] = useState(PAGE)
   const [openId, setOpenId] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)

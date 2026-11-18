@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { BellIcon, ExternalLinkIcon, LeafIcon } from '../components/icons/LibraryIcons'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { LinkedText } from '../components/notifications/LinkedText'
+import { DetailSkeleton } from '../components/notifications/NotificationSkeletons'
+import { useHeld } from '../hooks/useHeld'
 import { useLang } from '../i18n/languageContext'
 import { NOTIFICATIONS } from '../i18n/strings/notifications'
 import { PLAYLISTS } from '../i18n/strings/playlists'
@@ -15,6 +17,7 @@ import type { NotificationItem } from '../utils/notificationsApi'
 // long it stays available. Opening the page marks this notification opened.
 // The masthead's Back returns to the list; a notification that has expired
 // or was taken down shows a note and a button back to the list instead.
+// While loading, the card's outline shows for at least the usual minimum.
 
 type Props = {
   items: NotificationItem[]
@@ -31,6 +34,7 @@ export function NotificationDetail({ items, loaded, focusId, onOpen, onLink, onO
   const t = useStrings(NOTIFICATIONS)
   const pt = useStrings(PLAYLISTS)
   const { lang } = useLang()
+  const showSkeleton = useHeld(!loaded)
 
   // The newest round of this notification, when it repeats.
   const item = items.find((i) => String(i.id) === focusId) ?? null
@@ -46,14 +50,9 @@ export function NotificationDetail({ items, loaded, focusId, onOpen, onLink, onO
     <div className="account-screen nf-screen">
       <LeafDecor className="account-leaf" />
 
-      {!loaded && (
-        <div role="status" aria-busy="true">
-          <span className="visually-hidden">{t.loading}</span>
-          <div className="skeleton nf-skel-detail" aria-hidden="true" />
-        </div>
-      )}
+      {showSkeleton && <DetailSkeleton label={t.loading} />}
 
-      {loaded && !item && (
+      {!showSkeleton && !item && (
         <>
           <p className="message">{t.notFound}</p>
           <button type="button" className="account-btn nf-back" onClick={onBack}>
@@ -62,7 +61,7 @@ export function NotificationDetail({ items, loaded, focusId, onOpen, onLink, onO
         </>
       )}
 
-      {item && (
+      {!showSkeleton && item && (
         <>
           <article className="nf-detail">
             <div className="nf-detail-meta">

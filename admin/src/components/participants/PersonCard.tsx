@@ -1,48 +1,63 @@
 import type { Participant } from '../../types/participants'
-import { StudyIcon } from '../studies/StudyIcons'
-import { aboutLine, booksLine, initialOf, statusLabel, statusLine } from './participantText'
+import { aboutLine, booksCount, idStyle, initialOf, latestBook, statusLine } from './participantText'
+import { TrackingSwitch } from './TrackingSwitch'
 
-// One person on the Participants page: a colored square with the first
-// letter of their research ID, the ID, age and join date, their tracking
-// status, and their tracked books. The whole card is a button that opens
-// the side panel. Research ID only; no name or email exists here.
+// One person on the Participants page.
+//
+//   Head   round badge in their ID color, research ID, age and join date,
+//          and the tracking switch, on a band tinted by tracking status
+//   Body   book count and latest book, then a short status line
+//
+// A full-size button behind the content opens the side panel; the switch
+// sits above it. Research ID only; no name or email exists here.
 
 type Props = {
   person: Participant
   selected: boolean
   onSelect: () => void
+  onTurnOff: () => void
+  onTurnOn: () => Promise<string | null>
 }
 
-export function PersonCard({ person, selected, onSelect }: Props) {
-  const tone = `is-${person.status}`
+export function PersonCard({ person, selected, onSelect, onTurnOff, onTurnOn }: Props) {
+  const books = booksCount(person)
+  const latest = latestBook(person)
+  const classes = ['pt-card', `is-${person.status}`, selected && 'is-selected'].filter(Boolean).join(' ')
 
   return (
-    <button
-      type="button"
-      className={selected ? `pt-card ${tone} is-selected` : `pt-card ${tone}`}
-      aria-pressed={selected}
-      onClick={onSelect}
-    >
-      <span className="pt-card-top">
-        <span className="pt-avatar" aria-hidden="true">
+    <div className={classes}>
+      <button
+        type="button"
+        className="pt-card-open"
+        aria-pressed={selected}
+        aria-label={`Open ${person.researchId}`}
+        onClick={onSelect}
+      />
+
+      <div className="pt-card-head">
+        <span className="pt-avatar" style={idStyle(person.researchId)} aria-hidden="true">
           {initialOf(person.researchId)}
         </span>
         <span className="pt-card-id">
           <strong>{person.researchId}</strong>
           <span>{aboutLine(person)}</span>
         </span>
-      </span>
+        <TrackingSwitch person={person} onTurnOff={onTurnOff} onTurnOn={onTurnOn} />
+      </div>
 
-      <span className="pt-chip">
-        <i aria-hidden="true" />
-        {statusLabel[person.status]}
-      </span>
-      <span className="pt-card-line">{statusLine(person)}</span>
-
-      <span className="pt-card-books">
-        <StudyIcon name="book" size={14} />
-        {booksLine(person)}
-      </span>
-    </button>
+      <div className="pt-card-body">
+        <dl className="pt-card-stats">
+          <div>
+            <dt>Books</dt>
+            <dd className={books ? undefined : 'is-none'}>{books ?? 'None yet'}</dd>
+          </div>
+          <div>
+            <dt>Latest</dt>
+            <dd className={latest ? undefined : 'is-none'}>{latest ?? 'None yet'}</dd>
+          </div>
+        </dl>
+        <span className="pt-card-line">{statusLine(person)}</span>
+      </div>
+    </div>
   )
 }

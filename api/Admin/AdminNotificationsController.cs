@@ -15,7 +15,8 @@ namespace VeggieBook.Api.Admin;
 //
 //   GET  /api/admin/notifications            every notification, newest first,
 //                                            with its status and counts
-//   GET  /api/admin/notifications/templates  the templates and vegetables
+//   GET  /api/admin/notifications/templates  the templates, and the VeggieBook
+//                                            vegetables for the {vegetable} slot
 //   GET  /api/admin/notifications/people     research IDs that can be picked
 //   POST /api/admin/notifications            create
 //   PUT  /api/admin/notifications/{id}       edit title, text, playlist,
@@ -33,7 +34,8 @@ namespace VeggieBook.Api.Admin;
 //
 // Playlist: "none", "made" (a saved playlist by id) or "auto" (a vegetable
 // and a meal; AutoPlaylists builds or refreshes it). Timing and audience are
-// the notification's own.
+// the notification's own. Template default playlists are kept by
+// AdminTemplatePlaylistsController.
 //
 // Start times: StartNow uses the server's clock at the moment of saving. A
 // requested start that has already passed also starts now, except the
@@ -109,18 +111,24 @@ public class AdminNotificationsController(
     }
 
     [HttpGet("templates")]
-    public IActionResult Templates() => Ok(new
+    public async Task<IActionResult> Templates()
     {
-        templates = NotificationTemplates.All.Select(t => new
+        var vegetables = await SeasonVegetables.LoadAsync(content);
+
+        Response.Headers.CacheControl = "no-store";
+        return Ok(new
         {
-            key = t.Key,
-            en = t.En,
-            es = t.Es,
-            needsVegetable = t.NeedsVegetable
-        }),
-        vegetables = NotificationTemplates.Vegetables.Select(v => new { key = v.Key, en = v.En }),
-        slot = NotificationTemplates.Slot
-    });
+            templates = NotificationTemplates.All.Select(t => new
+            {
+                key = t.Key,
+                en = t.En,
+                es = t.Es,
+                needsVegetable = t.NeedsVegetable
+            }),
+            vegetables = vegetables.Select(v => new { key = v.Key, en = v.En, name = v.Name }),
+            slot = NotificationTemplates.Slot
+        });
+    }
 
     [HttpGet("people")]
     public async Task<IActionResult> People()
@@ -332,13 +340,13 @@ public class AdminNotificationsController(
 
         var template = NotificationTemplates.Find(req.TemplateKey);
         var vegetable = template is { NeedsVegetable: true }
-            ? NotificationTemplates.FindVegetable(req.Vegetable)
+            ? await SeasonVegetables.FindAsync(content, req.Vegetable)
             : null;
 
         return (new Parsed(
             title,
             body,
-            NotificationTemplates.SpanishFor(template?.Key, vegetable?.Key, body),
+            NotificationTemplates.SpanishFor(template?.Key, vegetable, body),
             template?.Key,
             vegetable?.Key,
             starts,

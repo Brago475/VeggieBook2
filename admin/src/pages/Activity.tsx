@@ -17,6 +17,7 @@ import { TopbarActions } from '../components/layout/TopbarSlot'
 import { downloadCsv } from '../components/questions/questionMath'
 import { ActivitySkeleton } from '../components/skeletons/ActivitySkeleton'
 import { useActivity } from '../hooks/useActivity'
+import { useHashParam } from '../hooks/useHashParam'
 import { useHeld } from '../hooks/useHeld'
 import type { ActivityEvent } from '../types/activity'
 import '../styles/studies.css'
@@ -24,11 +25,21 @@ import '../styles/books.css'
 import '../styles/activity.css'
 
 // Admin Activity page: the full, permanent activity history with type,
-// who, research ID or admin, date, and study filters. Filtering and paging
-// are client-side.
+// who, research ID or admin, date, and study filters. The type and Who
+// filters are kept in the address. Filtering and paging are client-side.
 
 const PAGE = 50
 const DAY = 24 * 60 * 60 * 1000
+
+// "all" first, so it is the default left out of the address.
+const GROUP_IDS: readonly ActivityGroup[] = [
+  'all' as ActivityGroup,
+  ...groups.map((g) => g.id).filter((id) => id !== 'all'),
+]
+const WHO_IDS: readonly ActivityWho[] = [
+  'all' as ActivityWho,
+  ...whoOptions.map((o) => o.id).filter((id) => id !== 'all'),
+]
 
 function chipDiff(now: number, before: number): string {
   const d = now - before
@@ -38,8 +49,8 @@ function chipDiff(now: number, before: number): string {
 export function Activity() {
   const [study, setStudy] = useState<number | null>(null)
   const { data, error, loading, reload } = useActivity(study)
-  const [group, setGroup] = useState<ActivityGroup>('all')
-  const [who, setWho] = useState<ActivityWho>('all')
+  const [group, setGroup] = useHashParam('type', GROUP_IDS)
+  const [who, setWho] = useHashParam('who', WHO_IDS)
   const [search, setSearch] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
@@ -196,8 +207,8 @@ export function Activity() {
                 type="button"
                 className="st-button"
                 onClick={() => {
-                  setGroup('all')
-                  setWho('all')
+                  setGroup('all' as ActivityGroup)
+                  setWho('all' as ActivityWho)
                   setSearch('')
                   setFrom('')
                   setTo('')

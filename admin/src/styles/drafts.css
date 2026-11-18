@@ -1,0 +1,84 @@
+/* Draft cards on the Playlists and Messages sections. Buttons come from the
+   Studies styles. A dashed edge sets drafts apart from finished items. */
+
+.dr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.dr-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px dashed #b7c9bb;
+  border-radius: 14px;
+  background: #fbfcfb;
+}
+
+.dr-badge {
+  align-self: flex-start;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #fff4e5;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a4b08;
+}
+
+.dr-title {
+  font-size: 15px;
+  line-height: 1.3;
+  color: #111827;
+  overflow-wrap: anywhere;
+}
+
+.dr-detail {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #4b5563;
+}
+
+.dr-saved {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.dr-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.dr-actions .st-button {
+  flex: 1;
+  justify-content: center;
+}
+
+.dr-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #fff7ed;
+  font-size: 13px;
+  color: #7c2d12;
+}
+
+@media (max-width: 640px) {
+  .dr-list {
+    grid-template-columns: 1fr;
+  }
+}

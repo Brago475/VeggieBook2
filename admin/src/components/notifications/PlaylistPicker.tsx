@@ -4,17 +4,18 @@ import type { PickedItem, PlaylistOptions, PlaylistSummary } from '../../types/p
 import { browseContent, fetchPlaylist, fetchPlaylistList, fetchPlaylistOptions } from '../../utils/playlistsApi'
 import { NavIcon } from '../icons/NavIcons'
 import {
-  countText,
   MAX_ITEMS,
   MAX_NAME,
   mealCount,
   pickedFromBrowse,
   pickedFromEntry,
+  shortCount,
 } from '../playlists/playlistFormat'
 import { ChooseItems } from './ChooseItems'
 import { MealPills } from './MealPills'
 import { KIND_LABELS, type PlaylistChoice } from './playlistChoice'
 import { PlaylistResult } from './PlaylistResult'
+import { SavedPlaylists } from './SavedPlaylists'
 import { VegetableStrip } from './VegetableStrip'
 
 // The Playlist part of the notification editor. Off by default. When on, it
@@ -187,20 +188,7 @@ export function PlaylistPicker({ value, currentPlaylistId, onChange }: Props) {
               {choosable.length === 0 ? (
                 <p className="st-muted">No saved playlists yet. Use Pick myself to make one.</p>
               ) : (
-                <select
-                  className="nt-input"
-                  aria-label="Saved playlist"
-                  value={playlistId ?? ''}
-                  onChange={(e) => set({ playlistId: e.target.value ? Number(e.target.value) : null })}
-                >
-                  <option value="">Pick a playlist</option>
-                  {choosable.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nameEn} ({countText(p.tips, p.recipes)}){p.auto ? ', automatic' : ''}
-                      {p.archived ? ', archived' : ''}
-                    </option>
-                  ))}
-                </select>
+                <SavedPlaylists playlists={choosable} value={playlistId} onChange={(id) => set({ playlistId: id })} />
               )}
               {playlistId !== null && <PlaylistResult name={savedName} items={loaded} loading={loading} />}
             </>
@@ -238,7 +226,7 @@ export function PlaylistPicker({ value, currentPlaylistId, onChange }: Props) {
                   ) : (
                     <>
                       <strong>{picked.length === 1 ? '1 item:' : `${picked.length} items:`}</strong>{' '}
-                      {countText(pickedTips, picked.length - pickedTips)}
+                      {shortCount(pickedTips, picked.length - pickedTips)}
                     </>
                   )}
                 </span>

@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { imageUrl } from '../../utils/images'
+import { ZoomImage } from '../playlists/ZoomImage'
 
 // A picture from /images that never shows a broken-image icon: with no
 // path, or one that won't load, it becomes a green VeggieBook leaf instead,
-// the same idea as the app's SafeImage.
+// the same idea as the app's SafeImage. Small pictures enlarge on hover.
 
 type Props = {
   path: string | null | undefined
@@ -26,13 +26,5 @@ export function SafeImg({ path, className, alt = '' }: Props) {
     )
   }
 
-  return (
-    <img
-      className={className}
-      src={imageUrl(path)}
-      alt={alt}
-      loading="lazy"
-      onError={() => setFailed(path)}
-    />
-  )
+  return <ZoomImage className={className} photo={path} alt={alt} onError={() => setFailed(path)} />
 }

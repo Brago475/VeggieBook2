@@ -1,35 +1,38 @@
+import type { ReactNode } from 'react'
 import type { ParticipantsResponse } from '../../types/participants'
 import { StudyIcon } from '../studies/StudyIcons'
 import { fullDate, studyTitle } from '../studies/studyFormat'
+import { PeopleStack } from './PeopleStack'
 
-// The strip at the top of the Participants page: the study running now (or
-// that none is), how many people are tracked out of everyone, a bar for
-// that share, the three counts, and a link to the Studies page.
+// The strip at the top of the Participants page.
+//
+//   Top      the study running now (or that none is), the people stack with
+//            how many are tracked, and Manage in Studies
+//   Bottom   the status tabs and search, passed in as children
 
 type Props = {
   data: ParticipantsResponse
   onOpenStudies: () => void
+  children: ReactNode
 }
 
-export function ParticipantsBanner({ data, onOpenStudies }: Props) {
-  const { study, counts } = data
-  const share = counts.all === 0 ? 0 : Math.round((counts.on / counts.all) * 100)
+export function ParticipantsBanner({ data, onOpenStudies, children }: Props) {
+  const { study, counts, people } = data
 
   return (
     <section className="pt-summary">
-      <div className="pt-summary-study">
+      <div className="pt-summary-top">
         <span className={study ? 'st-badge is-running' : 'st-badge'}>
-          <StudyIcon name="flask" size={22} />
+          <StudyIcon name="flask" size={20} />
         </span>
+
         <div className="pt-summary-title">
           {study ? (
             <>
-              <span className="pt-summary-name">
-                <strong>{studyTitle(study)}</strong>
-                <span className="st-pill is-running">
-                  <i />
-                  Running
-                </span>
+              <strong>{studyTitle(study)}</strong>
+              <span className="st-pill is-running">
+                <i />
+                Running
               </span>
               <span className="pt-summary-when">Started {fullDate(study.startedAt)}</span>
             </>
@@ -40,39 +43,16 @@ export function ParticipantsBanner({ data, onOpenStudies }: Props) {
             </>
           )}
         </div>
+
+        <PeopleStack people={people} counts={counts} />
+        <span className="pt-summary-divider" aria-hidden="true" />
+
+        <button type="button" className="st-button pt-summary-link" onClick={onOpenStudies}>
+          Manage in Studies
+        </button>
       </div>
 
-      <div className="pt-summary-share">
-        <span className="pt-summary-big">
-          <strong>
-            {counts.on.toLocaleString()} of {counts.all.toLocaleString()}
-          </strong>{' '}
-          tracked
-        </span>
-        <span className="pt-bar" aria-hidden="true">
-          <span style={{ width: `${share}%` }} />
-        </span>
-        <span className="pt-summary-pct">{share}%</span>
-      </div>
-
-      <ul className="pt-summary-counts">
-        <li className="is-on">
-          <i aria-hidden="true" />
-          Tracking on <strong>{counts.on.toLocaleString()}</strong>
-        </li>
-        <li className="is-self">
-          <i aria-hidden="true" />
-          Turned off by them <strong>{counts.offSelf.toLocaleString()}</strong>
-        </li>
-        <li className="is-admin">
-          <i aria-hidden="true" />
-          Turned off by an admin <strong>{counts.offAdmin.toLocaleString()}</strong>
-        </li>
-      </ul>
-
-      <button type="button" className="st-button pt-summary-link" onClick={onOpenStudies}>
-        Manage in Studies
-      </button>
+      <div className="pt-summary-filters">{children}</div>
     </section>
   )
 }

@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import type { RecipeDetail } from '../../types/content'
 import { api } from '../../utils/api'
 import { imageUrl } from '../../utils/images'
+import { ZoomImage } from '../playlists/ZoomImage'
 import { ContentSection } from './ContentSection'
 
 // One recipe, with the same sections the public site shows: the first
 // photo, the story, the summary, ingredients, instructions, notes, and any
-// other photos. Loaded from the public /api/recipes/{id}.
+// other photos, which enlarge on hover. Loaded from the public
+// /api/recipes/{id}.
 //
 // Each result is kept with the id it belongs to, so switching recipes never
 // shows the previous one's content for a moment.
@@ -66,7 +68,7 @@ export function RecipeView({ id }: Props) {
       {firstPhoto && <img className="content-hero" src={imageUrl(firstPhoto)} alt="" />}
 
       <p className="content-meta">
-        {r.code} · {r.vegetable}
+        {r.code}, {r.vegetable}
       </p>
       <h2 className="content-title">{r.title}</h2>
       {r.storyLine && <p className="content-lead">{r.storyLine}</p>}
@@ -112,7 +114,7 @@ export function RecipeView({ id }: Props) {
         <ContentSection title="More photos">
           <div className="content-photos">
             {morePhotos.map((path, i) => (
-              <img key={`${i}-${path}`} src={imageUrl(path)} alt="" loading="lazy" />
+              <ZoomImage key={`${i}-${path}`} photo={path} />
             ))}
           </div>
         </ContentSection>

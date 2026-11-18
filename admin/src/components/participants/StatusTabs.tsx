@@ -1,8 +1,8 @@
 import type { ParticipantsResponse, TrackingStatus } from '../../types/participants'
 import { statusLabel } from './participantText'
 
-// The tabs over the people cards: All, then one per tracking status, each
-// with its count.
+// The tabs under the banner: All, then one per tracking status with its
+// color dot, each with its count.
 
 export type StatusFilter = 'all' | TrackingStatus
 
@@ -31,6 +31,7 @@ export function StatusTabs({ counts, value, onChange }: Props) {
           className={t.id === value ? `pt-tab is-active is-${t.id}` : `pt-tab is-${t.id}`}
           onClick={() => onChange(t.id)}
         >
+          {t.id !== 'all' && <i className="pt-tab-dot" aria-hidden="true" />}
           {t.label}
           <span className="pt-tab-count">{t.count.toLocaleString()}</span>
         </button>

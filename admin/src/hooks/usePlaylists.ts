@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import type { PlaylistDraft, PlaylistOptions, PlaylistSummary } from '../types/playlists'
 import { api, isChanged } from '../utils/api'
 
-// Loads the Playlists page and runs create, edit, archive, and restore.
-// The list reloads after each change and every minute while the tab is
-// visible. A failed change returns the API's message for the page to show.
-// If another admin saved the same playlist first, the change is refused and
-// the message asks to reopen it.
+// Loads the Playlists page and runs create, edit, archive, restore, and
+// delete. The list reloads after each change and every minute while the tab
+// is visible. A failed change returns the API's message for the page to
+// show. If another admin saved the same playlist first, the change is
+// refused and the message asks to reopen it.
 
 const REFRESH_MS = 60_000
 
@@ -75,5 +75,10 @@ export function usePlaylists() {
     [change],
   )
 
-  return { list, options, error, reload: load, create, save, archive, restore }
+  const remove = useCallback(
+    (id: number) => change(() => api(`/admin/playlists/${id}`, { method: 'DELETE' })),
+    [change],
+  )
+
+  return { list, options, error, reload: load, create, save, archive, restore, remove }
 }

@@ -4,8 +4,8 @@ import '../../styles/shimmer.css'
 import { BlockSkeleton } from './BlockSkeleton'
 import { ListSkeleton } from './ListSkeleton'
 
-// Outline of the Participants page: banner, filter row, person cards, and
-// the side panel.
+// Outline of the Participants page: the banner with its tabs, person cards,
+// and the side panel.
 
 const PEOPLE = 6
 
@@ -13,12 +13,7 @@ export function ParticipantsSkeleton() {
   return (
     <div className="pt-page" role="status" aria-busy="true" aria-label="Loading participants">
       <div className="sk-stack" aria-hidden="true">
-        <BlockSkeleton height={72} />
-
-        <div className="sk-bar-row">
-          <span className="sk sk-tabs" />
-          <span className="sk sk-search" />
-        </div>
+        <BlockSkeleton height={124} />
 
         <div className="pt-split has-panel">
           <div className="pt-cards">
