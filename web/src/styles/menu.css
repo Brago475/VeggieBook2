@@ -53,11 +53,11 @@
 }
 
 /* A row's open menu draws over the rows below it. Opening a menu moves
-   focus into its list, so the row holding focus is lifted above its
-   neighbors until the menu closes. */
+   focus into its list, so the row holding focus is lifted above every
+   row's ⋮ (z-index 2 in reading.css) until the menu closes. */
 .book-recipes li:focus-within {
   position: relative;
-  z-index: 2;
+  z-index: 10;
 }
 
 .menu-item {
