@@ -11,12 +11,13 @@ import { useStrings } from '../i18n/useStrings'
 import { isToday } from '../utils/notificationDates'
 import type { NotificationItem } from '../utils/notificationsApi'
 
-// The Notifications list: every live notification, newest first, as
-// separate cards grouped into Today and Earlier, with All and Unread tabs.
-// A card opens that notification's own page. The list alone does not mark
-// anything opened. The switch on top leads to the Playlists tab. While
-// loading, card outlines show for at least the usual short minimum. With
-// no notifications at all, faded rows show in place of the list.
+// The Notifications list: every live notification, newest first, as small
+// pages grouped under Today and Earlier, with All and Unread tabs. A page
+// opens that notification's own page. The list alone does not mark
+// anything opened. The switch on top leads to the Playlists tab. The list
+// ends with a short closing card. While loading, card outlines show for at
+// least the usual short minimum. With no notifications at all, faded rows
+// show in place of the list.
 
 type Props = {
   items: NotificationItem[]
@@ -39,19 +40,24 @@ export function Notifications({ items, loaded, error, onOpen, onPlaylists }: Pro
   const earlier = list.filter((item) => !isToday(item.sentAt))
   const isEmpty = !showSkeleton && !error && items.length === 0
 
-  function group(label: string, cards: NotificationItem[]) {
+  function group(id: string, label: string, cards: NotificationItem[]) {
     if (cards.length === 0) return null
     return (
-      <section className="nf-section">
-        <h2 className="nf-group-label">{label}</h2>
-        <ul className="nf-list">
+      <div className="nf-day" role="group" aria-labelledby={id}>
+        <div className="nf-day-head">
+          <h2 className="nf-day-title" id={id}>
+            {label}
+          </h2>
+          <span className="nf-day-rule" aria-hidden="true" />
+        </div>
+        <ul className="nf-pages">
           {cards.map((item) => (
             <li key={notificationKey(item)}>
               <InboxRow item={item} onOpen={() => onOpen(item)} />
             </li>
           ))}
         </ul>
-      </section>
+      </div>
     )
   }
 
@@ -102,10 +108,17 @@ export function Notifications({ items, loaded, error, onOpen, onPlaylists }: Pro
             <p className="nf-empty-line">{t.emptyUnread}</p>
           )}
 
-          {group(t.today, today)}
-          {group(t.earlier, earlier)}
+          {group('nf-day-today', t.today, today)}
+          {group('nf-day-earlier', t.earlier, earlier)}
 
-          {items.length > 0 && <p className="nf-note">{t.expireNote}</p>}
+          {items.length > 0 && (
+            <div className="nf-chapter-end">
+              <span className="nf-chapter-spine" aria-hidden="true" />
+              <p className="nf-chapter-text">
+                {t.chapterEnd} {t.expireNote}
+              </p>
+            </div>
+          )}
         </>
       )}
     </div>
