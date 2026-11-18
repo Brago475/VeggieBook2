@@ -1,9 +1,13 @@
 /* The screen shown right after a book is saved (pages/BookSaved.tsx). */
 
-/* Wide enough for the book card to match its size on home. Buttons,
-   lists and hints stay in a narrower column below it. */
+/* Fills the page up to 720px so the book card can match its size on home.
+   The width is set because the parent is a flex layout, which would
+   otherwise shrink this column to its content. Buttons, lists and hints
+   stay in a narrower column below the card. */
 .book-saved {
+  width: 100%;
   max-width: 720px;
+  box-sizing: border-box;
   margin: 0 auto;
   padding: 32px 20px 40px;
   display: flex;
