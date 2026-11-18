@@ -7,6 +7,8 @@ const en = {
   subAfter: ' nutrition research and community work.',
   credit:
     'Originally created by Dr. Peter Clarke and Dr. Susan H. Evans at the USC Annenberg School for Communication and Journalism, with support from the U.S. Department of Agriculture. Continued and rebuilt at Kean University.',
+  readMore: 'Read more',
+  showLess: 'Show less',
   learnMore: 'Learn about the project',
   legal: 'Legal',
   terms: 'Terms of Use',
@@ -20,6 +22,8 @@ const es: typeof en = {
   subAfter: ' investigación en nutrición y trabajo comunitario.',
   credit:
     'Creado originalmente por el Dr. Peter Clarke y la Dra. Susan H. Evans en la Escuela de Comunicación y Periodismo Annenberg de USC, con el apoyo del Departamento de Agricultura de los Estados Unidos. Continuado y reconstruido en Kean University.',
+  readMore: 'Leer más',
+  showLess: 'Ver menos',
   learnMore: 'Conoce el proyecto',
   legal: 'Información legal',
   terms: 'Términos de uso',

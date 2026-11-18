@@ -1,9 +1,9 @@
 /* Site footer (SiteFooter.tsx).
 
-   One soft green card on the off-white page, so it reads as information
-   about the app rather than another set of controls. A faint leaf sits in
-   the top right corner, clipped by the card's rounded edge. Kept compact so
-   it stays secondary to the screen above it. */
+   A small closed book: a green spine in the header's colors with the
+   name, and a white page holding the title, the vegetables from the
+   loading screen, the folded credit, and the links. One layout for every
+   screen size. */
 
 .site-footer {
   padding: var(--sp-4) var(--pad-x) var(--sp-5);
@@ -11,75 +11,79 @@
 }
 
 .site-footer-card {
-  position: relative;
-  overflow: hidden;
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  padding: var(--sp-4);
-  background: linear-gradient(135deg, #f4f9ec 0%, #edf5e2 100%);
-  border: 1px solid #dde8cc;
-  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid #dde3d6;
+  border-radius: 12px;
 }
 
-/* Everything except the leaf sits above it. */
-.site-footer-card > :not(.site-footer-leaf) {
-  position: relative;
-  z-index: 1;
+/* --- spine ------------------------------------------------------------ */
+
+.site-footer-spine {
+  flex: 0 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #97c459;
+  border-right: 2px solid #7aa63f;
 }
 
-.site-footer-leaf {
-  position: absolute;
-  z-index: 0;
-  top: -20px;
-  right: -16px;
-  width: 96px;
-  height: 96px;
-  color: rgba(140, 198, 62, 0.16);
-  transform: rotate(-20deg);
-  pointer-events: none;
+.site-footer-spine > span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
-/* --- heading: icon, title, and the short line ------------------------- */
+.site-footer-spine-veggie {
+  color: #ffffff;
+}
+
+.site-footer-spine-book {
+  color: #173404;
+}
+
+/* --- page ------------------------------------------------------------- */
+
+.site-footer-body {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 14px;
+}
 
 .site-footer-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--sp-3);
 }
 
-.site-footer-icon {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  color: var(--green-deep);
-  background: #e1eed0;
-  border-radius: 50%;
-}
-
-.site-footer-icon svg {
-  width: 22px;
-  height: 22px;
-}
-
+/* Title and line sit side by side and wrap under each other when narrow. */
 .site-footer-head-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 2px;
   min-width: 0;
 }
 
 .site-footer-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--green-deep);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #3b6d11;
 }
 
 .site-footer-sub {
-  margin: 2px 0 0;
-  font-size: var(--font-small);
-  line-height: 1.4;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
   color: var(--text);
 }
 
@@ -87,52 +91,165 @@
   font-weight: 700;
 }
 
-/* --- credit ----------------------------------------------------------- */
+/* The loading screen's vegetables, overlapping in small white circles. */
+.site-footer-veg {
+  flex: 0 0 auto;
+  display: flex;
+  padding-left: 6px;
+}
+
+.site-footer-veg-chip {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -6px;
+  background: var(--surface);
+  border: 1px solid #e3eed6;
+  border-radius: 50%;
+}
+
+.site-footer-veg-chip img {
+  width: 18px;
+  height: 18px;
+}
+
+/* --- credit, folded to one line until opened -------------------------- */
+
+.site-footer-credit-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+}
 
 .site-footer-credit {
+  flex: 1;
+  min-width: 0;
   margin: 0;
-  font-size: var(--font-small);
-  line-height: 1.5;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: var(--text-muted);
 }
 
-/* --- button to About -------------------------------------------------- */
+.site-footer-credit-row.is-open {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
 
-.site-footer-btn {
+.site-footer-credit-row.is-open .site-footer-credit {
+  white-space: normal;
+}
+
+.site-footer-more {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3b6d11;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.site-footer-more:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The right chevron, turned to point down, or up once open. */
+.site-footer-more-icon {
+  width: 14px;
+  height: 14px;
+  transform: rotate(90deg);
+}
+
+.site-footer-credit-row.is-open .site-footer-more-icon {
+  transform: rotate(-90deg);
+}
+
+/* --- bottom row: About link, then the legal links --------------------- */
+
+.site-footer-foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  margin-top: var(--sp-1);
-  padding: 10px var(--sp-3) 10px var(--sp-4);
+  gap: 4px var(--sp-4);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e3eed6;
+}
+
+.site-footer-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 0;
   font: inherit;
-  font-size: var(--font-small);
+  font-size: 13px;
   font-weight: 700;
-  color: var(--green-deep);
-  text-align: left;
-  background: #e1eed0;
+  color: #3b6d11;
+  background: none;
   border: 0;
-  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.15s ease;
 }
 
 .site-footer-btn:hover {
-  background: #d6e8bf;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .site-footer-btn:focus-visible {
   outline: 2px solid var(--green-dark);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .site-footer-chevron {
   flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
-/* The card's gap already spaces the Terms and Privacy links (legal.css). */
+/* The legal links' look is in legal.css; here they only sit in the row. */
 .site-footer .site-footer-links {
   margin-top: 0;
+  font-size: 13px;
+}
+
+/* Phones: the same layout, slightly tighter. */
+@media (max-width: 480px) {
+  .site-footer-body {
+    padding: 8px 10px;
+  }
+
+  .site-footer-title {
+    font-size: 15px;
+  }
+
+  .site-footer-veg-chip {
+    width: 24px;
+    height: 24px;
+  }
+
+  .site-footer-veg-chip img {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-footer-more-icon {
+    transition: none;
+  }
 }
