@@ -25,6 +25,8 @@ const en = {
   counts: (tips: number, recipes: number): string => countEn(tips, recipes),
   kept: 'Kept',
 
+  emptyTitle: 'Your playlists live here',
+  emptyBody: 'Keep one from a notification, or make your own from a VeggieBook.',
   keptTitle: 'Kept from notifications',
   keptEmpty: 'Playlists you keep from a notification show here.',
   mineTitle: 'My playlists',
@@ -97,6 +99,8 @@ const es: typeof en = {
   counts: (tips: number, recipes: number) => countEs(tips, recipes),
   kept: 'Guardada',
 
+  emptyTitle: 'Aquí viven tus listas',
+  emptyBody: 'Guarda una desde una notificación, o haz la tuya desde un VeggieBook.',
   keptTitle: 'Guardadas desde notificaciones',
   keptEmpty: 'Las listas que guardes desde una notificación aparecen aquí.',
   mineTitle: 'Mis listas',

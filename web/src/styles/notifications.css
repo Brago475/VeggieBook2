@@ -132,6 +132,19 @@
   list-style: none;
 }
 
+/* A quiet line under a section label when only that section is empty. */
+.nf-empty-line {
+  display: block;
+  width: 100%;
+  margin: 0 4px;
+  font-size: var(--font-label);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text-muted);
+}
+
 .nf-card {
   display: flex;
   align-items: center;
@@ -209,6 +222,111 @@
   width: 18px;
   height: 18px;
   color: #b7b6ad;
+}
+
+/* Empty state (GhostEmpty.tsx): faded rows, each lighter than the last,
+   then a title, a short line, and an optional button. */
+.nf-ghost {
+  margin: 0 0 var(--sp-5);
+  text-align: center;
+}
+
+.nf-ghost-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 var(--sp-5);
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.nf-ghost-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.nf-ghost-row:nth-child(2) {
+  opacity: 0.65;
+}
+
+.nf-ghost-row:nth-child(3) {
+  opacity: 0.35;
+}
+
+.nf-ghost-thumb {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  background: #ecebe3;
+  border-radius: 12px;
+}
+
+.nf-ghost-thumb.is-cover {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+}
+
+.nf-ghost-lines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nf-ghost-line {
+  display: block;
+  height: 10px;
+  background: #ecebe3;
+  border-radius: 5px;
+}
+
+.nf-ghost-line.is-short {
+  height: 8px;
+}
+
+.nf-ghost-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.nf-ghost-body {
+  max-width: 30em;
+  margin: 6px auto 0;
+  font-size: var(--font-label);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.nf-ghost-btn {
+  min-height: 48px;
+  margin-top: var(--sp-4);
+  padding: 0 28px;
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: 700;
+  color: #ffffff;
+  background: #4f8a2b;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.nf-ghost-btn:hover {
+  filter: brightness(0.95);
+}
+
+.nf-ghost-btn:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
 }
 
 /* One notification: a single soft card */

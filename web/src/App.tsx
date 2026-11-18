@@ -640,6 +640,9 @@ export default function App() {
               <PlaylistLibrary
                 onMessages={() => navigate('/notifications', { replace: true })}
                 onOpen={openPlaylist}
+                onHome={() => navigate('/')}
+
+
               />
             )}
 

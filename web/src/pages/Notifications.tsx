@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { LeafDecor } from '../components/layout/LeafDecor'
+import { GhostEmpty } from '../components/notifications/GhostEmpty'
 import { InboxRow } from '../components/notifications/InboxRow'
 import { CardListSkeleton } from '../components/notifications/NotificationSkeletons'
 import { SectionSwitch } from '../components/notifications/SectionSwitch'
@@ -14,7 +15,8 @@ import type { NotificationItem } from '../utils/notificationsApi'
 // separate cards grouped into Today and Earlier, with All and Unread tabs.
 // A card opens that notification's own page. The list alone does not mark
 // anything opened. The switch on top leads to the Playlists tab. While
-// loading, card outlines show for at least the usual short minimum.
+// loading, card outlines show for at least the usual short minimum. With
+// no notifications at all, faded rows show in place of the list.
 
 type Props = {
   items: NotificationItem[]
@@ -35,6 +37,7 @@ export function Notifications({ items, loaded, error, onOpen, onPlaylists }: Pro
   const list = unreadOnly ? unread : items
   const today = list.filter((item) => isToday(item.sentAt))
   const earlier = list.filter((item) => !isToday(item.sentAt))
+  const isEmpty = !showSkeleton && !error && items.length === 0
 
   function group(label: string, cards: NotificationItem[]) {
     if (cards.length === 0) return null
@@ -65,33 +68,39 @@ export function Notifications({ items, loaded, error, onOpen, onPlaylists }: Pro
 
       <SectionSwitch active="messages" onMessages={() => {}} onPlaylists={onPlaylists} />
 
-      <div className="nf-tabs" role="tablist" aria-label={t.show}>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={!unreadOnly}
-          className="nf-tab"
-          onClick={() => setUnreadOnly(false)}
-        >
-          {t.tabAll(items.length)}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={unreadOnly}
-          className="nf-tab"
-          onClick={() => setUnreadOnly(true)}
-        >
-          {t.tabUnread(unread.length)}
-        </button>
-      </div>
+      {!isEmpty && (
+        <div className="nf-tabs" role="tablist" aria-label={t.show}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!unreadOnly}
+            className="nf-tab"
+            onClick={() => setUnreadOnly(false)}
+          >
+            {t.tabAll(items.length)}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={unreadOnly}
+            className="nf-tab"
+            onClick={() => setUnreadOnly(true)}
+          >
+            {t.tabUnread(unread.length)}
+          </button>
+        </div>
+      )}
 
       {showSkeleton && <CardListSkeleton label={t.loading} kind="message" count={SKELETON_CARDS} />}
 
-      {!showSkeleton && (
+      {isEmpty && <GhostEmpty kind="message" title={t.emptyTitle} body={t.emptyAll} />}
+
+      {!showSkeleton && !isEmpty && (
         <>
           {error && items.length === 0 && <p className="message">{t.couldNotLoad}</p>}
-          {!error && list.length === 0 && <p className="message">{unreadOnly ? t.emptyUnread : t.emptyAll}</p>}
+          {!error && items.length > 0 && list.length === 0 && (
+            <p className="nf-empty-line">{t.emptyUnread}</p>
+          )}
 
           {group(t.today, today)}
           {group(t.earlier, earlier)}

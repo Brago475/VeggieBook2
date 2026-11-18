@@ -1,4 +1,5 @@
 import { LeafDecor } from '../components/layout/LeafDecor'
+import { GhostEmpty } from '../components/notifications/GhostEmpty'
 import { CardListSkeleton } from '../components/notifications/NotificationSkeletons'
 import { SectionSwitch } from '../components/notifications/SectionSwitch'
 import { PlaylistRow } from '../components/playlists/PlaylistRow'
@@ -11,20 +12,24 @@ import type { PlaylistSource } from '../utils/routes'
 
 // The Playlists tab of Notifications: playlists kept from notifications,
 // then the account's own playlists. Own playlists are made from a book's ⋮.
-// While loading, playlist card outlines show.
+// While loading, playlist card outlines show. With no playlists at all,
+// faded rows show with a button to the books.
 
 type Props = {
   onMessages: () => void
   onOpen: (source: PlaylistSource, id: number) => void
+  onHome: () => void
 }
 
 const SKELETON_CARDS = 2
 
-export function PlaylistLibrary({ onMessages, onOpen }: Props) {
+export function PlaylistLibrary({ onMessages, onOpen, onHome }: Props) {
   const t = useStrings(PLAYLISTS)
   const nt = useStrings(NOTIFICATIONS)
   const { data, error, loading } = usePlaylistLibrary()
   const showSkeleton = useHeld(loading)
+
+  const isEmpty = data !== null && data !== undefined && data.kept.length === 0 && data.own.length === 0
 
   return (
     <div className="account-screen nf-screen">
@@ -43,12 +48,21 @@ export function PlaylistLibrary({ onMessages, onOpen }: Props) {
 
       {!showSkeleton && error && <p className="message">{t.couldNotLoad}</p>}
 
-      {!showSkeleton && data && (
+      {!showSkeleton && isEmpty && (
+        <GhostEmpty
+          kind="playlist"
+          title={t.emptyTitle}
+          body={t.emptyBody}
+          action={{ label: t.makeFromBook, onClick: onHome }}
+        />
+      )}
+
+      {!showSkeleton && data && !isEmpty && (
         <>
           <section className="nf-section">
             <h2 className="nf-group-label">{t.keptTitle}</h2>
             {data.kept.length === 0 ? (
-              <p className="pl-empty">{t.keptEmpty}</p>
+              <p className="nf-empty-line">{t.keptEmpty}</p>
             ) : (
               <ul className="nf-list">
                 {data.kept.map((p) => (
@@ -68,7 +82,7 @@ export function PlaylistLibrary({ onMessages, onOpen }: Props) {
           <section className="nf-section">
             <h2 className="nf-group-label">{t.mineTitle}</h2>
             {data.own.length === 0 ? (
-              <p className="pl-empty">{t.mineEmpty}</p>
+              <p className="nf-empty-line">{t.mineEmpty}</p>
             ) : (
               <ul className="nf-list">
                 {data.own.map((p) => (
