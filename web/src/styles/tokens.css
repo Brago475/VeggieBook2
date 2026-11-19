@@ -29,17 +29,6 @@
   --danger: #a3261f;
   --danger-tint: #fdf0ef;
 
-  /* Legacy names. Point at the palette above; remove once no file uses them. */
-  --green-dark: var(--green-action);
-  --green-deep-press: var(--green-deep);
-  --text-label: var(--text);
-  --text-invert: var(--surface);
-  --surface-alt: var(--page);
-  --surface-press: var(--line);
-  --line-strong: var(--line);
-  --danger-line: var(--danger);
-  --cream: var(--page);
-
   /* Spacing, multiples of 4 */
   --sp-1: 4px;
   --sp-2: 8px;
@@ -58,8 +47,6 @@
   --font-section: 20px; /* section titles */
   --font-row: 17px; /* recipe and card titles, body */
   --font-label: 14px; /* labels, times, small print */
-  --font-hero: var(--font-title);
-  --font-small: var(--font-label);
 
   --weight-regular: 400;
   --weight-bold: 700;
