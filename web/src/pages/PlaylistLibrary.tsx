@@ -87,6 +87,7 @@ export function PlaylistLibrary({ onMessages, onOpen, onHome }: Props) {
       {!showSkeleton && isEmpty && (
         <GhostEmpty
           kind="playlist"
+          label={t.kicker}
           title={t.emptyTitle}
           body={t.emptyBody}
           action={{ label: t.makeFromBook, onClick: onHome }}

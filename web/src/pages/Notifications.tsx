@@ -17,7 +17,7 @@ import type { NotificationItem } from '../utils/notificationsApi'
 // The list alone does not mark anything opened. The switch on top leads to
 // the Playlists tab. The list ends with a short closing card. While
 // loading, card outlines show for at least the usual short minimum. With
-// no notifications at all, faded rows show instead of the panel.
+// no notifications at all, faded pages show inside the panel.
 
 type Props = {
   items: NotificationItem[]
@@ -74,59 +74,65 @@ export function Notifications({ items, loaded, error, onOpen, onPlaylists }: Pro
 
       <SectionSwitch active="messages" onMessages={() => {}} onPlaylists={onPlaylists} />
 
-      {isEmpty ? (
-        <GhostEmpty kind="message" title={t.emptyTitle} body={t.emptyAll} />
-      ) : (
-        <div className="nf-folder">
-          <div className="nf-folder-tabs" role="tablist" aria-label={t.show}>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={!unreadOnly}
-              className="nf-folder-tab"
-              onClick={() => setUnreadOnly(false)}
-            >
-              {t.tabAll(items.length)}
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={unreadOnly}
-              className="nf-folder-tab"
-              onClick={() => setUnreadOnly(true)}
-            >
-              {t.tabUnread(unread.length)}
-            </button>
-          </div>
-
-          <div className="nf-folder-panel" role="tabpanel">
-            {showSkeleton && (
-              <CardListSkeleton label={t.loading} kind="message" count={SKELETON_CARDS} />
-            )}
-
-            {!showSkeleton && (
-              <>
-                {error && items.length === 0 && <p className="message">{t.couldNotLoad}</p>}
-                {!error && items.length > 0 && list.length === 0 && (
-                  <p className="nf-empty-line">{t.emptyUnread}</p>
-                )}
-
-                {group('nf-day-today', t.today, today)}
-                {group('nf-day-earlier', t.earlier, earlier)}
-
-                {items.length > 0 && (
-                  <div className="nf-chapter-end">
-                    <span className="nf-chapter-spine" aria-hidden="true" />
-                    <p className="nf-chapter-text">
-                      {t.chapterEnd} {t.expireNote}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+      <div className="nf-folder">
+        <div className="nf-folder-tabs" role="tablist" aria-label={t.show}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!unreadOnly}
+            className="nf-folder-tab"
+            onClick={() => setUnreadOnly(false)}
+          >
+            {t.tabAll(items.length)}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={unreadOnly}
+            className="nf-folder-tab"
+            onClick={() => setUnreadOnly(true)}
+          >
+            {t.tabUnread(unread.length)}
+          </button>
         </div>
-      )}
+
+        <div className="nf-folder-panel" role="tabpanel">
+          {showSkeleton && (
+            <CardListSkeleton label={t.loading} kind="message" count={SKELETON_CARDS} />
+          )}
+
+          {isEmpty && (
+            <GhostEmpty
+              kind="message"
+              day={t.today}
+              title={t.emptyTitle}
+              body={t.emptyAll}
+              note={t.firstChapter}
+            />
+          )}
+
+          {!showSkeleton && !isEmpty && (
+            <>
+              {error && items.length === 0 && <p className="message">{t.couldNotLoad}</p>}
+              {!error && items.length > 0 && list.length === 0 && (
+                <p className="nf-empty-line">{t.emptyUnread}</p>
+              )}
+
+              {group('nf-day-today', t.today, today)}
+              {group('nf-day-earlier', t.earlier, earlier)}
+
+              {items.length > 0 && (
+                <div className="nf-chapter-end">
+                  <span className="nf-chapter-spine" aria-hidden="true" />
+                  <p className="nf-chapter-text">
+                    {t.chapterEnd} {t.expireNote}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

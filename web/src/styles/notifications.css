@@ -330,6 +330,10 @@
   border-radius: 14px;
 }
 
+.nf-chapter-end.is-ghost {
+  margin: var(--sp-4) 0 0;
+}
+
 .nf-chapter-spine {
   flex: 0 0 10px;
   background: #eef4e6;
@@ -426,71 +430,216 @@
   color: #b7b6ad;
 }
 
-/* Empty state (GhostEmpty.tsx): faded rows, each lighter than the last,
-   then a title, a short line, and an optional button. */
+/* Empty states (GhostEmpty.tsx): faded versions of what will appear. */
 .nf-ghost {
   margin: 0 0 var(--sp-5);
   text-align: center;
 }
 
-.nf-ghost-rows {
+.nf-ghost.is-message {
+  margin: 0;
+}
+
+.nf-ghost-day {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 2px 10px;
+  opacity: 0.6;
+}
+
+.nf-ghost-day-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 19px;
+  color: #9aa58c;
+}
+
+.nf-ghost-pages {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 0 0 var(--sp-5);
+  margin: 0 0 var(--sp-4);
   padding: 0;
   list-style: none;
   text-align: left;
 }
 
-.nf-ghost-row {
+.nf-ghost-page {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
-.nf-ghost-row:nth-child(2) {
-  opacity: 0.65;
+.nf-ghost-page:nth-child(2) {
+  opacity: 0.6;
 }
 
-.nf-ghost-row:nth-child(3) {
-  opacity: 0.35;
+.nf-ghost-page:nth-child(3) {
+  opacity: 0.3;
 }
 
-.nf-ghost-thumb {
-  flex: 0 0 auto;
-  width: 42px;
-  height: 42px;
-  background: #ecebe3;
-  border-radius: 12px;
+.nf-ghost-page-spine {
+  flex: 0 0 10px;
+  background: #e3e6dc;
 }
 
-.nf-ghost-thumb.is-cover {
-  width: 52px;
-  height: 52px;
-  border-radius: 10px;
-}
-
-.nf-ghost-lines {
+.nf-ghost-page-body {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
+  padding: 14px;
 }
 
 .nf-ghost-line {
   display: block;
-  height: 10px;
+  height: 9px;
   background: #ecebe3;
   border-radius: 5px;
 }
 
 .nf-ghost-line.is-short {
   height: 8px;
+}
+
+/* A faded playlist card, shaped like PlaylistCard.tsx. */
+.nf-ghost-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 var(--sp-5);
+}
+
+.nf-ghost-card {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  max-height: 260px;
+  overflow: hidden;
+  background: #ecebe3;
+  border-radius: 20px;
+}
+
+.nf-ghost-card::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 70%;
+  background: linear-gradient(to top, #d6d5ca, transparent);
+}
+
+.nf-ghost-card.is-peek {
+  aspect-ratio: auto;
+  height: 56px;
+  opacity: 0.45;
+  border-radius: 20px 20px 12px 12px;
+}
+
+.nf-ghost-card.is-peek::after {
+  display: none;
+}
+
+.nf-ghost-photo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #d3d2c8;
+}
+
+.nf-ghost-photo svg {
+  width: 48px;
+  height: 48px;
+}
+
+.nf-ghost-dots {
+  position: absolute;
+  z-index: 1;
+  top: 14px;
+  left: var(--sp-5);
+  display: flex;
+  gap: 4px;
+}
+
+.nf-ghost-dots span {
+  width: 6px;
+  height: 6px;
+  background: #f8f7f2;
+  border-radius: 3px;
+}
+
+.nf-ghost-dots span.is-on {
+  width: 16px;
+}
+
+.nf-ghost-badge {
+  position: absolute;
+  z-index: 1;
+  top: 12px;
+  right: 12px;
+  width: 76px;
+  height: 24px;
+  background: #f8f7f2;
+  border-radius: 999px;
+}
+
+.nf-ghost-text {
+  position: absolute;
+  z-index: 1;
+  left: var(--sp-5);
+  bottom: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 55%;
+  text-align: left;
+}
+
+.nf-ghost-name {
+  width: 72%;
+  height: 18px;
+  background: #f3f2ec;
+  border-radius: 5px;
+}
+
+/* The spaced word, like the book card's label, in faded white. */
+.nf-ghost-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #f3f2ec;
+}
+
+.nf-ghost-label::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+}
+
+.nf-ghost-count {
+  width: 36%;
+  height: 9px;
+  background: #f3f2ec;
+  border-radius: 4px;
+}
+
+.nf-ghost-open {
+  position: absolute;
+  z-index: 1;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  width: 68px;
+  height: 30px;
+  background: #f8f7f2;
+  border-radius: 999px;
 }
 
 .nf-ghost-title {
@@ -509,9 +658,12 @@
 }
 
 .nf-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-height: 48px;
   margin-top: var(--sp-4);
-  padding: 0 28px;
+  padding: 0 24px;
   font: inherit;
   font-size: var(--font-label);
   font-weight: 700;
@@ -520,6 +672,11 @@
   border: 0;
   border-radius: 12px;
   cursor: pointer;
+}
+
+.nf-ghost-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .nf-ghost-btn:hover {
@@ -832,7 +989,7 @@
 }
 
 /* On a phone the pop-up sits at the bottom, within thumb reach, and the
-   folder panel uses tighter edges. */
+   folder panel and faded card use tighter edges. */
 @media (max-width: 600px) {
   .dialog-overlay.nf-overlay {
     align-items: flex-end;
@@ -853,6 +1010,16 @@
 
   .nf-folder-panel {
     padding: var(--sp-3);
+  }
+
+  .nf-ghost-text,
+  .nf-ghost-dots {
+    left: var(--sp-4);
+  }
+
+  .nf-ghost-open {
+    right: var(--sp-3);
+    bottom: var(--sp-3);
   }
 
   .nf-detail {
