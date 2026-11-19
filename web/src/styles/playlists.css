@@ -1,8 +1,8 @@
 /* Playlists inside Notifications: the Messages and Playlists switch, the
    Playlists tab, a playlist's page, a tip, and making your own playlist.
    Rows reuse the book's recipe rows (reading.css) and the notification
-   cards (notifications.css). Playlist cards reuse the book card's text
-   styles (book-card.css). */
+   cards (notifications.css). Playlist cards and the open playlist's top
+   reuse the book card's text styles (book-card.css). */
 
 /* Switch */
 .pl-switch {
@@ -147,7 +147,8 @@
 }
 
 /* Keeps white text readable whatever the photo. */
-.pl-card::after {
+.pl-card::after,
+.pl-hero::after {
   content: '';
   position: absolute;
   inset: auto 0 0 0;
@@ -236,6 +237,408 @@
   height: 16px;
 }
 
+/* An open playlist (PlaylistView.tsx): the top, styled like its card. */
+.pl-hero {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  max-height: 280px;
+  margin: 0 0 var(--sp-4);
+  overflow: hidden;
+  background: #c7dd9e;
+  border-radius: 20px;
+  box-shadow: 0 6px 20px rgba(20, 20, 15, 0.12);
+}
+
+.pl-hero-text {
+  position: absolute;
+  z-index: 2;
+  left: var(--sp-5);
+  right: var(--sp-5);
+  bottom: var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-invert);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+
+.pl-hero-name {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Chapters: one per vegetable, folding open and closed. */
+.pl-chapters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 var(--sp-4);
+}
+
+.pl-chapter {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.pl-chapter-heading {
+  margin: 0;
+  font: inherit;
+}
+
+.pl-chapter-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.pl-chapter-head:focus {
+  outline: none;
+}
+
+.pl-chapter-head:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: -3px;
+  border-radius: 16px;
+}
+
+.pl-chapter-avatar {
+  display: block;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  background: #c7dd9e;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.pl-chapter-names {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pl-chapter-kicker {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 12px;
+  font-style: italic;
+  color: #7aa63f;
+}
+
+.pl-chapter-name {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 18px;
+  line-height: 1.2;
+  color: #27500a;
+  overflow-wrap: anywhere;
+}
+
+.pl-chapter-count {
+  flex: 0 0 auto;
+  padding: 2px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: #eef4e6;
+  border-radius: 999px;
+}
+
+/* The right chevron, turned down when closed and up when open. */
+.pl-chapter-chevron {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+.pl-chapter.is-open .pl-chapter-chevron {
+  color: var(--green-deep);
+  transform: rotate(-90deg);
+}
+
+.pl-chapter-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  list-style: none;
+  background: #fbfbf7;
+  border-top: 1px solid #eef0eb;
+}
+
+/* A recipe or tip: a spine, green for a recipe and yellow for a tip. */
+.pl-entry {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.pl-entry:hover {
+  border-color: #c9dfae;
+  box-shadow: 0 4px 14px rgba(20, 20, 15, 0.08);
+}
+
+.pl-entry:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+.pl-entry-spine {
+  flex: 0 0 8px;
+  background: #97c459;
+  border-right: 2px solid #7aa63f;
+}
+
+.pl-entry.is-tip .pl-entry-spine {
+  background: #efc96a;
+  border-right-color: #d9ad45;
+}
+
+.pl-entry-thumb {
+  display: block;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  margin: 8px;
+  object-fit: cover;
+  background: var(--surface-alt);
+  border-radius: 9px;
+}
+
+.pl-entry-thumb.is-tip {
+  display: grid;
+  place-items: center;
+  color: #854f0b;
+  background: #fff7e0;
+}
+
+.pl-entry-thumb.is-tip svg {
+  width: 24px;
+  height: 24px;
+}
+
+.pl-entry-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 4px;
+}
+
+.pl-entry-title {
+  font-size: var(--font-label);
+  font-weight: 700;
+  color: var(--green-deep);
+  overflow-wrap: anywhere;
+}
+
+.pl-entry-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.pl-entry.is-tip .pl-entry-meta {
+  color: #854f0b;
+}
+
+.pl-entry-chevron {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 18px;
+  height: 18px;
+  margin-right: 12px;
+  color: #b7b6ad;
+}
+
+/* The bar pinned to the bottom of an open playlist (PlaylistBar.tsx). */
+.pl-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  margin-top: var(--sp-5);
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 -4px 20px rgba(20, 20, 15, 0.1);
+}
+
+.pl-bar.is-tools {
+  padding: 8px;
+}
+
+.pl-bar-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--green-deep);
+}
+
+.pl-bar-note.is-hint {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.pl-bar-note svg {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.pl-bar-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pl-bar-btn {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: var(--surface);
+  border: 1px solid #cfdcbb;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.pl-bar-btn.is-primary {
+  color: #ffffff;
+  background: #4f8a2b;
+  border-color: #4f8a2b;
+}
+
+.pl-bar-btn.is-icon {
+  flex: 0 0 52px;
+  padding: 0;
+  color: #a3302a;
+  border-color: #e3c6c6;
+}
+
+.pl-bar-btn svg {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.pl-bar-btn:hover:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.pl-bar-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.pl-bar-btn:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
+/* Own playlists: one compact toolbar. */
+.pl-tools {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px;
+  background: #f3f5ef;
+  border-radius: 14px;
+}
+
+.pl-tool {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 56px;
+  padding: 6px 4px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-deep);
+  background: none;
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+}
+
+.pl-tool:hover:not(:disabled) {
+  background: #e8eddf;
+}
+
+.pl-tool.is-primary {
+  flex: 1.4;
+  color: #ffffff;
+  background: #4f8a2b;
+}
+
+.pl-tool.is-primary:hover {
+  background: #4f8a2b;
+  filter: brightness(0.95);
+}
+
+.pl-tool.is-danger {
+  color: #a3302a;
+}
+
+.pl-tool svg {
+  width: 20px;
+  height: 20px;
+}
+
+.pl-tool:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.pl-tool:focus-visible {
+  outline: 2px solid var(--green-dark);
+  outline-offset: 2px;
+}
+
 @media (max-width: 480px) {
   .pl-card-text {
     left: var(--sp-4);
@@ -253,12 +656,25 @@
     padding: 6px 10px 6px 12px;
     font-size: 12px;
   }
+
+  .pl-hero-text {
+    left: var(--sp-4);
+    right: var(--sp-4);
+    bottom: var(--sp-3);
+  }
+
+  .pl-entry-thumb {
+    width: 46px;
+    height: 46px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .pl-card,
   .pl-card-photo,
-  .pl-card-dots span {
+  .pl-card-dots span,
+  .pl-chapter-chevron,
+  .pl-entry {
     transition: none;
   }
 }
@@ -311,7 +727,7 @@
   outline-offset: 2px;
 }
 
-/* A playlist's page */
+/* A playlist's page: older pieces still used by other screens. */
 .pl-head {
   margin-bottom: var(--sp-4);
 }

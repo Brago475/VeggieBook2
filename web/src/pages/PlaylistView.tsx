@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { SafeImage } from '../components/common/SafeImage'
-import { LeafIcon } from '../components/icons/LibraryIcons'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { NavBar } from '../components/layout/NavBar'
 import { PlaylistSkeleton } from '../components/notifications/NotificationSkeletons'
+import { PlaylistBar, type PlaylistBarMode } from '../components/playlists/PlaylistBar'
+import { PlaylistChapter } from '../components/playlists/PlaylistChapter'
+import { PlaylistHero } from '../components/playlists/PlaylistHero'
 import { TipView } from '../components/playlists/TipView'
 import { RecipeSections } from '../components/veggie/RecipeSections'
 import { RecipeSkeleton } from '../components/veggie/RecipeSkeleton'
@@ -26,11 +28,15 @@ import {
 } from '../utils/playlistsApi'
 import type { PlaylistOpen, PlaylistSource } from '../utils/routes'
 
-// One playlist: its tips and recipes as rows. A recipe opens in the same
-// view a saved book uses (RecipeSections); a tip opens on its own page.
-// A playlist from the team ends with Skip and Keep; an own playlist has Edit
-// and Delete. Which item is open is held by App, in the address. While
-// loading, the playlist's outline shows.
+// One playlist. The top is styled like its card, with recipe photos that
+// change every 20 seconds. Its tips and recipes are grouped by vegetable
+// into chapters that fold open and closed; the first starts open. A
+// recipe opens in the same view a saved book uses (RecipeSections); a tip
+// opens on its own page. A bar pinned to the bottom holds the actions:
+// Skip and Keep, or My playlists and Remove, for a playlist from the team;
+// Edit, Add, My playlists and Delete for an own playlist. Which item is
+// open is held by App, in the address. While loading, the playlist's
+// outline shows.
 
 type Props = {
   source: PlaylistSource
@@ -40,8 +46,25 @@ type Props = {
   notificationId: number | null
   onOpenItem: (open: PlaylistOpen) => void
   onEdit: () => void
+  onAdd: () => void
   onDeleted: () => void
   onBack: () => void
+}
+
+type Chapter = { key: string; name: string; items: PlaylistEntry[] }
+
+const PHOTO_LIMIT = 5
+
+// Groups items by vegetable, in the order each vegetable first appears.
+function chaptersOf(items: PlaylistEntry[]): Chapter[] {
+  const byKey = new Map<string, Chapter>()
+  for (const item of items) {
+    const key = item.vegetable || item.vegetableName
+    const chapter = byKey.get(key)
+    if (chapter) chapter.items.push(item)
+    else byKey.set(key, { key, name: item.vegetableName, items: [item] })
+  }
+  return [...byKey.values()]
 }
 
 export function PlaylistView({
@@ -51,6 +74,7 @@ export function PlaylistView({
   notificationId,
   onOpenItem,
   onEdit,
+  onAdd,
   onDeleted,
   onBack,
 }: Props) {
@@ -65,6 +89,8 @@ export function PlaylistView({
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+  // Chapters opened by the person; null until the first toggle.
+  const [openChapters, setOpenChapters] = useState<Set<string> | null>(null)
 
   // Records each item opened, once per opening.
   const sentFor = useRef<string | null>(null)
@@ -165,101 +191,75 @@ export function PlaylistView({
 
   const tips = data.items.filter((i) => i.kind === 'tip').length
   const recipes = data.items.length - tips
+  const chapters = chaptersOf(data.items)
+  const openSet = openChapters ?? new Set(chapters.length > 0 ? [chapters[0].key] : [])
+
+  const photos = [
+    ...new Set(
+      data.items
+        .map((i) => (i.kind === 'recipe' ? i.photo : null))
+        .filter((p): p is string => Boolean(p)),
+    ),
+  ].slice(0, PHOTO_LIMIT)
+
+  const mode: PlaylistBarMode =
+    source === 'own'
+      ? 'own'
+      : data.choice === 'kept'
+        ? 'kept'
+        : data.choice === 'skipped'
+          ? 'skipped'
+          : 'new'
+
+  function toggleChapter(key: string) {
+    const next = new Set(openSet)
+    if (next.has(key)) next.delete(key)
+    else next.add(key)
+    setOpenChapters(next)
+  }
 
   return (
     <div className="account-screen nf-screen pl-screen">
       <LeafDecor className="account-leaf" />
 
-      <header className="pl-head">
-        <span className="pl-kicker">{t.kicker}</span>
-        <h1 className="library-title">{data.name}</h1>
-        <p className="library-sub">{t.counts(tips, recipes)}</p>
-      </header>
+      <PlaylistHero
+        name={data.name}
+        label={t.kicker}
+        summary={`${t.counts(tips, recipes)}, ${t.vegetables(chapters.length)}`}
+        badge={source === 'own' ? t.badgeYours : t.badgeTeam}
+        source={source === 'own' ? 'own' : 'team'}
+        photos={photos}
+      />
 
-      {source === 'own' && (
-        <div className="pl-actions">
-          <button type="button" className="pl-btn" onClick={onEdit}>
-            {t.edit}
-          </button>
-          <button type="button" className="pl-btn is-danger" onClick={() => setConfirming(true)}>
-            {t.delete}
-          </button>
-        </div>
-      )}
+      <div className="pl-chapters">
+        {chapters.map((c, i) => (
+          <PlaylistChapter
+            key={c.key}
+            kicker={t.chapter(i + 1)}
+            name={c.name}
+            items={c.items}
+            open={openSet.has(c.key)}
+            recipeLabel={t.recipe}
+            tipLabel={t.tip}
+            onToggle={() => toggleChapter(c.key)}
+            onOpenItem={openItem}
+          />
+        ))}
+      </div>
 
       {actionError && <p className="message">{actionError}</p>}
 
-      <ul className="book-recipes pl-items">
-        {data.items.map((item) => (
-          <li key={`${item.kind}:${item.id}`}>
-            <button type="button" className="recipe-row" onClick={() => openItem(item)}>
-              {item.kind === 'recipe' ? (
-                <SafeImage className="recipe-thumb" src={item.photo ? coverSrc(item.photo) : null} />
-              ) : (
-                <span className="recipe-thumb pl-tip-thumb" aria-hidden="true">
-                  <LeafIcon />
-                </span>
-              )}
-              <span className="pl-item-text">
-                <span className="recipe-row-title">{item.title}</span>
-                <span className="pl-item-meta">
-                  {item.kind === 'tip' ? t.tip : t.recipe}, {item.vegetableName}
-                </span>
-              </span>
-              <svg className="recipe-row-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path
-                  d="M9 5l7 7-7 7"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {source === 'admin' && (
-        <div className="pl-decide">
-          {data.choice === 'kept' ? (
-            <>
-              <p className="pl-decide-note">{t.keptNote}</p>
-              <button
-                type="button"
-                className="pl-btn"
-                disabled={busy}
-                onClick={() => decide(() => removePlaylist(playlistId), 'skipped')}
-              >
-                {t.remove}
-              </button>
-            </>
-          ) : (
-            <>
-              {data.choice === 'skipped' && <p className="pl-decide-note">{t.skippedNote}</p>}
-              <div className="pl-decide-row">
-                <button
-                  type="button"
-                  className="pl-btn"
-                  disabled={busy || data.choice === 'skipped'}
-                  onClick={() => decide(() => skipPlaylist(playlistId, notificationId), 'skipped')}
-                >
-                  {t.skip}
-                </button>
-                <button
-                  type="button"
-                  className="pl-btn is-primary"
-                  disabled={busy}
-                  onClick={() => decide(() => keepPlaylist(playlistId, notificationId), 'kept')}
-                >
-                  {t.keep}
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      <PlaylistBar
+        mode={mode}
+        busy={busy}
+        onKeep={() => decide(() => keepPlaylist(playlistId, notificationId), 'kept')}
+        onSkip={() => decide(() => skipPlaylist(playlistId, notificationId), 'skipped')}
+        onRemove={() => decide(() => removePlaylist(playlistId), 'skipped')}
+        onPlaylists={onBack}
+        onEdit={onEdit}
+        onAdd={onAdd}
+        onDelete={() => setConfirming(true)}
+      />
 
       {source === 'own' && (
         <ConfirmDialog

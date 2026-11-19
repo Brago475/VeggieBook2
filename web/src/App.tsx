@@ -659,6 +659,7 @@ export default function App() {
                 }
                 onOpenItem={(open) => openPlaylistItem(route.source, route.playlistId, open)}
                 onEdit={() => navigate(`/notifications/mine/${route.playlistId}/edit`)}
+                onAdd={() => navigate('/')}
                 onDeleted={() => navigate('/notifications/playlists', { replace: true })}
                 onBack={backToPlaylists}
               />
