@@ -11,9 +11,7 @@
   background: var(--green);
 }
 
-/* Absolute so the logo stays centered whether or not the button is there.
-   A filled pill with a label because a bare chevron on a web page reads as
-   decoration rather than navigation. */
+/* Absolute so the logo stays centered with or without the button. */
 .masthead-back {
   position: absolute;
   left: var(--sp-3);
@@ -25,23 +23,23 @@
   gap: 6px;
   padding: 8px 16px 8px 12px;
   font-size: var(--font-label);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   line-height: 1;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.85);
+  color: var(--green-action);
+  background: var(--surface);
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .masthead-back:hover {
-  background: #fff;
+  background: var(--green-tint);
 }
 
 .masthead-back:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--surface);
   outline-offset: 2px;
 }
 
@@ -59,19 +57,19 @@
   height: auto;
 }
 
-/* Faint leaf tucked into the right corner, clipped by overflow: hidden. */
+/* Faint leaf in the right corner, clipped by overflow: hidden. */
 .masthead-decor {
   position: absolute;
   right: -12px;
   top: -18px;
   width: 104px;
   height: 104px;
-  color: rgba(255, 255, 255, 0.2);
+  color: color-mix(in srgb, var(--surface) 20%, transparent);
   pointer-events: none;
 }
 
-/* Narrow phones: the pill and the logo start to collide, so the pill drops
-   to the arrow alone. The word stays in the markup for screen readers. */
+/* Narrow phones: the pill drops to the arrow alone. The label stays for
+   screen readers. */
 @media (max-width: 380px) {
   .masthead-back {
     padding: 8px;

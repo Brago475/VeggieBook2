@@ -1,39 +1,46 @@
 /* Design tokens.
-   Every color, spacing, and font size resolves to one of these, so a change
-   to the brand green or the spacing rhythm happens here, once.
-
-   Text colors are deliberately high contrast: this gets used on phones,
-   sometimes in poor light. */
+   Colors and type follow the original VeggieBook iPhone and Android apps.
+   Design rules follow the original formative research:
+   Evans, Clarke and Koprowski (2010), Public Health Nutrition 13(3).
+   Evans and Clarke (2019), Evaluation and Program Planning 72.
+   - Recipe titles in green.
+   - Sans serif type only.
+   - Real photos for recipe content.
+   Use only the 12 colors below. */
 
 :root {
-  /* Brand */
-  --green: #8cc63e;
-  --green-dark: #6fa32c;
-  --green-tint: #f4f9ec;
+  /* Greens */
+  --green: #0fb022; /* brand: header, KEEP, progress, focus */
+  --green-action: #157018; /* buttons with white text, links, recipe titles */
+  --green-deep: #305f20; /* pressed buttons, chapter and day headings */
+  --green-light: #80c664; /* spines, borders, selected outline */
+  --green-tint: #ecffe4; /* unread, chips, hover, tips */
 
   /* Text */
-  --text: #14140f;
-  --text-muted: #4a4a42;
-  --text-label: #14140f;
-  --text-invert: #fff;
+  --text: #001f04;
+  --text-muted: #6d6e71;
 
-  /* Surfaces */
-  --surface: #fff;
-  --surface-alt: #f6f6f2;
-  --surface-press: #ecece6;
+  /* Surfaces and lines */
+  --surface: #ffffff;
+  --page: #f6f6f6;
+  --line: #ebebeb;
 
-  /* Lines */
-  --line: #e6e6df;
-  --line-strong: #d5d5cc;
-
-  /* Warnings and destructive actions: error messages, delete account.
-     The text red passes contrast on white and on its own tint. */
+  /* Errors and delete */
   --danger: #a3261f;
   --danger-tint: #fdf0ef;
-  --danger-line: #eab8b4;
 
-  /* Spacing scale. Everything is a multiple of 4, which keeps vertical
-     rhythm consistent without hand-tuning each screen. */
+  /* Legacy names. Point at the palette above; remove once no file uses them. */
+  --green-dark: var(--green-action);
+  --green-deep-press: var(--green-deep);
+  --text-label: var(--text);
+  --text-invert: var(--surface);
+  --surface-alt: var(--page);
+  --surface-press: var(--line);
+  --line-strong: var(--line);
+  --danger-line: var(--danger);
+  --cream: var(--page);
+
+  /* Spacing, multiples of 4 */
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
@@ -46,42 +53,37 @@
   --row-pad-y: var(--sp-3);
   --gap: var(--sp-5);
 
-  /* Type scale */
-  --font-hero: 32px;
-  --font-title: 24px;
-  --font-section: 17px;
-  --font-row: 17px;
-  --font-label: 15px;
-  --font-small: 13px;
+  /* Type scale, from the original apps. Weights: 400 and 700 only. */
+  --font-title: 28px; /* page titles */
+  --font-section: 20px; /* section titles */
+  --font-row: 17px; /* recipe and card titles, body */
+  --font-label: 14px; /* labels, times, small print */
+  --font-hero: var(--font-title);
+  --font-small: var(--font-label);
+
+  --weight-regular: 400;
+  --weight-bold: 700;
+
+  --sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace; /* research ID only */
 
   /* Radii */
   --r-sm: 6px;
   --r-md: 10px;
   --r-lg: 14px;
+  --r-pill: 999px;
 
-  /* Shadows. Kept soft: this is a content tool, not a dashboard. */
-  --shadow-sm: 0 1px 2px rgba(20, 20, 15, 0.06);
-  --shadow-md: 0 2px 8px rgba(20, 20, 15, 0.08);
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 31, 4, 0.06);
+  --shadow-md: 0 2px 8px rgba(0, 31, 4, 0.08);
 
   /* Sizes */
   --thumb-w: 88px;
   --thumb-h: 68px;
   --hero-h: 240px;
 
-  /* Layout widths. The phone width stays the base; wider screens get more
-     room only where extra room actually helps. */
+  /* Layout widths */
   --app-max: 520px;
   --app-max-wide: 900px;
-
-  --sans:
-    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-
-  /* Deep green for actions on the account screens. The brand green is
-     bright enough that white text on it fails contrast, so it stays the
-     identity color and this carries the buttons. */
-  --green-deep: #2f5d2f;
-  --green-deep-press: #264b26;
-
-  /* Warm off-white. Pure white made the auth screens read as unfinished. */
-  --cream: #f8f7f2;
 }

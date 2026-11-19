@@ -1,17 +1,9 @@
-/* Shared component styles.
-   Page-specific styles live in pages.css. The masthead has its own file,
-   masthead.css. */
+/* Shared component styles. Page styles: pages.css. Masthead: masthead.css. */
 
-/* App shell */
+/* --- app shell ------------------------------------------------------- */
 
-/* A column the full height of the window, so a screen can stretch to the
-   bottom instead of stopping where its content ends.
-
-   hyphens: none makes the browser ignore soft hyphens (U+00AD). The
-   original recipe text has about 140 of them, invisible marks left over
-   from a word processor, and a line that wrapped at one showed a stray
-   extra hyphen (CA-221 read "One--Pot"). Ignoring them here fixes the
-   display while the text itself stays exactly as the original has it. */
+/* Full-height column so short screens still reach the bottom.
+   hyphens: none hides the stray soft hyphens in the original recipe text. */
 .app {
   display: flex;
   flex-direction: column;
@@ -24,22 +16,15 @@
   -webkit-hyphens: none;
 }
 
-/* The off-white screens fill the rest of the window below the masthead,
-   so no strip of white shows under a short page. */
 .app > .library,
 .app > .book-view,
 .app > .account-screen {
   flex: 1 0 auto;
 }
 
-/* Image fallback */
+/* --- image fallback -------------------------------------------------- */
 
-/* When SafeImage cannot load a photo it shows the VeggieBook mark and adds
-   .is-placeholder. The mark is contained on the brand green with room
-   around it, not cropped like a photo, so it reads as "no photo here"
-   rather than a bad photograph. Covers every image SafeImage draws; the
-   recipe thumbnails and photos in reading.css set their own padding on
-   top of this. */
+/* SafeImage fallback: the VeggieBook mark contained on the brand green. */
 img.is-placeholder {
   box-sizing: border-box;
   padding: 10%;
@@ -49,21 +34,21 @@ img.is-placeholder {
   filter: none;
 }
 
-/* Screen label strip */
+/* --- screen label strip ---------------------------------------------- */
 
 .screen-label {
   margin: 0;
   padding: var(--sp-3) var(--pad-x);
-  font-size: var(--font-small);
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
-  background: var(--surface-alt);
+  background: var(--page);
   border-bottom: 1px solid var(--line);
 }
 
-/* Bottom navigation */
+/* --- bottom navigation ----------------------------------------------- */
 
 .nav {
   display: flex;
@@ -75,10 +60,10 @@ img.is-placeholder {
   flex: 1;
   padding: var(--sp-4);
   font-size: var(--font-row);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   color: var(--text);
-  background: var(--surface-alt);
-  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
   cursor: pointer;
   transition:
@@ -87,24 +72,31 @@ img.is-placeholder {
 }
 
 .nav-btn:hover {
-  background: var(--surface-press);
+  background: var(--page);
 }
 
 .nav-btn:active {
   transform: translateY(1px);
 }
 
+.nav-btn:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
 .nav-btn-primary {
-  background: var(--green);
-  border-color: var(--green-dark);
+  color: var(--surface);
+  background: var(--green-action);
+  border-color: var(--green-action);
   box-shadow: var(--shadow-sm);
 }
 
 .nav-btn-primary:hover {
-  background: var(--green-dark);
+  background: var(--green-deep);
+  border-color: var(--green-deep);
 }
 
-/* Status and debug text */
+/* --- status text ----------------------------------------------------- */
 
 .message {
   margin: 0;
@@ -113,7 +105,7 @@ img.is-placeholder {
   color: var(--text-muted);
 }
 
-/* Vegetable rows */
+/* --- vegetable rows -------------------------------------------------- */
 
 .veg-row {
   display: flex;
@@ -133,33 +125,31 @@ img.is-placeholder {
   background: var(--green-tint);
 }
 
-/* Fixed box with object-fit so photos of different shapes sit the same.
-   The source images vary: some square, some wide, some shot on countertops.
-   cover fills the box; the rounded corner keeps it from looking pasted in. */
+/* Fixed box so photos of any shape sit the same. */
 .veg-thumb {
   flex: 0 0 auto;
   width: var(--thumb-w);
   height: var(--thumb-h);
   object-fit: cover;
   border-radius: var(--r-sm);
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
 .veg-name {
   font-size: var(--font-row);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   color: var(--text);
 }
 
-/* Choice rows */
+/* --- choice rows ----------------------------------------------------- */
 
 .choice-row {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-3) var(--sp-3);
+  padding: var(--sp-3);
   margin-bottom: var(--sp-2);
-  background: var(--surface-alt);
+  background: var(--page);
   border: 1px solid transparent;
   border-radius: var(--r-md);
   cursor: pointer;
@@ -172,17 +162,16 @@ img.is-placeholder {
   background: var(--green-tint);
 }
 
-/* :has lets the whole row show its checked state, not just the box. */
 .choice-row:has(:checked) {
   background: var(--green-tint);
-  border-color: var(--green);
+  border-color: var(--green-light);
 }
 
 .choice-box {
   flex: 0 0 auto;
   width: 22px;
   height: 22px;
-  accent-color: var(--green-dark);
+  accent-color: var(--green-action);
   cursor: pointer;
 }
 
@@ -191,11 +180,11 @@ img.is-placeholder {
   color: var(--text);
 }
 
-/* Question hero */
+/* --- question hero --------------------------------------------------- */
 
 .hero {
   position: relative;
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
 .hero-img {
@@ -205,14 +194,17 @@ img.is-placeholder {
   object-position: center 30%;
 }
 
-/* Darkens the lower band so white text stays readable over a photo whose
-   bottom edge could be any color. */
+/* Shade on the lower photo keeps the white name readable. */
 .hero::after {
   content: '';
   position: absolute;
   inset: auto 0 0 0;
   height: 110px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--text) 55%, transparent),
+    transparent
+  );
   pointer-events: none;
 }
 
@@ -222,14 +214,14 @@ img.is-placeholder {
   left: var(--pad-x);
   bottom: var(--sp-3);
   margin: 0;
-  font-size: var(--font-hero);
-  font-weight: 600;
+  font-size: var(--font-title);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.01em;
-  color: var(--text-invert);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  color: var(--surface);
+  text-shadow: 0 1px 6px color-mix(in srgb, var(--text) 50%, transparent);
 }
 
-/* Recipe card */
+/* --- recipe card ----------------------------------------------------- */
 
 .recipe {
   padding: var(--sp-4) var(--pad-x) 0;
@@ -244,36 +236,31 @@ img.is-placeholder {
 
 .recipe-badge {
   padding: 4px 10px;
-  font-size: var(--font-small);
-  font-weight: 600;
-  color: var(--text-invert);
-  border-radius: 999px;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--surface);
+  border-radius: var(--r-pill);
 }
 
+/* Recipe titles are green, per the original research. */
 .recipe-title {
   margin: 0 0 var(--sp-3);
   font-size: var(--font-title);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   line-height: 1.25;
   letter-spacing: -0.01em;
-  color: var(--text);
+  color: var(--green-action);
 }
 
-/* A fixed 3:2 shape, the same as the top photo in a saved book. The space
-   is held before the photo arrives, so the sections below never jump down
-   when it finishes loading. */
+/* Holds a 3:2 space so content below does not jump when the photo loads. */
 .recipe-photo-frame {
   aspect-ratio: 3 / 2;
   overflow: hidden;
   border-radius: var(--r-lg);
-  background: var(--surface-alt);
+  background: var(--page);
   box-shadow: var(--shadow-md);
 }
 
-/* Fills the frame and crops to fit, since source photos come in every
-   shape. The placeholder override in reading.css (.recipe-photo
-   .is-placeholder) still wins, so a missing photo shows the logo
-   contained rather than cropped. */
 .recipe-photo {
   display: block;
   width: 100%;
@@ -281,33 +268,28 @@ img.is-placeholder {
   object-fit: cover;
 }
 
-/* The recipe's sections (Ingredients, Summary, Instructions, Notes,
-   Photos) are styled in recipe-sections.css. */
+/* Recipe sections: recipe-sections.css. */
 
-/* Sits above the card as a progress marker rather than a footnote, so the
-   reader knows where they are before reading. */
 .recipe-counter {
   display: inline-block;
   margin: 0 0 var(--sp-3);
   padding: 4px 12px;
-  font-size: var(--font-small);
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.03em;
-  color: var(--green-dark);
+  color: var(--green-action);
   background: var(--green-tint);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
-/* Loading skeletons.
-   Grey bars shaped like the sections they stand in for, so the card keeps
-   its height and does not jump when the real content arrives. */
+/* --- loading skeletons ----------------------------------------------- */
 
 .recipe-loading {
   margin-top: var(--sp-5);
 }
 
 .skeleton {
-  background: var(--surface-alt);
+  background: var(--line);
   border-radius: var(--r-sm);
   animation: pulse 1.4s ease-in-out infinite;
 }
@@ -327,8 +309,6 @@ img.is-placeholder {
   width: 60%;
 }
 
-/* RecipeSkeleton: the title and the top photo, sized like the real ones
-   (a title line, then a 3:2 photo with the same rounded corners). */
 .skel-recipe-title {
   width: 75%;
   height: 28px;
@@ -351,7 +331,8 @@ img.is-placeholder {
   }
 }
 
-/* Available to screen readers, hidden visually. */
+/* --- utilities ------------------------------------------------------- */
+
 .visually-hidden {
   position: absolute;
   width: 1px;

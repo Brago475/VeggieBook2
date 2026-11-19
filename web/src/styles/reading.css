@@ -1,47 +1,21 @@
-/* Reading a saved book: the heading, the recipe list and one recipe.
- *
- * The photographs are the design here. They were shot in real kitchens on
- * real counters, which is the honest thing this app owns, so they get size
- * and the chrome around them stays quiet.
- *
- * Everything resolves to tokens.css. An opened recipe's sections
- * (Ingredients through Photos) are styled in recipe-sections.css, shared
- * with the review screen; this file covers only what is specific to a
- * saved book, plus the color of recipe titles everywhere (below). The ⋮
- * menus themselves are styled in menu.css. */
+/* Reading a saved book: heading, recipe list and one recipe.
+   Recipe sections: recipe-sections.css. Menus: menu.css.
+   Recipe titles are green per the original research; the base color is
+   set on .recipe-title in components.css. */
 
-/* --- recipe titles --------------------------------------------------- */
+/* --- page ------------------------------------------------------------ */
 
-/* Recipe titles are printed in green, following the original VeggieBook's
-   formative research (Evans et al. 2009): pantry clients' preferred design
-   put recipe titles in green, "connoting nature." The deep green keeps
-   strong contrast on white.
-
-   Three places show a recipe title: the KEEP / DROP card (.recipe-title,
-   laid out in components.css), an opened recipe in a saved book
-   (.recipe-detail h2, below) and the rows of a book's list
-   (.recipe-row-title, below). All three are set here so the color lives
-   in one file. This file loads after components.css, so it wins. */
-.recipe-title {
-  color: var(--green-deep);
-}
-
-/* --- the page -------------------------------------------------------- */
-
-/* Off-white behind the list so the white recipe cards stand out from it. */
 .book-view {
   padding-bottom: var(--sp-6);
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
-/* A message on the book page (for example, a book that no longer exists),
-   with room around it rather than tucked against the header. */
 .book-view-message {
   padding-top: var(--sp-6);
   text-align: center;
 }
 
-/* --- the heading ----------------------------------------------------- */
+/* --- heading --------------------------------------------------------- */
 
 .book-heading {
   display: flex;
@@ -50,8 +24,7 @@
   padding: var(--sp-5) var(--pad-x) var(--sp-4);
 }
 
-/* Height fixed, width follows the image, so the mark keeps its own
-   proportions whatever shape the file is. */
+/* Fixed height, width follows the image. */
 .book-heading-logo {
   flex: 0 0 auto;
   height: 52px;
@@ -65,8 +38,8 @@
 
 .book-heading-eyebrow {
   margin: 0;
-  font-size: var(--font-small);
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -75,7 +48,7 @@
 .book-heading-title {
   margin: 2px 0 0;
   font-size: var(--font-title);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   line-height: 1.2;
   letter-spacing: -0.01em;
   color: var(--text);
@@ -87,19 +60,15 @@
   color: var(--text-muted);
 }
 
-/* --- the cover card -------------------------------------------------- */
+/* --- cover card ------------------------------------------------------ */
 
-/* Holds the card and its ⋮, which sits over the top right corner using
-   the same .book-item-menu position as the home screen's cards. */
 .book-hero {
   position: relative;
 }
 
-/* --- the recipe list ------------------------------------------------- */
+/* --- recipe list ----------------------------------------------------- */
 
-/* One row per recipe: photo, then title. Flat by default, matching
- * .veg-row on the vegetable picker. Inside a saved book the rows become
- * cards (below). */
+/* Flat row by default, like .veg-row. Cards inside a saved book. */
 .recipe-row {
   display: flex;
   align-items: center;
@@ -118,8 +87,6 @@
   background: var(--green-tint);
 }
 
-/* In a saved book: separate white cards with a soft shadow and a gap
-   between them, so each recipe reads as its own thing to open. */
 .book-recipes {
   display: flex;
   flex-direction: column;
@@ -129,40 +96,36 @@
   list-style: none;
 }
 
-/* Holds the row and its ⋮. */
 .book-recipes li {
   position: relative;
 }
 
-/* The transparent border holds the space the green hover outline takes,
-   so the card does not shift by a pixel when it appears. */
+/* Transparent border holds the space of the hover outline. */
 .book-recipes .recipe-row {
   padding: var(--sp-2) var(--sp-4) var(--sp-2) var(--sp-2);
   border: 1px solid transparent;
   border-radius: var(--r-lg);
-  box-shadow: 0 1px 3px rgba(20, 20, 15, 0.08);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text) 8%, transparent);
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
     border-color 0.18s ease;
 }
 
-/* Hover: the card lifts and picks up a green edge, and the chevron turns
-   green, so it is clear which recipe is about to open. */
 .book-recipes .recipe-row:hover {
   background: var(--surface);
-  border-color: var(--green);
-  box-shadow: 0 8px 20px rgba(20, 20, 15, 0.12);
+  border-color: var(--green-light);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--text) 12%, transparent);
   transform: translateY(-2px);
 }
 
 .book-recipes .recipe-row:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(20, 20, 15, 0.1);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--text) 10%, transparent);
 }
 
 .book-recipes .recipe-row:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
 }
 
@@ -175,15 +138,11 @@
   min-width: 0;
 }
 
-/* Leaves room for the ⋮ between the title and the chevron, so a long
-   title wraps before it reaches the button. */
+/* Room for the menu so long titles wrap before it. */
 .book-recipes .recipe-row.has-menu .recipe-row-title {
   margin-right: 44px;
 }
 
-/* The recipe's ⋮: between the title and the chevron, vertically centered.
-   Plain gray rather than the white circle used over photos, since it sits
-   on a white card. */
 .recipe-row-menu {
   position: absolute;
   top: 50%;
@@ -203,7 +162,7 @@
 .recipe-row-menu .menu-btn:hover,
 .recipe-row-menu .menu-btn[aria-expanded='true'] {
   color: var(--text);
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
 .recipe-row-chevron {
@@ -219,34 +178,29 @@
 }
 
 .recipe-row:hover .recipe-row-chevron {
-  color: var(--green-dark);
+  color: var(--green-action);
   opacity: 1;
   transform: translateX(3px);
 }
 
-/* Square rather than the wider .veg-thumb: these are plated dishes, and a
-   square crop keeps the food centered where a wide one cuts it off. */
+/* Square crop keeps plated dishes centered. */
 .recipe-thumb {
   flex: 0 0 auto;
   width: var(--thumb-w);
   height: var(--thumb-w);
   object-fit: cover;
   border-radius: var(--r-sm);
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
-/* This recipe has no photo of its own, so the vegetable's photo stands in.
-   Dimmed and desaturated, so it never passes for a photograph of the
-   finished dish. */
+/* Vegetable photo standing in for a missing dish photo: dimmed. */
 .recipe-thumb.is-standin,
 .recipe-photo.is-standin {
   opacity: 0.45;
   filter: grayscale(0.35);
 }
 
-/* No photo, or one that would not load. The VeggieBook mark on the brand
-   green, contained rather than cropped, so it reads as a placeholder
-   instead of as a bad photograph. */
+/* No photo: the VeggieBook mark contained on the brand green. */
 .recipe-thumb.is-placeholder,
 .recipe-photo.is-placeholder {
   box-sizing: border-box;
@@ -264,13 +218,11 @@
   padding: var(--sp-5);
 }
 
-/* A recipe's title in a list: green, like every recipe title (see the top
-   of this file). */
 .recipe-row-title {
   font-size: var(--font-row);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   line-height: 1.3;
-  color: var(--green-deep);
+  color: var(--green-action);
 }
 
 /* --- one recipe ------------------------------------------------------ */
@@ -279,42 +231,34 @@
   padding: var(--sp-4) var(--pad-x) 0;
 }
 
-/* An opened recipe's title: green, like every recipe title. */
 .recipe-detail h2 {
   margin: 0 0 var(--sp-3);
   font-size: var(--font-title);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   line-height: 1.25;
   letter-spacing: -0.01em;
-  color: var(--green-deep);
+  color: var(--green-action);
 }
 
-/* Matches .recipe-photo-frame on the review screen: same radius, same
-   shadow, so one recipe looks the same whether it is being chosen or read.
-   The fixed ratio keeps the page from jumping as photos load. */
+/* Matches .recipe-photo-frame on the review screen. */
 .recipe-detail .recipe-photo {
   width: 100%;
   aspect-ratio: 3 / 2;
   object-fit: cover;
   border-radius: var(--r-lg);
-  background: var(--surface-alt);
+  background: var(--page);
   box-shadow: var(--shadow-md);
 }
 
-/* Same override as the thumbnail, but it has to out-specify
-   .recipe-detail .recipe-photo above, which sets cover and a gray
-   background and would otherwise win on source order. */
+/* Must out-specify the rule above. */
 .recipe-detail .recipe-photo.is-placeholder {
   object-fit: contain;
   background: var(--green);
   padding: var(--sp-5);
 }
 
-/* --- the book's recipe count ----------------------------------------- */
+/* --- recipe count ---------------------------------------------------- */
 
-/* A chip rather than a line of gray text: it is a fact about the book, so
-   it sits on its own tint under the cover instead of trailing off the
-   corner of the card. */
 .book-count {
   margin: 0;
   padding: var(--sp-3) var(--pad-x) 0;
@@ -325,22 +269,19 @@
   display: inline-block;
   padding: 6px 18px;
   font-size: var(--font-label);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   letter-spacing: 0.01em;
-  color: var(--green-deep);
+  color: var(--green-action);
   background: var(--green-tint);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
 /* --- loading skeleton ------------------------------------------------ */
 
-/* Shapes sized to match the real heading, card, pill and rows, so nothing
-   moves when the book arrives. .skeleton (components.css) supplies the
-   pulse; the gray is darkened here because the default matches this
-   page's off-white and would be invisible on it. */
+/* Shapes match the real heading, card, pill and rows. */
 .book-skeleton .skeleton {
   display: block;
-  background: #e6e6de;
+  background: var(--line);
 }
 
 .skel-logo {
@@ -354,7 +295,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .skel-eyebrow {
@@ -372,17 +313,16 @@
   width: 100%;
   aspect-ratio: 2 / 1;
   max-height: 260px;
-  border-radius: 20px;
+  border-radius: var(--r-lg);
 }
 
 .skel-pill {
   display: inline-block;
   width: 110px;
   height: 32px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
-/* Same size and white card as a real recipe row. */
 .skel-row {
   display: flex;
   align-items: center;
@@ -391,7 +331,7 @@
   background: var(--surface);
   border: 1px solid transparent;
   border-radius: var(--r-lg);
-  box-shadow: 0 1px 3px rgba(20, 20, 15, 0.08);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .skel-thumb {
@@ -401,9 +341,9 @@
   border-radius: var(--r-md);
 }
 
-/* Inside the white row, a lighter gray than the shapes on the page. */
+/* Inside a white row, the lighter page gray. */
 .skel-row .skeleton {
-  background: #eeeee8;
+  background: var(--page);
 }
 
 .skel-row-title {

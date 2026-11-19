@@ -9,11 +9,9 @@ import type { NutritionItem } from '../../types/nutrition'
 import { fetchNutrition, servingText } from '../../utils/nutritionApi'
 import { SafeImage } from '../common/SafeImage'
 
-// Nutrition facts for one vegetable in a pop-up: the source on top, the
-// raw serving with calories, the nutrients with % Daily Value, then
-// vitamins and minerals. A vegetable with several kinds shows tabs. On a
-// phone it slides up from the bottom; Close, a tap outside, or Escape
-// closes it.
+// Nutrition facts for one vegetable in a pop-up: source, raw serving with
+// calories, nutrients with % Daily Value, then vitamins and minerals.
+// Several kinds show as tabs. Close, a tap outside, or Escape closes it.
 
 type Props = {
   vegetable: Vegetable
@@ -29,10 +27,10 @@ type RowProps = {
 
 function NutrientRow({ label, amount, dv, sub = false }: RowProps) {
   return (
-    <li className={sub ? 'nf-row is-sub' : 'nf-row'}>
-      <span className="nf-name">{label}</span>
-      <span className="nf-amount">{amount}</span>
-      <span className={dv === undefined ? 'nf-dv is-empty' : 'nf-dv'}>{dv === undefined ? '' : `${dv}%`}</span>
+    <li className={sub ? 'nu-row is-sub' : 'nu-row'}>
+      <span className="nu-name">{label}</span>
+      <span className="nu-amount">{amount}</span>
+      <span className={dv === undefined ? 'nu-dv is-empty' : 'nu-dv'}>{dv === undefined ? '' : `${dv}%`}</span>
     </li>
   )
 }
@@ -81,37 +79,37 @@ export function NutritionSheet({ vegetable, onClose }: Props) {
   const item = items && items.length > 0 ? items[Math.min(picked, items.length - 1)] : null
 
   return (
-    <div className="dialog-overlay nf-overlay" onClick={onClose}>
+    <div className="dialog-overlay nu-overlay" onClick={onClose}>
       <div
-        className="dialog nf-sheet"
+        className="dialog nu-sheet"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="nf-sheet-title"
+        aria-labelledby="nu-sheet-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="nf-head">
-          <SafeImage className="nf-thumb" src={`/images/${vegetable.image}`} />
-          <div className="nf-head-text">
-            <h2 className="nf-title" id="nf-sheet-title">
+        <div className="nu-head">
+          <SafeImage className="nu-thumb" src={`/images/${vegetable.image}`} />
+          <div className="nu-head-text">
+            <h2 className="nu-title" id="nu-sheet-title">
               {vegetable.name}
             </h2>
-            <span className="nf-sub">{t.title}</span>
+            <span className="nu-sub">{t.title}</span>
           </div>
-          <button ref={closeRef} type="button" className="nf-close" aria-label={common.close} onClick={onClose}>
+          <button ref={closeRef} type="button" className="nu-close" aria-label={common.close} onClick={onClose}>
             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
           </button>
         </div>
 
-        <div className="nf-body">
-          {failed && <p className="nf-message">{t.couldNotLoad}</p>}
-          {!failed && items === null && <p className="nf-message">{t.loading}</p>}
-          {!failed && items !== null && !item && <p className="nf-message">{t.unavailable}</p>}
+        <div className="nu-body">
+          {failed && <p className="nu-message">{t.couldNotLoad}</p>}
+          {!failed && items === null && <p className="nu-message">{t.loading}</p>}
+          {!failed && items !== null && !item && <p className="nu-message">{t.unavailable}</p>}
 
           {item && items && (
             <>
-              <p className="nf-source">
+              <p className="nu-source">
                 {t.source}:{' '}
                 <a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">
                   {item.source === 'fda' ? t.fda : t.fdc}
@@ -119,13 +117,13 @@ export function NutritionSheet({ vegetable, onClose }: Props) {
               </p>
 
               {items.length > 1 && (
-                <div className="nf-tabs" role="tablist" aria-label={t.kinds}>
+                <div className="nu-tabs" role="tablist" aria-label={t.kinds}>
                   {items.map((kind, i) => (
                     <button
                       key={kind.name}
                       type="button"
                       role="tab"
-                      className="nf-tab"
+                      className="nu-tab"
                       aria-selected={i === picked}
                       onClick={() => setPicked(i)}
                     >
@@ -135,23 +133,23 @@ export function NutritionSheet({ vegetable, onClose }: Props) {
                 </div>
               )}
 
-              <div className="nf-serving">
+              <div className="nu-serving">
                 <div>
-                  <span className="nf-label">{t.serving}</span>
-                  <span className="nf-serving-value">{servingText(item)}</span>
+                  <span className="nu-label">{t.serving}</span>
+                  <span className="nu-serving-value">{servingText(item)}</span>
                 </div>
-                <div className="nf-calories">
+                <div className="nu-calories">
                   <strong>{item.calories}</strong>
                   <span>{t.calories}</span>
                   <span>{t.fromFat(item.caloriesFromFat)}</span>
                 </div>
               </div>
 
-              <p className="nf-section">
+              <p className="nu-section">
                 <span>{t.nutrients}</span>
                 <span>{t.dailyValue}</span>
               </p>
-              <ul className="nf-rows">
+              <ul className="nu-rows">
                 <NutrientRow label={t.fat} amount={`${item.fatG} g`} dv={item.fatDv} />
                 <NutrientRow label={t.sodium} amount={`${item.sodiumMg} mg`} dv={item.sodiumDv} />
                 <NutrientRow label={t.potassium} amount={`${item.potassiumMg} mg`} dv={item.potassiumDv} />
@@ -161,10 +159,10 @@ export function NutritionSheet({ vegetable, onClose }: Props) {
                 <NutrientRow label={t.protein} amount={`${item.proteinG} g`} />
               </ul>
 
-              <p className="nf-section">
+              <p className="nu-section">
                 <span>{t.vitamins}</span>
               </p>
-              <ul className="nf-grid">
+              <ul className="nu-grid">
                 <li>
                   <span>{t.vitaminA}</span>
                   <strong>{item.vitaminADv}%</strong>
@@ -183,7 +181,7 @@ export function NutritionSheet({ vegetable, onClose }: Props) {
                 </li>
               </ul>
 
-              <p className="nf-note">{t.footnote}</p>
+              <p className="nu-note">{t.footnote}</p>
             </>
           )}
         </div>

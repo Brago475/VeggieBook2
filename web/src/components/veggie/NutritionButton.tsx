@@ -18,7 +18,7 @@ export function NutritionButton({ vegetable }: Props) {
 
   return (
     <>
-      <button type="button" className="nf-button" aria-label={t.buttonAria(vegetable.name)} onClick={() => setOpen(true)}>
+      <button type="button" className="nu-button" aria-label={t.buttonAria(vegetable.name)} onClick={() => setOpen(true)}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="M6 3h12v18H6zM9 7h6M9 11h6M9 15h3" />
         </svg>

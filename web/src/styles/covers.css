@@ -1,8 +1,5 @@
-/* Cover screen: the row of vegetables to browse covers by. The grid and
-   its tiles are in pages.css.
-
-   Imported by components/CoverOptions.tsx rather than App.tsx, so these
-   styles load with the only component that uses them. */
+/* Cover screen: the row of vegetables to browse covers by.
+   Grid and tiles: pages.css. Imported by components/CoverOptions.tsx. */
 
 .cover-veg-row {
   display: flex;
@@ -14,12 +11,12 @@
 .cover-veg {
   padding: var(--sp-2) var(--sp-3);
   font: inherit;
-  font-size: var(--font-small);
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
   cursor: pointer;
   white-space: nowrap;
   transition:
@@ -28,10 +25,11 @@
 }
 
 .cover-veg:hover {
-  background: var(--surface-alt);
+  background: var(--green-tint);
 }
 
 .cover-veg[aria-pressed='true'] {
+  color: var(--green-action);
   background: var(--green-tint);
-  border-color: var(--green-dark);
+  border-color: var(--green-light);
 }

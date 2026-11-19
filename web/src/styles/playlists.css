@@ -1,10 +1,10 @@
 /* Playlists inside Notifications: the Messages and Playlists switch, the
-   Playlists tab, a playlist's page, a tip, and making your own playlist.
-   Rows reuse the book's recipe rows (reading.css) and the notification
-   cards (notifications.css). Playlist cards and the open playlist's top
-   reuse the book card's text styles (book-card.css). */
+   Playlists tab, an open playlist, a tip, and making a playlist.
+   Rows reuse reading.css and notifications.css; card text reuses
+   book-card.css. */
 
-/* Switch */
+/* --- switch ---------------------------------------------------------- */
+
 .pl-switch {
   display: flex;
   gap: 6px;
@@ -16,32 +16,28 @@
   min-height: 44px;
   font: inherit;
   font-size: var(--font-label);
-  font-weight: 700;
-  color: var(--green-deep);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   cursor: pointer;
 }
 
 .pl-switch-btn[aria-selected='true'] {
-  color: #fff;
-  background: var(--green-dark);
-  border-color: var(--green-dark);
+  color: var(--surface);
+  background: var(--green-action);
+  border-color: var(--green-action);
   cursor: default;
 }
 
-.pl-switch-btn:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-}
+/* --- playlists tab --------------------------------------------------- */
 
-/* Playlists tab */
 .pl-group-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--sp-3);
   margin-bottom: 10px;
 }
 
@@ -55,23 +51,18 @@
   gap: 6px;
   padding: 6px 12px;
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--green-deep);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: var(--green-tint);
   border: none;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   cursor: pointer;
-}
-
-.pl-new:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
 }
 
 .pl-empty {
   margin: 0 4px;
-  font-size: 14px;
+  font-size: var(--font-label);
   line-height: 1.5;
   color: var(--text-muted);
 }
@@ -80,19 +71,19 @@
   flex: 0 0 auto;
   width: 56px;
   height: 56px;
-  border-radius: 12px;
+  border-radius: var(--r-md);
   object-fit: cover;
 }
 
 .pl-row-name {
-  font-size: var(--font-label);
-  font-weight: 700;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   color: var(--text);
   overflow-wrap: anywhere;
 }
 
-/* Playlist cards (PlaylistCard.tsx): recipe photos that cross-fade, a
-   darker band at the bottom for the text, like a book card on home. */
+/* --- playlist cards (PlaylistCard.tsx) ------------------------------- */
+
 .pl-cards {
   display: flex;
   flex-direction: column;
@@ -112,10 +103,10 @@
   overflow: hidden;
   font: inherit;
   text-align: left;
-  background: var(--surface-alt);
+  background: var(--page);
   border: 0;
-  border-radius: 20px;
-  box-shadow: 0 6px 20px rgba(20, 20, 15, 0.12);
+  border-radius: var(--r-lg);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--text) 12%, transparent);
   cursor: pointer;
   transition:
     transform 0.15s ease,
@@ -124,12 +115,7 @@
 
 .pl-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(20, 20, 15, 0.16);
-}
-
-.pl-card:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 3px;
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--text) 16%, transparent);
 }
 
 .pl-card-photo {
@@ -146,14 +132,19 @@
   opacity: 1;
 }
 
-/* Keeps white text readable whatever the photo. */
+/* Shade keeps white text readable on any photo. */
 .pl-card::after,
 .pl-hero::after {
   content: '';
   position: absolute;
   inset: auto 0 0 0;
   height: 72%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.25) 55%, transparent);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--text) 65%, transparent),
+    color-mix(in srgb, var(--text) 25%, transparent) 55%,
+    transparent
+  );
   pointer-events: none;
 }
 
@@ -169,7 +160,7 @@
 .pl-card-dots span {
   width: 6px;
   height: 6px;
-  background: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
   border-radius: 3px;
   transition:
     width 0.3s ease,
@@ -178,29 +169,29 @@
 
 .pl-card-dots span.is-on {
   width: 16px;
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .pl-card-badge {
   position: absolute;
   z-index: 2;
-  top: 12px;
-  right: 12px;
+  top: var(--sp-3);
+  right: var(--sp-3);
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 5px 11px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   color: var(--text);
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border-radius: var(--r-pill);
 }
 
 .pl-card-badge svg {
   width: 14px;
   height: 14px;
-  color: var(--green-dark);
+  color: var(--green-action);
 }
 
 .pl-card-text {
@@ -212,8 +203,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: var(--text-invert);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+  color: var(--surface);
+  text-shadow: 0 1px 6px color-mix(in srgb, var(--text) 45%, transparent);
 }
 
 .pl-card-open {
@@ -225,11 +216,11 @@
   align-items: center;
   gap: 2px;
   padding: 7px 12px 7px 14px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--green-deep);
-  background: #ffffff;
-  border-radius: 999px;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: var(--surface);
+  border-radius: var(--r-pill);
 }
 
 .pl-card-open-icon {
@@ -237,16 +228,17 @@
   height: 16px;
 }
 
-/* An open playlist (PlaylistView.tsx): the top, styled like its card. */
+/* --- open playlist (PlaylistView.tsx) -------------------------------- */
+
 .pl-hero {
   position: relative;
   aspect-ratio: 2 / 1;
   max-height: 280px;
   margin: 0 0 var(--sp-4);
   overflow: hidden;
-  background: #c7dd9e;
-  border-radius: 20px;
-  box-shadow: 0 6px 20px rgba(20, 20, 15, 0.12);
+  background: var(--green-light);
+  border-radius: var(--r-lg);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 .pl-hero-text {
@@ -258,8 +250,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: var(--text-invert);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+  color: var(--surface);
+  text-shadow: 0 1px 6px color-mix(in srgb, var(--text) 45%, transparent);
 }
 
 .pl-hero-name {
@@ -279,7 +271,7 @@
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
 }
 
 .pl-chapter-heading {
@@ -290,9 +282,9 @@
 .pl-chapter-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   width: 100%;
-  padding: 12px 14px;
+  padding: var(--sp-3) 14px;
   font: inherit;
   text-align: left;
   color: var(--text);
@@ -306,9 +298,9 @@
 }
 
 .pl-chapter-head:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: -3px;
-  border-radius: 16px;
+  border-radius: var(--r-lg);
 }
 
 .pl-chapter-avatar {
@@ -317,8 +309,8 @@
   width: 42px;
   height: 42px;
   object-fit: cover;
-  background: #c7dd9e;
-  border: 2px solid #ffffff;
+  background: var(--green-light);
+  border: 2px solid var(--surface);
   border-radius: 50%;
   box-shadow: 0 0 0 1px var(--line);
 }
@@ -331,31 +323,29 @@
 }
 
 .pl-chapter-kicker {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 12px;
-  font-style: italic;
-  color: #7aa63f;
+  font-size: var(--font-label);
+  color: var(--text-muted);
 }
 
 .pl-chapter-name {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 18px;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   line-height: 1.2;
-  color: #27500a;
+  color: var(--green-deep);
   overflow-wrap: anywhere;
 }
 
 .pl-chapter-count {
   flex: 0 0 auto;
   padding: 2px 9px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--green-deep);
-  background: #eef4e6;
-  border-radius: 999px;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: var(--green-tint);
+  border-radius: var(--r-pill);
 }
 
-/* The right chevron, turned down when closed and up when open. */
+/* Chevron points down when closed, up when open. */
 .pl-chapter-chevron {
   flex: 0 0 auto;
   width: 18px;
@@ -366,22 +356,22 @@
 }
 
 .pl-chapter.is-open .pl-chapter-chevron {
-  color: var(--green-deep);
+  color: var(--green-action);
   transform: rotate(-90deg);
 }
 
 .pl-chapter-rows {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   margin: 0;
   padding: 10px;
   list-style: none;
-  background: #fbfbf7;
-  border-top: 1px solid #eef0eb;
+  background: var(--page);
+  border-top: 1px solid var(--line);
 }
 
-/* A recipe or tip: a spine, green for a recipe and yellow for a tip. */
+/* A recipe or tip row with a spine: green for a recipe, pale for a tip. */
 .pl-entry {
   display: flex;
   align-items: stretch;
@@ -393,7 +383,7 @@
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -401,24 +391,19 @@
 }
 
 .pl-entry:hover {
-  border-color: #c9dfae;
-  box-shadow: 0 4px 14px rgba(20, 20, 15, 0.08);
-}
-
-.pl-entry:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
+  border-color: var(--green-light);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .pl-entry-spine {
   flex: 0 0 8px;
-  background: #97c459;
-  border-right: 2px solid #7aa63f;
+  background: var(--green-light);
+  border-right: 2px solid var(--green);
 }
 
 .pl-entry.is-tip .pl-entry-spine {
-  background: #efc96a;
-  border-right-color: #d9ad45;
+  background: var(--green-tint);
+  border-right-color: var(--green-light);
 }
 
 .pl-entry-thumb {
@@ -426,17 +411,17 @@
   flex: 0 0 auto;
   width: 52px;
   height: 52px;
-  margin: 8px;
+  margin: var(--sp-2);
   object-fit: cover;
-  background: var(--surface-alt);
-  border-radius: 9px;
+  background: var(--page);
+  border-radius: var(--r-sm);
 }
 
 .pl-entry-thumb.is-tip {
   display: grid;
   place-items: center;
-  color: #854f0b;
-  background: #fff7e0;
+  color: var(--green-deep);
+  background: var(--green-tint);
 }
 
 .pl-entry-thumb.is-tip svg {
@@ -451,23 +436,23 @@
   justify-content: center;
   gap: 2px;
   min-width: 0;
-  padding: 8px 4px;
+  padding: var(--sp-2) 4px;
 }
 
 .pl-entry-title {
-  font-size: var(--font-label);
-  font-weight: 700;
-  color: var(--green-deep);
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   overflow-wrap: anywhere;
 }
 
 .pl-entry-meta {
-  font-size: 12px;
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
 .pl-entry.is-tip .pl-entry-meta {
-  color: #854f0b;
+  color: var(--green-deep);
 }
 
 .pl-entry-chevron {
@@ -475,25 +460,26 @@
   align-self: center;
   width: 18px;
   height: 18px;
-  margin-right: 12px;
-  color: #b7b6ad;
+  margin-right: var(--sp-3);
+  color: var(--text-muted);
 }
 
-/* The bar pinned to the bottom of an open playlist (PlaylistBar.tsx). */
+/* --- pinned bar (PlaylistBar.tsx) ------------------------------------ */
+
 .pl-bar {
   position: sticky;
-  bottom: 12px;
+  bottom: var(--sp-3);
   z-index: 5;
   margin-top: var(--sp-5);
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.96);
+  padding: var(--sp-3);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  box-shadow: 0 -4px 20px rgba(20, 20, 15, 0.1);
+  border-radius: var(--r-lg);
+  box-shadow: 0 -4px 20px color-mix(in srgb, var(--text) 10%, transparent);
 }
 
 .pl-bar.is-tools {
-  padding: 8px;
+  padding: var(--sp-2);
 }
 
 .pl-bar-note {
@@ -502,15 +488,14 @@
   justify-content: center;
   gap: 6px;
   margin: 0 0 10px;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   text-align: center;
   color: var(--green-deep);
 }
 
 .pl-bar-note.is-hint {
-  font-size: 13px;
-  font-weight: 400;
+  font-weight: var(--weight-regular);
   color: var(--text-muted);
 }
 
@@ -522,7 +507,7 @@
 
 .pl-bar-row {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .pl-bar-btn {
@@ -534,26 +519,40 @@
   min-height: 48px;
   padding: 0 14px;
   font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--green-deep);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: var(--surface);
-  border: 1px solid #cfdcbb;
-  border-radius: 12px;
+  border: 1px solid var(--green-light);
+  border-radius: var(--r-md);
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pl-bar-btn:hover:not(:disabled) {
+  background: var(--green-tint);
 }
 
 .pl-bar-btn.is-primary {
-  color: #ffffff;
-  background: #4f8a2b;
-  border-color: #4f8a2b;
+  color: var(--surface);
+  background: var(--green-action);
+  border-color: var(--green-action);
+}
+
+.pl-bar-btn.is-primary:hover:not(:disabled) {
+  background: var(--green-deep);
+  border-color: var(--green-deep);
 }
 
 .pl-bar-btn.is-icon {
   flex: 0 0 52px;
   padding: 0;
-  color: #a3302a;
-  border-color: #e3c6c6;
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
+.pl-bar-btn.is-icon:hover:not(:disabled) {
+  background: var(--danger-tint);
 }
 
 .pl-bar-btn svg {
@@ -562,18 +561,9 @@
   height: 18px;
 }
 
-.pl-bar-btn:hover:not(:disabled) {
-  filter: brightness(0.96);
-}
-
 .pl-bar-btn:disabled {
   opacity: 0.55;
   cursor: default;
-}
-
-.pl-bar-btn:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
 }
 
 /* Own playlists: one compact toolbar. */
@@ -582,8 +572,8 @@
   align-items: stretch;
   gap: 4px;
   padding: 4px;
-  background: #f3f5ef;
-  border-radius: 14px;
+  background: var(--page);
+  border-radius: var(--r-lg);
 }
 
 .pl-tool {
@@ -596,32 +586,37 @@
   min-height: 56px;
   padding: 6px 4px;
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--green-deep);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  line-height: 1.15;
+  text-align: center;
+  color: var(--green-action);
   background: none;
   border: 0;
-  border-radius: 11px;
+  border-radius: var(--r-md);
   cursor: pointer;
 }
 
 .pl-tool:hover:not(:disabled) {
-  background: #e8eddf;
+  background: var(--green-tint);
 }
 
 .pl-tool.is-primary {
   flex: 1.4;
-  color: #ffffff;
-  background: #4f8a2b;
+  color: var(--surface);
+  background: var(--green-action);
 }
 
-.pl-tool.is-primary:hover {
-  background: #4f8a2b;
-  filter: brightness(0.95);
+.pl-tool.is-primary:hover:not(:disabled) {
+  background: var(--green-deep);
 }
 
 .pl-tool.is-danger {
-  color: #a3302a;
+  color: var(--danger);
+}
+
+.pl-tool.is-danger:hover:not(:disabled) {
+  background: var(--danger-tint);
 }
 
 .pl-tool svg {
@@ -634,60 +629,16 @@
   cursor: default;
 }
 
-.pl-tool:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-}
+/* --- playlist inside a notification ---------------------------------- */
 
-@media (max-width: 480px) {
-  .pl-card-text {
-    left: var(--sp-4);
-    right: 96px;
-    bottom: var(--sp-3);
-  }
-
-  .pl-card-dots {
-    left: var(--sp-4);
-  }
-
-  .pl-card-open {
-    right: var(--sp-3);
-    bottom: var(--sp-3);
-    padding: 6px 10px 6px 12px;
-    font-size: 12px;
-  }
-
-  .pl-hero-text {
-    left: var(--sp-4);
-    right: var(--sp-4);
-    bottom: var(--sp-3);
-  }
-
-  .pl-entry-thumb {
-    width: 46px;
-    height: 46px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pl-card,
-  .pl-card-photo,
-  .pl-card-dots span,
-  .pl-chapter-chevron,
-  .pl-entry {
-    transition: none;
-  }
-}
-
-/* The playlist card inside a notification */
 .pl-attached {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #f6f9f1;
-  border: 1px solid #d5e6c0;
-  border-radius: 16px;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--green-tint);
+  border: 1px solid var(--green-light);
+  border-radius: var(--r-lg);
 }
 
 .pl-attached-text {
@@ -699,35 +650,36 @@
 }
 
 .pl-attached-text strong {
-  font-size: 16px;
+  font-size: var(--font-row);
   color: var(--text);
   overflow-wrap: anywhere;
 }
 
 .pl-attached-text span {
-  font-size: 13px;
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
 .pl-open {
   min-height: 50px;
-  padding: 0 16px;
+  padding: 0 var(--sp-4);
   font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-  background: var(--green-dark);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--surface);
+  background: var(--green-action);
   border: none;
-  border-radius: 14px;
+  border-radius: var(--r-md);
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.pl-open:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
+.pl-open:hover {
+  background: var(--green-deep);
 }
 
-/* A playlist's page: older pieces still used by other screens. */
+/* --- older pieces still used by other screens ------------------------ */
+
 .pl-head {
   margin-bottom: var(--sp-4);
 }
@@ -735,9 +687,9 @@
 .pl-kicker {
   display: block;
   margin: 0 0 4px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--green-deep);
 }
@@ -762,7 +714,7 @@
 }
 
 .pl-item-meta {
-  font-size: 13px;
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
@@ -785,16 +737,16 @@
   bottom: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   margin-top: var(--sp-5);
-  padding: 12px 0 16px;
-  background: linear-gradient(to bottom, rgba(250, 250, 245, 0), var(--bg, #fafaf5) 30%);
+  padding: var(--sp-3) 0 var(--sp-4);
+  background: linear-gradient(to bottom, transparent, var(--page) 30%);
 }
 
 .pl-decide-note {
   margin: 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   text-align: center;
   color: var(--green-deep);
 }
@@ -814,32 +766,40 @@
   position: sticky;
   bottom: 0;
   margin-top: var(--sp-5);
-  padding: 12px 0 16px;
-  background: linear-gradient(to bottom, rgba(250, 250, 245, 0), var(--bg, #fafaf5) 30%);
+  padding: var(--sp-3) 0 var(--sp-4);
+  background: linear-gradient(to bottom, transparent, var(--page) 30%);
 }
 
-/* Buttons */
 .pl-btn {
   min-height: 48px;
   padding: 0 18px;
   font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--green-deep);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pl-btn:hover:not(:disabled) {
+  background: var(--green-tint);
 }
 
 .pl-btn.is-primary {
-  color: #fff;
-  background: var(--green-dark);
-  border-color: var(--green-dark);
+  color: var(--surface);
+  background: var(--green-action);
+  border-color: var(--green-action);
+}
+
+.pl-btn.is-primary:hover:not(:disabled) {
+  background: var(--green-deep);
 }
 
 .pl-btn.is-danger {
-  color: #a3302a;
+  color: var(--danger);
 }
 
 .pl-btn:disabled {
@@ -847,12 +807,8 @@
   cursor: default;
 }
 
-.pl-btn:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-}
+/* --- a tip ----------------------------------------------------------- */
 
-/* A tip */
 .pl-tip .pl-kicker {
   margin-bottom: 6px;
 }
@@ -863,7 +819,7 @@
 
 .pl-tip-block p {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-row);
   line-height: 1.6;
   white-space: pre-line;
   color: var(--text);
@@ -873,12 +829,13 @@
   display: block;
   width: 100%;
   max-height: 320px;
-  margin-bottom: 12px;
+  margin-bottom: var(--sp-3);
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: var(--r-lg);
 }
 
-/* Making your own playlist */
+/* --- making a playlist ----------------------------------------------- */
+
 .pl-field {
   display: flex;
   flex-direction: column;
@@ -887,30 +844,25 @@
 }
 
 .pl-field-label {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   color: var(--text-muted);
 }
 
 .pl-input {
   min-height: 48px;
-  padding: 0 16px;
+  padding: 0 var(--sp-4);
   font: inherit;
-  font-size: 16px;
+  font-size: var(--font-row);
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
-}
-
-.pl-input:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 1px;
+  border-radius: var(--r-md);
 }
 
 /* Saved books, one open at a time */
 .pl-books-label {
-  margin: 0 0 8px;
+  margin: 0 0 var(--sp-2);
 }
 
 .pl-books {
@@ -923,20 +875,20 @@
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--r-lg);
   scroll-margin-top: 80px;
 }
 
 .pl-book.is-open {
-  border-color: var(--green-dark);
+  border-color: var(--green-light);
 }
 
 .pl-book-head {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   width: 100%;
-  padding: 12px;
+  padding: var(--sp-3);
   font: inherit;
   text-align: left;
   color: var(--text);
@@ -946,16 +898,16 @@
 }
 
 .pl-book-head:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: -2px;
-  border-radius: 18px;
+  border-radius: var(--r-lg);
 }
 
 .pl-book-cover {
   flex: 0 0 auto;
   width: 56px;
   height: 56px;
-  border-radius: 12px;
+  border-radius: var(--r-md);
   object-fit: cover;
 }
 
@@ -968,24 +920,24 @@
 }
 
 .pl-book-name {
-  font-size: var(--font-label);
-  font-weight: 700;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   overflow-wrap: anywhere;
 }
 
 .pl-book-meta {
-  font-size: 13px;
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
 .pl-book-badge {
   flex: 0 0 auto;
   padding: 4px 10px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-  background: var(--green-dark);
-  border-radius: 999px;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--surface);
+  background: var(--green-action);
+  border-radius: var(--r-pill);
 }
 
 .pl-book-chevron {
@@ -1004,24 +956,24 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 0 12px 12px;
+  padding: 0 var(--sp-3) var(--sp-3);
   border-top: 1px solid var(--line);
-  background: #fafaf5;
+  background: var(--page);
 }
 
 .pl-book-tools {
   display: flex;
   justify-content: flex-end;
-  gap: 16px;
+  gap: var(--sp-4);
   padding-top: 10px;
 }
 
 .pl-book-link {
   padding: 4px 2px;
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--green-deep);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: none;
   border: none;
   cursor: pointer;
@@ -1033,43 +985,32 @@
   cursor: default;
 }
 
-.pl-book-link:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-  border-radius: 6px;
-}
-
 /* Recipe rows to pick */
 .pl-pick {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px var(--sp-3);
   font: inherit;
   text-align: left;
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
   cursor: pointer;
 }
 
 .pl-pick.is-on {
-  border-color: var(--green-dark);
-  box-shadow: inset 0 0 0 1px var(--green-dark);
-}
-
-.pl-pick:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
+  background: var(--green-tint);
+  border-color: var(--green-light);
 }
 
 .pl-pick-title {
   flex: 1;
   min-width: 0;
-  font-size: var(--font-label);
-  font-weight: 600;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   overflow-wrap: anywhere;
 }
 
@@ -1080,17 +1021,75 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  border: 2px solid #c9c8bf;
+  border: 2px solid var(--green-light);
   border-radius: 50%;
 }
 
 .pl-pick.is-on .pl-check {
-  color: #fff;
-  background: var(--green-dark);
-  border-color: var(--green-dark);
+  color: var(--surface);
+  background: var(--green-action);
+  border-color: var(--green-action);
 }
 
 .pl-check svg {
   width: 16px;
   height: 16px;
+}
+
+/* --- focus ----------------------------------------------------------- */
+
+.pl-switch-btn:focus-visible,
+.pl-new:focus-visible,
+.pl-card:focus-visible,
+.pl-entry:focus-visible,
+.pl-bar-btn:focus-visible,
+.pl-tool:focus-visible,
+.pl-open:focus-visible,
+.pl-btn:focus-visible,
+.pl-input:focus-visible,
+.pl-book-link:focus-visible,
+.pl-pick:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* --- small screens --------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .pl-card-text {
+    left: var(--sp-4);
+    right: 96px;
+    bottom: var(--sp-3);
+  }
+
+  .pl-card-dots {
+    left: var(--sp-4);
+  }
+
+  .pl-card-open {
+    right: var(--sp-3);
+    bottom: var(--sp-3);
+    padding: 6px 10px 6px 12px;
+  }
+
+  .pl-hero-text {
+    left: var(--sp-4);
+    right: var(--sp-4);
+    bottom: var(--sp-3);
+  }
+
+  .pl-entry-thumb {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-card,
+  .pl-card-photo,
+  .pl-card-dots span,
+  .pl-chapter-chevron,
+  .pl-entry {
+    transition: none;
+  }
 }

@@ -1,6 +1,5 @@
-/* The book card: a vegetable photo with the chosen cover inset on the
-   right and the book's name along the bottom. Shared by the home screen,
-   the top of a saved book, and the cover chooser's preview. */
+/* Book card: vegetable photo, chosen cover inset on the right, name along
+   the bottom. Used on the home screen, a saved book and the cover chooser. */
 
 .book-card {
   position: relative;
@@ -13,10 +12,10 @@
   overflow: hidden;
   font: inherit;
   text-align: left;
-  background: var(--surface-alt);
+  background: var(--page);
   border: 0;
-  border-radius: 20px;
-  box-shadow: 0 6px 20px rgba(20, 20, 15, 0.12);
+  border-radius: var(--r-lg);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 button.book-card {
@@ -28,11 +27,11 @@ button.book-card {
 
 button.book-card:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(20, 20, 15, 0.16);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--text) 16%, transparent);
 }
 
 button.book-card:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 3px;
 }
 
@@ -45,8 +44,7 @@ button.book-card:focus-visible {
   object-position: center;
 }
 
-/* Darkens the lower part of the photo so white text stays readable
-   whatever color the bottom of the photo happens to be. */
+/* Shade on the lower photo keeps the white text readable. */
 .book-card::after {
   content: '';
   position: absolute;
@@ -54,15 +52,14 @@ button.book-card:focus-visible {
   height: 70%;
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.65),
-    rgba(0, 0, 0, 0.25) 55%,
+    color-mix(in srgb, var(--text) 65%, transparent),
+    color-mix(in srgb, var(--text) 25%, transparent) 55%,
     transparent
   );
   pointer-events: none;
 }
 
-/* Rounded, with a thick white frame and a real shadow, so it reads as a
-   photo resting on top of the vegetable picture. */
+/* Cover photo resting on the vegetable picture. */
 .book-card-cover {
   position: absolute;
   z-index: 1;
@@ -72,14 +69,13 @@ button.book-card:focus-visible {
   max-width: 160px;
   aspect-ratio: 1;
   object-fit: cover;
-  background: var(--surface-alt);
+  background: var(--page);
   border: 4px solid var(--surface);
-  border-radius: 14px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  border-radius: var(--r-md);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--text) 30%, transparent);
 }
 
-/* The name and anything under it. Stops short of the inset so long names
-   wrap instead of running underneath it. */
+/* Stops short of the cover so long names wrap instead of running under it. */
 .book-card-text {
   position: absolute;
   z-index: 1;
@@ -89,26 +85,26 @@ button.book-card:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  color: var(--text-invert);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+  color: var(--surface);
+  text-shadow: 0 1px 6px color-mix(in srgb, var(--text) 45%, transparent);
 }
 
 .book-card-name {
-  font-size: var(--font-hero);
-  font-weight: 700;
+  font-size: var(--font-title);
+  font-weight: var(--weight-bold);
   line-height: 1.1;
   letter-spacing: -0.01em;
 }
 
-/* A short rule, then a small word spaced wide: "—— VEGGIEBOOK". */
+/* A short rule, then a small word spaced wide. */
 .book-card-label {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 2px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.28em;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   opacity: 0.92;
 }
@@ -123,7 +119,7 @@ button.book-card:focus-visible {
 
 .book-card-subtitle {
   font-size: var(--font-label);
-  font-weight: 400;
+  font-weight: var(--weight-regular);
   opacity: 0.92;
 }
 
@@ -132,8 +128,8 @@ button.book-card:focus-visible {
   align-items: center;
   gap: 6px;
   margin-top: 2px;
-  font-size: var(--font-small);
-  font-weight: 500;
+  font-size: var(--font-label);
+  font-weight: var(--weight-regular);
 }
 
 .book-card-count-icon {
@@ -141,8 +137,7 @@ button.book-card:focus-visible {
   height: 18px;
 }
 
-/* Phones: a smaller name and tighter edges so the text still fits beside
-   the inset. */
+/* Phones: tighter edges and a smaller name so text fits beside the cover. */
 @media (max-width: 480px) {
   .book-card-text {
     left: var(--sp-4);
@@ -150,7 +145,7 @@ button.book-card:focus-visible {
   }
 
   .book-card-name {
-    font-size: var(--font-title);
+    font-size: var(--font-section);
   }
 
   .book-card-cover {

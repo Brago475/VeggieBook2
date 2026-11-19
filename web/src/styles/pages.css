@@ -1,14 +1,15 @@
-/* Page-specific styles. */
+/* Page-specific styles. Book cards: book-card.css. */
 
-/* Green action button. The home screen no longer uses it (see
-   library.css), but ConfirmDialog does for its non-danger confirm. */
+/* --- action button --------------------------------------------------- */
+
+/* Standard action button. Used by ConfirmDialog for non-danger confirms. */
 .create-btn {
   width: 100%;
   padding: var(--sp-4);
   font-size: var(--font-row);
-  font-weight: 700;
-  color: var(--text);
-  background: var(--green);
+  font-weight: var(--weight-bold);
+  color: var(--surface);
+  background: var(--green-action);
   border: 0;
   border-radius: var(--r-md);
   box-shadow: var(--shadow-sm);
@@ -19,24 +20,27 @@
 }
 
 .create-btn:hover {
-  background: var(--green-dark);
+  background: var(--green-deep);
 }
 
 .create-btn:active {
   transform: translateY(1px);
 }
 
+.create-btn:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
 .create-btn:disabled {
   color: var(--text-muted);
-  background: var(--surface-alt);
+  background: var(--page);
   box-shadow: none;
   cursor: default;
   transform: none;
 }
 
-/* Book cards are styled in book-card.css. */
-
-/* Question screen */
+/* --- question screen ------------------------------------------------- */
 
 .question {
   padding: var(--sp-5) var(--pad-x) var(--sp-2);
@@ -44,8 +48,8 @@
 
 .question-intro {
   margin: 0;
-  font-size: 21px;
-  font-weight: 700;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
   line-height: 1.35;
   letter-spacing: -0.01em;
   color: var(--text);
@@ -53,13 +57,13 @@
 
 .question-sub {
   margin: var(--sp-2) 0 0;
-  font-size: var(--font-small);
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
-  color: var(--green-dark);
+  color: var(--green-action);
 }
 
-/* Transition screen */
+/* --- transition screen ----------------------------------------------- */
 
 .transition {
   display: flex;
@@ -71,8 +75,8 @@
 .transition-line {
   align-self: flex-start;
   margin: 0 0 var(--sp-5);
-  font-size: 19px;
-  font-weight: 600;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
   line-height: 1.45;
   color: var(--text);
 }
@@ -80,12 +84,11 @@
 .transition-cue {
   margin: var(--sp-6) 0 var(--sp-4);
   font-size: var(--font-row);
-  font-weight: 700;
-  color: var(--green-dark);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
 }
 
-/* Outlined arrow pointing at the NEXT button: a shaft and a triangular head
-   drawn with clip-path, so it stays sharp at any size and ships no image. */
+/* Arrow pointing at NEXT, drawn with clip-path. */
 .transition-arrow {
   width: 44px;
   height: 110px;
@@ -101,7 +104,7 @@
   );
 }
 
-/* KEEP / DROP bar */
+/* --- KEEP / DROP bar ------------------------------------------------- */
 
 .decide {
   position: sticky;
@@ -118,7 +121,7 @@
   flex: 1;
   padding: var(--sp-4);
   font-size: var(--font-row);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   letter-spacing: 0.03em;
   border-radius: var(--r-md);
   cursor: pointer;
@@ -131,34 +134,39 @@
   transform: translateY(1px);
 }
 
-/* KEEP is the affirmative action, so it carries the brand color; DROP is
-   present but quieter. */
+.decide-btn:focus-visible {
+  outline: 2px solid var(--green-action);
+  outline-offset: 2px;
+}
+
+/* KEEP: brand green with dark text, as in the original app. */
 .decide-btn:first-child {
   color: var(--text);
   background: var(--green);
-  border: 1px solid var(--green-dark);
+  border: 1px solid var(--green);
   box-shadow: var(--shadow-sm);
 }
 
 .decide-btn:first-child:hover {
-  background: var(--green-dark);
+  background: var(--green-light);
+  border-color: var(--green-light);
 }
 
 .decide-btn:last-child {
   color: var(--text-muted);
-  background: var(--surface-alt);
-  border: 1px solid var(--line-strong);
+  background: var(--page);
+  border: 1px solid var(--line);
 }
 
 .decide-btn:last-child:hover {
-  background: var(--surface-press);
+  background: var(--line);
 }
 
-/* Extra copy selection */
+/* --- extra copies ---------------------------------------------------- */
 
 .intro-text {
   padding: var(--sp-4) var(--pad-x);
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
 .intro-text p {
@@ -185,7 +193,7 @@
   width: 100%;
   padding: 0;
   overflow: hidden;
-  background: var(--surface-alt);
+  background: var(--page);
   border: 2px solid transparent;
   border-radius: var(--r-sm);
   cursor: pointer;
@@ -202,22 +210,21 @@
   object-fit: cover;
 }
 
-/* Title sits over the photo on a dark scrim rather than a green band: the
-   scrim keeps it readable whether or not the photo loaded. */
+/* Title over the photo on a dark shade, readable with or without a photo. */
 .copy-tile-title {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   padding: var(--sp-2) 38px var(--sp-3) var(--sp-3);
-  font-size: var(--font-small);
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   text-align: left;
-  color: var(--text-invert);
+  color: var(--surface);
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.65),
-    rgba(0, 0, 0, 0)
+    color-mix(in srgb, var(--text) 65%, transparent),
+    transparent
   );
 }
 
@@ -228,13 +235,13 @@
   width: 22px;
   height: 22px;
   background: var(--surface);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
   border-radius: var(--r-sm);
 }
 
 .copy-tile-box.is-checked {
   background: var(--green);
-  border-color: var(--green-dark);
+  border-color: var(--green);
 }
 
 .copy-tile-box.is-checked::after {
@@ -249,10 +256,8 @@
   transform: rotate(45deg);
 }
 
-/* Cover chooser */
+/* --- cover chooser --------------------------------------------------- */
 
-/* The preview is the same BookCard the home screen uses, so it inherits
-   that look. It sits alone here, so it drops the gap below. */
 .cover-preview {
   padding: var(--sp-4) var(--pad-x) 0;
 }
@@ -268,19 +273,18 @@
   padding: var(--sp-4) var(--pad-x);
 }
 
-/* Shared by the two buttons and the upload label, so all three options
-   look and behave the same. The active option gets the brand tint. */
+/* Shared by both buttons and the upload label. */
 .cover-mode {
   position: relative;
   display: block;
   width: 100%;
   padding: var(--sp-4);
   font-size: var(--font-row);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   text-align: center;
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
   cursor: pointer;
   transition:
@@ -289,17 +293,17 @@
 }
 
 .cover-mode:hover {
-  background: var(--surface-alt);
+  background: var(--green-tint);
 }
 
 .cover-mode[aria-pressed='true'],
 .cover-mode.is-active {
+  color: var(--green-action);
   background: var(--green-tint);
-  border-color: var(--green-dark);
+  border-color: var(--green-light);
 }
 
-/* The file input is hidden visually but kept in the tab order, so keyboard
-   users can still reach it. The label shows the focus ring in its place. */
+/* Hidden visually but kept in the tab order; the label shows focus. */
 .cover-upload-input {
   position: absolute;
   width: 1px;
@@ -309,13 +313,11 @@
 }
 
 .cover-mode:focus-within {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
 }
 
-/* A tighter gap than the spacing scale would give: these are photographs
-   in a contact sheet, and the grid reads better as a block of images than
-   as separated tiles. */
+/* Tight gap so the photos read as one contact sheet. */
 .cover-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -329,7 +331,7 @@
   aspect-ratio: 1;
   padding: 0;
   overflow: hidden;
-  background: var(--surface-alt);
+  background: var(--page);
   border: 3px solid transparent;
   border-radius: var(--r-sm);
   cursor: pointer;

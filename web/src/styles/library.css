@@ -1,13 +1,9 @@
-/* Home screen: the heading, the two create buttons, and the book list.
-   The ⋮ on each card is styled in menu.css; the card itself in
-   book-card.css. The ☰ Menu button in the heading has its own file,
-   main-menu.css. */
+/* Home screen: heading, create buttons and book list.
+   Card: book-card.css. Card menu: menu.css. Menu button: main-menu.css. */
 
-/* Off-white behind everything, matching a saved book, so the white
-   buttons and photo cards stand out from it. */
 .library {
   padding-bottom: var(--sp-6);
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
 /* --- heading --------------------------------------------------------- */
@@ -26,10 +22,10 @@
 
 .library-title {
   margin: 0;
-  font-size: 28px;
-  font-weight: 800;
+  font-size: var(--font-title);
+  font-weight: var(--weight-bold);
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   color: var(--text);
 }
 
@@ -51,7 +47,7 @@
   padding: var(--sp-3) var(--pad-x) var(--sp-5);
 }
 
-/* Icon circle on the left, label centered, chevron on the right. */
+/* Icon circle left, label centered, chevron right. */
 .library-create-btn {
   display: flex;
   align-items: center;
@@ -60,8 +56,8 @@
   padding: 12px 18px 12px 12px;
   font: inherit;
   font-size: var(--font-row);
-  font-weight: 700;
-  border-radius: 18px;
+  font-weight: var(--weight-bold);
+  border-radius: var(--r-lg);
   cursor: pointer;
   transition:
     transform 0.15s ease,
@@ -71,7 +67,7 @@
 }
 
 .library-create-btn:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 3px;
 }
 
@@ -101,19 +97,17 @@
   opacity: 0.85;
 }
 
-/* The main action. A deeper green than the brand green so the white text
-   on it stays readable. */
+/* Primary action: white text on the action green. */
 .library-create-btn.is-primary {
-  font-size: 18px;
-  color: #fff;
-  background: linear-gradient(180deg, #66a02a, #47831c);
+  color: var(--surface);
+  background: var(--green-action);
   border: 0;
-  box-shadow: 0 6px 16px rgba(71, 131, 28, 0.35);
+  box-shadow: var(--shadow-md);
 }
 
 .library-create-btn.is-primary:hover {
+  background: var(--green-deep);
   transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(71, 131, 28, 0.4);
 }
 
 .library-create-btn.is-primary:active {
@@ -121,27 +115,26 @@
 }
 
 .is-primary .library-create-icon {
-  color: #47831c;
-  background: #fff;
+  color: var(--green-action);
+  background: var(--surface);
 }
 
 .library-create-btn.is-secondary {
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
 }
 
 .library-create-btn.is-secondary:hover:not(:disabled) {
   background: var(--green-tint);
-  border-color: var(--green);
+  border-color: var(--green-light);
 }
 
 .is-secondary .library-create-icon {
-  color: var(--text);
-  background: var(--surface-alt);
+  color: var(--green-action);
+  background: var(--green-tint);
 }
 
-/* Secrets Book is not built yet. */
 .library-create-btn:disabled {
   opacity: 0.6;
   cursor: default;
@@ -158,8 +151,7 @@
   list-style: none;
 }
 
-/* Holds the card and the ⋮ over its top right corner. The ⋮ is a sibling
-   of the card rather than inside it, so tapping it never opens the book. */
+/* The menu is a sibling of the card, so tapping it never opens the book. */
 .book-item {
   position: relative;
 }
@@ -177,14 +169,12 @@
 
 /* --- loading skeleton ------------------------------------------------ */
 
-/* A gray shape the size of a book card, pulsing (the animation comes from
-   .skeleton in components.css). The gray is darker than the default so it
-   shows against this page's off-white. */
+/* Pulse animation comes from .skeleton in components.css. */
 .library-skel-card {
   display: block;
   width: 100%;
   aspect-ratio: 2 / 1;
   max-height: 260px;
-  background: #e6e6de;
-  border-radius: 20px;
+  background: var(--line);
+  border-radius: var(--r-lg);
 }

@@ -1,9 +1,10 @@
-/* Notifications: the list (pages/Notifications.tsx), one notification's
-   page (pages/NotificationDetail.tsx) and the pop-up
-   (components/notifications/NotificationNotice.tsx). The pop-up builds on
-   .dialog (dialog.css). Loading outlines: notification-skeletons.css. */
+/* Notifications: the list (pages/Notifications.tsx), one notification
+   (pages/NotificationDetail.tsx) and the pop-up
+   (components/notifications/NotificationNotice.tsx).
+   Pop-up base: dialog.css. Loading: notification-skeletons.css. */
 
-/* Shared */
+/* --- shared ---------------------------------------------------------- */
+
 .nf-icon {
   display: inline-flex;
   flex: 0 0 auto;
@@ -11,8 +12,8 @@
   justify-content: center;
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  color: var(--green-deep);
+  border-radius: var(--r-md);
+  color: var(--green-action);
   background: var(--green-tint);
 }
 
@@ -24,7 +25,6 @@
 .nf-icon.is-small {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
 }
 
 .nf-icon.is-small svg {
@@ -44,37 +44,31 @@
 }
 
 .nf-link {
-  font-weight: 600;
-  color: var(--green-deep);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.nf-link:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
 .nf-note {
   margin: 0 4px var(--sp-5);
-  font-size: 13px;
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
 .nf-new {
   padding: 2px 8px;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--green-deep);
+  color: var(--green-action);
   background: var(--green-tint);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
-/* List: All and Unread as folder tabs on a panel that holds the list. The
-   chosen tab joins the panel and carries a green top edge. */
+/* --- list: All and Unread as folder tabs ----------------------------- */
+
 .nf-folder {
   margin: 0 0 var(--sp-5);
 }
@@ -93,11 +87,11 @@
   padding: 0 18px;
   font: inherit;
   font-size: var(--font-label);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   color: var(--text-muted);
-  background: #ecebe3;
+  background: var(--line);
   border: 0;
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--r-md) var(--r-md) 0 0;
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -105,36 +99,31 @@
 }
 
 .nf-folder-tab:hover {
-  color: var(--green-deep);
+  color: var(--green-action);
 }
 
+/* Chosen tab joins the panel with a green top edge. */
 .nf-folder-tab[aria-selected='true'] {
   z-index: 1;
   min-height: 46px;
   margin-top: 0;
   margin-bottom: -1px;
-  font-weight: 700;
-  color: var(--green-deep);
-  background: #fbfbf7;
+  color: var(--green-action);
+  background: var(--page);
   border: 1px solid var(--line);
   border-bottom: 0;
-  box-shadow: inset 0 3px 0 #97c459;
+  box-shadow: inset 0 3px 0 var(--green);
 }
 
 .nf-folder-tab:focus {
   outline: none;
 }
 
-.nf-folder-tab:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-}
-
 .nf-folder-panel {
   padding: var(--sp-4);
-  background: #fbfbf7;
+  background: var(--page);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
 }
 
 .nf-folder-panel > :last-child {
@@ -147,9 +136,9 @@
 
 .nf-group-label {
   margin: 0 4px 10px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -163,21 +152,21 @@
   list-style: none;
 }
 
-/* A quiet line when a filter or section has nothing to show. */
+/* Shown when a filter or section is empty. */
 .nf-empty-line {
   display: block;
   width: 100%;
   margin: 0 4px var(--sp-4);
   font-size: var(--font-label);
-  font-weight: 400;
+  font-weight: var(--weight-regular);
   line-height: 1.5;
   letter-spacing: normal;
   text-transform: none;
   color: var(--text-muted);
 }
 
-/* A day of messages: a serif heading with a thin line after it, then the
-   pages stacked under it. */
+/* --- a day of messages ----------------------------------------------- */
+
 .nf-day {
   display: block;
   margin-bottom: var(--sp-5);
@@ -192,16 +181,15 @@
 
 .nf-day-title {
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 19px;
-  font-weight: 400;
-  color: #3b6d11;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
+  color: var(--green-deep);
 }
 
 .nf-day-rule {
   flex: 1;
   height: 1px;
-  background: #dfe7cf;
+  background: var(--green-light);
 }
 
 .nf-pages {
@@ -213,8 +201,7 @@
   list-style: none;
 }
 
-/* One message as a small page (InboxRow.tsx): a spine, green while
-   unread and gray once read, beside the text. */
+/* One message (InboxRow.tsx): green spine while unread, gray once read. */
 .nf-page {
   display: flex;
   width: 100%;
@@ -225,8 +212,8 @@
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  box-shadow: 0 1px 2px rgba(20, 20, 15, 0.05);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -234,24 +221,18 @@
 }
 
 .nf-page:hover {
-  border-color: #c9dfae;
-  box-shadow: 0 4px 14px rgba(20, 20, 15, 0.08);
-}
-
-.nf-page:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
+  border-color: var(--green-light);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .nf-page-spine {
   flex: 0 0 10px;
-  background: #d3d8c8;
-  border-right: 2px solid #c2c8b4;
+  background: var(--line);
 }
 
 .nf-page.is-unread .nf-page-spine {
-  background: #97c459;
-  border-right-color: #7aa63f;
+  background: var(--green-light);
+  border-right: 2px solid var(--green);
 }
 
 .nf-page-body {
@@ -260,19 +241,19 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
-  padding: 12px 14px;
+  padding: var(--sp-3) 14px;
 }
 
-/* A short rule, then NEW spaced wide, like the book card's label. */
+/* A short rule, then NEW spaced wide. */
 .nf-page-new {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.26em;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #3b6d11;
+  color: var(--green-action);
 }
 
 .nf-page-new::before {
@@ -289,14 +270,14 @@
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-size: var(--font-label);
+  font-size: var(--font-row);
   line-height: 1.45;
-  color: #44443d;
+  color: var(--text-muted);
   overflow-wrap: anywhere;
 }
 
 .nf-page.is-unread .nf-page-text {
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   color: var(--text);
 }
 
@@ -304,13 +285,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .nf-page-time {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 13px;
-  font-style: italic;
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
@@ -318,16 +297,16 @@
   flex: 0 0 auto;
   width: 18px;
   height: 18px;
-  color: #b7b6ad;
+  color: var(--text-muted);
 }
 
-/* The end of the list: a dashed page with the expiry note. */
+/* End of the list: a dashed page with the expiry note. */
 .nf-chapter-end {
   display: flex;
   overflow: hidden;
   margin: var(--sp-2) 0 var(--sp-5);
-  border: 1px dashed #c9d8b4;
-  border-radius: 14px;
+  border: 1px dashed var(--green-light);
+  border-radius: var(--r-lg);
 }
 
 .nf-chapter-end.is-ghost {
@@ -336,34 +315,34 @@
 
 .nf-chapter-spine {
   flex: 0 0 10px;
-  background: #eef4e6;
+  background: var(--green-tint);
 }
 
 .nf-chapter-text {
   flex: 1;
   margin: 0;
-  padding: 12px 14px;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 14px;
-  font-style: italic;
+  padding: var(--sp-3) 14px;
+  font-size: var(--font-label);
   line-height: 1.5;
   text-align: center;
-  color: #5b6356;
+  color: var(--text-muted);
 }
+
+/* --- card row -------------------------------------------------------- */
 
 .nf-card {
   display: flex;
   align-items: center;
   gap: 14px;
   width: 100%;
-  padding: 14px 14px 14px 16px;
+  padding: 14px 14px 14px var(--sp-4);
   font: inherit;
   text-align: left;
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(20, 20, 15, 0.05);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -371,23 +350,20 @@
 }
 
 .nf-card:hover {
-  border-color: #c9dfae;
-  box-shadow: 0 4px 14px rgba(20, 20, 15, 0.08);
-}
-
-.nf-card:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
+  border-color: var(--green-light);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .nf-card.is-unread {
-  border-color: #c9dfae;
-  box-shadow: inset 4px 0 0 var(--green-dark), 0 1px 2px rgba(20, 20, 15, 0.05);
+  border-color: var(--green-light);
+  box-shadow:
+    inset 4px 0 0 var(--green-action),
+    var(--shadow-sm);
 }
 
 .nf-card:not(.is-unread) .nf-icon {
   color: var(--text-muted);
-  background: #f1f0e9;
+  background: var(--page);
 }
 
 .nf-card-body {
@@ -404,22 +380,22 @@
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-size: var(--font-label);
+  font-size: var(--font-row);
   line-height: 1.45;
-  color: #44443d;
+  color: var(--text-muted);
   overflow-wrap: anywhere;
 }
 
 .nf-card.is-unread .nf-card-text {
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   color: var(--text);
 }
 
 .nf-card-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: var(--sp-2);
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
@@ -427,10 +403,11 @@
   flex: 0 0 auto;
   width: 18px;
   height: 18px;
-  color: #b7b6ad;
+  color: var(--text-muted);
 }
 
-/* Empty states (GhostEmpty.tsx): faded versions of what will appear. */
+/* --- empty states (GhostEmpty.tsx) ----------------------------------- */
+
 .nf-ghost {
   margin: 0 0 var(--sp-5);
   text-align: center;
@@ -449,9 +426,9 @@
 }
 
 .nf-ghost-day-title {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 19px;
-  color: #9aa58c;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
 }
 
 .nf-ghost-pages {
@@ -469,7 +446,7 @@
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-lg);
 }
 
 .nf-ghost-page:nth-child(2) {
@@ -482,7 +459,7 @@
 
 .nf-ghost-page-spine {
   flex: 0 0 10px;
-  background: #e3e6dc;
+  background: var(--line);
 }
 
 .nf-ghost-page-body {
@@ -496,8 +473,8 @@
 .nf-ghost-line {
   display: block;
   height: 9px;
-  background: #ecebe3;
-  border-radius: 5px;
+  background: var(--line);
+  border-radius: var(--r-sm);
 }
 
 .nf-ghost-line.is-short {
@@ -517,8 +494,8 @@
   aspect-ratio: 2 / 1;
   max-height: 260px;
   overflow: hidden;
-  background: #ecebe3;
-  border-radius: 20px;
+  background: var(--line);
+  border-radius: var(--r-lg);
 }
 
 .nf-ghost-card::after {
@@ -526,14 +503,18 @@
   position: absolute;
   inset: auto 0 0 0;
   height: 70%;
-  background: linear-gradient(to top, #d6d5ca, transparent);
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--text-muted) 20%, transparent),
+    transparent
+  );
 }
 
 .nf-ghost-card.is-peek {
   aspect-ratio: auto;
   height: 56px;
   opacity: 0.45;
-  border-radius: 20px 20px 12px 12px;
+  border-radius: var(--r-lg) var(--r-lg) var(--r-md) var(--r-md);
 }
 
 .nf-ghost-card.is-peek::after {
@@ -545,7 +526,7 @@
   inset: 0;
   display: grid;
   place-items: center;
-  color: #d3d2c8;
+  color: color-mix(in srgb, var(--text-muted) 25%, var(--line));
 }
 
 .nf-ghost-photo svg {
@@ -565,7 +546,7 @@
 .nf-ghost-dots span {
   width: 6px;
   height: 6px;
-  background: #f8f7f2;
+  background: var(--page);
   border-radius: 3px;
 }
 
@@ -576,12 +557,12 @@
 .nf-ghost-badge {
   position: absolute;
   z-index: 1;
-  top: 12px;
-  right: 12px;
+  top: var(--sp-3);
+  right: var(--sp-3);
   width: 76px;
   height: 24px;
-  background: #f8f7f2;
-  border-radius: 999px;
+  background: var(--page);
+  border-radius: var(--r-pill);
 }
 
 .nf-ghost-text {
@@ -592,7 +573,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: var(--sp-2);
   width: 55%;
   text-align: left;
 }
@@ -600,20 +581,20 @@
 .nf-ghost-name {
   width: 72%;
   height: 18px;
-  background: #f3f2ec;
-  border-radius: 5px;
+  background: var(--page);
+  border-radius: var(--r-sm);
 }
 
-/* The spaced word, like the book card's label, in faded white. */
+/* The spaced word, like the book card's label, faded. */
 .nf-ghost-label {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.28em;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #f3f2ec;
+  color: var(--page);
 }
 
 .nf-ghost-label::before {
@@ -627,8 +608,8 @@
 .nf-ghost-count {
   width: 36%;
   height: 9px;
-  background: #f3f2ec;
-  border-radius: 4px;
+  background: var(--page);
+  border-radius: var(--r-sm);
 }
 
 .nf-ghost-open {
@@ -638,14 +619,14 @@
   bottom: var(--sp-4);
   width: 68px;
   height: 30px;
-  background: #f8f7f2;
-  border-radius: 999px;
+  background: var(--page);
+  border-radius: var(--r-pill);
 }
 
 .nf-ghost-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
   color: var(--text);
 }
 
@@ -660,18 +641,19 @@
 .nf-ghost-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   min-height: 48px;
   margin-top: var(--sp-4);
-  padding: 0 24px;
+  padding: 0 var(--sp-5);
   font: inherit;
   font-size: var(--font-label);
-  font-weight: 700;
-  color: #ffffff;
-  background: #4f8a2b;
+  font-weight: var(--weight-bold);
+  color: var(--surface);
+  background: var(--green-action);
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--r-md);
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 
 .nf-ghost-btn svg {
@@ -680,40 +662,36 @@
 }
 
 .nf-ghost-btn:hover {
-  filter: brightness(0.95);
+  background: var(--green-deep);
 }
 
-.nf-ghost-btn:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-}
+/* --- one notification ------------------------------------------------ */
 
-/* One notification: a single soft card */
 .nf-detail {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 24px;
+  padding: var(--sp-5);
   background: var(--surface);
-  border-radius: 24px;
+  border-radius: var(--r-lg);
   box-shadow:
-    0 1px 2px rgba(20, 20, 15, 0.04),
-    0 8px 24px rgba(20, 20, 15, 0.06);
+    var(--shadow-sm),
+    0 8px 24px color-mix(in srgb, var(--text) 6%, transparent);
 }
 
 .nf-detail-meta {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   color: var(--text-muted);
 }
 
 .nf-detail-text {
   margin: 0;
-  font-size: 21px;
-  font-weight: 500;
+  font-size: var(--font-section);
+  font-weight: var(--weight-regular);
   line-height: 1.5;
   color: var(--text);
   overflow-wrap: anywhere;
@@ -723,18 +701,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--sp-2);
   min-height: 50px;
-  padding: 0 16px;
-  font-size: 15px;
-  font-weight: 700;
+  padding: 0 var(--sp-4);
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   text-align: center;
   text-decoration: none;
-  color: var(--green-deep);
+  color: var(--green-action);
   background: var(--green-tint);
-  border-radius: 14px;
+  border-radius: var(--r-md);
   overflow-wrap: anywhere;
-  transition: background 0.15s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 .nf-open-link svg {
@@ -744,17 +722,12 @@
 }
 
 .nf-open-link:hover {
-  background: #e1efcf;
-}
-
-.nf-open-link:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
+  box-shadow: inset 0 0 0 1px var(--green-light);
 }
 
 .nf-detail-until {
-  margin: 12px 8px var(--sp-5);
-  font-size: 13px;
+  margin: var(--sp-3) var(--sp-2) var(--sp-5);
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
@@ -766,15 +739,16 @@
 .nf-skel-detail {
   height: 220px;
   margin-bottom: var(--sp-5);
-  border-radius: 24px;
+  border-radius: var(--r-lg);
 }
 
-/* Pop-up: a stack of cards (NotificationNotice.tsx). The dialog itself is
-   only the frame; the cards draw their own surfaces. */
+/* --- pop-up: a stack of cards (NotificationNotice.tsx) --------------- */
+
 .dialog.nf-sheet {
   max-width: 440px;
 }
 
+/* The dialog is only the frame; the cards draw their own surfaces. */
 .dialog.nf-sheet.nf-stack {
   position: relative;
   display: block;
@@ -792,9 +766,9 @@
   right: 10px;
   height: 60px;
   overflow: hidden;
-  background: #97c459;
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.14);
+  background: var(--green);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: 0 -2px 10px color-mix(in srgb, var(--text) 14%, transparent);
 }
 
 .nf-stack-back.is-far {
@@ -815,11 +789,11 @@
   position: relative;
   overflow: hidden;
   background: var(--surface);
-  border-radius: 22px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  border-radius: var(--r-lg);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 25%, transparent);
 }
 
-/* Takes focus when the pop-up opens; draws no ring of its own. */
+/* Takes focus when the pop-up opens; no ring of its own. */
 .nf-stack-card:focus {
   outline: none;
 }
@@ -827,7 +801,7 @@
 .nf-stack-top {
   position: relative;
   height: 120px;
-  background: #97c459;
+  background: var(--green);
 }
 
 .nf-stack-photo {
@@ -837,12 +811,12 @@
   object-fit: cover;
 }
 
-/* No photo: the VeggieBook logo on header green. */
+/* No photo: the VeggieBook logo on the brand green. */
 .is-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #97c459;
+  background: var(--green);
 }
 
 .is-logo img {
@@ -853,7 +827,7 @@
 
 .nf-stack-back .is-logo {
   align-items: flex-start;
-  padding-top: 8px;
+  padding-top: var(--sp-2);
 }
 
 .nf-stack-back .is-logo img {
@@ -862,18 +836,18 @@
 
 .nf-stack-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: var(--sp-3);
+  left: var(--sp-3);
   display: inline-flex;
   align-items: center;
   gap: 6px;
   margin: 0;
-  padding: 5px 12px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--green-deep);
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 999px;
+  padding: 5px var(--sp-3);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  border-radius: var(--r-pill);
 }
 
 .nf-stack-badge svg {
@@ -891,7 +865,7 @@
   height: 36px;
   padding: 0;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.94);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
   border: 0;
   border-radius: 50%;
   cursor: pointer;
@@ -902,16 +876,11 @@
   height: 16px;
 }
 
-.nf-stack-close:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-}
-
 .nf-stack-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 16px 18px 14px;
+  gap: var(--sp-3);
+  padding: var(--sp-4) 18px 14px;
 }
 
 .nf-stack-text {
@@ -922,7 +891,7 @@
   overflow: hidden;
   padding: 0;
   font: inherit;
-  font-size: 17px;
+  font-size: var(--font-row);
   line-height: 1.5;
   text-align: left;
   color: var(--text);
@@ -936,23 +905,17 @@
   outline: none;
 }
 
-.nf-stack-text:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 4px;
-  border-radius: 6px;
-}
-
 .nf-stack-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
 .nf-stack-count {
-  font-weight: 700;
-  color: var(--green-deep);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
 }
 
 .nf-stack-actions {
@@ -967,11 +930,11 @@
 
 .nf-stack-all {
   align-self: center;
-  padding: 4px 8px;
+  padding: 4px var(--sp-2);
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--green-deep);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: none;
   border: 0;
   cursor: pointer;
@@ -982,18 +945,33 @@
   text-underline-offset: 3px;
 }
 
+/* --- focus ----------------------------------------------------------- */
+
+.nf-link:focus-visible,
+.nf-folder-tab:focus-visible,
+.nf-page:focus-visible,
+.nf-card:focus-visible,
+.nf-ghost-btn:focus-visible,
+.nf-open-link:focus-visible,
+.nf-stack-close:focus-visible,
 .nf-stack-all:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
-/* On a phone the pop-up sits at the bottom, within thumb reach, and the
-   folder panel and faded card use tighter edges. */
+.nf-stack-text:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+  border-radius: var(--r-sm);
+}
+
+/* --- phones: pop-up at the bottom, tighter edges --------------------- */
+
 @media (max-width: 600px) {
   .dialog-overlay.nf-overlay {
     align-items: flex-end;
-    padding: 12px;
+    padding: var(--sp-3);
   }
 
   .nf-stack-top {
@@ -1001,7 +979,7 @@
   }
 
   .nf-folder-tabs {
-    padding-left: 8px;
+    padding-left: var(--sp-2);
   }
 
   .nf-folder-tab {
@@ -1024,10 +1002,6 @@
 
   .nf-detail {
     padding: 20px;
-  }
-
-  .nf-detail-text {
-    font-size: 19px;
   }
 }
 

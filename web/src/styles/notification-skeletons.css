@@ -1,19 +1,17 @@
 /* Loading outlines for Notifications, one notification, the Playlists tab
-   and an open playlist, shaped like the real screens so nothing jumps when
-   they arrive. The shimmer comes from .skeleton in skeleton.css; these
-   classes set only shapes, sizes and grays: darker on the page, lighter
-   inside a white card. */
+   and an open playlist, shaped like the real screens. Shimmer: .skeleton
+   in skeleton.css. Line gray on the page, page gray inside white cards. */
 
 .nf-skel .skeleton {
   display: block;
-  background-color: #e6e6de;
+  background-color: var(--line);
 }
 
 .nf-skel .nf-skel-page .skeleton,
 .nf-skel .nf-skel-card .skeleton,
 .nf-skel .nf-skel-chapter .skeleton,
 .nf-skel .nf-skel-bar .skeleton {
-  background-color: #eeeee8;
+  background-color: var(--page);
 }
 
 .nf-skel-stack {
@@ -31,7 +29,7 @@
 .nf-skel-line {
   width: 85%;
   height: 12px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .nf-skel-line.is-mid {
@@ -48,7 +46,7 @@
   height: 10px;
 }
 
-/* --- the message list: a day heading and spine pages ------------------- */
+/* --- message list: day heading and spine pages ----------------------- */
 
 .nf-skel-day {
   display: flex;
@@ -60,13 +58,13 @@
 .nf-skel-day-title {
   width: 64px;
   height: 18px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .nf-skel-day-rule {
   flex: 1;
   height: 1px;
-  background: #dfe7cf;
+  background: var(--line);
 }
 
 .nf-skel-page {
@@ -74,30 +72,30 @@
   overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-lg);
 }
 
 .nf-skel-page-spine {
   flex: 0 0 10px;
-  background: #e3e6dc;
+  background: var(--line);
 }
 
 .nf-skel-page-body {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   padding: 14px;
 }
 
-/* --- the Playlists tab and an open playlist's top: photo cards --------- */
+/* --- playlist cards and an open playlist's top ----------------------- */
 
 .nf-skel-pcard {
   position: relative;
   width: 100%;
   aspect-ratio: 2 / 1;
   max-height: 260px;
-  border-radius: 20px;
+  border-radius: var(--r-lg);
 }
 
 .nf-skel-pcard.is-hero {
@@ -111,17 +109,17 @@
 .nf-skel-pcard-label,
 .nf-skel-pcard-count {
   display: block;
-  background: #f3f2ec;
+  background: var(--page);
 }
 
 .nf-skel-pcard-badge {
   position: absolute;
   z-index: 1;
-  top: 12px;
-  right: 12px;
+  top: var(--sp-3);
+  right: var(--sp-3);
   width: 84px;
   height: 24px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
 .nf-skel-pcard-text {
@@ -131,26 +129,26 @@
   bottom: var(--sp-4);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   width: 50%;
 }
 
 .nf-skel-pcard-name {
   width: 75%;
   height: 22px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .nf-skel-pcard-label {
   width: 45%;
   height: 8px;
-  border-radius: 4px;
+  border-radius: var(--r-sm);
 }
 
 .nf-skel-pcard-count {
   width: 35%;
   height: 10px;
-  border-radius: 5px;
+  border-radius: var(--r-sm);
 }
 
 .nf-skel-pcard-open {
@@ -160,19 +158,19 @@
   bottom: var(--sp-4);
   width: 70px;
   height: 30px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
-/* --- an open playlist: folded chapters and the bottom bar -------------- */
+/* --- open playlist: folded chapters and the bottom bar --------------- */
 
 .nf-skel-chapter {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 14px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
 }
 
 .nf-skel-avatar {
@@ -186,45 +184,45 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .nf-skel-count {
   flex: 0 0 auto;
   width: 28px;
   height: 20px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
 .nf-skel-bar {
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   margin-top: var(--sp-5);
-  padding: 12px;
+  padding: var(--sp-3);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--r-lg);
 }
 
 .nf-skel-bar .skeleton {
   flex: 1;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--r-md);
 }
 
-/* --- one notification: the same soft card as .nf-detail --------------- */
+/* --- one notification ------------------------------------------------ */
 
 .nf-skel-card {
   display: flex;
   flex-direction: column;
   gap: 20px;
   margin-bottom: var(--sp-5);
-  padding: 24px;
+  padding: var(--sp-5);
   background: var(--surface);
-  border-radius: 24px;
+  border-radius: var(--r-lg);
   box-shadow:
-    0 1px 2px rgba(20, 20, 15, 0.04),
-    0 6px 20px rgba(20, 20, 15, 0.05);
+    var(--shadow-sm),
+    0 6px 20px color-mix(in srgb, var(--text) 5%, transparent);
 }
 
 .nf-skel-meta {
@@ -242,7 +240,7 @@
 .nf-skel-date {
   width: 140px;
   height: 14px;
-  border-radius: 7px;
+  border-radius: var(--r-sm);
 }
 
 .nf-skel-text {
@@ -268,7 +266,7 @@
   width: 200px;
   max-width: 100%;
   height: 48px;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
 @media (max-width: 480px) {

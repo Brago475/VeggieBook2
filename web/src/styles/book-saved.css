@@ -1,19 +1,18 @@
-/* The screen shown right after a book is saved (pages/BookSaved.tsx). */
+/* Screen shown after a book is saved (pages/BookSaved.tsx).
+   Card, buttons, lists and hints share one width: --saved-width.
+   width: 100% stops the flex parent from shrinking the column. */
 
-/* The book card, buttons, lists and hints all share one width, set by
-   --saved-width. The column has an explicit width because its parent is a
-   flex layout, which would otherwise shrink it to its content. */
 .book-saved {
   --saved-width: 420px;
   width: 100%;
   max-width: 720px;
   box-sizing: border-box;
   margin: 0 auto;
-  padding: 32px 20px 40px;
+  padding: var(--sp-6) 20px 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: var(--sp-4);
   text-align: center;
 }
 
@@ -21,8 +20,8 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #e3eed9;
-  color: #3f7a1f;
+  background: var(--green-tint);
+  color: var(--green-action);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -35,19 +34,21 @@
 
 .book-saved-title {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: var(--font-title);
+  font-weight: var(--weight-bold);
+  color: var(--text);
 }
 
 .book-saved-sub {
   margin: -8px 0 0;
-  color: #4b5545;
+  font-size: var(--font-row);
+  color: var(--text-muted);
 }
 
 .book-saved-card {
   width: 100%;
   max-width: var(--saved-width);
-  margin: 8px 0;
+  margin: var(--sp-2) 0;
   text-align: left;
 }
 
@@ -55,9 +56,9 @@
 .book-saved-extra {
   width: 100%;
   max-width: var(--saved-width);
-  background: #ffffff;
-  border: 1px solid #e5e7e3;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   overflow: hidden;
   text-align: left;
 }
@@ -67,7 +68,7 @@
   width: 100%;
   height: 220px;
   object-fit: cover;
-  background: #f4f6f1;
+  background: var(--page);
 }
 
 .book-saved-extra-photo.is-secret {
@@ -76,9 +77,10 @@
 
 .book-saved-extra-name {
   margin: 0;
-  padding: 14px 16px;
-  font-size: 1.05rem;
-  font-weight: 800;
+  padding: 14px var(--sp-4);
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
 }
 
 /* Several extra copies: a list of names. */
@@ -86,11 +88,11 @@
   width: 100%;
   max-width: var(--saved-width);
   margin: 0;
-  padding: 4px 16px;
+  padding: 4px var(--sp-4);
   list-style: none;
-  background: #ffffff;
-  border: 1px solid #e5e7e3;
-  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   box-sizing: border-box;
   text-align: left;
 }
@@ -98,56 +100,70 @@
 .book-saved-extras li {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   padding: 10px 0;
-  font-weight: 700;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
 }
 
 .book-saved-extras li + li {
-  border-top: 1px solid #eef0eb;
+  border-top: 1px solid var(--line);
 }
 
 .book-saved-extras-thumb {
   width: 44px;
   height: 44px;
   flex-shrink: 0;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   object-fit: cover;
-  background: #f4f6f1;
+  background: var(--page);
 }
 
 .book-saved-extras-thumb.is-secret {
   object-fit: contain;
 }
 
+/* --- actions --------------------------------------------------------- */
+
 .book-saved-actions {
   width: 100%;
   max-width: var(--saved-width);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .book-saved-btn {
   min-height: 52px;
-  border-radius: 10px;
-  border: 2px solid #4f8a2b;
-  background: #ffffff;
-  color: #2d5a15;
+  border-radius: var(--r-md);
+  border: 2px solid var(--green-action);
+  background: var(--surface);
+  color: var(--green-action);
   font: inherit;
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.book-saved-btn:hover {
+  background: var(--green-tint);
 }
 
 .book-saved-btn.is-primary {
-  background: #4f8a2b;
-  color: #ffffff;
+  background: var(--green-action);
+  color: var(--surface);
+}
+
+.book-saved-btn.is-primary:hover {
+  background: var(--green-deep);
+  border-color: var(--green-deep);
 }
 
 .book-saved-btn svg {
@@ -160,51 +176,56 @@
   stroke-linejoin: round;
 }
 
-.book-saved-btn:hover,
-.book-saved-done-btn:hover {
-  filter: brightness(0.95);
-}
-
 .book-saved-done {
   width: 100%;
   max-width: var(--saved-width);
-  margin-top: 8px;
+  margin-top: var(--sp-2);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .book-saved-done-btn {
   min-height: 52px;
   border: none;
-  border-radius: 10px;
-  background: #1f2a1a;
-  color: #ffffff;
+  border-radius: var(--r-md);
+  background: var(--text);
+  color: var(--surface);
   font: inherit;
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.book-saved-done-btn:hover {
+  background: var(--green-deep);
 }
 
 .book-saved-hint {
   margin: 0;
-  font-size: 0.9rem;
-  color: #6b7069;
-}
-
-.book-saved-btn:focus-visible,
-.book-saved-done-btn:focus-visible,
-.book-saved-skip:focus-visible {
-  outline: 3px solid #2d5a15;
-  outline-offset: 2px;
+  font-size: var(--font-label);
+  color: var(--text-muted);
 }
 
 .book-saved-skip {
   min-height: 48px;
   border: none;
   background: transparent;
-  color: #4b5545;
+  color: var(--text-muted);
   font: inherit;
-  font-weight: 700;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   cursor: pointer;
+}
+
+.book-saved-skip:hover {
+  color: var(--text);
+}
+
+.book-saved-btn:focus-visible,
+.book-saved-done-btn:focus-visible,
+.book-saved-skip:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
 }

@@ -1,10 +1,10 @@
-/* Making a playlist from one book (pages/BookPlaylist.tsx). Rows, buttons
-   and the switch come from playlists.css. */
+/* Making a playlist from one book (pages/BookPlaylist.tsx).
+   Rows, buttons and the switch: playlists.css. */
 
 .bp-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--sp-2);
   margin-bottom: var(--sp-4);
 }
 
@@ -16,7 +16,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .bp-tools {
@@ -27,9 +27,9 @@
 .bp-link {
   padding: 4px 2px;
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--green-deep);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: none;
   border: none;
   cursor: pointer;
@@ -42,9 +42,9 @@
 }
 
 .bp-link:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .bp-row-text {
@@ -56,6 +56,6 @@
 }
 
 .bp-row-meta {
-  font-size: 13px;
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
