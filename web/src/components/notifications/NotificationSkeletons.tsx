@@ -1,8 +1,10 @@
 import '../../styles/notification-skeletons.css'
 
 // Loading outlines for the Notifications screens, shaped like the real
-// cards: the message list, one notification, the Playlists tab and one
-// playlist. Screen readers hear the label once instead of empty shapes.
+// thing so nothing jumps when it arrives: the message list as spine pages,
+// the Playlists tab as photo cards, one notification, and one open
+// playlist (its top, its vegetable chapters, and the bottom bar). Screen
+// readers hear the label once instead of empty shapes.
 
 type ListProps = {
   label: string
@@ -10,28 +12,48 @@ type ListProps = {
   count: number
 }
 
-// A group label and a few cards, as in the message list or the Playlists tab.
+// The message list or the Playlists tab.
 export function CardListSkeleton({ label, kind, count }: ListProps) {
+  const items = Array.from({ length: count }, (_, i) => i)
+
   return (
     <div className="nf-skel" role="status" aria-busy="true">
       <span className="visually-hidden">{label}</span>
-      <section className="nf-section" aria-hidden="true">
-        <span className="skeleton nf-skel-label" />
-        <ul className="nf-list">
-          {Array.from({ length: count }, (_, i) => (
-            <li key={i}>
-              <div className="nf-skel-row">
-                <span className={kind === 'message' ? 'skeleton nf-skel-icon' : 'skeleton nf-skel-cover'} />
-                <span className="nf-skel-body">
-                  <span className={kind === 'message' ? 'skeleton nf-skel-line' : 'skeleton nf-skel-line is-mid'} />
+
+      {kind === 'message' ? (
+        <div aria-hidden="true">
+          <div className="nf-skel-day">
+            <span className="skeleton nf-skel-day-title" />
+            <span className="nf-skel-day-rule" />
+          </div>
+          <div className="nf-skel-stack">
+            {items.map((i) => (
+              <div key={i} className="nf-skel-page">
+                <span className="nf-skel-page-spine" />
+                <span className="nf-skel-page-body">
+                  <span className="skeleton nf-skel-line" />
+                  <span className="skeleton nf-skel-line is-mid" />
                   <span className="skeleton nf-skel-line is-short" />
                 </span>
-                <span className="skeleton nf-skel-chevron" />
               </div>
-            </li>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="nf-skel-stack is-cards" aria-hidden="true">
+          {items.map((i) => (
+            <div key={i} className="skeleton nf-skel-pcard">
+              <span className="nf-skel-pcard-badge" />
+              <span className="nf-skel-pcard-text">
+                <span className="nf-skel-pcard-name" />
+                <span className="nf-skel-pcard-label" />
+                <span className="nf-skel-pcard-count" />
+              </span>
+              <span className="nf-skel-pcard-open" />
+            </div>
           ))}
-        </ul>
-      </section>
+        </div>
+      )}
     </div>
   )
 }
@@ -57,33 +79,38 @@ export function DetailSkeleton({ label }: { label: string }) {
   )
 }
 
-const PLAYLIST_ROWS = 4
+const CHAPTERS = 3
 
-// One playlist: the heading, its rows (the same row outline a saved book
-// uses), and the Skip and Keep buttons.
+// One open playlist: the top like its card, folded vegetable chapters, and
+// the bar pinned to the bottom.
 export function PlaylistSkeleton({ label }: { label: string }) {
   return (
     <div className="account-screen nf-screen pl-screen nf-skel" role="status" aria-busy="true">
       <span className="visually-hidden">{label}</span>
       <div aria-hidden="true">
-        <header className="pl-head">
-          <span className="skeleton nf-skel-kicker" />
-          <span className="skeleton nf-skel-title" />
-          <span className="skeleton nf-skel-sub" />
-        </header>
+        <div className="skeleton nf-skel-pcard is-hero">
+          <span className="nf-skel-pcard-badge" />
+          <span className="nf-skel-pcard-text">
+            <span className="nf-skel-pcard-name" />
+            <span className="nf-skel-pcard-label" />
+            <span className="nf-skel-pcard-count" />
+          </span>
+        </div>
 
-        <ul className="book-recipes pl-items">
-          {Array.from({ length: PLAYLIST_ROWS }, (_, i) => (
-            <li key={i}>
-              <div className="skel-row">
-                <span className="skeleton skel-thumb" />
-                <span className="skeleton skel-row-title" />
-              </div>
-            </li>
+        <div className="nf-skel-stack">
+          {Array.from({ length: CHAPTERS }, (_, i) => (
+            <div key={i} className="nf-skel-chapter">
+              <span className="skeleton nf-skel-avatar" />
+              <span className="nf-skel-chapter-text">
+                <span className="skeleton nf-skel-line is-tiny" />
+                <span className="skeleton nf-skel-line is-mid" />
+              </span>
+              <span className="skeleton nf-skel-count" />
+            </div>
           ))}
-        </ul>
+        </div>
 
-        <div className="nf-skel-decide">
+        <div className="nf-skel-bar">
           <span className="skeleton" />
           <span className="skeleton" />
         </div>
