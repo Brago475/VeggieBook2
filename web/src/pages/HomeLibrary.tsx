@@ -25,13 +25,13 @@ import type { BookPlaylistMode } from '../utils/routes'
 // Home screen: a heading that says who is using the site, the two create
 // buttons, then the books.
 //
-// Signed in, the heading shows the username (or the email, for an older
-// account without one), and the books come from the account, on any
-// device. For a guest, they are kept on the server in a temporary guest
-// account, until the guest signs out or for up to 24 hours. The line under
-// the heading says which, so a guest is never surprised.
+// Signed in, the heading shows an avatar with the first letter of the
+// username (or the email, for an older account without one) and the name
+// under the title. A guest sees a person icon and the guest line. Guest
+// books are kept on the server in a temporary guest account, until the
+// guest signs out or for up to 24 hours.
 //
-// Beside the heading, the ☰ Menu (MainMenu.tsx), in two groups. On top,
+// Beside the heading, the Menu (MainMenu.tsx), in two groups. On top,
 // features and information: Notifications (with the unread count), About
 // VeggieBook, and future features as they are added. Below a line, the
 // account: Profile and settings, the language switch, and Sign out, or for
@@ -40,18 +40,16 @@ import type { BookPlaylistMode } from '../utils/routes'
 //
 // Each card follows the original app: a picture fills the card and the
 // chosen cover sits as a small inset. For a VeggieBook the picture is the
-// vegetable's; for a Secrets Book it is the category's (the toaster, the
-// cart), as on the original app's home screen. Every card opens its book,
-// for a guest as well as an account. Actions on a book live in the ⋮ on its
-// card: for a VeggieBook with recipes, Make a playlist and Add to a
-// playlist; then Print book, Download book, and Delete book.
+// vegetable's; for a Secrets Book it is the category's. Every card opens its
+// book. Actions on a book live in the card's menu: for a VeggieBook with
+// recipes, Make a playlist and Add to a playlist; then Print book, Download
+// book, and Delete book.
 //
-// While the books load, two gray card shapes hold their place, so the list
-// does not pop in under a line of text.
+// While the books load, two gray card shapes hold their place.
 //
-// For a signed-in account, the study notice can show as a card under the
-// heading while a study runs (StudyNoticeCard.tsx decides with the API).
-// Guests never see it.
+// For a signed-in account, the study notice can show under the heading
+// while a study runs (StudyNoticeCard.tsx decides with the API). Guests
+// never see it.
 
 type Props = {
   // The account's email, or null for a guest. Visitors who are neither see
@@ -86,7 +84,7 @@ const SKELETON_CARDS = 2
 // draws both kinds the same way.
 type CardInfo = {
   title: string
-  // The name used in the ⋮ label and the delete question.
+  // The name used in the menu label and the delete question.
   bookName: string
   background: string | null
   subtitle: string
@@ -119,6 +117,8 @@ export function HomeLibrary({
   const common = useStrings(COMMON)
   const pl = useStrings(PLAYLISTS)
   const isGuest = email === null
+  const userName = displayName ?? email ?? ''
+  const initial = userName.trim().charAt(0).toUpperCase()
 
   const [deleteError, setDeleteError] = useState<string | null>(null)
   // The book awaiting confirmation. The name is held alongside the id so the
@@ -137,7 +137,7 @@ export function HomeLibrary({
     secretCategories.map((c) => [c.id, c]),
   )
 
-  // The ☰ Menu. Features on top (new ones go at the end of this list), the
+  // The Menu. Features on top (new ones go at the end of this list), the
   // account below the line.
   const menuItems: MainMenuItem[] = [
     {
@@ -260,12 +260,22 @@ export function HomeLibrary({
 
   return (
     <div className="library">
-      <div className="library-head">
-        <div className="library-head-text">
-          <h1 className="library-title">{t.title}</h1>
-          <p className="library-sub">
-            {isGuest ? t.guestSub : t.signedInAs(displayName ?? email ?? '')}
-          </p>
+      <div className="library-head has-user">
+        <div className="library-user-row">
+          <span className="library-avatar" aria-hidden="true">
+            {isGuest || !initial ? <PersonIcon /> : initial}
+          </span>
+          <div className="library-head-text">
+            <h1 className="library-title">{t.title}</h1>
+            {isGuest ? (
+              <p className="library-sub">{t.guestSub}</p>
+            ) : (
+              <p className="library-user">
+                <span className="visually-hidden">{t.signedInAs(userName)}</span>
+                <span aria-hidden="true">{userName}</span>
+              </p>
+            )}
+          </div>
         </div>
         <MainMenu items={menuItems} accountItems={accountItems} />
       </div>

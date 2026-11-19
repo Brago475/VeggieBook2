@@ -38,12 +38,57 @@
   white-space: nowrap;
 }
 
+/* Home only: avatar beside the title, the name under it. */
+.library-head.has-user {
+  align-items: center;
+}
+
+.library-user-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.library-avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--surface);
+  background: var(--green-action);
+  border-radius: 50%;
+}
+
+.library-avatar svg {
+  width: 24px;
+  height: 24px;
+}
+
+.library-head.has-user .library-title {
+  font-size: var(--font-section);
+}
+
+.library-user {
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* --- create buttons -------------------------------------------------- */
 
 .library-create {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3);
+  gap: var(--sp-4);
   padding: var(--sp-3) var(--pad-x) var(--sp-5);
 }
 
@@ -60,8 +105,8 @@
   border-radius: var(--r-lg);
   cursor: pointer;
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
     background 0.15s ease,
     border-color 0.15s ease;
 }
@@ -97,21 +142,21 @@
   opacity: 0.85;
 }
 
-/* Primary action: white text on the action green. */
+/* Primary action: a key with a dark green edge that sinks on tap. */
 .library-create-btn.is-primary {
   color: var(--surface);
   background: var(--green-action);
   border: 0;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 0 var(--green-deep);
 }
 
 .library-create-btn.is-primary:hover {
-  background: var(--green-deep);
-  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--green-action) 90%, var(--surface));
 }
 
 .library-create-btn.is-primary:active {
-  transform: translateY(0);
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--green-deep);
 }
 
 .is-primary .library-create-icon {
@@ -177,4 +222,10 @@
   max-height: 260px;
   background: var(--line);
   border-radius: var(--r-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-create-btn {
+    transition: none;
+  }
 }
