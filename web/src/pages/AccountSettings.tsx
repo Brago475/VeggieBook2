@@ -1,31 +1,34 @@
 import { useState } from 'react'
-import { SignOutIcon, UserIcon } from '../components/icons/AccountIcons'
+import { AccountHub } from '../components/account/AccountHub'
 import { AdminDeleteNote } from '../components/account/AdminDeleteNote'
 import { DeleteAccountForm } from '../components/account/DeleteAccountForm'
-import { LeafDecor } from '../components/layout/LeafDecor'
 import { ProfileCard } from '../components/account/ProfileCard'
 import { ResearchCard } from '../components/account/ResearchCard'
 import { SecurityCard } from '../components/account/SecurityCard'
+import { SettingsPage } from '../components/account/SettingsPage'
+import { SignOutIcon } from '../components/icons/AccountIcons'
+import { LeafDecor } from '../components/layout/LeafDecor'
 import { ACCOUNT } from '../i18n/strings/account'
 import { COMMON } from '../i18n/strings/common'
 import { HOME } from '../i18n/strings/home'
+import { SETTINGS } from '../i18n/strings/settings'
 import { useStrings } from '../i18n/useStrings'
+import type { AccountSection } from '../utils/routes'
 
-// Profile and settings: the profile (username), password and recovery
-// (password, PIN and security question in one card), help with research
-// (research tracking), delete account, and sign out.
-//
-// Each section is a card, with its own error message, so a problem in one
-// never hides another. Sign out sits below them on its own: it is one
-// button with no settings behind it. It is also in the home screen's Menu.
+// Profile and settings. With no section open: a green cover with the
+// username and email, a list of settings, and sign out below it. With a
+// section open: that setting on its own screen (username, password and
+// recovery, help with research, or delete account), each with a link back
+// to the list. Each setting is its existing card, with its own error
+// message. Sign out is also in the home screen's Menu.
 //
 // Admin accounts see a note instead of Delete account; the API refuses it.
-//
-// The two faint leaves in the bottom corner are decoration only.
 
 type Props = {
   email: string
   isAdmin: boolean
+  section: AccountSection | null
+  onOpenSection: (section: AccountSection | null) => void
   onSignOut: () => Promise<void>
   onChangePassword: (ticket: string, newPassword: string) => Promise<void>
   onDeleteAccount: (password: string) => Promise<void>
@@ -34,11 +37,14 @@ type Props = {
 export function AccountSettings({
   email,
   isAdmin,
+  section,
+  onOpenSection,
   onSignOut,
   onChangePassword,
   onDeleteAccount,
 }: Props) {
   const t = useStrings(ACCOUNT)
+  const s = useStrings(SETTINGS)
   const home = useStrings(HOME)
   const common = useStrings(COMMON)
 
@@ -58,38 +64,43 @@ export function AccountSettings({
     }
   }
 
+  if (section) {
+    const title =
+      section === 'username'
+        ? t.username
+        : section === 'security'
+          ? s.security
+          : section === 'research'
+            ? t.rsTitle
+            : t.delTitle
+
+    return (
+      <SettingsPage
+        kicker={s.settings}
+        title={title}
+        backLabel={s.profile}
+        danger={section === 'delete'}
+        onBack={() => onOpenSection(null)}
+      >
+        {section === 'username' && <ProfileCard />}
+        {section === 'security' && <SecurityCard email={email} onChangePassword={onChangePassword} />}
+        {section === 'research' && <ResearchCard />}
+        {section === 'delete' &&
+          (isAdmin ? <AdminDeleteNote /> : <DeleteAccountForm onDeleteAccount={onDeleteAccount} />)}
+      </SettingsPage>
+    )
+  }
+
   return (
-    <div className="account-screen">
+    <div className="account-screen settings-hub">
       <LeafDecor className="account-leaf" />
       <LeafDecor className="account-leaf is-small" />
 
-      <div className="account-hero">
-        <span className="account-avatar">
-          <UserIcon />
-        </span>
-        <div className="account-hero-text">
-          <h1 className="account-title">{home.profile}</h1>
-          <p className="account-email">{email}</p>
-          <p className="account-tagline">{t.tagline}</p>
-        </div>
-      </div>
-
-      <ProfileCard />
-
-      <SecurityCard email={email} onChangePassword={onChangePassword} />
-
-      <ResearchCard />
-
-      {isAdmin ? <AdminDeleteNote /> : <DeleteAccountForm onDeleteAccount={onDeleteAccount} />}
+      <AccountHub email={email} isAdmin={isAdmin} onOpen={onOpenSection} />
 
       <hr className="account-divider" />
 
-      <button
-        type="button"
-        className="account-signout"
-        onClick={signOut}
-        disabled={busy}
-      >
+      <button type="button" className="account-signout" onClick={signOut} disabled={busy}>
         <SignOutIcon />
         {busy ? t.signingOut : home.signOut}
       </button>

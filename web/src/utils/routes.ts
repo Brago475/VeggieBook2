@@ -11,7 +11,9 @@
 //   /book/{id}/cover                          changing a saved book's cover
 //   /book/{id}/playlist/new                   a new playlist from a VeggieBook
 //   /book/{id}/playlist/add                   adding a VeggieBook's recipes to a playlist
-//   /account                                  account settings
+//   /account                                  profile and settings, the list
+//   /account/{section}                        one setting: username, security,
+//                                             research, or delete
 //   /notifications                            the inbox of messages from the research team
 //   /notifications/{id}                       one message on its own page
 //   /notifications/playlists                  the Playlists tab of Notifications
@@ -35,11 +37,15 @@ export type PlaylistOpen = { kind: 'recipe' | 'tip'; id: number } | null
 
 export type BookPlaylistMode = 'new' | 'add'
 
+export type AccountSection = 'username' | 'security' | 'research' | 'delete'
+
+const ACCOUNT_SECTIONS: AccountSection[] = ['username', 'security', 'research', 'delete']
+
 export type Route =
   | { view: 'home' }
   | { view: 'flow' }
   | { view: 'secrets' }
-  | { view: 'account' }
+  | { view: 'account'; section?: AccountSection | null }
   | { view: 'notifications'; messageId: string | null }
   | { view: 'playlists' }
   | { view: 'playlist'; source: PlaylistSource; playlistId: number; open: PlaylistOpen }
@@ -83,6 +89,10 @@ function decode(part: string): string | null {
   }
 }
 
+function isAccountSection(part: string): part is AccountSection {
+  return (ACCOUNT_SECTIONS as string[]).includes(part)
+}
+
 function parsePlaylist(parts: string[]): Route | null {
   const source: PlaylistSource | null =
     parts[1] === 'playlist' ? 'admin' : parts[1] === 'mine' ? 'own' : null
@@ -117,7 +127,7 @@ export function parseRoute(path: string): Route {
       case 'secrets':
         return { view: 'secrets' }
       case 'account':
-        return { view: 'account' }
+        return { view: 'account', section: null }
       case 'notifications':
         return { view: 'notifications', messageId: null }
       case 'about':
@@ -133,6 +143,10 @@ export function parseRoute(path: string): Route {
       case 'forgot-password':
         return { view: 'forgotPassword' }
     }
+  }
+
+  if (parts[0] === 'account' && parts.length === 2 && isAccountSection(parts[1])) {
+    return { view: 'account', section: parts[1] }
   }
 
   if (parts[0] === 'notifications') {
@@ -174,6 +188,11 @@ export function bookPlaylistPath(bookId: string, mode: BookPlaylistMode): string
   return `/book/${bookId}/playlist/${mode}`
 }
 
+// The address of profile and settings, or of one setting.
+export function accountPath(section: AccountSection | null = null): string {
+  return section ? `/account/${section}` : '/account'
+}
+
 // The one correct address for a route, so a stray trailing slash or an
 // unknown path can be tidied up.
 export function routePath(route: Route): string {
@@ -185,7 +204,7 @@ export function routePath(route: Route): string {
     case 'secrets':
       return '/secrets'
     case 'account':
-      return '/account'
+      return accountPath(route.section ?? null)
     case 'notifications':
       return route.messageId === null
         ? '/notifications'

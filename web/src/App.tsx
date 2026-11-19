@@ -20,6 +20,7 @@ import { useSplash } from './hooks/useSplash'
 import { useVeggieBookData } from './hooks/useVeggieBookData'
 import { BOOK } from './i18n/strings/book'
 import { useStrings } from './i18n/useStrings'
+import { accountPath } from './utils/routes'
 import { About } from './pages/About'
 import { AccountSettings } from './pages/AccountSettings'
 import { AuthForm } from './pages/AuthForm'
@@ -608,6 +609,11 @@ export default function App() {
               <AccountSettings
                 email={email}
                 isAdmin={admin}
+                section={route.view === 'account' ? (route.section ?? null) : null}
+                onOpenSection={(section) => {
+                  navigate(accountPath(section))
+                  window.scrollTo(0, 0)
+                }}
                 onSignOut={signOut}
                 onChangePassword={account.changePassword}
                 onDeleteAccount={deleteAccount}
