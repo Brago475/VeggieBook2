@@ -26,8 +26,10 @@ import { useLang } from '../../i18n/languageContext'
 // onError advances one step and warns once, naming the path, so a broken
 // image shows up in DevTools without the user being shown anything.
 
+// Colors match tokens.css (--green, --surface); a data URI cannot read
+// CSS variables.
 const DRAWING_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
-  <rect width="120" height="120" fill="#8cc63e"/>
+  <rect width="120" height="120" fill="#0fb022"/>
   <circle cx="60" cy="64" r="29" fill="none" stroke="#fff" stroke-width="4" opacity="0.85"/>
   <circle cx="60" cy="64" r="17" fill="none" stroke="#fff" stroke-width="3" opacity="0.55"/>
   <path d="M60 47c0-9 6-15 14-17-1 9-6 15-14 17z" fill="#fff" opacity="0.85"/>
