@@ -122,7 +122,7 @@ export function AccountHub({ email, isAdmin, onOpen }: Props) {
               icon={<FlaskIcon />}
               label={t.rsTitle}
               value={
-                tracking ? (
+                tracking && tracking.eligible ? (
                   <span className={tracking.on ? 'settings-chip' : 'settings-chip is-off'}>
                     {tracking.on ? s.on : s.off}
                   </span>
