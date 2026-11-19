@@ -1,10 +1,7 @@
-/* Account settings, and the form pieces shared with other screens.
-
-   The shared pieces near the top (fields, messages, .account-btn,
-   .link-btn) are also used by PasswordField, ConfirmDialog, and the saved
-   book screen, so they stay general. Welcome, sign in, and create account
-   are styled in auth.css. The account settings screen has its own section
-   at the bottom. */
+/* Account settings and form pieces shared with other screens.
+   Fields, messages, .account-btn and .link-btn are also used by
+   PasswordField, ConfirmDialog and the saved book screen.
+   Welcome, sign in and create account: auth.css. */
 
 .account-page {
   display: flex;
@@ -16,7 +13,7 @@
 .account-title {
   margin: 0;
   font-size: var(--font-title);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   color: var(--text);
 }
 
@@ -24,7 +21,7 @@
   text-align: center;
 }
 
-/* --- form fields ------------------------------------------------------ */
+/* --- form fields ----------------------------------------------------- */
 
 .field {
   display: flex;
@@ -34,34 +31,33 @@
 
 .field-label {
   font-size: var(--font-label);
-  font-weight: 600;
-  color: var(--text-label);
+  font-weight: var(--weight-bold);
+  color: var(--text);
 }
 
-/* Filled and borderless at rest, outlined only on focus. A soft fill reads
-   as a place to type without drawing a frame around it.
-
-   17px text: iOS zooms the page in on any input smaller than 16px. */
+/* Filled at rest, outlined on focus. 17px stops iOS zooming on focus. */
 .field-input {
   width: 100%;
   padding: var(--sp-4);
   font: inherit;
   font-size: var(--font-row);
   color: var(--text);
-  background: var(--surface-alt);
+  background: var(--page);
   border: 1px solid transparent;
   border-radius: var(--r-md);
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .field-input:hover {
-  background: var(--surface-press);
+  background: var(--line);
 }
 
 .field-input:focus {
   background: var(--surface);
-  border-color: var(--green-dark);
-  outline: 2px solid var(--green-dark);
+  border-color: var(--green-action);
+  outline: 2px solid var(--green);
   outline-offset: 1px;
 }
 
@@ -70,33 +66,28 @@
   opacity: 0.75;
 }
 
-/* Browsers paint their own pale blue on autofilled fields and ignore the
-   background property, so the only way to cover it is a large inset
-   shadow. The long transition keeps it from flashing blue on focus. */
+/* Covers the browser's autofill color. */
 .field-input:-webkit-autofill,
 .field-input:-webkit-autofill:hover,
 .field-input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px var(--surface-alt) inset;
-  box-shadow: 0 0 0 1000px var(--surface-alt) inset;
+  -webkit-box-shadow: 0 0 0 1000px var(--page) inset;
+  box-shadow: 0 0 0 1000px var(--page) inset;
   caret-color: var(--text);
   transition: background-color 9999s ease-in-out 0s;
 }
 
-/* A field with a control living inside it, such as the eye button on a
-   password. */
+/* A field with a control inside it, such as the password eye button. */
 .field-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-/* Room for the eye button in PasswordField. */
 .field-input.has-icon {
   padding-right: 56px;
 }
 
-/* The eye button inside PasswordField. */
 .field-icon-btn {
   position: absolute;
   right: 6px;
@@ -117,12 +108,7 @@
 
 .field-icon-btn:hover {
   color: var(--text);
-  background: var(--surface-alt);
-}
-
-.field-icon-btn:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 1px;
+  background: var(--page);
 }
 
 .field-icon-btn svg {
@@ -132,7 +118,7 @@
 
 .field-hint {
   margin: 0;
-  font-size: var(--font-small);
+  font-size: var(--font-label);
   line-height: 1.4;
   color: var(--text-muted);
 }
@@ -144,7 +130,7 @@
   line-height: 1.4;
   color: var(--danger);
   background: var(--danger-tint);
-  border: 1px solid var(--danger-line);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
   border-radius: var(--r-md);
 }
 
@@ -154,28 +140,28 @@
   font-size: var(--font-label);
   color: var(--text);
   background: var(--green-tint);
-  border: 1px solid var(--green-dark);
+  border: 1px solid var(--green-light);
   border-radius: var(--r-md);
 }
 
-/* --- buttons ---------------------------------------------------------- */
+/* --- buttons --------------------------------------------------------- */
 
-/* Used by ConfirmDialog for its red confirm button. */
+/* Outlined button. ConfirmDialog uses .is-danger for its red confirm. */
 .account-btn {
   width: 100%;
   padding: var(--sp-4);
   font-size: var(--font-row);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .account-btn:hover {
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
 .account-btn:disabled {
@@ -185,22 +171,20 @@
 
 .account-btn.is-danger {
   color: var(--danger);
-  border-color: var(--danger-line);
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
 }
 
 .account-btn.is-danger:hover {
   background: var(--danger-tint);
 }
 
-/* Text-style button. Dark text with an underline rather than green text:
-   the brand green is too light to read as small text on white. */
 .link-btn {
   align-self: center;
   padding: var(--sp-2) var(--sp-1);
   font: inherit;
   font-size: var(--font-label);
-  font-weight: 600;
-  color: var(--text);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: none;
   border: 0;
   text-decoration: underline;
@@ -208,10 +192,9 @@
   cursor: pointer;
 }
 
-/* --- account settings ------------------------------------------------- */
+/* --- account settings ------------------------------------------------ */
 
-/* Off-white behind the cards, matching the home screen and a saved book.
-   overflow: hidden clips the corner leaves at the screen's edge. */
+/* overflow: hidden clips the corner leaves at the edge. */
 .account-screen {
   position: relative;
   overflow: hidden;
@@ -219,10 +202,9 @@
   flex-direction: column;
   gap: var(--sp-4);
   padding: var(--sp-5) var(--pad-x) var(--sp-7);
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
-/* Everything except the leaves sits above them. */
 .account-screen > :not(.account-leaf) {
   position: relative;
   z-index: 1;
@@ -235,7 +217,7 @@
   bottom: -28px;
   width: 190px;
   height: 190px;
-  color: rgba(140, 198, 62, 0.16);
+  color: color-mix(in srgb, var(--green) 16%, transparent);
   pointer-events: none;
 }
 
@@ -247,7 +229,6 @@
   transform: rotate(28deg);
 }
 
-/* Heading: avatar, then the title, email, and a short line. */
 .account-hero {
   display: flex;
   align-items: center;
@@ -261,7 +242,7 @@
   place-items: center;
   width: 76px;
   height: 76px;
-  color: var(--green-deep);
+  color: var(--green-action);
   background: var(--green-tint);
   border-radius: 50%;
 }
@@ -276,8 +257,6 @@
 }
 
 .account-hero .account-title {
-  font-size: 26px;
-  font-weight: 800;
   letter-spacing: -0.01em;
 }
 
@@ -302,13 +281,11 @@
   padding: var(--sp-5);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  box-shadow: 0 1px 3px rgba(20, 20, 15, 0.06);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
 }
 
-/* Icon circle, title and text, and (on the delete card) the button on the
-   right. Wraps on a narrow phone so the button drops below the text
-   instead of squeezing it. */
+/* Wraps on narrow phones so the button drops below the text. */
 .account-card-head {
   display: flex;
   flex-wrap: wrap;
@@ -322,7 +299,7 @@
   place-items: center;
   width: 52px;
   height: 52px;
-  color: var(--green-deep);
+  color: var(--green-action);
   background: var(--green-tint);
   border-radius: 50%;
 }
@@ -344,8 +321,8 @@
 
 .account-card-title {
   margin: 0;
-  font-size: 19px;
-  font-weight: 700;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
   color: var(--text);
 }
 
@@ -356,19 +333,18 @@
   color: var(--text-muted);
 }
 
-/* Inside a white card the fields are outlined rather than filled, so they
-   stand out from the card around them. */
+/* Inside a white card the fields are outlined, not filled. */
 .account-card .field-input {
   background: var(--surface);
-  border-color: var(--line-strong);
+  border-color: var(--line);
 }
 
 .account-card .field-input:hover {
-  border-color: var(--green);
+  border-color: var(--green-light);
 }
 
 .account-card .field-input:focus {
-  border-color: var(--green-dark);
+  border-color: var(--green-action);
 }
 
 .account-card .field-input:-webkit-autofill,
@@ -378,28 +354,23 @@
   box-shadow: 0 0 0 1000px var(--surface) inset;
 }
 
-/* The card's main action: filled deep green. */
+/* The card's main action. */
 .account-primary {
   width: 100%;
   padding: 15px;
   font: inherit;
   font-size: var(--font-row);
-  font-weight: 700;
-  color: #fff;
-  background: var(--green-deep);
+  font-weight: var(--weight-bold);
+  color: var(--surface);
+  background: var(--green-action);
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .account-primary:hover {
-  background: var(--green-deep-press);
-}
-
-.account-primary:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
+  background: var(--green-deep);
 }
 
 .account-primary:disabled {
@@ -407,18 +378,17 @@
   cursor: default;
 }
 
-/* Outlined red for the first step, filled red for the final one, so the
-   step that actually deletes is the one that looks the most serious. */
+/* Outlined red first, filled red for the step that deletes. */
 .account-danger-btn {
   flex: 0 0 auto;
   padding: 11px 18px;
   font: inherit;
   font-size: var(--font-label);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   color: var(--danger);
   background: var(--surface);
   border: 1.5px solid var(--danger);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -429,21 +399,16 @@
   background: var(--danger-tint);
 }
 
-.account-danger-btn:focus-visible {
-  outline: 2px solid var(--danger);
-  outline-offset: 2px;
-}
-
 .account-danger-btn.is-filled {
   width: 100%;
   padding: 15px;
   font-size: var(--font-row);
-  color: #fff;
+  color: var(--surface);
   background: var(--danger);
 }
 
 .account-danger-btn.is-filled:hover {
-  background: #8b1f18;
+  background: color-mix(in srgb, var(--danger) 85%, var(--text));
 }
 
 .account-danger-btn:disabled {
@@ -468,11 +433,11 @@
   padding: 13px 30px;
   font: inherit;
   font-size: var(--font-row);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -481,12 +446,7 @@
 
 .account-signout:hover {
   background: var(--green-tint);
-  border-color: var(--green);
-}
-
-.account-signout:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
+  border-color: var(--green-light);
 }
 
 .account-signout:disabled {
@@ -502,7 +462,21 @@
 .account-signout-note {
   align-self: center;
   margin: calc(var(--sp-2) * -1) 0 0;
-  font-size: var(--font-small);
+  font-size: var(--font-label);
   text-align: center;
   color: var(--text-muted);
+}
+
+/* --- focus ----------------------------------------------------------- */
+
+.field-icon-btn:focus-visible,
+.account-primary:focus-visible,
+.account-signout:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.account-danger-btn:focus-visible {
+  outline: 2px solid var(--danger);
+  outline-offset: 2px;
 }

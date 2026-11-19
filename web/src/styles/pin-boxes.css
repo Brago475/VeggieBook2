@@ -1,9 +1,9 @@
-/* The six PIN squares (PinBoxes.tsx), shared by the account and sign-in screens. */
+/* The six PIN squares (PinBoxes.tsx), on account and sign-in screens. */
 
 .pin-boxes-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .pin-boxes {
@@ -12,11 +12,11 @@
   max-width: 360px;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
+  gap: var(--sp-2);
   cursor: text;
 }
 
-/* Invisible input over the squares. 16px prevents zoom on iPhone. */
+/* Invisible input over the squares. 16px stops iOS zooming. */
 .pin-boxes-input {
   position: absolute;
   inset: 0;
@@ -36,42 +36,42 @@
   display: grid;
   place-items: center;
   min-height: 52px;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
-  color: var(--text, #1f2d1f);
-  background: var(--surface, #fff);
-  border: 1.5px solid var(--line-strong, rgba(31, 45, 31, 0.25));
-  border-radius: 12px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
 }
 
 .pin-box.is-filled {
-  border-color: var(--green-dark, #4f7a2a);
+  border-color: var(--green-light);
 }
 
 /* Next square to fill while focused. */
 .pin-box.is-active {
-  border-color: var(--green-deep, #2f5d2f);
-  box-shadow: 0 0 0 3px rgba(47, 93, 47, 0.18);
+  border-color: var(--green-action);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 25%, transparent);
 }
 
 .pin-boxes-actions {
   flex: none;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .pin-boxes-toggle {
   flex: none;
-  padding: 8px 4px;
+  padding: var(--sp-2) 4px;
   font: inherit;
-  font-size: 0.9em;
-  font-weight: 600;
-  color: var(--text, #1f2d1f);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: none;
   border: 0;
   text-decoration: underline;
@@ -91,7 +91,6 @@
 
   .pin-box {
     min-height: 46px;
-    font-size: 20px;
   }
 
   .pin-boxes-actions {

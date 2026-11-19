@@ -1,15 +1,7 @@
-/* Welcome, sign in, and create account.
- *
- * These three screens hide the masthead and own the whole viewport. A
- * photograph fills a tinted band at the top, the logo sits under it, and
- * the form follows. On a tall window the spare space collects at the
- * bottom, where a footer can go later. Every other screen keeps the green
- * bar.
- *
- * Warm off-white page, white outlined fields, deep green actions. The brand
- * green is bright enough that white text on it fails contrast, so it stays
- * the identity color and the deep green carries the buttons.
- */
+/* Welcome, sign in and create account.
+   These screens hide the masthead: a photo band on top, the logo under
+   it, then the form. Sans serif and green actions follow the original
+   research (Evans, Clarke and Koprowski 2010). */
 
 .auth-screen {
   position: relative;
@@ -17,14 +9,10 @@
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  background: var(--cream);
+  background: var(--page);
 }
 
-/* A fixed band: about a third of the screen, never taller than 280px.
-
-   It ends in a shallow arc rather than a hard line across the screen. The
-   curve is a fixed depth (48px), so it looks the same at any window
-   height. */
+/* About a third of the screen, max 280px, ending in a fixed 48px arc. */
 .auth-hero {
   position: relative;
   flex: 0 0 auto;
@@ -45,9 +33,7 @@
   object-position: center 45%;
 }
 
-/* The masthead is gone here, so Back lives over the photograph. Same white
-   pill and arrow as the header's Back, so it is recognized as the same
-   control. */
+/* Same pill as the masthead's Back. */
 .auth-back {
   position: absolute;
   top: var(--sp-3);
@@ -59,23 +45,23 @@
   padding: 8px 16px 8px 12px;
   font: inherit;
   font-size: var(--font-label);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   line-height: 1;
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.9);
+  color: var(--green-action);
+  background: var(--surface);
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .auth-back:hover {
-  background: #fff;
+  background: var(--green-tint);
 }
 
 .auth-back:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--surface);
   outline-offset: 2px;
 }
 
@@ -84,9 +70,7 @@
   height: 18px;
 }
 
-/* Fills the rest of the screen, but its content stays packed at the top,
-   so the spare space is below everything rather than between the buttons.
-   Relative so the decorative leaves can be placed inside it. */
+/* Content packed at the top; spare space collects below. */
 .auth-main {
   position: relative;
   display: flex;
@@ -97,21 +81,19 @@
   padding: var(--sp-4) var(--pad-x) var(--sp-6);
 }
 
-/* Everything except the leaves sits above them. */
 .auth-main > :not(.auth-leaf) {
   position: relative;
   z-index: 1;
 }
 
-/* Two faint leaves at the screen's edges, level with the logo. Clipped by
-   the screen's overflow: hidden, so they peek in from the sides. */
+/* Faint leaves peeking in from the sides, level with the logo. */
 .auth-leaf {
   position: absolute;
   z-index: 0;
   top: -8px;
   width: 110px;
   height: 110px;
-  color: rgba(140, 198, 62, 0.22);
+  color: color-mix(in srgb, var(--green) 22%, transparent);
   pointer-events: none;
 }
 
@@ -132,7 +114,6 @@
   margin: 0 auto;
 }
 
-/* The title and the lines under it, centered and stacked. */
 .auth-head {
   display: flex;
   flex-direction: column;
@@ -143,10 +124,10 @@
 .auth-greeting {
   margin: 0;
   font-size: var(--font-title);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   line-height: 1.2;
   letter-spacing: -0.01em;
-  color: var(--green-deep);
+  color: var(--green-action);
 }
 
 .auth-sub {
@@ -162,23 +143,21 @@
   gap: var(--sp-3);
 }
 
-/* Welcome's second group: the "or", the guest option, and the steps. */
+/* Welcome's second group: "or", guest option and the steps. */
 .auth-lower {
   display: flex;
   flex-direction: column;
   gap: var(--sp-4);
 }
 
-/* On a tall window, the second group moves down by a share of the height,
-   so the page is balanced instead of everything sitting at the top. Capped
-   at 160px, and phones are left alone so nothing drops below the fold. */
+/* Tall windows: move the second group down a little, capped at 160px. */
 @media (min-height: 900px) {
   .auth-lower {
     margin-top: min(12vh, 160px);
   }
 }
 
-/* --- fields ----------------------------------------------------------- */
+/* --- fields ---------------------------------------------------------- */
 
 .pill-field {
   display: flex;
@@ -187,8 +166,8 @@
 }
 
 .pill-label {
-  font-size: var(--font-small);
-  font-weight: 600;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   color: var(--text-muted);
 }
 
@@ -205,10 +184,7 @@
   pointer-events: none;
 }
 
-/* White on the cream page, so the field reads as a surface to write on
-   rather than a hole cut in the background.
-
-   17px text: iOS zooms the page in on any input smaller than 16px. */
+/* White on the gray page. 17px stops iOS zooming on focus. */
 .pill-input {
   width: 100%;
   padding: var(--sp-3) var(--sp-3) var(--sp-3) 44px;
@@ -216,14 +192,18 @@
   font-size: var(--font-row);
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
   transition: border-color 0.15s ease;
 }
 
+.pill-input:hover {
+  border-color: var(--green-light);
+}
+
 .pill-input:focus {
-  border-color: var(--green-deep);
-  outline: 2px solid var(--green-deep);
+  border-color: var(--green-action);
+  outline: 2px solid var(--green);
   outline-offset: 1px;
 }
 
@@ -231,8 +211,7 @@
   padding-right: 48px;
 }
 
-/* Browsers paint their own pale blue on autofilled fields and ignore the
-   background property, so a large inset shadow is the only cover. */
+/* Covers the browser's autofill color. */
 .pill-input:-webkit-autofill,
 .pill-input:-webkit-autofill:hover,
 .pill-input:-webkit-autofill:focus {
@@ -243,7 +222,7 @@
   transition: background-color 9999s ease-in-out 0s;
 }
 
-/* 44px square: the smallest comfortable tap target on a phone. */
+/* 44px square tap target. */
 .pill-action {
   position: absolute;
   right: var(--sp-1);
@@ -260,15 +239,15 @@
 }
 
 .pill-action:hover {
-  color: var(--green-deep);
+  color: var(--green-action);
 }
 
 .pill-action:focus-visible {
-  outline: 2px solid var(--green-deep);
+  outline: 2px solid var(--green);
   outline-offset: -2px;
 }
 
-/* --- actions ---------------------------------------------------------- */
+/* --- actions --------------------------------------------------------- */
 
 .auth-primary,
 .auth-secondary,
@@ -282,10 +261,13 @@
   padding: var(--sp-3) var(--sp-4);
   font: inherit;
   font-size: var(--font-row);
-  font-weight: 700;
-  border-radius: 999px;
+  font-weight: var(--weight-bold);
+  border-radius: var(--r-pill);
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.1s ease;
 }
 
 .auth-primary:active,
@@ -297,19 +279,20 @@
 .auth-primary:focus-visible,
 .auth-secondary:focus-visible,
 .auth-guest:focus-visible {
-  outline: 2px solid var(--green-deep);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
 }
 
 .auth-primary {
-  color: #fff;
-  background: var(--green-deep);
-  border: 1px solid var(--green-deep);
-  box-shadow: 0 2px 8px rgba(47, 93, 47, 0.22);
+  color: var(--surface);
+  background: var(--green-action);
+  border: 1px solid var(--green-action);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--green-action) 22%, transparent);
 }
 
 .auth-primary:hover {
-  background: var(--green-deep-press);
+  background: var(--green-deep);
+  border-color: var(--green-deep);
 }
 
 .auth-primary:disabled {
@@ -319,9 +302,9 @@
 }
 
 .auth-secondary {
-  color: var(--green-deep);
+  color: var(--green-action);
   background: var(--surface);
-  border: 1px solid var(--green-deep);
+  border: 1px solid var(--green-action);
 }
 
 .auth-secondary:hover {
@@ -329,22 +312,22 @@
 }
 
 .auth-guest {
-  color: var(--green-deep);
+  color: var(--green-action);
   background: var(--green-tint);
   border: 1px solid transparent;
 }
 
 .auth-guest:hover {
-  background: #e9f2da;
+  border-color: var(--green-light);
 }
 
-/* --- divider and copy ------------------------------------------------- */
+/* --- divider and copy ------------------------------------------------ */
 
 .auth-or {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  font-size: var(--font-small);
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
@@ -353,19 +336,18 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--line-strong);
+  background: var(--line);
 }
 
 .auth-note {
   margin: 0;
-  font-size: var(--font-small);
+  font-size: var(--font-label);
   line-height: 1.5;
   color: var(--text-muted);
   text-align: center;
 }
 
-/* The other door on sign in and create account, under a thin line, with
-   "New here?" and its link on one line. */
+/* "New here?" and its link, under a thin line. */
 .auth-switch {
   display: block;
   margin: var(--sp-2) 0 0;
@@ -378,34 +360,27 @@
 
 .auth-switch .link-btn {
   padding: 0;
-  color: var(--green-deep);
 }
 
-/* --- how it works (Welcome only) -------------------------------------- */
+/* --- how it works (Welcome only) ------------------------------------- */
 
-/* A soft green card, so the steps read as information about the site
-   rather than another set of buttons. */
 .auth-steps {
   margin-top: var(--sp-3);
-  padding: var(--sp-5) var(--sp-4) var(--sp-5);
-  background: #f1f6e9;
-  border-radius: 20px;
+  padding: var(--sp-5) var(--sp-4);
+  background: var(--green-tint);
+  border-radius: var(--r-lg);
 }
 
-/* Sans serif like the rest of the app: the original VeggieBook's
-   formative research found pantry clients preferred sans serif text
-   (Evans et al. 2009). */
 .auth-steps-title {
   margin: 0 0 var(--sp-4);
-  font-size: 21px;
-  font-weight: 800;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.01em;
   text-align: center;
   color: var(--text);
 }
 
-/* Three equal columns, numbered by a counter so the numbers stay right if
-   a step is ever added or reordered. */
+/* Three columns, numbered by a counter. */
 .auth-steps-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -426,17 +401,14 @@
   counter-increment: step;
 }
 
-/* A dotted line from each icon to the next, at the height of the icons'
-   centers. It starts just past this icon's edge (32px radius plus 10px)
-   and stops the same distance short of the next one, across the gap
-   between the columns. */
+/* Dotted line between icon centers, stopping 10px short of each icon. */
 .auth-step:not(:last-child)::after {
   content: '';
   position: absolute;
   top: 32px;
   left: calc(50% + 42px);
   width: calc(100% + var(--sp-3) - 84px);
-  border-top: 2px dotted rgba(47, 93, 47, 0.3);
+  border-top: 2px dotted color-mix(in srgb, var(--green-deep) 30%, transparent);
   pointer-events: none;
 }
 
@@ -445,8 +417,8 @@
   place-items: center;
   width: 64px;
   height: 64px;
-  color: var(--green-deep);
-  background: #e2eed3;
+  color: var(--green-action);
+  background: var(--surface);
   border-radius: 50%;
 }
 
@@ -457,7 +429,7 @@
 
 .auth-step-label {
   font-size: var(--font-label);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   line-height: 1.3;
   color: var(--text);
 }
@@ -466,7 +438,7 @@
   content: counter(step) '. ';
 }
 
-/* Very narrow phones: no room for the dotted lines between the icons. */
+/* Very narrow phones: no room for the dotted lines. */
 @media (max-width: 360px) {
   .auth-step:not(:last-child)::after {
     display: none;

@@ -1,13 +1,6 @@
-/* Wide-screen adjustments.
-   The phone layout is the base and stays untouched below 720px. Above that
-   the column widens and the copy grid gains a third across. The recipe stays
-   a single column on purpose: it is a document, and documents read better as
-   one comfortable column than split into panels.
-
-   Nothing new appears on a wide screen. Pantry clients use this on phones,
-   so a desktop-only panel would be decoration that most users never see.
-   What the extra room buys instead is a column that reads as a held surface
-   and slightly more generous type. */
+/* Wide screens. The phone layout is the base below 720px. Above it the
+   column widens and the copy grid gains a third column; recipes stay one
+   column. No desktop-only pieces: most users are on phones. */
 
 @media (min-width: 720px) {
   .app {
@@ -19,7 +12,7 @@
   }
 
   .recipe-title {
-    font-size: 28px;
+    font-size: var(--font-title);
   }
 
   .copy-grid {
@@ -30,8 +23,7 @@
     height: 150px;
   }
 
-  /* The decide bar spans the container but its buttons should not stretch
-     to absurd widths. */
+  /* Keep the decide buttons from stretching. */
   .decide {
     justify-content: center;
   }
@@ -41,39 +33,25 @@
   }
 }
 
-/* As soon as the column stops growing, the space around it becomes visible,
-   so it has to be deliberate. The page takes the tinted surface and the
-   column sits on it as a sheet: the white becomes a choice rather than an
-   unfilled page. */
+/* Once the column stops growing, it sits on the page gray as a sheet. */
 @media (min-width: 760px) {
   body {
-    background: var(--surface-alt);
+    background: var(--page);
   }
 
   .app {
     min-height: 100vh;
     box-shadow: var(--shadow-md);
-  }
-
-  /* The masthead is the only full-bleed green band, so it holds the top of
-     the sheet. Rounding the sheet below it keeps the column from looking
-     like a slice cut out of the page. */
-  .app {
     border-left: 1px solid var(--line);
     border-right: 1px solid var(--line);
   }
 
-  /* Reading a recipe is the one place the extra room helps: a little more
-     size on the body text, since nobody is holding a laptop at arm's
-     length in a kitchen. Covers ingredients, instructions, and notes on
-     both the review step and a saved book, since both draw them through
-     RecipeSections. */
   .recipe-list li {
     font-size: var(--font-row);
   }
 
   .recipe-row-title {
-    font-size: 19px;
+    font-size: var(--font-section);
   }
 
   .recipe-thumb {

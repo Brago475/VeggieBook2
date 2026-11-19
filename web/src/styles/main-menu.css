@@ -1,7 +1,5 @@
-/* The ☰ Menu button on the home screen and the list it opens
-   (MainMenu.tsx), styled like the admin sidebar: a soft gray panel, small
-   spaced-out section labels, and rows that turn green with a bar on the
-   left. The list builds on the ⋮ menu's list (menu.css) for its position. */
+/* Home screen menu button and its list (MainMenu.tsx). Rows turn green
+   with a bar on the left. Position comes from .menu-list in menu.css. */
 
 .main-menu {
   flex: 0 0 auto;
@@ -11,15 +9,15 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
+  gap: var(--sp-2);
+  padding: 10px var(--sp-4);
   font: inherit;
   font-size: var(--font-label);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -29,11 +27,11 @@
 .main-menu-btn:hover,
 .main-menu-btn[aria-expanded='true'] {
   background: var(--green-tint);
-  border-color: var(--green);
+  border-color: var(--green-light);
 }
 
 .main-menu-btn:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
 }
 
@@ -58,27 +56,27 @@
 /* The panel. */
 .main-menu .menu-list {
   min-width: 270px;
-  padding: 12px 10px 10px;
-  background: #f6f7f5;
+  padding: var(--sp-3) 10px 10px;
+  background: var(--page);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 16px 40px rgba(20, 20, 15, 0.16);
+  border-radius: var(--r-lg);
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--text) 16%, transparent);
 }
 
-/* VEGGIEBOOK, LANGUAGE, ACCOUNT. */
+/* Section labels. */
 .main-menu-heading {
   list-style: none;
   padding: 4px 10px 6px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 .main-menu-divider {
   height: 0;
-  margin: 8px 4px;
+  margin: var(--sp-2) 4px;
   list-style: none;
   border-top: 1px solid var(--line);
 }
@@ -87,9 +85,9 @@
 .main-menu .menu-item {
   min-height: 46px;
   padding: 0 10px;
-  border-radius: 10px;
-  font-size: var(--font-label);
-  font-weight: 600;
+  border-radius: var(--r-md);
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   color: var(--text);
   background: transparent;
   transition:
@@ -102,7 +100,7 @@
   color: var(--text-muted);
 }
 
-/* A row's count, pushed to the right edge. */
+/* A row's count, at the right edge. */
 .main-menu-badge {
   display: inline-flex;
   align-items: center;
@@ -111,25 +109,24 @@
   height: 22px;
   margin-left: auto;
   padding: 0 7px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
-  color: #fff;
-  background: var(--green-dark);
+  border-radius: var(--r-pill);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--surface);
+  background: var(--green-action);
 }
 
-/* Hover and keyboard focus: the admin sidebar's active look. */
 .main-menu .menu-item:hover,
 .main-menu .menu-item:focus-visible {
-  background: #e3f0d6;
-  color: var(--green-deep);
-  box-shadow: inset 4px 0 0 var(--green-dark);
+  background: var(--green-tint);
+  color: var(--green-action);
+  box-shadow: inset 4px 0 0 var(--green-action);
   outline: none;
 }
 
 .main-menu .menu-item:hover svg,
 .main-menu .menu-item:focus-visible svg {
-  color: var(--green-deep);
+  color: var(--green-action);
 }
 
 /* Sign out and End guest visit. */

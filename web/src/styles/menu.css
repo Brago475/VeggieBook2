@@ -1,11 +1,11 @@
-/* The ⋮ action menu. Shared: book cards on the home screen, the book card
-   inside a saved book, and each recipe or secret row inside a book. */
+/* The action menu: book cards on home, the card in a saved book, and each
+   recipe or secret row. */
 
 .menu {
   position: relative;
 }
 
-/* A white circle so the dots stay visible on any photo. */
+/* White circle so the dots stay visible on any photo. */
 .menu-btn {
   display: grid;
   place-items: center;
@@ -13,21 +13,21 @@
   height: 40px;
   padding: 0;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.88);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   border: 0;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--text) 18%, transparent);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .menu-btn:hover,
 .menu-btn[aria-expanded='true'] {
-  background: #fff;
+  background: var(--surface);
 }
 
 .menu-btn:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
 }
 
@@ -47,14 +47,12 @@
   list-style: none;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  box-shadow: 0 10px 28px rgba(20, 20, 15, 0.18);
+  border-radius: var(--r-md);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--text) 18%, transparent);
   animation: menu-in 0.12s ease-out;
 }
 
-/* A row's open menu draws over the rows below it. Opening a menu moves
-   focus into its list, so the row holding focus is lifted above every
-   row's ⋮ (z-index 2 in reading.css) until the menu closes. */
+/* An open row menu draws over the rows below it. */
 .book-recipes li:focus-within {
   position: relative;
   z-index: 10;
@@ -65,21 +63,21 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px var(--sp-3);
   font: inherit;
   font-size: var(--font-label);
-  font-weight: 600;
+  font-weight: var(--weight-bold);
   text-align: left;
   color: var(--text);
   background: none;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--r-sm);
   cursor: pointer;
 }
 
 .menu-item:hover,
 .menu-item:focus-visible {
-  background: var(--surface-alt);
+  background: var(--green-tint);
   outline: none;
 }
 

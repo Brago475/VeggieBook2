@@ -1,12 +1,7 @@
-/* About VeggieBook.
+/* About VeggieBook. Builds on account.css (screen, leaves, cards).
+   Adds the logo heading, reading text, the paper list and the license. */
 
-   Built on the account screen's pieces (account.css): the off-white
-   screen with the two faint corner leaves, and the white cards with an
-   icon circle and a title. This file only adds what About needs on top:
-   the logo heading, reading text inside the cards, the paper list, and
-   the license line at the bottom. */
-
-/* --- heading ---------------------------------------------------------- */
+/* --- heading --------------------------------------------------------- */
 
 .about-hero {
   display: flex;
@@ -25,8 +20,8 @@
 
 .about-title {
   margin: var(--sp-2) 0 0;
-  font-size: 26px;
-  font-weight: 800;
+  font-size: var(--font-title);
+  font-weight: var(--weight-bold);
   letter-spacing: -0.01em;
   color: var(--text);
 }
@@ -39,10 +34,8 @@
   color: var(--text-muted);
 }
 
-/* --- cards ------------------------------------------------------------ */
+/* --- cards ----------------------------------------------------------- */
 
-/* A little tighter than the account cards, which hold forms: here the
-   heading leads straight into reading text. */
 .about-card {
   gap: var(--sp-3);
 }
@@ -61,25 +54,23 @@
   margin-bottom: 0;
 }
 
-/* --- links ------------------------------------------------------------ */
+/* --- links ----------------------------------------------------------- */
 
-/* Deep green and underlined: the brand green is too light to read as
-   small text on white (see .link-btn in account.css). */
 .about-link {
-  font-weight: 600;
-  color: var(--green-deep);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   text-decoration: underline;
   text-underline-offset: 3px;
   overflow-wrap: anywhere;
 }
 
 .about-link:hover {
-  color: var(--green-deep-press);
+  color: var(--green-deep);
   text-decoration-thickness: 2px;
 }
 
 .about-link:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -92,9 +83,9 @@
   vertical-align: -1px;
 }
 
-/* --- research papers -------------------------------------------------- */
+/* --- research papers ------------------------------------------------- */
 
-/* A thin green bar marks each paper, like the quotes on Who Says So. */
+/* A green bar marks each paper. */
 .about-papers {
   margin: 0;
   padding: 0;
@@ -122,11 +113,11 @@
   font-style: italic;
 }
 
-/* --- license line ----------------------------------------------------- */
+/* --- license line ---------------------------------------------------- */
 
 .about-license {
   margin: var(--sp-2) 0 0;
-  font-size: var(--font-small);
+  font-size: var(--font-label);
   line-height: 1.5;
   text-align: center;
   color: var(--text-muted);

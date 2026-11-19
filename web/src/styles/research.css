@@ -1,9 +1,5 @@
-/* Research tracking in the app: the Help with research card on Profile
-   and settings (components/account/ResearchCard.tsx) and the study notice
-   at the top of the home screen (components/library/StudyNoticeCard.tsx).
-
-   Same deep green as the other account actions; the brand green only as a
-   border and tint, since white text on it fails contrast. */
+/* Research tracking: the Help with research card in settings
+   (ResearchCard.tsx) and the study notice on home (StudyNoticeCard.tsx). */
 
 /* --- Help with research card ----------------------------------------- */
 
@@ -12,10 +8,10 @@
   align-self: flex-start;
   align-items: center;
   gap: var(--sp-2);
-  padding: 6px 12px;
-  font-size: 14px;
-  font-weight: 700;
-  border-radius: 999px;
+  padding: 6px var(--sp-3);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  border-radius: var(--r-pill);
 }
 
 .research-chip i {
@@ -25,18 +21,18 @@
 }
 
 .research-chip.is-on {
-  color: var(--green-deep);
+  color: var(--green-action);
   background: var(--green-tint);
 }
 
 .research-chip.is-on i {
-  background: var(--green-deep);
+  background: var(--green-action);
 }
 
 .research-chip.is-off,
 .research-chip.is-locked {
   color: var(--text-muted);
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
 .research-chip.is-off i,
@@ -49,19 +45,19 @@
   flex-direction: column;
   gap: 4px;
   padding: var(--sp-3) var(--sp-4);
-  border: 1px dashed var(--line-strong);
-  border-radius: 12px;
+  border: 1px dashed var(--green-light);
+  border-radius: var(--r-md);
 }
 
 .research-id-label {
-  font-size: var(--font-small);
+  font-size: var(--font-label);
   color: var(--text-muted);
 }
 
 .research-id-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 18px;
-  font-weight: 700;
+  font-family: var(--mono);
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.04em;
   color: var(--text);
   overflow-wrap: anywhere;
@@ -76,8 +72,8 @@
   margin: 0 var(--pad-x) var(--sp-4);
   padding: 18px;
   background: var(--green-tint);
-  border: 1px solid var(--green);
-  border-radius: 18px;
+  border: 1px solid var(--green-light);
+  border-radius: var(--r-lg);
 }
 
 .study-notice-head {
@@ -92,7 +88,7 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  color: var(--green-deep);
+  color: var(--green-action);
   background: var(--surface);
   border-radius: 50%;
 }
@@ -105,7 +101,7 @@
 .study-notice-title {
   margin: 0;
   font-size: var(--font-section);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   color: var(--text);
 }
 
@@ -125,40 +121,39 @@
 .study-notice-join,
 .study-notice-later {
   flex: 1 1 140px;
-  padding: 12px;
+  padding: var(--sp-3);
   font: inherit;
   font-size: var(--font-label);
-  border-radius: 12px;
+  font-weight: var(--weight-bold);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
 .study-notice-join {
-  font-weight: 700;
-  color: #fff;
-  background: var(--green-deep);
+  color: var(--surface);
+  background: var(--green-action);
   border: 0;
 }
 
 .study-notice-join:hover {
-  background: var(--green-deep-press);
+  background: var(--green-deep);
 }
 
 .study-notice-later {
-  font-weight: 600;
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line);
 }
 
 .study-notice-later:hover {
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
 .study-notice-join:focus-visible,
 .study-notice-later:focus-visible,
 .study-notice-close:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
 }
 
@@ -176,8 +171,8 @@
 
 .study-notice-check {
   flex: 0 0 auto;
-  font-weight: 800;
-  color: var(--green-deep);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
 }
 
 .study-notice-thanks {

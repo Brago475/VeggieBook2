@@ -1,9 +1,7 @@
-/* Additions to auth.css for the account screens: the form wrapper, the
-   forgot password link, the guest books choice, and the Create Account and
-   Forgot password pieces (sections, drop-downs, PIN, Terms checkbox). */
+/* Account screen additions to auth.css: form wrapper, forgot password
+   link, guest books choice, Create Account and Forgot password pieces. */
 
-/* The form only groups the fields for submitting. display: contents keeps
-   its children laid out exactly as if they sat directly in .auth-main. */
+/* Groups fields for submitting without changing layout. */
 .auth-form {
   display: contents;
 }
@@ -13,34 +11,35 @@
   text-align: right;
 }
 
-/* Keep my books / Start fresh. */
+/* --- keep my books / start fresh ------------------------------------- */
+
 .guest-choice {
   border: 0;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .guest-option {
   display: flex;
-  gap: 12px;
+  gap: var(--sp-3);
   align-items: flex-start;
-  padding: 12px 14px;
-  border: 1px solid rgba(47, 93, 47, 0.25);
-  border-radius: 16px;
-  background: #fff;
+  padding: var(--sp-3) 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--surface);
   cursor: pointer;
 }
 
 .guest-option:has(input:checked) {
-  border-color: var(--green-deep, #2f5d2f);
-  box-shadow: 0 0 0 1px var(--green-deep, #2f5d2f);
+  background: var(--green-tint);
+  border-color: var(--green-light);
 }
 
 .guest-option input {
   margin-top: 3px;
-  accent-color: var(--green-deep, #2f5d2f);
+  accent-color: var(--green-action);
 }
 
 .guest-option-text {
@@ -49,65 +48,68 @@
 }
 
 .guest-option-title {
-  font-weight: 600;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--text);
 }
 
 .guest-option-sub {
-  font-size: 0.9em;
-  opacity: 0.75;
+  font-size: var(--font-label);
+  color: var(--text-muted);
 }
 
-/* Section titles inside a long form: About you, Sign-in details, Account
-   recovery. */
+/* --- long form sections ---------------------------------------------- */
+
 .auth-section-title {
-  margin: 12px 0 -4px;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--green-deep, #2f5d2f);
+  margin: var(--sp-3) 0 -4px;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--green-deep);
   letter-spacing: 0.01em;
 }
 
 .auth-section-text {
   margin: 0;
-  font-size: 0.9em;
-  opacity: 0.8;
+  font-size: var(--font-label);
   line-height: 1.45;
+  color: var(--text-muted);
 }
 
-/* A box with no icon on its left. */
 .pill-input.no-icon {
   padding-left: 18px;
 }
 
-/* Drop-downs in the pill style, with a drawn arrow so they look the same
-   in every browser. */
+/* Drop-downs with a drawn arrow. The arrow color is --green-action;
+   a data URI cannot read a CSS variable. */
 .pill-select {
   appearance: none;
   -webkit-appearance: none;
   padding-right: 42px;
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%232f5d2f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23157018' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 18px center;
 }
 
 .pill-select:invalid {
-  color: rgba(31, 45, 31, 0.55);
+  color: var(--text-muted);
 }
 
-/* The PIN reads as six spaced digits. */
+/* Six spaced digits. */
 .pin-input {
   letter-spacing: 0.3em;
   font-variant-numeric: tabular-nums;
 }
 
-/* I am 18 or older, and I agree to the Terms... */
+/* --- terms checkbox -------------------------------------------------- */
+
 .terms-agree {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  font-size: 0.92em;
+  font-size: var(--font-label);
   line-height: 1.45;
+  color: var(--text);
   cursor: pointer;
 }
 
@@ -116,31 +118,35 @@
   width: 18px;
   height: 18px;
   flex: none;
-  accent-color: var(--green-deep, #2f5d2f);
+  accent-color: var(--green-action);
 }
 
 .terms-agree a {
-  color: var(--green-deep, #2f5d2f);
-  font-weight: 600;
+  color: var(--green-action);
+  font-weight: var(--weight-bold);
 }
 
-/* Forgot password: the security question, and a note above it. */
+/* --- forgot password ------------------------------------------------- */
+
 .auth-question {
   margin: 0;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(47, 93, 47, 0.08);
-  font-weight: 600;
-  color: var(--green-deep, #2f5d2f);
+  padding: 14px var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--green-tint);
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--green-deep);
 }
 
 .auth-notice {
-  margin: 8px 0 0;
-  font-size: 0.92em;
-  color: #8a5a00;
+  margin: var(--sp-2) 0 0;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--danger);
 }
 
 .auth-contact {
-  font-size: 0.95em;
+  font-size: var(--font-label);
   line-height: 1.5;
+  color: var(--text);
 }

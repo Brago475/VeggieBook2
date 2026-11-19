@@ -1,52 +1,50 @@
-/* Site footer (SiteFooter.tsx).
-
-   A small closed book: a green spine in the header's colors with the
-   name, and a white page holding the title, the vegetables from the
-   loading screen, the folded credit, and the links. One layout for every
-   screen size. */
+/* Site footer (SiteFooter.tsx): a small closed book. Green spine with the
+   name, then a white page with the title, the loading screen vegetables,
+   the folded credit and the links. */
 
 .site-footer {
   padding: var(--sp-4) var(--pad-x) var(--sp-5);
-  background: var(--surface-alt);
+  background: var(--page);
 }
 
 .site-footer-card {
   display: flex;
   overflow: hidden;
   background: var(--surface);
-  border: 1px solid #dde3d6;
-  border-radius: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
 }
 
-/* --- spine ------------------------------------------------------------ */
+/* --- spine ----------------------------------------------------------- */
 
+/* Brand green, with the name colored like the logo. */
 .site-footer-spine {
   flex: 0 0 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #97c459;
-  border-right: 2px solid #7aa63f;
+  background: var(--green);
+  border-right: 2px solid var(--green-action);
 }
 
 .site-footer-spine > span {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 12px;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
 
 .site-footer-spine-veggie {
-  color: #ffffff;
+  color: var(--surface);
 }
 
 .site-footer-spine-book {
-  color: #173404;
+  color: var(--text);
 }
 
-/* --- page ------------------------------------------------------------- */
+/* --- page ------------------------------------------------------------ */
 
 .site-footer-body {
   flex: 1;
@@ -61,7 +59,7 @@
   gap: var(--sp-3);
 }
 
-/* Title and line sit side by side and wrap under each other when narrow. */
+/* Title and line side by side, wrapping when narrow. */
 .site-footer-head-text {
   display: flex;
   flex-wrap: wrap;
@@ -73,25 +71,24 @@
 
 .site-footer-title {
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 16px;
-  font-weight: 400;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
   line-height: 1.2;
-  color: #3b6d11;
+  color: var(--green-deep);
 }
 
 .site-footer-sub {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-label);
   line-height: 1.35;
   color: var(--text);
 }
 
 .site-footer-sub strong {
-  font-weight: 700;
+  font-weight: var(--weight-bold);
 }
 
-/* The loading screen's vegetables, overlapping in small white circles. */
+/* Loading screen vegetables in small overlapping circles. */
 .site-footer-veg {
   flex: 0 0 auto;
   display: flex;
@@ -105,7 +102,7 @@
   height: 28px;
   margin-left: -6px;
   background: var(--surface);
-  border: 1px solid #e3eed6;
+  border: 1px solid var(--line);
   border-radius: 50%;
 }
 
@@ -114,12 +111,12 @@
   height: 18px;
 }
 
-/* --- credit, folded to one line until opened -------------------------- */
+/* --- credit, folded to one line until opened ------------------------- */
 
 .site-footer-credit-row {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--sp-2);
   margin-top: 6px;
 }
 
@@ -128,7 +125,7 @@
   min-width: 0;
   margin: 0;
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--font-label);
   line-height: 1.45;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -152,21 +149,15 @@
   gap: 2px;
   padding: 2px 0;
   font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  color: #3b6d11;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: none;
   border: 0;
   cursor: pointer;
 }
 
-.site-footer-more:focus-visible {
-  outline: 2px solid var(--green-dark);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* The right chevron, turned to point down, or up once open. */
+/* Chevron points down, or up once open. */
 .site-footer-more-icon {
   width: 14px;
   height: 14px;
@@ -177,7 +168,7 @@
   transform: rotate(-90deg);
 }
 
-/* --- bottom row: About link, then the legal links --------------------- */
+/* --- bottom row: About link, then the legal links -------------------- */
 
 .site-footer-foot {
   display: flex;
@@ -185,9 +176,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 4px var(--sp-4);
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #e3eed6;
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--line);
 }
 
 .site-footer-btn {
@@ -196,9 +187,9 @@
   gap: 2px;
   padding: 2px 0;
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: #3b6d11;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: none;
   border: 0;
   cursor: pointer;
@@ -209,10 +200,11 @@
   text-underline-offset: 3px;
 }
 
+.site-footer-more:focus-visible,
 .site-footer-btn:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--r-sm);
 }
 
 .site-footer-chevron {
@@ -221,20 +213,16 @@
   height: 16px;
 }
 
-/* The legal links' look is in legal.css; here they only sit in the row. */
+/* Legal links' look: legal.css. Here they only sit in the row. */
 .site-footer .site-footer-links {
   margin-top: 0;
-  font-size: 13px;
+  font-size: var(--font-label);
 }
 
-/* Phones: the same layout, slightly tighter. */
+/* Phones: same layout, slightly tighter. */
 @media (max-width: 480px) {
   .site-footer-body {
-    padding: 8px 10px;
-  }
-
-  .site-footer-title {
-    font-size: 15px;
+    padding: var(--sp-2) 10px;
   }
 
   .site-footer-veg-chip {

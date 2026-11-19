@@ -1,7 +1,7 @@
-/* Profile and settings in the A1 layout: the list (AccountHub.tsx) and the
-   frame around one setting (SettingsPage.tsx). Builds on account.css. */
+/* Profile and settings: the list (AccountHub.tsx) and one setting
+   (SettingsPage.tsx). Builds on account.css. */
 
-/* --- the list: cover ---------------------------------------------------- */
+/* --- list: cover ----------------------------------------------------- */
 
 .settings-cover {
   position: relative;
@@ -10,10 +10,10 @@
   gap: 14px;
   padding: var(--sp-5);
   overflow: hidden;
-  color: #ffffff;
-  background: #97c459;
-  border-radius: 20px;
-  box-shadow: 0 6px 20px rgba(20, 20, 15, 0.12);
+  color: var(--surface);
+  background: var(--green-action);
+  border-radius: var(--r-lg);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 .settings-cover-leaf {
@@ -22,7 +22,7 @@
   right: -18px;
   width: 120px;
   height: 120px;
-  color: rgba(255, 255, 255, 0.18);
+  color: color-mix(in srgb, var(--surface) 18%, transparent);
   transform: rotate(-20deg);
   pointer-events: none;
 }
@@ -34,10 +34,10 @@
   place-items: center;
   width: 58px;
   height: 58px;
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--green-deep);
-  background: #ffffff;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: var(--surface);
   border-radius: 50%;
 }
 
@@ -51,27 +51,26 @@
 
 .settings-cover-name {
   margin: 0;
-  font-size: 23px;
-  font-weight: 800;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
   line-height: 1.15;
-  color: #ffffff;
+  color: var(--surface);
   overflow-wrap: anywhere;
 }
 
 .settings-cover-email {
-  font-size: 13px;
-  color: #f1f7e8;
+  font-size: var(--font-label);
+  color: color-mix(in srgb, var(--surface) 85%, transparent);
   overflow-wrap: anywhere;
 }
 
-/* --- the list: groups and rows ------------------------------------------ */
+/* --- list: groups and rows ------------------------------------------- */
 
 .settings-group {
-  margin: var(--sp-5) 4px 8px;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 17px;
-  font-weight: 400;
-  color: #3b6d11;
+  margin: var(--sp-5) 4px var(--sp-2);
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--green-deep);
 }
 
 .settings-list {
@@ -81,11 +80,11 @@
   list-style: none;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
 }
 
 .settings-list li + li {
-  border-top: 1px solid #eef0eb;
+  border-top: 1px solid var(--line);
 }
 
 .settings-list.is-alone {
@@ -95,7 +94,7 @@
 .settings-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   width: 100%;
   min-height: 60px;
   padding: 10px 14px;
@@ -108,7 +107,7 @@
 }
 
 .settings-row:hover {
-  background: #f8faf5;
+  background: var(--page);
 }
 
 .settings-row:focus {
@@ -116,7 +115,7 @@
 }
 
 .settings-row:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: -3px;
 }
 
@@ -126,9 +125,9 @@
   place-items: center;
   width: 38px;
   height: 38px;
-  color: var(--green-deep);
-  background: #eef4e6;
-  border-radius: 11px;
+  color: var(--green-action);
+  background: var(--green-tint);
+  border-radius: var(--r-md);
 }
 
 .settings-row-icon svg {
@@ -139,23 +138,23 @@
 .settings-row-label {
   flex: 1;
   min-width: 0;
-  font-size: var(--font-label);
-  font-weight: 600;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
 }
 
 .settings-row.is-danger .settings-row-icon {
-  color: #a32d2d;
-  background: #fcebeb;
+  color: var(--danger);
+  background: var(--danger-tint);
 }
 
 .settings-row.is-danger .settings-row-label {
-  color: #a32d2d;
+  color: var(--danger);
 }
 
 .settings-row-value {
   max-width: 45%;
   overflow: hidden;
-  font-size: 14px;
+  font-size: var(--font-label);
   white-space: nowrap;
   text-overflow: ellipsis;
   color: var(--text-muted);
@@ -164,26 +163,26 @@
 .settings-chip {
   flex: 0 0 auto;
   padding: 2px 10px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--green-deep);
-  background: #eef4e6;
-  border-radius: 999px;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: var(--green-tint);
+  border-radius: var(--r-pill);
 }
 
 .settings-chip.is-off {
   color: var(--text-muted);
-  background: #f1f0e9;
+  background: var(--page);
 }
 
 .settings-row-chevron {
   flex: 0 0 auto;
   width: 18px;
   height: 18px;
-  color: #b7b6ad;
+  color: var(--text-muted);
 }
 
-/* --- one setting -------------------------------------------------------- */
+/* --- one setting ----------------------------------------------------- */
 
 .settings-back {
   display: inline-flex;
@@ -192,9 +191,9 @@
   gap: 2px;
   padding: 6px 10px 6px 2px;
   font: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--green-deep);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
   background: none;
   border: 0;
   cursor: pointer;
@@ -210,25 +209,25 @@
 }
 
 .settings-back:focus-visible {
-  outline: 2px solid var(--green-dark);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
 }
 
 .settings-head {
   margin: 0 0 var(--sp-2);
 }
 
-/* A short rule, then the word spaced wide, like the book card's label. */
+/* A short rule, then the word spaced wide. */
 .settings-kicker {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.28em;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #3b6d11;
+  color: var(--green-deep);
 }
 
 .settings-kicker::before {
@@ -240,20 +239,19 @@
 }
 
 .settings-kicker.is-danger {
-  color: #a32d2d;
+  color: var(--danger);
 }
 
 .settings-title {
   margin: 6px 0 0;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 28px;
-  font-weight: 400;
+  font-size: var(--font-title);
+  font-weight: var(--weight-bold);
   line-height: 1.2;
-  color: #27500a;
+  color: var(--green-deep);
 }
 
 .settings-title.is-danger {
-  color: #791f1f;
+  color: var(--danger);
 }
 
 /* The page title already names the setting. */
@@ -265,13 +263,5 @@
 @media (max-width: 480px) {
   .settings-cover {
     padding: var(--sp-4);
-  }
-
-  .settings-cover-name {
-    font-size: 20px;
-  }
-
-  .settings-title {
-    font-size: 24px;
   }
 }
