@@ -114,6 +114,9 @@ import './styles/responsive.css'
 // (pages/PlaylistPicker.tsx), or from a VeggieBook's ⋮ on home (pages/
 // BookPlaylist.tsx). Books are never changed by them.
 //
+// The green bar's Back steps up one level: from a setting to Profile and
+// settings, from an open item to its list, and from a list to home.
+//
 // After a deploy, the page reloads itself on the next move to a screen
 // where nothing is lost (hooks/useNewVersion.ts).
 
@@ -171,6 +174,8 @@ export default function App() {
   const editingCover = route.view === 'book' ? route.cover : false
   // The notification open on its own page, or null for the list.
   const openNotification = route.view === 'notifications' ? route.messageId : null
+  // The setting open on its own page, or null for Profile and settings.
+  const openSection = route.view === 'account' ? (route.section ?? null) : null
 
   // Which viewer a saved book needs. An open recipe or secret in the
   // address already says; otherwise the book list, which the home screen
@@ -459,6 +464,9 @@ export default function App() {
     }
     // Making a playlist from a book goes back to home, where it started.
     if (current === 'bookPlaylist') return goHome
+    // One setting goes back to Profile and settings, and that list goes
+    // home.
+    if (current === 'account' && openSection !== null) return () => goUp(accountPath())
     if (current === 'forgotPassword') return () => goUp('/signin')
     if (authPage || current === 'account' || readingPage) return goHome
     return undefined
@@ -627,7 +635,7 @@ export default function App() {
               <AccountSettings
                 email={email}
                 isAdmin={admin}
-                section={route.view === 'account' ? (route.section ?? null) : null}
+                section={openSection}
                 onOpenSection={(section) => {
                   navigate(accountPath(section))
                   window.scrollTo(0, 0)

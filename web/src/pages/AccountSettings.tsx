@@ -18,9 +18,9 @@ import type { AccountSection } from '../utils/routes'
 // Profile and settings. With no section open: a green cover with the
 // username and email, a list of settings, and sign out below it. With a
 // section open: that setting on its own screen (username, password and
-// recovery, help with research, or delete account), each with a link back
-// to the list. Each setting is its existing card, with its own error
-// message. Sign out is also in the home screen's Menu.
+// recovery, help with research, or delete account). The green bar's Back
+// returns from a setting to the list. Each setting is its existing card,
+// with its own error message. Sign out is also in the home screen's Menu.
 //
 // Admin accounts see a note instead of Delete account; the API refuses it.
 
@@ -75,13 +75,7 @@ export function AccountSettings({
             : t.delTitle
 
     return (
-      <SettingsPage
-        kicker={s.settings}
-        title={title}
-        backLabel={s.profile}
-        danger={section === 'delete'}
-        onBack={() => onOpenSection(null)}
-      >
+      <SettingsPage kicker={s.settings} title={title} danger={section === 'delete'}>
         {section === 'username' && <ProfileCard />}
         {section === 'security' && <SecurityCard email={email} onChangePassword={onChangePassword} />}
         {section === 'research' && <ResearchCard />}
