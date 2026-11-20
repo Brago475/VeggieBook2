@@ -20,12 +20,14 @@ import {
 
 // Picking recipes from saved VeggieBooks, for a new playlist (no
 // playlistId) or to add to one already made. A shelf of book covers picks
-// which book's recipes show. When adding, recipes already in the playlist
-// are marked and cannot be picked again; taking recipes out is done on the
+// which book's recipes show; startBookId opens it on one book, as when
+// coming from a book's ⋮. When adding, recipes already in the playlist are
+// marked and cannot be picked again; taking recipes out is done on the
 // edit screen. Books are only read.
 
 type Props = {
   playlistId: number | null
+  startBookId?: string | null
   onSaved: (id: number) => void
   onCancel: () => void
   onMakeBook: () => void
@@ -41,7 +43,7 @@ function shortDate(iso: string, lang: string): string {
   return d.toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { month: 'short', day: 'numeric' })
 }
 
-export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Props) {
+export function PlaylistPicker({ playlistId, startBookId = null, onSaved, onCancel, onMakeBook }: Props) {
   const t = useStrings(PLAYLISTS)
   const { lang } = useLang()
   const adding = playlistId !== null
@@ -52,7 +54,7 @@ export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Pr
   const [loadError, setLoadError] = useState(false)
   const [name, setName] = useState('')
   const [picked, setPicked] = useState<number[]>([])
-  const [active, setActive] = useState<string | null>(null)
+  const [active, setActive] = useState<string | null>(startBookId)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 

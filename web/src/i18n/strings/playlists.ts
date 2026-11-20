@@ -95,6 +95,7 @@ const en = {
   newSub: 'Pick recipes from your books.',
   kickerAdd: 'Add to playlist',
   addSub: 'Recipes already in it are marked.',
+  chooseSub: 'Then pick recipes from this book.',
   inPlaylist: 'In playlist',
   makeBook: 'Make a VeggieBook',
 
@@ -191,6 +192,7 @@ const es: typeof en = {
   newSub: 'Elige recetas de tus libros.',
   kickerAdd: 'Agregar a la lista',
   addSub: 'Las recetas que ya están en ella aparecen marcadas.',
+  chooseSub: 'Luego elige recetas de este libro.',
   inPlaylist: 'En la lista',
   makeBook: 'Hacer un VeggieBook',
 
