@@ -74,9 +74,12 @@ const en = {
   needKeep: 'Keep at least one recipe, or delete the playlist.',
   nameLabel: 'Name',
   namePlaceholder: 'Weeknight dinners',
+  namePrompt: 'Name your playlist',
   yourBooks: 'Your books',
   fromBook: (vegetable: string): string => `Your ${vegetable} VeggieBook`,
   bookRecipes: (n: number): string => (n === 1 ? '1 recipe' : `${n} recipes`),
+  bookCount: (vegetable: string, n: number): string =>
+    n === 1 ? `${vegetable}, 1 recipe` : `${vegetable}, ${n} recipes`,
   bookPicked: (n: number): string => `${n} picked`,
   pickAll: 'Pick all',
   clearBook: 'Clear',
@@ -87,13 +90,9 @@ const en = {
   needRecipe: 'Pick at least one recipe.',
   somethingWrong: 'Something went wrong. Please try again.',
 
-  pickerSub: 'Pick recipes from any of your VeggieBooks.',
   addTo: (name: string): string => `Add to "${name}"`,
   addSub: 'Pick recipes to add. Ones already in this playlist are marked.',
   inPlaylist: 'In playlist',
-  allBooks: 'All',
-  booksFilter: 'Show recipes from',
-  pickRecipes: 'Pick recipes',
   makeBook: 'Make a VeggieBook',
 
   makeFromBook: 'Make a playlist',
@@ -168,9 +167,12 @@ const es: typeof en = {
   needKeep: 'Deja al menos una receta, o borra la lista.',
   nameLabel: 'Nombre',
   namePlaceholder: 'Cenas entre semana',
+  namePrompt: 'Ponle nombre a tu lista',
   yourBooks: 'Tus libros',
   fromBook: (vegetable: string) => `Tu VeggieBook de ${vegetable}`,
   bookRecipes: (n: number) => (n === 1 ? '1 receta' : `${n} recetas`),
+  bookCount: (vegetable: string, n: number) =>
+    n === 1 ? `${vegetable}, 1 receta` : `${vegetable}, ${n} recetas`,
   bookPicked: (n: number) => (n === 1 ? '1 elegida' : `${n} elegidas`),
   pickAll: 'Elegir todas',
   clearBook: 'Quitar',
@@ -181,13 +183,9 @@ const es: typeof en = {
   needRecipe: 'Elige al menos una receta.',
   somethingWrong: 'Algo salió mal. Inténtalo de nuevo.',
 
-  pickerSub: 'Elige recetas de cualquiera de tus VeggieBooks.',
   addTo: (name: string) => `Agregar a "${name}"`,
   addSub: 'Elige recetas para agregar. Las que ya están en esta lista aparecen marcadas.',
   inPlaylist: 'En la lista',
-  allBooks: 'Todos',
-  booksFilter: 'Mostrar recetas de',
-  pickRecipes: 'Elige recetas',
   makeBook: 'Hacer un VeggieBook',
 
   makeFromBook: 'Hacer una lista',

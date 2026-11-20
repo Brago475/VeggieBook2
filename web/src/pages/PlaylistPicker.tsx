@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { LeafDecor } from '../components/layout/LeafDecor'
-import { BookChips, type BookChip } from '../components/playlists/BookChips'
+import { BookShelf, type ShelfBook } from '../components/playlists/BookShelf'
 import { PickFooter } from '../components/playlists/PickFooter'
 import { PickRow } from '../components/playlists/PickRow'
+import { EditIcon } from '../components/playlists/PlaylistIcons'
 import { useLang } from '../i18n/languageContext'
 import { PLAYLISTS } from '../i18n/strings/playlists'
 import { useStrings } from '../i18n/useStrings'
+import type { BookSummary } from '../types'
+import { apiFetch } from '../utils/api'
 import {
   createOwnPlaylist,
   fetchBookChoices,
@@ -14,11 +17,11 @@ import {
   type BookChoice,
 } from '../utils/playlistsApi'
 
-// Picking recipes from every saved VeggieBook, for a new playlist (no
-// playlistId) or to add to one already made. Chips narrow the list to one
-// book. When adding, recipes already in the playlist are marked and cannot
-// be picked again; taking recipes out is done on the edit screen. Books are
-// only read.
+// Picking recipes from saved VeggieBooks, for a new playlist (no
+// playlistId) or to add to one already made. A shelf of book covers picks
+// which book's recipes show. When adding, recipes already in the playlist
+// are marked and cannot be picked again; taking recipes out is done on the
+// edit screen. Books are only read.
 
 type Props = {
   playlistId: number | null
@@ -28,24 +31,13 @@ type Props = {
 }
 
 type Target = { name: string; ids: number[] }
-type Recipe = BookChoice['recipes'][number]
-type Group = { id: string; label: string; recipes: Recipe[] }
 
 const MAX_NAME = 60
 
-// Books of the same vegetable get a number so their chips differ.
-function chipLabels(books: BookChoice[]): Map<string, string> {
-  const totals = new Map<string, number>()
-  for (const b of books) totals.set(b.vegetableName, (totals.get(b.vegetableName) ?? 0) + 1)
-
-  const seen = new Map<string, number>()
-  const labels = new Map<string, string>()
-  for (const b of books) {
-    const n = (seen.get(b.vegetableName) ?? 0) + 1
-    seen.set(b.vegetableName, n)
-    labels.set(b.id, (totals.get(b.vegetableName) ?? 0) > 1 ? `${b.vegetableName} ${n}` : b.vegetableName)
-  }
-  return labels
+function shortDate(iso: string, lang: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString(lang === 'es' ? 'es-US' : 'en-US', { month: 'short', day: 'numeric' })
 }
 
 export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Props) {
@@ -54,6 +46,7 @@ export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Pr
   const adding = playlistId !== null
 
   const [books, setBooks] = useState<BookChoice[] | null>(null)
+  const [covers, setCovers] = useState<Map<string, string>>(new Map())
   const [target, setTarget] = useState<Target | null>(null)
   const [loadError, setLoadError] = useState(false)
   const [name, setName] = useState('')
@@ -66,11 +59,14 @@ export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Pr
     let live = true
     Promise.all([
       fetchBookChoices(lang),
+      // Covers are only decoration; the picker works without them.
+      apiFetch<BookSummary[]>('/books').catch(() => [] as BookSummary[]),
       playlistId === null ? Promise.resolve(null) : fetchOwnPlaylist(playlistId, lang),
     ])
-      .then(([choices, own]) => {
+      .then(([choices, summaries, own]) => {
         if (!live) return
         setBooks(choices.filter((b) => b.recipes.length > 0))
+        setCovers(new Map(summaries.map((s) => [s.id, s.cover])))
         if (own) {
           const ids = own.recipeIds ?? own.items.filter((i) => i.kind === 'recipe').map((i) => i.id)
           setTarget({ name: own.name, ids })
@@ -84,49 +80,29 @@ export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Pr
     }
   }, [playlistId, lang])
 
-  const labels = useMemo(() => chipLabels(books ?? []), [books])
   const already = useMemo(() => new Set(target?.ids ?? []), [target])
+  const current = books?.find((b) => b.id === active) ?? books?.[0] ?? null
 
-  // All books: each recipe shows once, under the first book that has it.
-  const groups: Group[] = useMemo(() => {
-    if (!books) return []
-    const list = active === null ? books : books.filter((b) => b.id === active)
-    const shown = new Set<number>()
-    const result: Group[] = []
-    for (const b of list) {
-      const recipes: Recipe[] = []
-      for (const r of b.recipes) {
-        if (shown.has(r.id)) continue
-        shown.add(r.id)
-        recipes.push(r)
-      }
-      if (recipes.length > 0) result.push({ id: b.id, label: t.fromBook(b.vegetableName), recipes })
-    }
-    return result
-  }, [books, active, t])
-
-  const visible = groups.flatMap((g) => g.recipes.map((r) => r.id)).filter((id) => !already.has(id))
-  const allVisiblePicked = visible.length > 0 && visible.every((id) => picked.includes(id))
-  const noneVisiblePicked = visible.every((id) => !picked.includes(id))
-
-  const chips: BookChip[] = (books ?? []).map((b) => ({
+  const shelf: ShelfBook[] = (books ?? []).map((b) => ({
     id: b.id,
-    label: labels.get(b.id) ?? b.vegetableName,
+    name: b.vegetableName,
+    date: shortDate(b.createdAt, lang),
+    cover: covers.get(b.id) ?? null,
     picked: b.recipes.filter((r) => picked.includes(r.id)).length,
   }))
+
+  const visible = current ? current.recipes.map((r) => r.id).filter((id) => !already.has(id)) : []
+  const allPicked = visible.length > 0 && visible.every((id) => picked.includes(id))
 
   function toggle(id: number) {
     setPicked((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
     setError(null)
   }
 
-  function pickAll() {
-    setPicked((prev) => [...new Set([...prev, ...visible])])
-    setError(null)
-  }
-
-  function clearVisible() {
-    setPicked((prev) => prev.filter((id) => !visible.includes(id)))
+  function toggleAll() {
+    setPicked((prev) =>
+      allPicked ? prev.filter((id) => !visible.includes(id)) : [...new Set([...prev, ...visible])],
+    )
     setError(null)
   }
 
@@ -161,7 +137,6 @@ export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Pr
     }
   }
 
-  const title = adding ? (target ? t.addTo(target.name) : t.addFromBook) : t.makerNew
   const loading = books === null && !loadError
   const noBooks = books !== null && books.length === 0
 
@@ -171,28 +146,30 @@ export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Pr
 
       <div className="library-head">
         <div className="library-head-text">
-          <h1 className="library-title">{title}</h1>
-          {!adding && <p className="library-sub">{t.pickerSub}</p>}
+          {adding ? (
+            <h1 className="library-title">{target ? t.addTo(target.name) : t.addFromBook}</h1>
+          ) : (
+            <h1 className="library-title pk-title">
+              <label className="pk-name">
+                <input
+                  className="pk-name-input"
+                  value={name}
+                  maxLength={MAX_NAME}
+                  placeholder={t.namePrompt}
+                  aria-label={t.nameLabel}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    setError(null)
+                  }}
+                />
+                <EditIcon className="pk-name-icon" />
+              </label>
+            </h1>
+          )}
         </div>
       </div>
 
       {adding && <p className="pk-hint">{t.addSub}</p>}
-
-      {!adding && !noBooks && (
-        <label className="pl-field">
-          <span className="pl-field-label">{t.nameLabel}</span>
-          <input
-            className="pl-input"
-            value={name}
-            maxLength={MAX_NAME}
-            placeholder={t.namePlaceholder}
-            onChange={(e) => {
-              setName(e.target.value)
-              setError(null)
-            }}
-          />
-        </label>
-      )}
 
       {loadError && <p className="message">{t.couldNotLoad}</p>}
       {loading && <div className="skeleton nf-skel-detail" aria-hidden="true" />}
@@ -211,54 +188,37 @@ export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Pr
         </>
       )}
 
-      {books && books.length > 0 && (
+      {current && (
         <>
-          {books.length > 1 && (
-            <BookChips
-              label={t.booksFilter}
-              allLabel={t.allBooks}
-              allPicked={picked.length}
-              books={chips}
-              active={active}
-              onChange={setActive}
-            />
-          )}
+          <p className="pl-field-label pk-shelf-label">{t.yourBooks}</p>
+          <BookShelf label={t.yourBooks} books={shelf} active={current.id} onChange={setActive} />
 
           <div className="bp-head pk-tools">
-            <p className="pl-field-label bp-label">{t.pickRecipes}</p>
-            <div className="bp-tools">
-              <button type="button" className="bp-link" disabled={allVisiblePicked || visible.length === 0} onClick={pickAll}>
-                {t.pickAll}
+            <p className="pl-field-label bp-label">{t.bookCount(current.vegetableName, current.recipes.length)}</p>
+            {visible.length > 0 && (
+              <button type="button" className="bp-link" onClick={toggleAll}>
+                {allPicked ? t.clearBook : t.pickAll}
               </button>
-              <button type="button" className="bp-link" disabled={noneVisiblePicked} onClick={clearVisible}>
-                {t.clearBook}
-              </button>
-            </div>
+            )}
           </div>
 
-          {groups.map((g) => (
-            <section key={g.id} className="pk-group">
-              {active === null && books.length > 1 && <p className="pl-field-label pk-group-label">{g.label}</p>}
-              <ul className="pk-list">
-                {g.recipes.map((r) => (
-                  <li key={r.id}>
-                    <PickRow
-                      title={r.title}
-                      photo={r.photo}
-                      on={picked.includes(r.id)}
-                      inLabel={already.has(r.id) ? t.inPlaylist : null}
-                      onToggle={() => toggle(r.id)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          <ul className="pk-list">
+            {current.recipes.map((r) => (
+              <li key={r.id}>
+                <PickRow
+                  title={r.title}
+                  photo={r.photo}
+                  on={picked.includes(r.id)}
+                  inLabel={already.has(r.id) ? t.inPlaylist : null}
+                  onToggle={() => toggle(r.id)}
+                />
+              </li>
+            ))}
+          </ul>
 
           {error && <p className="message">{error}</p>}
 
           <PickFooter
-            countLabel={t.bookPicked(picked.length)}
             cancelLabel={t.cancel}
             saveLabel={busy ? t.saving : adding ? t.addSave(picked.length) : t.save(picked.length)}
             busy={busy}

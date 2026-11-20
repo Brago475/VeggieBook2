@@ -1,5 +1,5 @@
 /* The playlist picker (pages/PlaylistPicker.tsx) and the New playlist card
-   on the Playlists tab. Rows, buttons and the name field: playlists.css.
+   on the Playlists tab. Rows and buttons: playlists.css.
    Colors come only from tokens.css. */
 
 /* --- new playlist card ------------------------------------------------ */
@@ -62,7 +62,45 @@
   color: var(--text-muted);
 }
 
-/* --- picker ----------------------------------------------------------- */
+/* --- name as the title ------------------------------------------------ */
+
+.pk-title {
+  margin: 0;
+}
+
+.pk-name {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--green-light);
+}
+
+.pk-name:focus-within {
+  border-color: var(--green-action);
+}
+
+.pk-name-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  outline: none;
+}
+
+.pk-name-input::placeholder {
+  color: var(--text-muted);
+}
+
+.pk-name-icon {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  color: var(--green-action);
+}
 
 .pk-hint {
   margin: 0 0 var(--sp-4);
@@ -75,71 +113,110 @@
   border-radius: var(--r-md);
 }
 
-.pk-chips {
+/* --- book shelf (BookShelf.tsx) --------------------------------------- */
+
+.pk-shelf-label {
+  margin: 0 0 var(--sp-2);
+}
+
+.pk-shelf {
   display: flex;
-  gap: var(--sp-2);
-  margin: 0 0 var(--sp-3);
-  padding: 2px 2px var(--sp-2);
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-4);
+  padding: 4px 4px var(--sp-2);
   overflow-x: auto;
+  scroll-snap-type: x proximity;
   scrollbar-width: none;
 }
 
-.pk-chips::-webkit-scrollbar {
+.pk-shelf::-webkit-scrollbar {
   display: none;
 }
 
-.pk-chip {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 0 14px;
+.pk-book {
+  position: relative;
+  flex: 0 0 104px;
+  height: 132px;
+  padding: 0;
+  overflow: hidden;
   font: inherit;
-  font-size: var(--font-label);
-  font-weight: var(--weight-bold);
-  white-space: nowrap;
-  color: var(--green-action);
-  background: var(--surface);
-  border: 1px solid var(--green-light);
-  border-radius: var(--r-pill);
+  background: var(--green-light);
+  border: 0;
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 1px var(--line);
+  scroll-snap-align: start;
   cursor: pointer;
 }
 
-.pk-chip.is-on {
-  color: var(--surface);
-  background: var(--green-action);
-  border-color: var(--green-action);
+.pk-book.is-on {
+  box-shadow: 0 0 0 3px var(--green-action);
 }
 
-.pk-chip-count {
+.pk-book-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Shade keeps white text readable on any cover. */
+.pk-book::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 60%;
+  background: linear-gradient(to top, color-mix(in srgb, var(--text) 65%, transparent), transparent);
+  pointer-events: none;
+}
+
+.pk-book-text {
+  position: absolute;
+  z-index: 2;
+  left: var(--sp-2);
+  right: var(--sp-2);
+  bottom: 6px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  color: var(--surface);
+  text-shadow: 0 1px 4px color-mix(in srgb, var(--text) 45%, transparent);
+}
+
+.pk-book-name {
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.pk-book-date {
+  font-size: var(--font-label);
+  color: color-mix(in srgb, var(--surface) 85%, transparent);
+}
+
+.pk-book-badge {
+  position: absolute;
+  z-index: 2;
+  top: 6px;
+  right: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
   font-size: var(--font-label);
-  line-height: 1;
-  color: var(--green-action);
-  background: var(--green-tint);
+  font-weight: var(--weight-bold);
+  color: var(--surface);
+  background: var(--green-action);
   border-radius: var(--r-pill);
 }
 
-.pk-chip.is-on .pk-chip-count {
-  background: var(--surface);
-}
+/* --- recipe rows ------------------------------------------------------ */
 
 .pk-tools {
   margin-bottom: var(--sp-2);
-}
-
-.pk-group {
-  margin: 0 0 var(--sp-4);
-}
-
-.pk-group-label {
-  margin: 0 0 var(--sp-2);
 }
 
 .pk-list {
@@ -149,6 +226,25 @@
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.pk-row {
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
+  border-radius: var(--r-md);
+}
+
+.pk-row .recipe-thumb {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+}
+
+.pk-row .pl-check {
+  width: 24px;
+  height: 24px;
 }
 
 .pk-row:disabled {
@@ -171,7 +267,8 @@
   border-radius: var(--r-pill);
 }
 
-/* Bar pinned to the bottom: count, Cancel, Save. */
+/* --- bottom bar (PickFooter.tsx) -------------------------------------- */
+
 .pk-foot {
   position: sticky;
   bottom: var(--sp-3);
@@ -180,55 +277,46 @@
   align-items: center;
   gap: var(--sp-3);
   margin-top: var(--sp-5);
-  padding: 10px var(--sp-3);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
   background: color-mix(in srgb, var(--surface) 96%, transparent);
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-pill);
   box-shadow: 0 -4px 20px color-mix(in srgb, var(--text) 10%, transparent);
 }
 
-.pk-foot-count {
+.pk-cancel {
   flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 var(--sp-2);
+  font: inherit;
   font-size: var(--font-label);
   font-weight: var(--weight-bold);
-  color: var(--text-muted);
+  color: var(--green-action);
+  background: none;
+  border: 0;
+  cursor: pointer;
 }
 
-.pk-foot-btns {
-  display: flex;
+.pk-cancel:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.pk-cancel:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.pk-save {
   flex: 1;
-  gap: var(--sp-2);
-}
-
-.pk-foot-btns .pl-btn {
-  flex: 1;
-  padding: 0 12px;
-}
-
-.pk-foot-btns .pl-btn.is-primary {
-  flex: 1.6;
 }
 
 /* --- focus ------------------------------------------------------------ */
 
 .pl-newcard:focus-visible,
-.pk-chip:focus-visible {
+.pk-book:focus-visible,
+.pk-cancel:focus-visible {
   outline: 2px solid var(--green);
   outline-offset: 2px;
-}
-
-/* --- small screens ---------------------------------------------------- */
-
-@media (max-width: 480px) {
-  .pk-foot {
-    flex-wrap: wrap;
-    gap: var(--sp-2);
-  }
-
-  .pk-foot-count {
-    width: 100%;
-    text-align: center;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
