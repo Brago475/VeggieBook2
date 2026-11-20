@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { PickFooter } from '../components/playlists/PickFooter'
+import { PickHead } from '../components/playlists/PickHead'
 import { PickRow } from '../components/playlists/PickRow'
 import { EditIcon } from '../components/playlists/PlaylistIcons'
 import { useLang } from '../i18n/languageContext'
@@ -11,8 +12,8 @@ import { fetchOwnPlaylist, updateOwnPlaylist, type PlaylistRecipe } from '../uti
 // Editing your own playlist: its name, and only the recipes already in it.
 // Unchecking a recipe takes it out on save. Recipes are added from the
 // playlist's Add button (pages/PlaylistPicker.tsx). Books are only read.
-// Styled like the picker: the name is the title, rows are compact, and the
-// bottom bar holds Cancel and Save.
+// Laid out like the picker: label and name on top, compact rows, and
+// Cancel and Save at the bottom.
 
 type Props = {
   playlistId: number
@@ -77,27 +78,24 @@ export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
     <div className="account-screen nf-screen pl-maker pk-screen">
       <LeafDecor className="account-leaf" />
 
-      <div className="library-head">
-        <div className="library-head-text">
-          <h1 className="library-title pk-title">
-            <label className="pk-name">
-              <input
-                className="pk-name-input"
-                value={name}
-                maxLength={MAX_NAME}
-                placeholder={t.namePrompt}
-                aria-label={t.nameLabel}
-                onChange={(e) => {
-                  setName(e.target.value)
-                  setError(null)
-                }}
-              />
-              <EditIcon className="pk-name-icon" />
-            </label>
-          </h1>
-          <p className="library-sub">{t.editSub}</p>
-        </div>
-      </div>
+      <PickHead kicker={t.makerEdit} sub={t.editSub}>
+        <h1 className="library-title pk-title">
+          <label className="pk-name">
+            <input
+              className="pk-name-input"
+              value={name}
+              maxLength={MAX_NAME}
+              placeholder={t.namePrompt}
+              aria-label={t.nameLabel}
+              onChange={(e) => {
+                setName(e.target.value)
+                setError(null)
+              }}
+            />
+            <EditIcon className="pk-name-icon" />
+          </label>
+        </h1>
+      </PickHead>
 
       {loadError && <p className="message">{t.couldNotLoad}</p>}
       {!recipes && !loadError && <div className="skeleton nf-skel-detail" aria-hidden="true" />}

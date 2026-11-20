@@ -76,6 +76,8 @@ const en = {
   namePlaceholder: 'Weeknight dinners',
   namePrompt: 'Name your playlist',
   yourBooks: 'Your books',
+  prevBooks: 'Show earlier books',
+  nextBooks: 'Show more books',
   fromBook: (vegetable: string): string => `Your ${vegetable} VeggieBook`,
   bookRecipes: (n: number): string => (n === 1 ? '1 recipe' : `${n} recipes`),
   bookCount: (vegetable: string, n: number): string =>
@@ -90,8 +92,9 @@ const en = {
   needRecipe: 'Pick at least one recipe.',
   somethingWrong: 'Something went wrong. Please try again.',
 
-  addTo: (name: string): string => `Add to "${name}"`,
-  addSub: 'Pick recipes to add. Ones already in this playlist are marked.',
+  newSub: 'Pick recipes from your books.',
+  kickerAdd: 'Add to playlist',
+  addSub: 'Recipes already in it are marked.',
   inPlaylist: 'In playlist',
   makeBook: 'Make a VeggieBook',
 
@@ -169,6 +172,8 @@ const es: typeof en = {
   namePlaceholder: 'Cenas entre semana',
   namePrompt: 'Ponle nombre a tu lista',
   yourBooks: 'Tus libros',
+  prevBooks: 'Ver libros anteriores',
+  nextBooks: 'Ver más libros',
   fromBook: (vegetable: string) => `Tu VeggieBook de ${vegetable}`,
   bookRecipes: (n: number) => (n === 1 ? '1 receta' : `${n} recetas`),
   bookCount: (vegetable: string, n: number) =>
@@ -183,8 +188,9 @@ const es: typeof en = {
   needRecipe: 'Elige al menos una receta.',
   somethingWrong: 'Algo salió mal. Inténtalo de nuevo.',
 
-  addTo: (name: string) => `Agregar a "${name}"`,
-  addSub: 'Elige recetas para agregar. Las que ya están en esta lista aparecen marcadas.',
+  newSub: 'Elige recetas de tus libros.',
+  kickerAdd: 'Agregar a la lista',
+  addSub: 'Las recetas que ya están en ella aparecen marcadas.',
   inPlaylist: 'En la lista',
   makeBook: 'Hacer un VeggieBook',
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { LeafDecor } from '../components/layout/LeafDecor'
 import { BookShelf, type ShelfBook } from '../components/playlists/BookShelf'
 import { PickFooter } from '../components/playlists/PickFooter'
+import { PickHead } from '../components/playlists/PickHead'
 import { PickRow } from '../components/playlists/PickRow'
 import { EditIcon } from '../components/playlists/PlaylistIcons'
 import { useLang } from '../i18n/languageContext'
@@ -144,32 +145,28 @@ export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Pr
     <div className="account-screen nf-screen pl-maker pk-screen">
       <LeafDecor className="account-leaf" />
 
-      <div className="library-head">
-        <div className="library-head-text">
-          {adding ? (
-            <h1 className="library-title">{target ? t.addTo(target.name) : t.addFromBook}</h1>
-          ) : (
-            <h1 className="library-title pk-title">
-              <label className="pk-name">
-                <input
-                  className="pk-name-input"
-                  value={name}
-                  maxLength={MAX_NAME}
-                  placeholder={t.namePrompt}
-                  aria-label={t.nameLabel}
-                  onChange={(e) => {
-                    setName(e.target.value)
-                    setError(null)
-                  }}
-                />
-                <EditIcon className="pk-name-icon" />
-              </label>
-            </h1>
-          )}
-        </div>
-      </div>
-
-      {adding && <p className="pk-hint">{t.addSub}</p>}
+      <PickHead kicker={adding ? t.kickerAdd : t.makerNew} sub={adding ? t.addSub : t.newSub}>
+        {adding ? (
+          <h1 className="library-title pk-title">{target?.name ?? ''}</h1>
+        ) : (
+          <h1 className="library-title pk-title">
+            <label className="pk-name">
+              <input
+                className="pk-name-input"
+                value={name}
+                maxLength={MAX_NAME}
+                placeholder={t.namePrompt}
+                aria-label={t.nameLabel}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setError(null)
+                }}
+              />
+              <EditIcon className="pk-name-icon" />
+            </label>
+          </h1>
+        )}
+      </PickHead>
 
       {loadError && <p className="message">{t.couldNotLoad}</p>}
       {loading && <div className="skeleton nf-skel-detail" aria-hidden="true" />}
@@ -177,21 +174,27 @@ export function PlaylistPicker({ playlistId, onSaved, onCancel, onMakeBook }: Pr
       {noBooks && (
         <>
           <p className="pl-empty">{t.noBooks}</p>
-          <div className="pl-savebar">
-            <button type="button" className="pl-btn" onClick={onCancel}>
-              {t.cancel}
-            </button>
-            <button type="button" className="pl-btn is-primary" onClick={onMakeBook}>
-              {t.makeBook}
-            </button>
-          </div>
+          <PickFooter
+            cancelLabel={t.cancel}
+            saveLabel={t.makeBook}
+            busy={false}
+            onCancel={onCancel}
+            onSave={onMakeBook}
+          />
         </>
       )}
 
       {current && (
         <>
           <p className="pl-field-label pk-shelf-label">{t.yourBooks}</p>
-          <BookShelf label={t.yourBooks} books={shelf} active={current.id} onChange={setActive} />
+          <BookShelf
+            label={t.yourBooks}
+            prevLabel={t.prevBooks}
+            nextLabel={t.nextBooks}
+            books={shelf}
+            active={current.id}
+            onChange={setActive}
+          />
 
           <div className="bp-head pk-tools">
             <p className="pl-field-label bp-label">{t.bookCount(current.vegetableName, current.recipes.length)}</p>

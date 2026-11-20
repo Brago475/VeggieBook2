@@ -1,6 +1,7 @@
 /* The playlist picker (pages/PlaylistPicker.tsx), the edit screen
    (pages/PlaylistMaker.tsx), and the New playlist card on the Playlists
-   tab. Rows and buttons: playlists.css. Colors come only from tokens.css. */
+   tab. Rows, buttons and the bottom bar: playlists.css.
+   Colors come only from tokens.css. */
 
 /* --- new playlist card ------------------------------------------------ */
 
@@ -62,10 +63,35 @@
   color: var(--text-muted);
 }
 
-/* --- name as the title ------------------------------------------------ */
+/* --- top (PickHead.tsx) ----------------------------------------------- */
+
+.pk-head {
+  margin-bottom: var(--sp-4);
+}
+
+.pk-kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 4px;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green-deep);
+}
+
+.pk-kicker::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 20px;
+  height: 1px;
+  background: currentColor;
+}
 
 .pk-title {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .pk-name {
@@ -102,27 +128,49 @@
   color: var(--green-action);
 }
 
-.pk-hint {
-  margin: 0 0 var(--sp-4);
-  padding: 10px 14px;
-  font-size: var(--font-label);
-  line-height: 1.5;
-  color: var(--green-deep);
-  background: var(--green-tint);
-  border: 1px solid var(--green-light);
-  border-radius: var(--r-md);
-}
-
 /* --- book shelf (BookShelf.tsx) --------------------------------------- */
 
 .pk-shelf-label {
   margin: 0 0 var(--sp-2);
 }
 
+.pk-shelf-wrap {
+  position: relative;
+  margin: 0 0 var(--sp-4);
+}
+
+/* Soft fades at the ends that still have books past them. */
+.pk-shelf-wrap::before,
+.pk-shelf-wrap::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: var(--sp-2);
+  width: 48px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pk-shelf-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--page), transparent);
+}
+
+.pk-shelf-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--page), transparent);
+}
+
+.pk-shelf-wrap.has-left::before,
+.pk-shelf-wrap.has-right::after {
+  opacity: 1;
+}
+
 .pk-shelf {
   display: flex;
   gap: var(--sp-3);
-  margin: 0 0 var(--sp-4);
   padding: 4px 4px var(--sp-2);
   overflow-x: auto;
   scroll-snap-type: x proximity;
@@ -131,6 +179,46 @@
 
 .pk-shelf::-webkit-scrollbar {
   display: none;
+}
+
+.pk-arrow {
+  position: absolute;
+  z-index: 4;
+  top: calc(50% - var(--sp-1));
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  color: var(--green-action);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--text) 15%, transparent);
+  transform: translateY(-50%);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pk-arrow:hover {
+  background: var(--green-tint);
+}
+
+.pk-arrow.is-left {
+  left: -6px;
+}
+
+.pk-arrow.is-right {
+  right: -6px;
+}
+
+.pk-arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+.pk-arrow.is-left svg {
+  transform: rotate(180deg);
 }
 
 .pk-book {
@@ -271,60 +359,20 @@
   margin-top: var(--sp-3);
 }
 
-/* --- bottom bar (PickFooter.tsx) -------------------------------------- */
-
-.pk-foot {
-  position: sticky;
-  bottom: var(--sp-3);
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  margin-top: var(--sp-5);
-  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  border: 1px solid var(--line);
-  border-radius: var(--r-pill);
-  box-shadow: 0 -4px 20px color-mix(in srgb, var(--text) 10%, transparent);
-}
-
-.pk-cancel {
-  flex: 0 0 auto;
-  min-height: 44px;
-  padding: 0 var(--sp-2);
-  font: inherit;
-  font-size: var(--font-label);
-  font-weight: var(--weight-bold);
-  color: var(--green-action);
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-
-.pk-cancel:hover:not(:disabled) {
-  text-decoration: underline;
-}
-
-.pk-cancel:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.pk-save {
-  flex: 1;
-}
-
 /* --- focus ------------------------------------------------------------ */
 
 .pl-newcard:focus-visible,
 .pk-book:focus-visible,
-.pk-cancel:focus-visible {
+.pk-arrow:focus-visible {
   outline: 2px solid var(--green);
   outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pl-newcard {
+  .pl-newcard,
+  .pk-arrow,
+  .pk-shelf-wrap::before,
+  .pk-shelf-wrap::after {
     transition: none;
   }
 }
