@@ -1,6 +1,6 @@
-/* The playlist picker (pages/PlaylistPicker.tsx) and the New playlist card
-   on the Playlists tab. Rows and buttons: playlists.css.
-   Colors come only from tokens.css. */
+/* The playlist picker (pages/PlaylistPicker.tsx), the edit screen
+   (pages/PlaylistMaker.tsx), and the New playlist card on the Playlists
+   tab. Rows and buttons: playlists.css. Colors come only from tokens.css. */
 
 /* --- new playlist card ------------------------------------------------ */
 
@@ -265,6 +265,10 @@
   color: var(--green-deep);
   background: var(--green-tint);
   border-radius: var(--r-pill);
+}
+
+.pk-note {
+  margin-top: var(--sp-3);
 }
 
 /* --- bottom bar (PickFooter.tsx) -------------------------------------- */

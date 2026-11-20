@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
-import { SafeImage } from '../components/common/SafeImage'
 import { LeafDecor } from '../components/layout/LeafDecor'
-import { PickCheck } from '../components/playlists/PickCheck'
+import { PickFooter } from '../components/playlists/PickFooter'
+import { PickRow } from '../components/playlists/PickRow'
+import { EditIcon } from '../components/playlists/PlaylistIcons'
 import { useLang } from '../i18n/languageContext'
 import { PLAYLISTS } from '../i18n/strings/playlists'
 import { useStrings } from '../i18n/useStrings'
-import { coverSrc } from '../utils/coverSrc'
 import { fetchOwnPlaylist, updateOwnPlaylist, type PlaylistRecipe } from '../utils/playlistsApi'
 
 // Editing your own playlist: its name, and only the recipes already in it.
 // Unchecking a recipe takes it out on save. Recipes are added from the
 // playlist's Add button (pages/PlaylistPicker.tsx). Books are only read.
+// Styled like the picker: the name is the title, rows are compact, and the
+// bottom bar holds Cancel and Save.
 
 type Props = {
   playlistId: number
@@ -72,72 +74,70 @@ export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
   }
 
   return (
-    <div className="account-screen nf-screen pl-maker">
+    <div className="account-screen nf-screen pl-maker pk-screen">
       <LeafDecor className="account-leaf" />
 
       <div className="library-head">
         <div className="library-head-text">
-          <h1 className="library-title">{t.makerEdit}</h1>
+          <h1 className="library-title pk-title">
+            <label className="pk-name">
+              <input
+                className="pk-name-input"
+                value={name}
+                maxLength={MAX_NAME}
+                placeholder={t.namePrompt}
+                aria-label={t.nameLabel}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  setError(null)
+                }}
+              />
+              <EditIcon className="pk-name-icon" />
+            </label>
+          </h1>
           <p className="library-sub">{t.editSub}</p>
         </div>
       </div>
-
-      <label className="pl-field">
-        <span className="pl-field-label">{t.nameLabel}</span>
-        <input
-          className="pl-input"
-          value={name}
-          maxLength={MAX_NAME}
-          placeholder={t.namePlaceholder}
-          onChange={(e) => {
-            setName(e.target.value)
-            setError(null)
-          }}
-        />
-      </label>
 
       {loadError && <p className="message">{t.couldNotLoad}</p>}
       {!recipes && !loadError && <div className="skeleton nf-skel-detail" aria-hidden="true" />}
 
       {recipes && (
-        <section className="bp-section">
-          <p className="pl-field-label bp-label">{t.inThisPlaylist(kept.length)}</p>
-          <ul className="nf-list">
+        <>
+          <div className="bp-head pk-tools">
+            <p className="pl-field-label bp-label">{t.inThisPlaylist(kept.length)}</p>
+          </div>
+
+          <ul className="pk-list">
             {recipes.map((r) => {
               const on = kept.includes(r.id)
               return (
                 <li key={r.id}>
-                  <button
-                    type="button"
-                    className={on ? 'pl-pick is-on' : 'pl-pick'}
-                    aria-pressed={on}
-                    onClick={() => toggle(r.id)}
-                  >
-                    <SafeImage className="recipe-thumb" src={r.photo ? coverSrc(r.photo) : null} />
-                    <span className="bp-row-text">
-                      <span className="pl-pick-title">{r.title}</span>
-                      <span className="bp-row-meta">{on ? r.vegetableName : t.willRemove}</span>
-                    </span>
-                    <PickCheck on={on} />
-                  </button>
+                  <PickRow
+                    title={r.title}
+                    photo={r.photo}
+                    meta={on ? r.vegetableName : t.willRemove}
+                    on={on}
+                    onToggle={() => toggle(r.id)}
+                  />
                 </li>
               )
             })}
           </ul>
-          <p className="pl-empty">{t.editAddHint}</p>
-        </section>
+
+          <p className="pl-empty pk-note">{t.editAddHint}</p>
+
+          {error && <p className="message">{error}</p>}
+
+          <PickFooter
+            cancelLabel={t.cancel}
+            saveLabel={busy ? t.saving : t.saveChanges}
+            busy={busy}
+            onCancel={onCancel}
+            onSave={save}
+          />
+        </>
       )}
-
-      {error && <p className="message">{error}</p>}
-
-      <div className="pl-savebar">
-        <button type="button" className="pl-btn" disabled={busy} onClick={onCancel}>
-          {t.cancel}
-        </button>
-        <button type="button" className="pl-btn is-primary" disabled={busy || !recipes} onClick={save}>
-          {busy ? t.saving : t.saveChanges}
-        </button>
-      </div>
     </div>
   )
 }
