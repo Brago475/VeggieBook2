@@ -25,6 +25,7 @@
 //   /notifications/mine/{id}/recipe/{r}       one recipe opened from it
 //   /notifications/mine/{id}/add              adding recipes from all books
 //   /notifications/mine/{id}/edit             renaming or removing recipes
+//   /supertracker                             SuperTracker2 (web/src/supertracker)
 //   /about                                    about VeggieBook, open to everyone
 //   /terms, /privacy                          Terms of Use and Privacy Policy, open to everyone
 //   /signin, /register                        sign in, create account
@@ -54,6 +55,7 @@ export type Route =
   // Null makes a new playlist; a number adds to that playlist.
   | { view: 'playlistPicker'; playlistId: number | null }
   | { view: 'bookPlaylist'; bookId: string; mode: BookPlaylistMode }
+  | { view: 'superTracker' }
   | { view: 'about' }
   | { view: 'terms' }
   | { view: 'privacy' }
@@ -134,6 +136,8 @@ export function parseRoute(path: string): Route {
         return { view: 'account', section: null }
       case 'notifications':
         return { view: 'notifications', messageId: null }
+      case 'supertracker':
+        return { view: 'superTracker' }
       case 'about':
         return { view: 'about' }
       case 'terms':
@@ -228,6 +232,8 @@ export function routePath(route: Route): string {
       return pickerPath(route.playlistId)
     case 'bookPlaylist':
       return bookPlaylistPath(route.bookId, route.mode)
+    case 'superTracker':
+      return '/supertracker'
     case 'about':
       return '/about'
     case 'terms':

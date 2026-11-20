@@ -18,7 +18,8 @@ import { LanguageSwitch } from './LanguageSwitch'
 //               items come last, so signing out is always in the same place.
 //
 // A row with a badge shows its count, and the Menu button shows a dot while
-// any row has one.
+// any row has one. A row with a tag shows a short label, such as Coming
+// soon.
 //
 // Labeled "Menu", not three lines alone: the original VeggieBook's research
 // found pantry clients did best with plainly labeled controls.
@@ -34,6 +35,8 @@ export type MainMenuItem = {
   danger?: boolean
   // A count shown on the row, such as unread messages. Hidden at 0.
   badge?: number
+  // A short label at the right of the row.
+  tag?: string
 }
 
 type Props = {
@@ -99,6 +102,7 @@ export function MainMenu({ items, accountItems }: Props) {
         >
           {item.icon}
           {item.label}
+          {item.tag && <span className="main-menu-tag">{item.tag}</span>}
           {count > 0 && (
             <>
               <span className="main-menu-badge" aria-hidden="true">

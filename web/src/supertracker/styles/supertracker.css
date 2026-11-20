@@ -1,0 +1,323 @@
+/* SuperTracker2 (web/src/supertracker). Colors, type and spacing come
+   from the VeggieBook tokens in styles/tokens.css. */
+
+.st2 {
+  padding: var(--sp-5) 0 var(--sp-6);
+}
+
+/* Website view: wider than the VeggieBook column, centered on the page. */
+.st2.is-site {
+  width: min(var(--app-max-wide), calc(100vw - 2 * var(--sp-5)));
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
+.st2-welcome {
+  display: grid;
+  gap: var(--sp-5);
+  grid-template-areas:
+    'hero'
+    'side'
+    'actions';
+}
+
+.is-site .st2-welcome {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'hero side'
+    'actions side';
+  align-items: start;
+  column-gap: var(--sp-6);
+}
+
+/* --- intro ------------------------------------------------------------ */
+
+.st2-hero {
+  grid-area: hero;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.st2-logo {
+  width: 96px;
+  height: 96px;
+  padding: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.st2-title {
+  margin: 0;
+}
+
+.st2-intro {
+  margin: 0;
+  font-size: var(--font-row);
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+/* --- steps and note --------------------------------------------------- */
+
+.st2-side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.is-site .st2-side {
+  padding: var(--sp-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.st2-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.st2-step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+
+.st2-step-num {
+  display: grid;
+  flex: 0 0 34px;
+  place-items: center;
+  height: 34px;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: var(--surface);
+  border: 1px solid var(--green-light);
+  border-radius: 50%;
+}
+
+.is-site .st2-step-num {
+  background: var(--green-tint);
+}
+
+.st2-step-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.st2-step-title {
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+
+.st2-step-sub {
+  font-size: var(--font-label);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.st2-note {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--font-label);
+  line-height: 1.5;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.is-site .st2-note {
+  background: var(--page);
+}
+
+/* --- view choice (ViewChoice.tsx) ------------------------------------- */
+
+.st2-view {
+  min-width: 0;
+  margin: 0 0 var(--sp-2);
+  padding: 0;
+  border: 0;
+}
+
+.st2-view-label {
+  margin-bottom: var(--sp-2);
+  padding: 0;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+}
+
+.st2-view-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+.st2-view-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: var(--sp-3);
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.st2-view-opt:hover {
+  border-color: var(--green-light);
+}
+
+.st2-view-opt.is-on {
+  background: var(--green-tint);
+  border-color: var(--green-action);
+  box-shadow: 0 0 0 1px var(--green-action);
+}
+
+.st2-view-pic {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  margin-bottom: var(--sp-1);
+  padding: 4px;
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.st2-view-pic span {
+  display: block;
+  background: var(--green-light);
+  border-radius: 3px;
+}
+
+.st2-view-pic.is-app {
+  justify-content: center;
+}
+
+.st2-view-pic.is-app span {
+  width: 24%;
+}
+
+.st2-view-pic.is-site span {
+  width: 100%;
+  box-shadow: inset 14px 0 0 var(--green-action);
+}
+
+.st2-view-title {
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+}
+
+.st2-view-text {
+  font-size: var(--font-label);
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* --- buttons ---------------------------------------------------------- */
+
+.st2-actions {
+  grid-area: actions;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.st2-start {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 52px;
+  padding: 0 var(--sp-5);
+  font: inherit;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--surface);
+  background: var(--green-action);
+  border: 0;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.st2-start:hover:not(:disabled) {
+  background: var(--green-deep);
+}
+
+.st2-start:disabled {
+  color: var(--text-muted);
+  background: var(--line);
+  cursor: not-allowed;
+}
+
+.st2-start svg {
+  width: 18px;
+  height: 18px;
+}
+
+.st2-guide {
+  align-self: center;
+  padding: var(--sp-1) var(--sp-2);
+  font: inherit;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.st2-guide:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.st2-soon {
+  margin: 0;
+  font-size: var(--font-label);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.is-site .st2-start {
+  align-self: flex-start;
+  min-width: 240px;
+}
+
+.is-site .st2-guide,
+.is-site .st2-soon {
+  align-self: flex-start;
+  text-align: left;
+}
+
+/* --- focus ------------------------------------------------------------ */
+
+.st2-view-opt:focus-visible,
+.st2-start:focus-visible,
+.st2-guide:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st2-start {
+    transition: none;
+  }
+}

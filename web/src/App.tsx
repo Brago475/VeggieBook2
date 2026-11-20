@@ -42,6 +42,7 @@ import { PlaylistView } from './pages/PlaylistView'
 import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
 import { Welcome } from './pages/Welcome'
+import { SuperTrackerWelcome } from './supertracker/pages/SuperTrackerWelcome'
 import type { NotificationItem } from './utils/notificationsApi'
 import {
   bookPlaylistPath,
@@ -58,7 +59,8 @@ import {
 // are not beaten by a rule of equal specificity further down.
 //
 // The loading screen's styles are not here: they live in index.html so
-// they apply before this bundle has loaded.
+// they apply before this bundle has loaded. SuperTracker2's styles load
+// with its pages (web/src/supertracker).
 import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
@@ -113,6 +115,9 @@ import './styles/responsive.css'
 // page. Own playlists are made from the Playlists tab or a playlist's Add
 // (pages/PlaylistPicker.tsx), or from a VeggieBook's ⋮ on home (pages/
 // BookPlaylist.tsx). Books are never changed by them.
+//
+// SuperTracker2 lives in web/src/supertracker and is opened from the home
+// Menu. It is separate from VeggieBook and is not research tracked.
 //
 // The green bar's Back steps up one level: from a setting to Profile and
 // settings, from an open item to its list, and from a list to home.
@@ -202,14 +207,15 @@ export default function App() {
     view === 'playlist' ||
     view === 'playlistMaker' ||
     view === 'playlistPicker' ||
-    view === 'bookPlaylist'
+    view === 'bookPlaylist' ||
+    view === 'superTracker'
   const needsAccount = view === 'account'
 
   // Addresses that do not fit who is here are corrected to home, once the
   // sign-in check has answered:
   //   account settings, without a real account
-  //   a book, saved or in progress, Notifications, or a playlist, without a
-  //     guest session or an account
+  //   a book, saved or in progress, Notifications, a playlist, or
+  //     SuperTracker2, without a guest session or an account
   //   sign in or create account, while already signed in to an account
   //     (a guest may use both, to move to a real account)
   //   an unknown or untidy address
@@ -464,6 +470,7 @@ export default function App() {
     }
     // Making a playlist from a book goes back to home, where it started.
     if (current === 'bookPlaylist') return goHome
+    if (current === 'superTracker') return goHome
     // One setting goes back to Profile and settings, and that list goes
     // home.
     if (current === 'account' && openSection !== null) return () => goUp(accountPath())
@@ -482,6 +489,7 @@ export default function App() {
     (current === 'home' ||
       current === 'account' ||
       current === 'notifications' ||
+      current === 'superTracker' ||
       playlistPage ||
       readingPage ||
       (showBook && !editingCover))
@@ -506,7 +514,8 @@ export default function App() {
   // book. It stays off while a book is being made or its cover changed, so
   // it never sits under the NEXT, KEEP or SAVE buttons, off on the account
   // screens, so nothing pulls attention from the form, off on the saved
-  // screen, and off while making a playlist.
+  // screen, off while making a playlist, and off in SuperTracker2, which
+  // will have its own terms.
   const showFooter =
     (current === 'home' && !showSaved) ||
     current === 'account' ||
@@ -598,6 +607,7 @@ export default function App() {
                 onSignIn={() => navigate('/signin')}
                 onSignOut={signOut}
                 onNotifications={() => navigate('/notifications')}
+                onSuperTracker={() => navigate('/supertracker')}
                 onAbout={() => navigate('/about')}
                 onDeleteBook={deleteBook}
                 onViewBook={viewBook}
@@ -724,6 +734,8 @@ export default function App() {
                 onCancel={goHome}
               />
             )}
+
+            {current === 'superTracker' && hasSession && <SuperTrackerWelcome />}
 
             {/* Open to everyone: a visitor, a guest, or an account. */}
             {current === 'about' && <About />}

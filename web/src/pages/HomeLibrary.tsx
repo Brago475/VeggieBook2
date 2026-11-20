@@ -18,6 +18,7 @@ import { COMMON } from '../i18n/strings/common'
 import { HOME } from '../i18n/strings/home'
 import { PLAYLISTS } from '../i18n/strings/playlists'
 import { useStrings } from '../i18n/useStrings'
+import { LOCKED as SUPERTRACKER_LOCKED } from '../supertracker/config'
 import type { BookSummary, SecretCategory, Vegetable } from '../types'
 import { downloadPdf, printPdf } from '../utils/bookPdf'
 import type { BookPlaylistMode } from '../utils/routes'
@@ -32,11 +33,12 @@ import type { BookPlaylistMode } from '../utils/routes'
 // guest signs out or for up to 24 hours.
 //
 // Beside the heading, the Menu (MainMenu.tsx), in two groups. On top,
-// features and information: Notifications (with the unread count), About
-// VeggieBook, and future features as they are added. Below a line, the
-// account: Profile and settings, the language switch, and Sign out, or for
-// a guest, Create account, Sign in, the language switch, and End guest
-// visit, which asks first because it deletes their books.
+// features and information: Notifications (with the unread count),
+// SuperTracker2 (tagged Coming soon while locked), About VeggieBook, and
+// future features as they are added. Below a line, the account: Profile
+// and settings, the language switch, and Sign out, or for a guest, Create
+// account, Sign in, the language switch, and End guest visit, which asks
+// first because it deletes their books.
 //
 // Each card follows the original app: a picture fills the card and the
 // chosen cover sits as a small inset. For a VeggieBook the picture is the
@@ -72,6 +74,7 @@ type Props = {
   // Signs out. For a guest, this also deletes the guest and their books.
   onSignOut: () => Promise<void>
   onNotifications: () => void
+  onSuperTracker: () => void
   onAbout: () => void
   onDeleteBook: (id: string) => Promise<void>
   onViewBook: (id: string) => void
@@ -107,6 +110,7 @@ export function HomeLibrary({
   onSignIn,
   onSignOut,
   onNotifications,
+  onSuperTracker,
   onAbout,
   onDeleteBook,
   onViewBook,
@@ -145,6 +149,12 @@ export function HomeLibrary({
       icon: <BellIcon />,
       badge: unreadCount,
       onSelect: onNotifications,
+    },
+    {
+      label: t.superTracker,
+      icon: <img className="main-menu-img" src="/supertracker/supertracker2-icon-64.png" alt="" />,
+      tag: SUPERTRACKER_LOCKED ? t.comingSoon : undefined,
+      onSelect: onSuperTracker,
     },
     { label: t.about, icon: <InfoIcon />, onSelect: onAbout },
   ]
