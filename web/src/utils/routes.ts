@@ -20,10 +20,11 @@
 //   /notifications/playlist/{id}              a playlist from a notification
 //   /notifications/playlist/{id}/recipe/{r}   one recipe opened from it
 //   /notifications/playlist/{id}/tip/{t}      one tip opened from it
-//   /notifications/mine/new                   making your own playlist from all books
+//   /notifications/mine/new                   a new playlist, picking from all books
 //   /notifications/mine/{id}                  one of your own playlists
 //   /notifications/mine/{id}/recipe/{r}       one recipe opened from it
-//   /notifications/mine/{id}/edit             changing your own playlist
+//   /notifications/mine/{id}/add              adding recipes from all books
+//   /notifications/mine/{id}/edit             renaming or removing recipes
 //   /about                                    about VeggieBook, open to everyone
 //   /terms, /privacy                          Terms of Use and Privacy Policy, open to everyone
 //   /signin, /register                        sign in, create account
@@ -49,7 +50,9 @@ export type Route =
   | { view: 'notifications'; messageId: string | null }
   | { view: 'playlists' }
   | { view: 'playlist'; source: PlaylistSource; playlistId: number; open: PlaylistOpen }
-  | { view: 'playlistMaker'; playlistId: number | null }
+  | { view: 'playlistMaker'; playlistId: number }
+  // Null makes a new playlist; a number adds to that playlist.
+  | { view: 'playlistPicker'; playlistId: number | null }
   | { view: 'bookPlaylist'; bookId: string; mode: BookPlaylistMode }
   | { view: 'about' }
   | { view: 'terms' }
@@ -99,14 +102,15 @@ function parsePlaylist(parts: string[]): Route | null {
   if (!source) return null
 
   if (source === 'own' && parts.length === 3 && parts[2] === 'new') {
-    return { view: 'playlistMaker', playlistId: null }
+    return { view: 'playlistPicker', playlistId: null }
   }
   if (!parts[2] || !NUMBER.test(parts[2])) return null
 
   const id = Number(parts[2])
   if (parts.length === 3) return playlist(source, id)
-  if (source === 'own' && parts.length === 4 && parts[3] === 'edit') {
-    return { view: 'playlistMaker', playlistId: id }
+  if (source === 'own' && parts.length === 4) {
+    if (parts[3] === 'edit') return { view: 'playlistMaker', playlistId: id }
+    if (parts[3] === 'add') return { view: 'playlistPicker', playlistId: id }
   }
   if (parts.length === 5 && NUMBER.test(parts[4])) {
     if (parts[3] === 'recipe') return playlist(source, id, { kind: 'recipe', id: Number(parts[4]) })
@@ -183,6 +187,11 @@ export function playlistPath(source: PlaylistSource, playlistId: number, open: P
   return open ? `${base}/${open.kind}/${open.id}` : base
 }
 
+// The address of the picker: a new playlist, or adding to one.
+export function pickerPath(playlistId: number | null): string {
+  return playlistId === null ? '/notifications/mine/new' : `/notifications/mine/${playlistId}/add`
+}
+
 // The address for making a playlist from one book.
 export function bookPlaylistPath(bookId: string, mode: BookPlaylistMode): string {
   return `/book/${bookId}/playlist/${mode}`
@@ -214,9 +223,9 @@ export function routePath(route: Route): string {
     case 'playlist':
       return playlistPath(route.source, route.playlistId, route.open)
     case 'playlistMaker':
-      return route.playlistId === null
-        ? '/notifications/mine/new'
-        : `/notifications/mine/${route.playlistId}/edit`
+      return `/notifications/mine/${route.playlistId}/edit`
+    case 'playlistPicker':
+      return pickerPath(route.playlistId)
     case 'bookPlaylist':
       return bookPlaylistPath(route.bookId, route.mode)
     case 'about':

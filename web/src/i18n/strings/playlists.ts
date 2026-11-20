@@ -1,5 +1,5 @@
 // Playlists inside Notifications: the Messages and Playlists switch, a
-// playlist's page, and making your own from a book. Spanish uses tú.
+// playlist's page, and making your own. Spanish uses tú.
 
 function countEn(tips: number, recipes: number): string {
   const parts: string[] = []
@@ -28,15 +28,16 @@ const en = {
   kept: 'Kept',
 
   emptyTitle: 'Your playlists live here',
-  emptyBody: 'Keep one from a notification, or make your own from a VeggieBook.',
+  emptyBody: 'Keep one from a notification, or make your own from your VeggieBooks.',
   badgeYours: 'Yours',
   badgeTeam: 'From the team',
   open: 'Open',
   keptTitle: 'Kept from notifications',
   keptEmpty: 'Playlists you keep from a notification show here.',
   mineTitle: 'My playlists',
-  mineEmpty: 'To make one, tap \u22EE on a VeggieBook, then Make a playlist.',
+  mineEmpty: 'To make one, tap New playlist.',
   newPlaylist: 'New playlist',
+  newCardSub: 'Pick recipes from your books',
   loading: 'Loading playlists...',
   couldNotLoad: 'Could not load your playlists.',
   notFound: 'This playlist is no longer available.',
@@ -68,7 +69,7 @@ const en = {
   editSub: 'Uncheck a recipe to take it out.',
   inThisPlaylist: (n: number): string => (n === 1 ? 'In this playlist: 1 recipe' : `In this playlist: ${n} recipes`),
   willRemove: 'Taken out when you save',
-  editAddHint: 'To add more, tap \u22EE on a VeggieBook, then Add to a playlist.',
+  editAddHint: 'To add more, go back to the playlist and tap Add.',
   saveChanges: 'Save changes',
   needKeep: 'Keep at least one recipe, or delete the playlist.',
   nameLabel: 'Name',
@@ -85,6 +86,15 @@ const en = {
   needName: 'Give your playlist a name.',
   needRecipe: 'Pick at least one recipe.',
   somethingWrong: 'Something went wrong. Please try again.',
+
+  pickerSub: 'Pick recipes from any of your VeggieBooks.',
+  addTo: (name: string): string => `Add to "${name}"`,
+  addSub: 'Pick recipes to add. Ones already in this playlist are marked.',
+  inPlaylist: 'In playlist',
+  allBooks: 'All',
+  booksFilter: 'Show recipes from',
+  pickRecipes: 'Pick recipes',
+  makeBook: 'Make a VeggieBook',
 
   makeFromBook: 'Make a playlist',
   addFromBook: 'Add to a playlist',
@@ -112,15 +122,16 @@ const es: typeof en = {
   kept: 'Guardada',
 
   emptyTitle: 'Aquí viven tus listas',
-  emptyBody: 'Guarda una desde una notificación, o haz la tuya desde un VeggieBook.',
+  emptyBody: 'Guarda una desde una notificación, o haz la tuya con tus VeggieBooks.',
   badgeYours: 'Tuya',
   badgeTeam: 'Del equipo',
   open: 'Abrir',
   keptTitle: 'Guardadas desde notificaciones',
   keptEmpty: 'Las listas que guardes desde una notificación aparecen aquí.',
   mineTitle: 'Mis listas',
-  mineEmpty: 'Para hacer una, toca \u22EE en un VeggieBook y luego Hacer una lista.',
+  mineEmpty: 'Para hacer una, toca Nueva lista.',
   newPlaylist: 'Nueva lista',
+  newCardSub: 'Elige recetas de tus libros',
   loading: 'Cargando listas...',
   couldNotLoad: 'No se pudieron cargar tus listas.',
   notFound: 'Esta lista ya no está disponible.',
@@ -152,7 +163,7 @@ const es: typeof en = {
   editSub: 'Desmarca una receta para quitarla.',
   inThisPlaylist: (n: number) => (n === 1 ? 'En esta lista: 1 receta' : `En esta lista: ${n} recetas`),
   willRemove: 'Se quita al guardar',
-  editAddHint: 'Para agregar más, toca \u22EE en un VeggieBook y luego Agregar a una lista.',
+  editAddHint: 'Para agregar más, vuelve a la lista y toca Agregar.',
   saveChanges: 'Guardar cambios',
   needKeep: 'Deja al menos una receta, o borra la lista.',
   nameLabel: 'Nombre',
@@ -169,6 +180,15 @@ const es: typeof en = {
   needName: 'Ponle un nombre a tu lista.',
   needRecipe: 'Elige al menos una receta.',
   somethingWrong: 'Algo salió mal. Inténtalo de nuevo.',
+
+  pickerSub: 'Elige recetas de cualquiera de tus VeggieBooks.',
+  addTo: (name: string) => `Agregar a "${name}"`,
+  addSub: 'Elige recetas para agregar. Las que ya están en esta lista aparecen marcadas.',
+  inPlaylist: 'En la lista',
+  allBooks: 'Todos',
+  booksFilter: 'Mostrar recetas de',
+  pickRecipes: 'Elige recetas',
+  makeBook: 'Hacer un VeggieBook',
 
   makeFromBook: 'Hacer una lista',
   addFromBook: 'Agregar a una lista',

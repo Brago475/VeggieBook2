@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SafeImage } from '../components/common/SafeImage'
 import { LeafDecor } from '../components/layout/LeafDecor'
+import { PickCheck } from '../components/playlists/PickCheck'
 import { useLang } from '../i18n/languageContext'
 import { PLAYLISTS } from '../i18n/strings/playlists'
 import { useStrings } from '../i18n/useStrings'
@@ -8,36 +9,16 @@ import { coverSrc } from '../utils/coverSrc'
 import { fetchOwnPlaylist, updateOwnPlaylist, type PlaylistRecipe } from '../utils/playlistsApi'
 
 // Editing your own playlist: its name, and only the recipes already in it.
-// Unchecking a recipe takes it out on save. Recipes are added from a
-// VeggieBook's ⋮ on home (pages/BookPlaylist.tsx). Books are only read.
+// Unchecking a recipe takes it out on save. Recipes are added from the
+// playlist's Add button (pages/PlaylistPicker.tsx). Books are only read.
 
 type Props = {
-  // Null only for the old New playlist address, which now points to books.
-  playlistId: number | null
+  playlistId: number
   onSaved: (id: number) => void
   onCancel: () => void
 }
 
 const MAX_NAME = 60
-
-function Check({ on }: { on: boolean }) {
-  return (
-    <span className="pl-check" aria-hidden="true">
-      {on && (
-        <svg viewBox="0 0 24 24" focusable="false">
-          <path
-            d="M5 12.5l4.5 4.5L19 7.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
-    </span>
-  )
-}
 
 export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
   const t = useStrings(PLAYLISTS)
@@ -50,7 +31,6 @@ export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    if (playlistId === null) return
     let live = true
     fetchOwnPlaylist(playlistId, lang)
       .then((d) => {
@@ -74,7 +54,7 @@ export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
   }
 
   async function save() {
-    if (busy || playlistId === null || !recipes) return
+    if (busy || !recipes) return
     const trimmed = name.trim()
     if (!trimmed) return setError(t.needName)
     const ids = recipes.map((r) => r.id).filter((id) => kept.includes(id))
@@ -89,20 +69,6 @@ export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
       setError(err instanceof Error ? err.message : t.somethingWrong)
       setBusy(false)
     }
-  }
-
-  if (playlistId === null) {
-    return (
-      <div className="account-screen nf-screen pl-maker">
-        <LeafDecor className="account-leaf" />
-        <p className="pl-empty">{t.mineEmpty}</p>
-        <div className="pl-savebar">
-          <button type="button" className="pl-btn" onClick={onCancel}>
-            {t.backToPlaylists}
-          </button>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -152,7 +118,7 @@ export function PlaylistMaker({ playlistId, onSaved, onCancel }: Props) {
                       <span className="pl-pick-title">{r.title}</span>
                       <span className="bp-row-meta">{on ? r.vegetableName : t.willRemove}</span>
                     </span>
-                    <Check on={on} />
+                    <PickCheck on={on} />
                   </button>
                 </li>
               )

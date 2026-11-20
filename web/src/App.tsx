@@ -37,6 +37,7 @@ import { NotificationDetail } from './pages/NotificationDetail'
 import { Notifications } from './pages/Notifications'
 import { PlaylistLibrary } from './pages/PlaylistLibrary'
 import { PlaylistMaker } from './pages/PlaylistMaker'
+import { PlaylistPicker } from './pages/PlaylistPicker'
 import { PlaylistView } from './pages/PlaylistView'
 import { SecretBookViewer } from './pages/SecretBookViewer'
 import { SecretsFlow } from './pages/SecretsFlow'
@@ -44,6 +45,7 @@ import { Welcome } from './pages/Welcome'
 import type { NotificationItem } from './utils/notificationsApi'
 import {
   bookPlaylistPath,
+  pickerPath,
   playlistPath,
   routePath,
   type PlaylistOpen,
@@ -82,6 +84,7 @@ import './styles/dialog.css'
 import './styles/notifications.css'
 import './styles/playlists.css'
 import './styles/book-playlist.css'
+import './styles/playlist-picker.css'
 import './styles/responsive.css'
 
 // Which screen is showing comes from the address (see utils/routes.ts), so
@@ -107,7 +110,8 @@ import './styles/responsive.css'
 // guests and accounts. Their pop-up shows only on calm screens, never while
 // a book is being made or on a form. Each notification opens on its own page.
 // Playlists live inside Notifications: the Playlists tab and a playlist's
-// page. Own playlists are made from a VeggieBook's ⋮ on home (pages/
+// page. Own playlists are made from the Playlists tab or a playlist's Add
+// (pages/PlaylistPicker.tsx), or from a VeggieBook's ⋮ on home (pages/
 // BookPlaylist.tsx). Books are never changed by them.
 //
 // After a deploy, the page reloads itself on the next move to a screen
@@ -192,6 +196,7 @@ export default function App() {
     view === 'playlists' ||
     view === 'playlist' ||
     view === 'playlistMaker' ||
+    view === 'playlistPicker' ||
     view === 'bookPlaylist'
   const needsAccount = view === 'account'
 
@@ -370,6 +375,13 @@ export default function App() {
     goUp('/notifications/playlists')
   }
 
+  // A new playlist opens in place of the picker. After adding, the step
+  // goes back up to the playlist so it is not stacked twice.
+  function pickerSaved(adding: boolean, id: number) {
+    if (adding) goUp(playlistPath('own', id))
+    else navigate(playlistPath('own', id), { replace: true })
+  }
+
   // For the frame before the redirect above runs, show home rather than a
   // screen this visitor cannot use.
   const current =
@@ -436,6 +448,12 @@ export default function App() {
       return open ? () => openPlaylistItem(source, playlistId, null) : backToPlaylists
     }
     if (current === 'playlistMaker' && route.view === 'playlistMaker') {
+      const id = route.playlistId
+      return () => goUp(playlistPath('own', id))
+    }
+    // The picker goes back to where it was opened: the Playlists tab for a
+    // new playlist, the playlist itself when adding.
+    if (current === 'playlistPicker' && route.view === 'playlistPicker') {
       const id = route.playlistId
       return id === null ? backToPlaylists : () => goUp(playlistPath('own', id))
     }
@@ -646,9 +664,7 @@ export default function App() {
               <PlaylistLibrary
                 onMessages={() => navigate('/notifications', { replace: true })}
                 onOpen={openPlaylist}
-                onHome={() => navigate('/')}
-
-
+                onNew={() => navigate(pickerPath(null))}
               />
             )}
 
@@ -665,7 +681,7 @@ export default function App() {
                 }
                 onOpenItem={(open) => openPlaylistItem(route.source, route.playlistId, open)}
                 onEdit={() => navigate(`/notifications/mine/${route.playlistId}/edit`)}
-                onAdd={() => navigate('/')}
+                onAdd={() => navigate(pickerPath(route.playlistId))}
                 onDeleted={() => navigate('/notifications/playlists', { replace: true })}
                 onBack={backToPlaylists}
               />
@@ -673,10 +689,20 @@ export default function App() {
 
             {current === 'playlistMaker' && hasSession && route.view === 'playlistMaker' && (
               <PlaylistMaker
-                key={route.playlistId ?? 'new'}
+                key={route.playlistId}
                 playlistId={route.playlistId}
                 onSaved={(id) => navigate(playlistPath('own', id), { replace: true })}
                 onCancel={backAction() ?? backToPlaylists}
+              />
+            )}
+
+            {current === 'playlistPicker' && hasSession && route.view === 'playlistPicker' && (
+              <PlaylistPicker
+                key={route.playlistId ?? 'new'}
+                playlistId={route.playlistId}
+                onSaved={(id) => pickerSaved(route.playlistId !== null, id)}
+                onCancel={backAction() ?? backToPlaylists}
+                onMakeBook={startBook}
               />
             )}
 
