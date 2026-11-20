@@ -1,12 +1,6 @@
-/* Making a playlist from one book (pages/BookPlaylist.tsx).
-   Rows, buttons and the switch: playlists.css. */
-
-.bp-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  margin-bottom: var(--sp-4);
-}
+/* Shared pieces of the playlist picker and edit screens: the list header
+   with its Pick all link, and a row's text and meta line. Rows, buttons
+   and the switch: playlists.css. */
 
 .bp-label {
   margin: 0;

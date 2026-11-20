@@ -33,9 +33,7 @@ const en = {
   badgeTeam: 'From the team',
   open: 'Open',
   keptTitle: 'Kept from notifications',
-  keptEmpty: 'Playlists you keep from a notification show here.',
   mineTitle: 'My playlists',
-  mineEmpty: 'To make one, tap New playlist.',
   newPlaylist: 'New playlist',
   newCardSub: 'Pick recipes from your books',
   loading: 'Loading playlists...',
@@ -65,7 +63,6 @@ const en = {
 
   makerNew: 'New playlist',
   makerEdit: 'Edit playlist',
-  makerSub: 'Open a book and tap the recipes you want.',
   editSub: 'Uncheck a recipe to take it out.',
   inThisPlaylist: (n: number): string => (n === 1 ? 'In this playlist: 1 recipe' : `In this playlist: ${n} recipes`),
   willRemove: 'Taken out when you save',
@@ -73,16 +70,12 @@ const en = {
   saveChanges: 'Save changes',
   needKeep: 'Keep at least one recipe, or delete the playlist.',
   nameLabel: 'Name',
-  namePlaceholder: 'Weeknight dinners',
   namePrompt: 'Name your playlist',
   yourBooks: 'Your books',
   prevBooks: 'Show earlier books',
   nextBooks: 'Show more books',
-  fromBook: (vegetable: string): string => `Your ${vegetable} VeggieBook`,
-  bookRecipes: (n: number): string => (n === 1 ? '1 recipe' : `${n} recipes`),
   bookCount: (vegetable: string, n: number): string =>
     n === 1 ? `${vegetable}, 1 recipe` : `${vegetable}, ${n} recipes`,
-  bookPicked: (n: number): string => `${n} picked`,
   pickAll: 'Pick all',
   clearBook: 'Clear',
   noBooks: 'Save a VeggieBook first. Its recipes show here.',
@@ -101,15 +94,9 @@ const en = {
 
   makeFromBook: 'Make a playlist',
   addFromBook: 'Add to a playlist',
-  bookPlaylistSub: (vegetable: string): string => `Recipes from your ${vegetable} VeggieBook.`,
-  modeNew: 'New playlist',
-  modeAdd: 'Add to one I made',
   choosePlaylist: 'Which playlist?',
   noOwnYet: 'You have not made a playlist yet. Make a new one first.',
-  recipesInBook: 'Recipes in this book',
   addSave: (n: number): string => (n > 0 ? `Add to playlist (${n})` : 'Add to playlist'),
-  needPlaylist: 'Pick a playlist.',
-  bookNoRecipes: 'This book has no recipes to add.',
 }
 
 const es: typeof en = {
@@ -130,9 +117,7 @@ const es: typeof en = {
   badgeTeam: 'Del equipo',
   open: 'Abrir',
   keptTitle: 'Guardadas desde notificaciones',
-  keptEmpty: 'Las listas que guardes desde una notificación aparecen aquí.',
   mineTitle: 'Mis listas',
-  mineEmpty: 'Para hacer una, toca Nueva lista.',
   newPlaylist: 'Nueva lista',
   newCardSub: 'Elige recetas de tus libros',
   loading: 'Cargando listas...',
@@ -162,7 +147,6 @@ const es: typeof en = {
 
   makerNew: 'Nueva lista',
   makerEdit: 'Editar lista',
-  makerSub: 'Abre un libro y toca las recetas que quieras.',
   editSub: 'Desmarca una receta para quitarla.',
   inThisPlaylist: (n: number) => (n === 1 ? 'En esta lista: 1 receta' : `En esta lista: ${n} recetas`),
   willRemove: 'Se quita al guardar',
@@ -170,16 +154,12 @@ const es: typeof en = {
   saveChanges: 'Guardar cambios',
   needKeep: 'Deja al menos una receta, o borra la lista.',
   nameLabel: 'Nombre',
-  namePlaceholder: 'Cenas entre semana',
   namePrompt: 'Ponle nombre a tu lista',
   yourBooks: 'Tus libros',
   prevBooks: 'Ver libros anteriores',
   nextBooks: 'Ver más libros',
-  fromBook: (vegetable: string) => `Tu VeggieBook de ${vegetable}`,
-  bookRecipes: (n: number) => (n === 1 ? '1 receta' : `${n} recetas`),
   bookCount: (vegetable: string, n: number) =>
     n === 1 ? `${vegetable}, 1 receta` : `${vegetable}, ${n} recetas`,
-  bookPicked: (n: number) => (n === 1 ? '1 elegida' : `${n} elegidas`),
   pickAll: 'Elegir todas',
   clearBook: 'Quitar',
   noBooks: 'Primero guarda un VeggieBook. Sus recetas aparecen aquí.',
@@ -198,15 +178,9 @@ const es: typeof en = {
 
   makeFromBook: 'Hacer una lista',
   addFromBook: 'Agregar a una lista',
-  bookPlaylistSub: (vegetable: string) => `Recetas de tu VeggieBook de ${vegetable}.`,
-  modeNew: 'Nueva lista',
-  modeAdd: 'Agregar a una mía',
   choosePlaylist: '¿Qué lista?',
   noOwnYet: 'Todavía no has hecho una lista. Primero haz una nueva.',
-  recipesInBook: 'Recetas de este libro',
   addSave: (n: number) => (n > 0 ? `Agregar a la lista (${n})` : 'Agregar a la lista'),
-  needPlaylist: 'Elige una lista.',
-  bookNoRecipes: 'Este libro no tiene recetas para agregar.',
 }
 
 export const PLAYLISTS = { en, es }

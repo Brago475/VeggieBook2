@@ -1,5 +1,6 @@
 /* Playlists inside Notifications: the Messages and Playlists switch, the
-   Playlists tab, an open playlist, a tip, and making a playlist.
+   Playlists tab, an open playlist, a tip, and the shared row, check and
+   button styles used by the picker and edit screens (playlist-picker.css).
    Rows reuse reading.css and notifications.css; card text reuses
    book-card.css. */
 
@@ -32,33 +33,6 @@
 }
 
 /* --- playlists tab --------------------------------------------------- */
-
-.pl-group-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  margin-bottom: 10px;
-}
-
-.pl-group-head .nf-group-label {
-  margin-bottom: 0;
-}
-
-.pl-new {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font: inherit;
-  font-size: var(--font-label);
-  font-weight: var(--weight-bold);
-  color: var(--green-action);
-  background: var(--green-tint);
-  border: none;
-  border-radius: var(--r-pill);
-  cursor: pointer;
-}
 
 .pl-empty {
   margin: 0 4px;
@@ -678,11 +652,7 @@
   background: var(--green-deep);
 }
 
-/* --- older pieces still used by other screens ------------------------ */
-
-.pl-head {
-  margin-bottom: var(--sp-4);
-}
+/* --- a tip ----------------------------------------------------------- */
 
 .pl-kicker {
   display: block;
@@ -694,80 +664,45 @@
   color: var(--green-deep);
 }
 
-.pl-actions {
-  display: flex;
-  gap: 10px;
-  margin-bottom: var(--sp-4);
+.pl-tip .pl-kicker {
+  margin-bottom: 6px;
 }
 
-.pl-items .recipe-row {
+.pl-tip-block {
+  margin-top: var(--sp-4);
+}
+
+.pl-tip-block p {
+  margin: 0;
+  font-size: var(--font-row);
+  line-height: 1.6;
+  white-space: pre-line;
+  color: var(--text);
+}
+
+.pl-tip-img {
+  display: block;
   width: 100%;
+  max-height: 320px;
+  margin-bottom: var(--sp-3);
+  object-fit: cover;
+  border-radius: var(--r-lg);
 }
 
-.pl-item-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  text-align: left;
-}
+/* --- bottom bar and buttons (picker and edit screens) ---------------- */
 
-.pl-item-meta {
-  font-size: var(--font-label);
-  color: var(--text-muted);
-}
-
-.pl-tip-thumb {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--green-deep);
-  background: var(--green-tint);
-}
-
-.pl-tip-thumb svg {
-  width: 24px;
-  height: 24px;
-}
-
-/* Keep and Skip */
-.pl-decide {
+.pl-savebar {
   position: sticky;
   bottom: 0;
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
+  gap: 10px;
   margin-top: var(--sp-5);
   padding: var(--sp-3) 0 var(--sp-4);
   background: linear-gradient(to bottom, transparent, var(--page) 30%);
 }
 
-.pl-decide-note {
-  margin: 0;
-  font-size: var(--font-label);
-  font-weight: var(--weight-bold);
-  text-align: center;
-  color: var(--green-deep);
-}
-
-.pl-decide-row,
-.pl-savebar {
-  display: flex;
-  gap: 10px;
-}
-
-.pl-decide-row > *,
 .pl-savebar > * {
   flex: 1;
-}
-
-.pl-savebar {
-  position: sticky;
-  bottom: 0;
-  margin-top: var(--sp-5);
-  padding: var(--sp-3) 0 var(--sp-4);
-  background: linear-gradient(to bottom, transparent, var(--page) 30%);
 }
 
 .pl-btn {
@@ -807,182 +742,10 @@
   cursor: default;
 }
 
-/* --- a tip ----------------------------------------------------------- */
-
-.pl-tip .pl-kicker {
-  margin-bottom: 6px;
-}
-
-.pl-tip-block {
-  margin-top: var(--sp-4);
-}
-
-.pl-tip-block p {
-  margin: 0;
-  font-size: var(--font-row);
-  line-height: 1.6;
-  white-space: pre-line;
-  color: var(--text);
-}
-
-.pl-tip-img {
-  display: block;
-  width: 100%;
-  max-height: 320px;
-  margin-bottom: var(--sp-3);
-  object-fit: cover;
-  border-radius: var(--r-lg);
-}
-
-/* --- making a playlist ----------------------------------------------- */
-
-.pl-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: var(--sp-5);
-}
-
 .pl-field-label {
   font-size: var(--font-label);
   font-weight: var(--weight-bold);
   color: var(--text-muted);
-}
-
-.pl-input {
-  min-height: 48px;
-  padding: 0 var(--sp-4);
-  font: inherit;
-  font-size: var(--font-row);
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-}
-
-/* Saved books, one open at a time */
-.pl-books-label {
-  margin: 0 0 var(--sp-2);
-}
-
-.pl-books {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.pl-book {
-  overflow: hidden;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  scroll-margin-top: 80px;
-}
-
-.pl-book.is-open {
-  border-color: var(--green-light);
-}
-
-.pl-book-head {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  width: 100%;
-  padding: var(--sp-3);
-  font: inherit;
-  text-align: left;
-  color: var(--text);
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.pl-book-head:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: -2px;
-  border-radius: var(--r-lg);
-}
-
-.pl-book-cover {
-  flex: 0 0 auto;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--r-md);
-  object-fit: cover;
-}
-
-.pl-book-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.pl-book-name {
-  font-size: var(--font-row);
-  font-weight: var(--weight-bold);
-  overflow-wrap: anywhere;
-}
-
-.pl-book-meta {
-  font-size: var(--font-label);
-  color: var(--text-muted);
-}
-
-.pl-book-badge {
-  flex: 0 0 auto;
-  padding: 4px 10px;
-  font-size: var(--font-label);
-  font-weight: var(--weight-bold);
-  color: var(--surface);
-  background: var(--green-action);
-  border-radius: var(--r-pill);
-}
-
-.pl-book-chevron {
-  flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
-  color: var(--text-muted);
-  transition: transform 0.2s;
-}
-
-.pl-book.is-open .pl-book-chevron {
-  transform: rotate(180deg);
-}
-
-.pl-book-body {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 0 var(--sp-3) var(--sp-3);
-  border-top: 1px solid var(--line);
-  background: var(--page);
-}
-
-.pl-book-tools {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--sp-4);
-  padding-top: 10px;
-}
-
-.pl-book-link {
-  padding: 4px 2px;
-  font: inherit;
-  font-size: var(--font-label);
-  font-weight: var(--weight-bold);
-  color: var(--green-action);
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.pl-book-link:disabled {
-  color: var(--text-muted);
-  opacity: 0.5;
-  cursor: default;
 }
 
 /* Recipe rows to pick */
@@ -1039,15 +802,12 @@
 /* --- focus ----------------------------------------------------------- */
 
 .pl-switch-btn:focus-visible,
-.pl-new:focus-visible,
 .pl-card:focus-visible,
 .pl-entry:focus-visible,
 .pl-bar-btn:focus-visible,
 .pl-tool:focus-visible,
 .pl-open:focus-visible,
 .pl-btn:focus-visible,
-.pl-input:focus-visible,
-.pl-book-link:focus-visible,
 .pl-pick:focus-visible {
   outline: 2px solid var(--green);
   outline-offset: 2px;
