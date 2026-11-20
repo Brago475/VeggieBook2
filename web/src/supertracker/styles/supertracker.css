@@ -5,11 +5,15 @@
   padding: var(--sp-5) 0 var(--sp-6);
 }
 
-/* Website view: wider than the VeggieBook column, centered on the page. */
+/* App view: a narrow centered column, like on a phone. */
+.st2.is-app {
+  max-width: var(--app-max);
+  margin: 0 auto;
+}
+
+/* Website view: the full width of the page column. */
 .st2.is-site {
-  width: min(var(--app-max-wide), calc(100vw - 2 * var(--sp-5)));
-  margin-left: 50%;
-  transform: translateX(-50%);
+  width: 100%;
 }
 
 .st2-welcome {
