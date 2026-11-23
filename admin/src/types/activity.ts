@@ -24,6 +24,7 @@ export type ActivityType =
   | 'notification_created'
   | 'notification_edited'
   | 'notification_stopped'
+  | 'notification_deleted'
   | 'playlist_created'
   | 'playlist_edited'
   | 'playlist_archived'

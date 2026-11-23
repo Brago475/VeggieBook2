@@ -5,7 +5,7 @@ namespace VeggieBook.Api.Data;
 
 // Admin notifications shown in the main site.
 // See db/migrations/019_notifications.sql, 020_notification_english_only.sql,
-// 022_notification_title.sql and 023_playlists.sql.
+// 022_notification_title.sql, 023_playlists.sql and 030_notification_deleted.sql.
 
 public class Notification
 {
@@ -45,6 +45,13 @@ public class Notification
     public Guid? CreatedBy { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public Guid? UpdatedBy { get; set; }
+
+    // Hidden from the admin site. Receipts and activity lines are kept.
+    [Column("deleted_at")]
+    public DateTime? DeletedAt { get; set; }
+
+    [Column("deleted_by")]
+    public Guid? DeletedBy { get; set; }
 
     // Postgres row version. Changes on every save; used to refuse an edit
     // made from an older copy.

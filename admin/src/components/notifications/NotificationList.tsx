@@ -14,7 +14,8 @@ import '../../styles/notification-compact.css'
 // actions on one line, the message, the playlist it opens as a chip, a live
 // countdown, then Details, which opens to the dates, audience, language, who
 // made and last edited it, and the four counts. The closed Details row still
-// shows the counts in one line. Counts are people.
+// shows the counts in one line. Counts are people. Live and scheduled
+// messages can be stopped; ended and stopped ones can be deleted.
 
 type Props = {
   items: AdminNotification[]
@@ -22,6 +23,7 @@ type Props = {
   onCopy: (item: AdminNotification) => void
   onRename: (item: AdminNotification) => void
   onStop: (item: AdminNotification) => void
+  onDelete: (item: AdminNotification) => void
 }
 
 function Fact({ icon, text }: { icon: IconName; text: string }) {
@@ -84,7 +86,7 @@ function countsLine(n: AdminNotification): string {
   return parts.join(', ')
 }
 
-export function NotificationList({ items, onEdit, onCopy, onRename, onStop }: Props) {
+export function NotificationList({ items, onEdit, onCopy, onRename, onStop, onDelete }: Props) {
   const now = useNow(30_000)
 
   return (
@@ -126,9 +128,13 @@ export function NotificationList({ items, onEdit, onCopy, onRename, onStop }: Pr
                 <button type="button" className="nt-btn" onClick={() => onCopy(n)}>
                   Send again
                 </button>
-                {active && (
+                {active ? (
                   <button type="button" className="nt-btn is-stop" onClick={() => onStop(n)}>
                     Stop
+                  </button>
+                ) : (
+                  <button type="button" className="nt-btn is-stop" onClick={() => onDelete(n)}>
+                    Delete
                   </button>
                 )}
               </div>

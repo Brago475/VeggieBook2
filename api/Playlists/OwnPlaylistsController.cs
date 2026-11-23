@@ -17,10 +17,11 @@ namespace VeggieBook.Api.Playlists;
 //   POST   /api/playlists/own                        { name, recipeIds }
 //   PUT    /api/playlists/own/{id}                   { name, recipeIds }
 //   DELETE /api/playlists/own/{id}
-//   POST   /api/playlists/own/{id}/opened/{recipeId} a recipe opened from it
+//   POST   /api/playlists/own/{id}/opened/{recipeId} accepted, not recorded
 //
 // Every query is limited to the signed-in account. Recipes must be kept in
-// one of its saved books when added. Every change writes an activity line.
+// one of its saved books when added. Every change writes an activity line;
+// opening a playlist or a recipe in it is a view and writes nothing.
 
 public record OwnPlaylistRequest(string? Name, List<int>? RecipeIds);
 
@@ -112,9 +113,6 @@ public class OwnPlaylistsController(
             .ToList();
         var items = await PlaylistContent.LoadAsync(content, refs, lang);
 
-        await PlaylistActivity.RecordAsync(
-            db, logger, uid, PlaylistActivity.Opened, id, PlaylistActivity.SourceOwn, items.Count);
-
         Response.Headers.CacheControl = "no-store";
         return Ok(new
         {
@@ -189,20 +187,9 @@ public class OwnPlaylistsController(
         return NoContent();
     }
 
+    // Still called by the main site when a recipe opens; views are not recorded.
     [HttpPost("{id:int}/opened/{recipeId:int}")]
-    public async Task<IActionResult> RecipeOpened(int id, int recipeId)
-    {
-        var uid = CurrentUserId;
-        var inList = await db.UserPlaylistItems.AnyAsync(i =>
-            i.UserPlaylistId == id && i.RecipeId == recipeId
-            && db.UserPlaylists.Any(u => u.Id == id && u.UserId == uid));
-        if (!inList) return NoContent();
-
-        await PlaylistActivity.RecordAsync(
-            db, logger, uid, PlaylistActivity.ItemOpened, id,
-            PlaylistActivity.ItemDetail(PlaylistActivity.SourceOwn, PlaylistKinds.Recipe, recipeId));
-        return NoContent();
-    }
+    public IActionResult RecipeOpened(int id, int recipeId) => NoContent();
 
     // Recipes already in the playlist may stay even if since taken out of a
     // book; new ones must be kept in one of the account's saved books.

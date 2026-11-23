@@ -21,8 +21,8 @@ namespace VeggieBook.Api.Admin;
 //
 // Works the same as a person deleting their own account: personal details
 // are wiped and research data is kept (Research/KeepOnDelete.cs). The
-// deletion is logged by research ID only, marked as removed by an admin.
-// The log never blocks the delete.
+// deletion is logged by research ID only, marked as removed by an admin,
+// with the admin who did it. The log never blocks the delete.
 
 public record AdminDeleteAccountRequest(string? ConfirmEmail);
 
@@ -54,7 +54,8 @@ public class AdminAccountDeleteController(
         if (!string.Equals((req.ConfirmEmail ?? "").Trim(), user.Email, StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { error = "The email typed does not match this account." });
 
-        var entry = await ActivityLog.ForAccountAsync(db, logger, user.Id, byAdmin: true);
+        var entry = await ActivityLog.ForAccountAsync(
+            db, logger, user.Id, byAdmin: true, adminId: AuthSetup.UserId(User));
 
         var result = await KeepOnDelete.DeleteAccountAsync(db, users, user);
         if (!result.Succeeded)

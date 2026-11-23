@@ -13,7 +13,10 @@ namespace VeggieBook.Api.Admin;
 //
 //   GET    /api/admin/playlists              every playlist with counts, the
 //                                            first photos for its card, and
-//                                            the messages it is default for
+//                                            the messages it is default for.
+//                                            sent is how many notifications
+//                                            used it; reached is how many
+//                                            people were shown one of them
 //   GET    /api/admin/playlists/{id}         one playlist with its items
 //   GET    /api/admin/playlists/options      vegetables with pictures, the four
 //                                            meals, and how many tips and
@@ -107,6 +110,17 @@ public class AdminPlaylistsController(
                 .ToListAsync())
             .ToLookup(x => x.Id);
 
+        // People shown a notification that opens the playlist, guests included.
+        var reached = (await (
+                    from r in db.NotificationReceipts
+                    join n in db.Notifications on r.NotificationId equals n.Id
+                    where n.PlaylistId != null
+                    select new { Id = n.PlaylistId!.Value, r.UserId })
+                .Distinct()
+                .ToListAsync())
+            .GroupBy(x => x.Id)
+            .ToDictionary(g => g.Key, g => g.Count());
+
         Response.Headers.CacheControl = "no-store";
         return Ok(playlists
             .OrderBy(p => p.ArchivedAt != null)
@@ -132,6 +146,7 @@ public class AdminPlaylistsController(
                 kept = choices.TryGetValue(p.Id, out var c) ? c.Kept : 0,
                 notKept = choices.TryGetValue(p.Id, out var c2) ? c2.NotKept : 0,
                 sent = sends[p.Id].Count(),
+                reached = reached.GetValueOrDefault(p.Id),
                 live = sends[p.Id].Any(s => s.Live),
                 defaultFor = defaults[p.Id].Select(d => new
                 {

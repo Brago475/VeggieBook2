@@ -16,12 +16,15 @@ namespace VeggieBook.Api.Data;
 // db/migrations is the source of truth for these tables. Identity's own
 // tables are renamed below to match db/migrations/003_identity.sql.
 //
-// Deleted accounts and books are hidden by query filters, so the app never
-// sees them. Research code reads them with IgnoreQueryFilters().
+// Deleted accounts, books and studies are hidden by query filters, so the
+// app never sees them. Research code reads them with IgnoreQueryFilters().
 
 public class AccountsContext(DbContextOptions<AccountsContext> options)
     : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
+    // Shadow property on Study for 031_study_deleted.sql.
+    public const string StudyDeletedAt = "DeletedAt";
+
     public DbSet<Book> Books => Set<Book>();
     public DbSet<BookCoverUpload> BookCoverUploads => Set<BookCoverUpload>();
     public DbSet<ResearchParticipant> ResearchParticipants => Set<ResearchParticipant>();
@@ -185,6 +188,10 @@ public class AccountsContext(DbContextOptions<AccountsContext> options)
             e.Property(x => x.StartedBy).HasColumnName("started_by");
             e.Property(x => x.EndedBy).HasColumnName("ended_by");
             e.Property(x => x.Name).HasColumnName("name"); // 009_study_name.sql
+            e.Property<DateTime?>(StudyDeletedAt).HasColumnName("deleted_at"); // 031
+
+            // Deleted studies are hidden; their notice answers are kept.
+            e.HasQueryFilter(x => EF.Property<DateTime?>(x, StudyDeletedAt) == null);
         });
 
         b.Entity<StudyNotice>(e =>

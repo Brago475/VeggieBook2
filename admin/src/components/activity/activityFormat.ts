@@ -42,6 +42,7 @@ export const groups: { id: ActivityGroup; label: string; types: ActivityType[] }
       'notification_created',
       'notification_edited',
       'notification_stopped',
+      'notification_deleted',
     ],
   },
   {

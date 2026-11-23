@@ -13,20 +13,26 @@ namespace VeggieBook.Api.Admin;
 
 // The Notifications page, Messages section.
 //
-//   GET  /api/admin/notifications            every notification, newest first,
-//                                            with its status and counts
-//   GET  /api/admin/notifications/templates  the templates, and the VeggieBook
-//                                            vegetables for the {vegetable} slot
-//   GET  /api/admin/notifications/people     research IDs that can be picked
-//   POST /api/admin/notifications            create
-//   PUT  /api/admin/notifications/{id}       edit title, text, playlist,
-//                                            dates, repeat, audience
-//   PUT  /api/admin/notifications/{id}/title rename, allowed in any status
-//   POST /api/admin/notifications/{id}/stop  stop now; a stopped message
-//                                            can't be edited, only renamed
+//   GET    /api/admin/notifications            every notification not deleted,
+//                                              newest first, with its status
+//                                              and counts
+//   GET    /api/admin/notifications/templates  the templates, and the VeggieBook
+//                                              vegetables for the {vegetable} slot
+//   GET    /api/admin/notifications/people     research IDs that can be picked
+//   POST   /api/admin/notifications            create
+//   PUT    /api/admin/notifications/{id}       edit title, text, playlist,
+//                                              dates, repeat, audience
+//   PUT    /api/admin/notifications/{id}/title rename, allowed in any status
+//   POST   /api/admin/notifications/{id}/stop  stop now; a stopped message
+//                                              can't be edited, only renamed
+//   DELETE /api/admin/notifications/{id}       hide an ended or stopped message
 //
 // The title is an admin-only label; the app never shows it. Activity names
 // the message by its title, so the log details here hold only the facts.
+//
+// Delete only hides the message from the admin site. Its receipts and
+// activity lines are kept, so playlist counts and research data stay whole.
+// A deleted message is treated as gone by every other endpoint here.
 //
 // Edit and rename take the version the page loaded. If another admin saved
 // since, the change is refused with changed: true so the page can reload.
@@ -43,8 +49,8 @@ namespace VeggieBook.Api.Admin;
 //
 // Admins only. Accounts are chosen by research ID; no email or username of a
 // participant is read or sent. Counts are people (distinct accounts), guests
-// included. Every create, edit, rename and stop is written to the activity
-// log with the admin who did it.
+// included. Every create, edit, rename, stop and delete is written to the
+// activity log with the admin who did it.
 
 public record NotificationRequest(
     string? Title,
@@ -83,6 +89,9 @@ public class AdminNotificationsController(
     private const string Changed =
         "Another admin changed this notification. Refresh to see the latest.";
 
+    private const string Gone =
+        "That notification no longer exists. Refresh the page.";
+
     private sealed record Parsed(
         string? Title,
         string BodyEn,
@@ -102,6 +111,7 @@ public class AdminNotificationsController(
     {
         var list = await db.Notifications
             .AsNoTracking()
+            .Where(n => n.DeletedAt == null)
             .Include(n => n.Targets)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
@@ -170,8 +180,8 @@ public class AdminNotificationsController(
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Edit(int id, [FromBody] NotificationRequest req)
     {
-        var n = await db.Notifications.Include(x => x.Targets).FirstOrDefaultAsync(x => x.Id == id);
-        if (n is null) return NotFound(new { error = "That notification no longer exists. Refresh the page." });
+        var n = await FindAsync(id);
+        if (n is null) return NotFound(new { error = Gone });
         if (IsStale(n, req.Version)) return Conflict(new { error = Changed, changed = true });
         if (n.CancelledAt is not null)
             return Conflict(new { error = "This notification was stopped and can't be edited. Create a new one instead." });
@@ -196,8 +206,8 @@ public class AdminNotificationsController(
     [HttpPut("{id:int}/title")]
     public async Task<IActionResult> Rename(int id, [FromBody] NotificationTitleRequest req)
     {
-        var n = await db.Notifications.Include(x => x.Targets).FirstOrDefaultAsync(x => x.Id == id);
-        if (n is null) return NotFound(new { error = "That notification no longer exists. Refresh the page." });
+        var n = await FindAsync(id);
+        if (n is null) return NotFound(new { error = Gone });
         if (IsStale(n, req.Version)) return Conflict(new { error = Changed, changed = true });
 
         var (title, error) = ParseTitle(req.Title);
@@ -219,8 +229,8 @@ public class AdminNotificationsController(
     [HttpPost("{id:int}/stop")]
     public async Task<IActionResult> Stop(int id)
     {
-        var n = await db.Notifications.Include(x => x.Targets).FirstOrDefaultAsync(x => x.Id == id);
-        if (n is null) return NotFound(new { error = "That notification no longer exists. Refresh the page." });
+        var n = await FindAsync(id);
+        if (n is null) return NotFound(new { error = Gone });
         if (n.CancelledAt is not null) return Ok((await DescribeAsync([n]))[0]);
 
         var now = DateTime.UtcNow;
@@ -234,6 +244,34 @@ public class AdminNotificationsController(
             $"Taken down {Eastern(now)}, was set to end {Eastern(n.ExpiresAt)}", AdminId());
         return Ok((await DescribeAsync([n]))[0]);
     }
+
+    // Only an ended or stopped message can be deleted. Deleting twice is
+    // harmless, so no version is needed.
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var n = await db.Notifications.FirstOrDefaultAsync(x => x.Id == id);
+        if (n is null) return NotFound(new { error = Gone });
+        if (n.DeletedAt is not null) return Ok(new { deleted = true });
+
+        var now = DateTime.UtcNow;
+        var stopped = n.CancelledAt is not null;
+        if (!stopped && n.ExpiresAt > now)
+            return Conflict(new { error = "Stop this notification before deleting it." });
+
+        n.DeletedAt = now;
+        n.DeletedBy = AdminId();
+        if (!await SaveAsync()) return Conflict(new { error = Changed, changed = true });
+
+        var was = stopped ? $"stopped {Eastern(n.CancelledAt!.Value)}" : $"ended {Eastern(n.ExpiresAt)}";
+        await NotificationActivity.RecordAdminAsync(
+            db, logger, NotificationActivity.Deleted, n,
+            $"Removed from the admin list, {was}; its records are kept", AdminId());
+        return Ok(new { deleted = true });
+    }
+
+    private Task<Notification?> FindAsync(int id) =>
+        db.Notifications.Include(x => x.Targets).FirstOrDefaultAsync(x => x.Id == id && x.DeletedAt == null);
 
     // True when the page sent a version and the row has changed since.
     private static bool IsStale(Notification n, uint? version) =>

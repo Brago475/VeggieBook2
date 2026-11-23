@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import type { AdminNotification, NotificationDraft, TemplatesResponse } from '../types/notifications'
 import { api, isChanged } from '../utils/api'
 
-// Loads the Notifications page and runs create, edit, rename, and stop.
-// After each change the list loads again so counts and statuses match the
-// server. It also reloads every minute while the tab is visible, so a
-// scheduled message turns live and counts move without a refresh. A failed
-// change returns the API's message for the page to show.
+// Loads the Notifications page and runs create, edit, rename, stop, and
+// delete. After each change the list loads again so counts and statuses
+// match the server. It also reloads every minute while the tab is visible,
+// so a scheduled message turns live and counts move without a refresh. A
+// failed change returns the API's message for the page to show.
 //
 // Edit and rename send the version the admin was looking at. If another
 // admin saved first, the change is refused, the list reloads, and the
@@ -86,5 +86,11 @@ export function useNotifications() {
     [change],
   )
 
-  return { list, templates, error, reload: load, create, save, rename, stop }
+  // Ended or stopped messages only; the server refuses the rest.
+  const remove = useCallback(
+    (id: number) => change(() => api(`/admin/notifications/${id}`, { method: 'DELETE' })),
+    [change],
+  )
+
+  return { list, templates, error, reload: load, create, save, rename, stop, remove }
 }

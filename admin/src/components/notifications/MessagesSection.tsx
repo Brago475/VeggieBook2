@@ -11,6 +11,7 @@ import { NavIcon } from '../icons/NavIcons'
 import { TopbarActions } from '../layout/TopbarSlot'
 import { MessagesSkeleton } from '../skeletons/MessagesSkeleton'
 import { StudyToast } from '../studies/StudyToast'
+import { DeleteNotificationDialog } from './DeleteNotificationDialog'
 import { NotificationEditor } from './NotificationEditor'
 import { notificationName } from './notificationFormat'
 import { NotificationList } from './NotificationList'
@@ -23,7 +24,9 @@ import { StopNotificationDialog } from './StopNotificationDialog'
 // drafts under Drafts; the chosen list is kept in the address. Each message
 // can carry an admin-only title. A playlist sent from the Playlists section
 // opens a new message with that playlist chosen. A draft that is sent or
-// scheduled is removed. While loading, the section's outline shows.
+// scheduled is removed. Ended and stopped messages can be deleted, which
+// hides them but keeps their records. While loading, the section's outline
+// shows.
 
 type Editing = {
   mode: 'create' | 'edit'
@@ -54,17 +57,19 @@ function draftRow(d: SavedDraft<NotificationDraftData>): DraftRow {
 }
 
 export function MessagesSection({ sendPlaylistId = null, onSendOpened }: Props) {
-  const { list, templates, error, create, save, rename, stop } = useNotifications()
+  const { list, templates, error, create, save, rename, stop, remove } = useNotifications()
   const drafts = useDrafts<NotificationDraftData>('notification')
   const [view, setView] = useHashParam('list', VIEWS)
   const [editing, setEditing] = useState<Editing | null>(null)
   const [renaming, setRenaming] = useState<AdminNotification | null>(null)
   const [stopping, setStopping] = useState<AdminNotification | null>(null)
+  const [deleting, setDeleting] = useState<AdminNotification | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const closeToast = useCallback(() => setToast(null), [])
   const closeEditor = useCallback(() => setEditing(null), [])
   const closeRename = useCallback(() => setRenaming(null), [])
   const closeStop = useCallback(() => setStopping(null), [])
+  const closeDelete = useCallback(() => setDeleting(null), [])
   const firstLoad = useHeld(!list && !error)
 
   useEffect(() => {
@@ -131,6 +136,12 @@ export function MessagesSection({ sendPlaylistId = null, onSendOpened }: Props) 
   async function stopOne(item: AdminNotification) {
     const message = await stop(item.id)
     if (!message) setToast(`Stopped ${notificationName(item)}.`)
+    return message
+  }
+
+  async function deleteOne(item: AdminNotification) {
+    const message = await remove(item.id)
+    if (!message) setToast(`Deleted ${notificationName(item)}.`)
     return message
   }
 
@@ -212,6 +223,7 @@ export function MessagesSection({ sendPlaylistId = null, onSendOpened }: Props) 
             onCopy={(n) => setEditing({ mode: 'create', from: n })}
             onRename={setRenaming}
             onStop={setStopping}
+            onDelete={setDeleting}
           />
         )}
       </section>
@@ -240,6 +252,10 @@ export function MessagesSection({ sendPlaylistId = null, onSendOpened }: Props) 
 
       {stopping && (
         <StopNotificationDialog item={stopping} onStop={() => stopOne(stopping)} onClose={closeStop} />
+      )}
+
+      {deleting && (
+        <DeleteNotificationDialog item={deleting} onDelete={() => deleteOne(deleting)} onClose={closeDelete} />
       )}
 
       {toast && <StudyToast message={toast} onClose={closeToast} />}
