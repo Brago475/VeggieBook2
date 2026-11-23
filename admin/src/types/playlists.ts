@@ -32,7 +32,10 @@ export type PlaylistSummary = {
   photos: string[]
   kept: number
   notKept: number
+  // Notifications that used it.
   sent: number
+  // People shown one of those notifications, guests included.
+  reached: number
   live: boolean
   defaultFor: PlaylistDefaultFor[]
 }

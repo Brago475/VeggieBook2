@@ -16,8 +16,9 @@ namespace VeggieBook.Api.Admin;
 //   everything  books, account record, tracking history, study notice
 //               answers and the research ID link, in one transaction.
 //
-// Every erase writes a research_erased line to the activity log. The
-// activity log is never erased. Admin accounts are refused.
+// Every erase writes a research_erased line to the activity log with the
+// admin who did it. The activity log is never erased. Admin accounts are
+// refused.
 
 public static class ParticipantErase
 {
@@ -124,12 +125,13 @@ public static class ParticipantErase
         return count;
     }
 
-    // The activity line for an erase, by research ID only.
-    public static ActivityEntry LogLine(string researchId, string level, int books) => new()
+    // The activity line for an erase, by research ID, with the admin who did it.
+    public static ActivityEntry LogLine(string researchId, string level, int books, Guid adminId) => new()
     {
         Kind = Kind,
         ParticipantId = researchId,
         Detail = level,
-        ItemCount = books
+        ItemCount = books,
+        AdminId = adminId
     };
 }

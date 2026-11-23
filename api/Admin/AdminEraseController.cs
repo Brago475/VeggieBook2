@@ -81,7 +81,7 @@ public class AdminEraseController(
             return StatusCode(500, new { error = "The erase did not finish. Nothing was logged; try again." });
         }
 
-        await ActivityLog.SaveAsync(db, logger, ParticipantErase.LogLine(t.ResearchId, level, books));
+        await ActivityLog.SaveAsync(db, logger, ParticipantErase.LogLine(t.ResearchId, level, books, adminId.Value));
 
         return Ok(new { level, booksErased = books });
     }

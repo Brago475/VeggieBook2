@@ -116,7 +116,7 @@ export function PlaylistCard({
 
         <dl className="plc-band">
           <div>
-            <dd>{p.sent}</dd>
+            <dd>{p.reached}</dd>
             <dt>Reached</dt>
           </div>
           <div>
