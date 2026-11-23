@@ -38,11 +38,12 @@
   opacity: 0.75;
 }
 
-/* Grid: every row is the same height, so every card is the same size. */
+/* Grid: every row is the same height, so every card is the same size.
+   Padded so the cards sit inside the section box with room around them. */
 .plc-grid {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 24px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   grid-auto-rows: 1fr;
@@ -377,5 +378,6 @@
   .plc-grid {
     grid-template-columns: 1fr;
     grid-auto-rows: auto;
+    padding: 16px;
   }
 }
