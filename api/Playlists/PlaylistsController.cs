@@ -4,218 +4,230 @@ using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Controllers;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.Notifications;
 using VeggieBook.Api.Recipes;
 
 namespace VeggieBook.Api.Playlists;
 
-// Playlists people make from recipes in their saved books. Books are only
-// read; adding a recipe to a playlist never changes a book.
+// Playlists in the main site, inside Notifications.
 //
-//   GET    /api/playlists/own/choices?lang=          recipes in this account's
-//                                                   saved books, by book
-//   GET    /api/playlists/own/{id}?lang=             one own playlist with its recipes
-//   POST   /api/playlists/own                        { name, recipeIds }
-//   PUT    /api/playlists/own/{id}                   { name, recipeIds }
-//   DELETE /api/playlists/own/{id}
-//   POST   /api/playlists/own/{id}/opened/{recipeId} accepted, not recorded
+//   GET    /api/playlists?lang=en|es                  kept playlists and own playlists
+//   GET    /api/playlists/{id}?lang=                  one admin playlist with its items
+//   POST   /api/playlists/{id}/keep                   body { notificationId }
+//   POST   /api/playlists/{id}/skip                   body { notificationId }
+//   DELETE /api/playlists/{id}/keep                   take a kept playlist out
+//   POST   /api/playlists/{id}/opened/{kind}/{itemId} accepted, not recorded
 //
-// Every query is limited to the signed-in account. Recipes must be kept in
-// one of its saved books when added. Every change writes an activity line;
-// opening a playlist or a recipe in it is a view and writes nothing.
+// An admin playlist opens only when a live notification that reaches this
+// account links to it, or when the account kept it. Only decisions (kept,
+// skipped, removed) write activity lines; viewing does not.
+// Own playlists: OwnPlaylistsController.
 
-public record OwnPlaylistRequest(string? Name, List<int>? RecipeIds);
+public record PlaylistDecisionRequest(int? NotificationId);
 
 [ApiController]
-[Route("api/playlists/own")]
+[Route("api/playlists")]
 [Authorize]
-public class OwnPlaylistsController(
+public class PlaylistsController(
     AccountsContext db,
     VeggieBookContext content,
-    ILogger<OwnPlaylistsController> logger) : ControllerBase
+    ILogger<PlaylistsController> logger) : ControllerBase
 {
-    private const int MaxName = 60;
-    private const int MaxPerUser = 50;
+    // Recipe photos sent per playlist for the card's slideshow.
+    private const int PhotoLimit = 5;
 
     private Guid CurrentUserId =>
         AuthSetup.UserId(User) ?? throw new InvalidOperationException("Signed-in user has no id.");
 
-    [HttpGet("choices")]
-    public async Task<IActionResult> Choices([FromQuery] string? lang)
+    [HttpGet]
+    public async Task<IActionResult> Mine([FromQuery] string? lang)
     {
         var uid = CurrentUserId;
         var es = Lang.IsSpanish(lang);
 
-        var books = await db.Books
+        var kept = await (
+                from c in db.PlaylistChoices
+                where c.UserId == uid && c.Kept
+                join p in db.Playlists on c.PlaylistId equals p.Id
+                orderby c.DecidedAt descending
+                select new
+                {
+                    p.Id,
+                    p.NameEn,
+                    p.NameEs,
+                    c.DecidedAt,
+                    Tips = p.Items.Count(i => i.Kind == PlaylistKinds.Tip),
+                    Recipes = p.Items.Count(i => i.Kind == PlaylistKinds.Recipe),
+                    RecipeIds = p.Items
+                        .Where(i => i.Kind == PlaylistKinds.Recipe)
+                        .OrderBy(i => i.Position)
+                        .Select(i => i.ItemId)
+                        .Take(PhotoLimit)
+                        .ToList()
+                })
             .AsNoTracking()
-            .Where(b => b.UserId == uid && b.Kind == "veggie")
-            .OrderByDescending(b => b.CreatedAt)
-            .Select(b => new
+            .ToListAsync();
+
+        var own = await db.UserPlaylists
+            .AsNoTracking()
+            .Where(u => u.UserId == uid)
+            .OrderByDescending(u => u.UpdatedAt ?? u.CreatedAt)
+            .Select(u => new
             {
-                b.Id,
-                b.VegetableCode,
-                b.CreatedAt,
-                Recipes = b.Selections
-                    .Where(s => s.ContentType == "recipe" && s.Kept)
-                    .Select(s => s.ContentId)
+                u.Id,
+                u.Name,
+                u.CreatedAt,
+                u.UpdatedAt,
+                Recipes = u.Items.Count,
+                RecipeIds = u.Items
+                    .OrderBy(i => i.Position)
+                    .Select(i => i.RecipeId)
+                    .Take(PhotoLimit)
                     .ToList()
             })
             .ToListAsync();
 
-        var ids = books.SelectMany(b => b.Recipes).Distinct().ToArray();
-        var recipes = (await content.Recipes
+        var recipeIds = kept.SelectMany(k => k.RecipeIds)
+            .Concat(own.SelectMany(o => o.RecipeIds))
+            .Distinct()
+            .ToArray();
+        var finished = (await content.Recipes
                 .AsNoTracking()
-                .Where(r => ids.Contains(r.Id))
-                .Select(r => new
-                {
-                    r.Id,
-                    r.DisplayCode,
-                    Title = es ? r.TitleEs : r.TitleEn,
-                    Photos = r.Photos.OrderBy(p => p.Position).Select(p => p.ImagePath).ToList()
-                })
+                .Where(r => recipeIds.Contains(r.Id))
+                .Select(r => new { r.Id, Photos = r.Photos.OrderBy(p => p.Position).Select(p => p.ImagePath).ToList() })
                 .ToListAsync())
-            .ToDictionary(r => r.Id);
+            .ToDictionary(r => r.Id, r => RecipePhotos.Finished(r.Photos));
 
-        var vegetables = await content.Vegetables
-            .AsNoTracking()
-            .ToDictionaryAsync(v => v.Code, v => es ? v.NameEs : v.NameEn);
+        // One finished photo per recipe, in playlist order, skipping recipes without one.
+        List<string> PhotosOf(IEnumerable<int> ids) =>
+            ids.Select(i => finished.GetValueOrDefault(i)).OfType<string>().Distinct().ToList();
 
         Response.Headers.CacheControl = "no-store";
-        return Ok(books
-            .Select(b => new
+        return Ok(new
+        {
+            kept = kept.Select(k =>
             {
-                id = b.Id,
-                vegetable = b.VegetableCode,
-                vegetableName = b.VegetableCode is string code ? vegetables.GetValueOrDefault(code, code) : "",
-                createdAt = b.CreatedAt,
-                recipes = b.Recipes
-                    .Where(recipes.ContainsKey)
-                    .Select(id => recipes[id])
-                    .OrderBy(r => r.DisplayCode == null)
-                    .ThenBy(r => r.DisplayCode)
-                    .ThenBy(r => r.Id)
-                    .Select(r => new { id = r.Id, code = r.DisplayCode, title = r.Title, photo = RecipePhotos.Finished(r.Photos) })
-                    .ToList()
+                var photos = PhotosOf(k.RecipeIds);
+                return new
+                {
+                    id = k.Id,
+                    name = es && !string.IsNullOrEmpty(k.NameEs) ? k.NameEs : k.NameEn,
+                    tips = k.Tips,
+                    recipes = k.Recipes,
+                    cover = photos.FirstOrDefault(),
+                    photos,
+                    keptAt = k.DecidedAt
+                };
+            }),
+            own = own.Select(o =>
+            {
+                var photos = PhotosOf(o.RecipeIds);
+                return new
+                {
+                    id = o.Id,
+                    name = o.Name,
+                    recipes = o.Recipes,
+                    cover = photos.FirstOrDefault(),
+                    photos,
+                    updatedAt = o.UpdatedAt ?? o.CreatedAt
+                };
             })
-            .Where(b => b.recipes.Count > 0));
+        });
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id, [FromQuery] string? lang)
     {
         var uid = CurrentUserId;
-        var p = await db.UserPlaylists.AsNoTracking().Include(x => x.Items)
-            .FirstOrDefaultAsync(x => x.Id == id && x.UserId == uid);
+
+        var p = await db.Playlists.AsNoTracking().Include(x => x.Items).FirstOrDefaultAsync(x => x.Id == id);
         if (p is null) return NotFound();
 
-        var refs = p.Items
-            .OrderBy(i => i.Position)
-            .Select(i => new PlaylistRef(PlaylistKinds.Recipe, i.RecipeId))
-            .ToList();
-        var items = await PlaylistContent.LoadAsync(content, refs, lang);
+        var choice = await db.PlaylistChoices.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.PlaylistId == id && c.UserId == uid);
+        if (choice?.Kept != true && !await OfferedAsync(uid, id)) return NotFound();
+
+        var items = await PlaylistContent.LoadAsync(content, PlaylistHelpers.RefsOf(p), lang);
 
         Response.Headers.CacheControl = "no-store";
         return Ok(new
         {
             id = p.Id,
-            name = p.Name,
-            recipeIds = refs.Select(r => r.Id),
+            name = Lang.IsSpanish(lang) && !string.IsNullOrEmpty(p.NameEs) ? p.NameEs : p.NameEn,
+            choice = choice is null ? null : choice.Kept ? "kept" : "skipped",
             items
         });
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] OwnPlaylistRequest req)
+    [HttpPost("{id:int}/keep")]
+    public Task<IActionResult> Keep(int id, [FromBody] PlaylistDecisionRequest? req) => DecideAsync(id, true, req);
+
+    [HttpPost("{id:int}/skip")]
+    public Task<IActionResult> Skip(int id, [FromBody] PlaylistDecisionRequest? req) => DecideAsync(id, false, req);
+
+    [HttpDelete("{id:int}/keep")]
+    public Task<IActionResult> Remove(int id) => DecideAsync(id, false, null);
+
+    // Still called by the main site when a tip or recipe opens; views are not recorded.
+    [HttpPost("{id:int}/opened/{kind}/{itemId:int}")]
+    public IActionResult ItemOpened(int id, string kind, int itemId) => NoContent();
+
+    // Keep, skip, or take out. Only a change writes a line: kept, skipped, or
+    // removed when a kept playlist is let go.
+    private async Task<IActionResult> DecideAsync(int id, bool keep, PlaylistDecisionRequest? req)
     {
         var uid = CurrentUserId;
 
-        if (await db.UserPlaylists.CountAsync(u => u.UserId == uid) >= MaxPerUser)
-            return Conflict(new { error = $"You can keep up to {MaxPerUser} playlists. Delete one to make room." });
+        var p = await db.Playlists.AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => new { x.Id, Count = x.Items.Count })
+            .FirstOrDefaultAsync();
+        if (p is null) return NotFound();
 
-        var (name, recipeIds, error) = await ParseAsync(uid, req);
-        if (error is not null) return BadRequest(new { error });
+        var choice = await db.PlaylistChoices.FirstOrDefaultAsync(c => c.PlaylistId == id && c.UserId == uid);
+        if (choice?.Kept != true && !await OfferedAsync(uid, id)) return NotFound();
+        if (choice is not null && choice.Kept == keep) return NoContent();
 
-        var p = new UserPlaylist
+        var wasKept = choice?.Kept == true;
+        if (choice is null)
         {
-            UserId = uid,
-            Name = name!,
-            CreatedAt = DateTime.UtcNow,
-            Items = recipeIds!.Select((r, i) => new UserPlaylistItem { Position = i, RecipeId = r }).ToList()
-        };
-        db.UserPlaylists.Add(p);
-        await db.SaveChangesAsync();
+            choice = new PlaylistChoice { PlaylistId = id, UserId = uid };
+            db.PlaylistChoices.Add(choice);
+        }
+        choice.Kept = keep;
+        choice.DecidedAt = DateTime.UtcNow;
+        if (req?.NotificationId is int nid
+            && await db.Notifications.AnyAsync(n => n.Id == nid && n.PlaylistId == id))
+            choice.NotificationId = nid;
 
-        await PlaylistActivity.RecordAsync(
-            db, logger, uid, PlaylistActivity.OwnCreated, p.Id, PlaylistActivity.SourceOwn, p.Items.Count);
-        return Created($"/api/playlists/own/{p.Id}", new { id = p.Id });
-    }
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Two tabs decided at once; the other one was stored.
+            return NoContent();
+        }
 
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] OwnPlaylistRequest req)
-    {
-        var uid = CurrentUserId;
-        var p = await db.UserPlaylists.Include(x => x.Items).FirstOrDefaultAsync(x => x.Id == id && x.UserId == uid);
-        if (p is null) return NotFound();
-
-        var (name, recipeIds, error) = await ParseAsync(uid, req, p.Items.Select(i => i.RecipeId));
-        if (error is not null) return BadRequest(new { error });
-
-        db.UserPlaylistItems.RemoveRange(p.Items);
-        p.Items.Clear();
-        p.Items.AddRange(recipeIds!.Select((r, i) => new UserPlaylistItem { Position = i, RecipeId = r }));
-        p.Name = name!;
-        p.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-
-        await PlaylistActivity.RecordAsync(
-            db, logger, uid, PlaylistActivity.OwnEdited, p.Id, PlaylistActivity.SourceOwn, p.Items.Count);
+        var kind = keep ? PlaylistActivity.Kept : wasKept ? PlaylistActivity.Removed : PlaylistActivity.Skipped;
+        await PlaylistActivity.RecordAsync(db, logger, uid, kind, id, PlaylistActivity.SourceAdmin, p.Count);
         return NoContent();
     }
 
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
+    // A live notification that reaches this account links to the playlist.
+    private async Task<bool> OfferedAsync(Guid uid, int playlistId)
     {
-        var uid = CurrentUserId;
-        var p = await db.UserPlaylists.Include(x => x.Items).FirstOrDefaultAsync(x => x.Id == id && x.UserId == uid);
-        if (p is null) return NotFound();
+        var user = await db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == uid);
+        if (user is null) return false;
 
-        var count = p.Items.Count;
-        db.UserPlaylists.Remove(p);
-        await db.SaveChangesAsync();
+        var now = DateTime.UtcNow;
+        var list = await db.Notifications
+            .AsNoTracking()
+            .Where(n => n.PlaylistId == playlistId && n.CancelledAt == null && n.StartsAt <= now && n.ExpiresAt > now)
+            .Include(n => n.Targets.Where(t => t.UserId == uid))
+            .ToListAsync();
 
-        await PlaylistActivity.RecordAsync(
-            db, logger, uid, PlaylistActivity.OwnDeleted, id, PlaylistActivity.SourceOwn, count);
-        return NoContent();
-    }
-
-    // Still called by the main site when a recipe opens; views are not recorded.
-    [HttpPost("{id:int}/opened/{recipeId:int}")]
-    public IActionResult RecipeOpened(int id, int recipeId) => NoContent();
-
-    // Recipes already in the playlist may stay even if since taken out of a
-    // book; new ones must be kept in one of the account's saved books.
-    private async Task<(string? Name, List<int>? RecipeIds, string? Error)> ParseAsync(
-        Guid uid, OwnPlaylistRequest req, IEnumerable<int>? already = null)
-    {
-        var name = (req.Name ?? "").Trim();
-        if (name.Length == 0) return (null, null, "Give your playlist a name.");
-        if (name.Length > MaxName) return (null, null, $"Keep the name to {MaxName} characters or fewer.");
-
-        var ids = req.RecipeIds ?? [];
-        if (ids.Count == 0) return (null, null, "Pick at least one recipe.");
-        if (ids.Count > PlaylistHelpers.MaxItems)
-            return (null, null, $"A playlist can hold up to {PlaylistHelpers.MaxItems} recipes.");
-        if (ids.Distinct().Count() != ids.Count) return (null, null, "A recipe is listed twice.");
-
-        var allowed = (await db.Books
-                .AsNoTracking()
-                .Where(b => b.UserId == uid)
-                .SelectMany(b => b.Selections.Where(s => s.ContentType == "recipe" && s.Kept).Select(s => s.ContentId))
-                .ToListAsync())
-            .Concat(already ?? [])
-            .ToHashSet();
-        if (ids.Any(i => !allowed.Contains(i)))
-            return (null, null, "Pick recipes from your saved books.");
-
-        return (name, ids, null);
+        return list.Any(n => NotificationRules.Reaches(n, uid, GuestAccounts.IsGuest(user)));
     }
 }

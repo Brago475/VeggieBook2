@@ -32,15 +32,15 @@ namespace VeggieBook.Api.Admin;
 // moment it is switched off. Only one runs at a time; the database's unique
 // index refuses a second, even if two admins click at the same moment.
 //
-// Deleting removes the study and its notice answers (the database removes
-// the notices with it). Books are never touched: they stay in All Data.
-// Tracking choices are not touched either. A running study can't be
-// deleted; switch it off first. The confirm text must match the study's
-// name (or "Study N" if it has none), the same check the page asks for.
+// Deleting hides the study (deleted_at, 031_study_deleted.sql). It leaves
+// every page, but its notice answers are kept as research data, and its
+// number is never given to a new study. Books and tracking choices are
+// never touched. A running study can't be deleted; switch it off first.
+// The confirm text must match the study's name (or "Study N" if it has
+// none), the same check the page asks for.
 //
 // Who started and ended a study is kept on the study itself. Renames and
-// deletions are written to the activity log with the admin who did them,
-// so they stay visible after the study row changes or is removed.
+// deletions are written to the activity log with the admin who did them.
 //
 // See Research/StudyTracking.cs for who is tracked and who sees the notice.
 
@@ -75,7 +75,7 @@ public class AdminStudiesController(
         return Ok(new
         {
             running = studies.Any(s => s.EndedAt is null),
-            nextNumber = (studies.Count == 0 ? 0 : studies.Max(s => s.Number)) + 1,
+            nextNumber = await NextNumberAsync(),
             preview = data.Preview(now),
             studies = studies.Select(s => data.Summary(s, now)).ToList(),
             admins = studies.Select(s => new
@@ -93,10 +93,9 @@ public class AdminStudiesController(
         if (await StudyTracking.RunningAsync(db) is not null)
             return Conflict(new { error = "A study is already running. Switch it off first." });
 
-        var last = await db.Studies.MaxAsync(s => (int?)s.Number) ?? 0;
         var study = new Study
         {
-            Number = last + 1,
+            Number = await NextNumberAsync(),
             StartedAt = DateTime.UtcNow,
             StartedBy = AdminId()
         };
@@ -156,6 +155,7 @@ public class AdminStudiesController(
         return Ok(data.Summary(study, DateTime.UtcNow));
     }
 
+    // Hides the study; its notice answers stay.
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, [FromBody] StudyDeleteRequest request)
     {
@@ -172,8 +172,7 @@ public class AdminStudiesController(
 
         var ran = $"{Eastern(study.StartedAt)} to {Eastern(study.EndedAt!.Value)}";
 
-        // Its notices go with it (ON DELETE CASCADE in 008_studies.sql).
-        db.Studies.Remove(study);
+        db.Entry(study).Property(AccountsContext.StudyDeletedAt).CurrentValue = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
         await ActivityLog.SaveAsync(db, logger, ActivityLog.ForStudy(
@@ -181,6 +180,10 @@ public class AdminStudiesController(
 
         return Ok(new { deleted = id, title });
     }
+
+    // Counts deleted studies too, so a number is never used twice.
+    private async Task<int> NextNumberAsync() =>
+        (await db.Studies.IgnoreQueryFilters().MaxAsync(s => (int?)s.Number) ?? 0) + 1;
 
     private static string Eastern(DateTime utc) =>
         TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), AllDataSource.Local.Zone)
