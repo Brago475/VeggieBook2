@@ -5,7 +5,8 @@ import { NavIcon, type IconName } from '../icons/NavIcons'
 // The ⋮ button on a card and its small menu. The menu is drawn on the page
 // body, so a panel that clips its content cannot hide it. It opens below the
 // button, or above when there is no room. Closes on a pick, a click outside,
-// Escape, scroll, or resize. A danger item shows in orange.
+// Escape, scroll, or resize. A danger item shows in orange. An optional note
+// shows at the top as plain text, not as an action.
 
 export type MenuItem = {
   label: string
@@ -17,9 +18,11 @@ export type MenuItem = {
 type Props = {
   label: string
   items: MenuItem[]
+  note?: string
 }
 
 const ROW_HEIGHT = 36
+const NOTE_HEIGHT = 56
 const GAP = 4
 
 function LineIcon({ d }: { d: string }) {
@@ -49,7 +52,7 @@ function ItemIcon({ icon }: { icon: MenuItem['icon'] }) {
   return <NavIcon name={icon} size={16} />
 }
 
-export function CardMenu({ label, items }: Props) {
+export function CardMenu({ label, items, note }: Props) {
   const [open, setOpen] = useState(false)
   const [place, setPlace] = useState<CSSProperties>({})
   const button = useRef<HTMLButtonElement>(null)
@@ -62,7 +65,7 @@ export function CardMenu({ label, items }: Props) {
     }
     const rect = button.current?.getBoundingClientRect()
     if (!rect) return
-    const height = items.length * ROW_HEIGHT + 10
+    const height = items.length * ROW_HEIGHT + (note ? NOTE_HEIGHT : 0) + 10
     const right = window.innerWidth - rect.right
     const up = rect.bottom + GAP + height > window.innerHeight && rect.top > height
     setPlace(
@@ -124,6 +127,7 @@ export function CardMenu({ label, items }: Props) {
       {open &&
         createPortal(
           <div ref={list} className="plc-menu-list" role="menu" aria-label={label} style={place}>
+            {note && <p className="plc-menu-note">{note}</p>}
             {items.map((item) => (
               <button
                 key={item.label}
