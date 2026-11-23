@@ -13,7 +13,7 @@ namespace VeggieBook.Api.Notifications;
 // the round, and Detail the template and vegetable ("in_season:lettuce") or
 // "custom".
 //
-// Admin lines (created, edited, stopped) carry the admin in AdminId;
+// Admin lines (created, edited, stopped, deleted) carry the admin in AdminId;
 // ContentId holds the notification number and Detail a readable summary.
 
 public static class NotificationActivity
@@ -26,6 +26,7 @@ public static class NotificationActivity
     public const string Created = "notification_created";
     public const string Edited = "notification_edited";
     public const string Stopped = "notification_stopped";
+    public const string Deleted = "notification_deleted";
 
     public static async Task RecordAsync(
         AccountsContext db,

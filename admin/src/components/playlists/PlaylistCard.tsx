@@ -13,6 +13,9 @@ import { shortCount } from './playlistFormat'
 //            as three boxes, and who made it
 //   Bottom   Send, Edit, and a menu: Download (English or Spanish), Archive
 //            or Restore, and Delete for one never sent, kept or skipped
+//
+// Every line of the middle keeps its space even when empty, so all cards
+// are the same size and their stats line up.
 
 type Props = {
   playlist: PlaylistSummary
@@ -83,14 +86,19 @@ export function PlaylistCard({
       </div>
 
       <div className="plc-body">
-        <strong className="plc-name">{p.nameEn}</strong>
-        {p.nameEs && (
-          <span className="plc-es">
+        <strong className="plc-name" title={p.nameEn}>
+          {p.nameEn}
+        </strong>
+
+        {p.nameEs ? (
+          <span className="plc-es" title={p.nameEs}>
             <span className="plc-lang" aria-label="Spanish name">
               ES
             </span>
             <span lang="es">{p.nameEs}</span>
           </span>
+        ) : (
+          <span className="plc-es" aria-hidden="true" />
         )}
 
         <span className="plc-count">
@@ -98,11 +106,13 @@ export function PlaylistCard({
           {empty ? 'No items' : shortCount(p.tips, p.recipes)}
         </span>
 
-        {defaults.length > 0 && (
+        {defaults.length > 0 ? (
           <span className="plc-default" title={defaults.map((x) => x.label).join('\n')}>
             <NavIcon name="bell" size={14} />
             <span>Default for: {defaults.map((x) => x.label).join('; ')}</span>
           </span>
+        ) : (
+          <span className="plc-default" aria-hidden="true" />
         )}
 
         <dl className="plc-stats">
@@ -120,7 +130,9 @@ export function PlaylistCard({
           </div>
         </dl>
 
-        {who && <span className="plc-who">{who}</span>}
+        <span className="plc-who" title={who ?? undefined}>
+          {who}
+        </span>
       </div>
 
       <div className="plc-actions">
