@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import type { AdminNotification } from '../../types/notifications'
-import { NavIcon } from '../icons/NavIcons'
 import { StudyIcon } from '../studies/StudyIcons'
 import { notificationName } from './notificationFormat'
 
@@ -12,6 +11,24 @@ type Props = {
   item: AdminNotification
   onDelete: () => Promise<string | null>
   onClose: () => void
+}
+
+function TrashIcon({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+    </svg>
+  )
 }
 
 export function DeleteNotificationDialog({ item, onDelete, onClose }: Props) {
@@ -39,7 +56,7 @@ export function DeleteNotificationDialog({ item, onDelete, onClose }: Props) {
       <div className="st-dialog" role="alertdialog" aria-modal="true" aria-labelledby="nd-title">
         <div className="st-dialog-head is-stop">
           <span className="st-dialog-icon">
-            <NavIcon name="delete" size={20} />
+            <TrashIcon size={20} />
           </span>
           <div className="st-dialog-title">
             <strong id="nd-title">Delete {notificationName(item)}?</strong>
@@ -78,7 +95,7 @@ export function DeleteNotificationDialog({ item, onDelete, onClose }: Props) {
               Cancel
             </button>
             <button type="button" className="st-button is-orange" disabled={busy} onClick={() => void confirm()}>
-              <NavIcon name="delete" size={16} />
+              <TrashIcon size={16} />
               {busy ? 'Deleting...' : 'Delete it'}
             </button>
           </div>
