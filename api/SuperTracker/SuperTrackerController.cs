@@ -13,7 +13,8 @@ namespace VeggieBook.Api.SuperTracker;
 //   POST /api/supertracker/terms     { version }
 //   PUT  /api/supertracker/profile   { age, sex, heightCm, weightKg, activity, units, calorieGoal }
 //
-// The profile can be saved only after the current Terms are accepted.
+// While SuperTrackerRules.RequireTerms is on, the profile can be saved
+// only after the current Terms are accepted.
 
 public record TermsRequest(string? Version);
 
@@ -47,6 +48,7 @@ public class SuperTrackerController(SuperTrackerContext db, AccountsContext acco
         return Ok(new
         {
             termsVersion = SuperTrackerRules.TermsVersion,
+            termsRequired = SuperTrackerRules.RequireTerms,
             termsAccepted = accepted,
             profile = profile is null ? null : View(profile)
         });
@@ -81,7 +83,7 @@ public class SuperTrackerController(SuperTrackerContext db, AccountsContext acco
         var uid = CurrentUserId;
         if (await IsGuestAsync(uid)) return AccountRequired();
 
-        if (!await HasAcceptedAsync(uid))
+        if (SuperTrackerRules.RequireTerms && !await HasAcceptedAsync(uid))
             return Conflict(new { error = "Please accept the SuperTracker2 terms first.", code = "termsRequired" });
 
         if (SuperTrackerRules.InvalidField(req) is string field)

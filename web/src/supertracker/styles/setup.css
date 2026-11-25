@@ -1,0 +1,218 @@
+/* SuperTracker2 setup form, summary and plain panels. Uses the
+   VeggieBook tokens. Mobile first; 900px and wider widens the form. */
+
+.st2-setup,
+.st2-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.st2-setup-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.st2-field {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.st2-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.st2-label {
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+
+.st2-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--sp-3);
+  font: inherit;
+  font-size: var(--font-row);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.st2-input[aria-invalid='true'] {
+  border-color: var(--warn, #c0392b);
+}
+
+.st2-units {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.st2-units .st2-input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.st2-unit {
+  flex: 0 0 auto;
+  font-size: var(--font-label);
+  color: var(--text-muted);
+}
+
+.st2-hint {
+  margin: 0;
+  font-size: var(--font-label);
+  color: var(--text-muted);
+}
+
+.st2-error {
+  margin: 0;
+  font-size: var(--font-label);
+  color: var(--warn, #c0392b);
+}
+
+/* Two-choice pills: units and sex. */
+.st2-pills {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+}
+
+.st2-pill {
+  min-height: 48px;
+  font: inherit;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+
+.st2-pill.is-on {
+  color: var(--green-action);
+  background: var(--green-tint);
+  border: 2px solid var(--green-action);
+}
+
+/* Activity cards. */
+.st2-levels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.st2-level {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--sp-3) var(--sp-4);
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.st2-level.is-on {
+  background: var(--green-tint);
+  border: 2px solid var(--green-action);
+}
+
+.st2-level-title {
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+}
+
+.st2-level-text {
+  font-size: var(--font-label);
+  color: var(--text-muted);
+}
+
+.st2-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+
+/* Saved answers. */
+.st2-summary {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.st2-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.st2-summary-row:last-child {
+  border-bottom: 0;
+}
+
+.st2-summary dt {
+  color: var(--text-muted);
+}
+
+.st2-summary dd {
+  margin: 0;
+  font-weight: var(--weight-bold);
+  text-align: right;
+}
+
+.st2-pill:focus-visible,
+.st2-level:focus-visible,
+.st2-input:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* Website layout. */
+@media (min-width: 900px) {
+  .st2-setup,
+  .st2-panel {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: var(--sp-6);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+
+  .st2-row {
+    flex-direction: row;
+  }
+
+  .st2-levels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .st2-form-actions {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .st2-form-actions .st2-start {
+    min-width: 240px;
+  }
+}

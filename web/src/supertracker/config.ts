@@ -1,4 +1,5 @@
 // Feature switches for SuperTracker2.
-// LOCKED keeps Get started and the guide closed until setup is built.
+// LOCKED closes Get started; GUIDE_LOCKED closes the guide until it is built.
 
-export const LOCKED = true
+export const LOCKED = false
+export const GUIDE_LOCKED = true

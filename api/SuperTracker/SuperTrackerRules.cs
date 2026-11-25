@@ -8,6 +8,10 @@ public static class SuperTrackerRules
     // Raise when the SuperTracker2 Terms change; everyone accepts again.
     public const string TermsVersion = "1.0";
 
+    // Off until the Terms wording is final. When on, the profile can be
+    // saved only after the current Terms are accepted.
+    public static readonly bool RequireTerms = false;
+
     public const int MinAge = 18;
     public const int MaxAge = 120;
     public const decimal MinHeightCm = 100m;
