@@ -1,7 +1,30 @@
 import { apiFetch } from '../../utils/api'
 
-// SuperTracker2 food log endpoints (api/SuperTracker/FoodLogController.cs).
-// Dates are the calendar day on this device, as yyyy-MM-dd.
+// SuperTracker2 food endpoints (api/SuperTracker/FoodLogController.cs and
+// FoodsController.cs). Dates are the calendar day on this device, as
+// yyyy-MM-dd. Food names are English only (USDA data).
+
+export type Meal = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+
+export const MEALS: Meal[] = ['breakfast', 'lunch', 'dinner', 'snack']
+
+// Amounts for one food or a whole day. Vegetables, fruits and dairy are
+// cups; whole grains ounce equivalents; healthy fats teaspoons of oil.
+export type Amounts = {
+  kcal: number
+  vegetables: number
+  fruits: number
+  dairy: number
+  wholeGrains: number
+  healthyFats: number
+  proteinG: number
+  sodiumMg: number
+  satFatG: number
+  addedSugarG: number
+  fiberG: number
+  potassiumMg: number
+  vitaminCMg: number
+}
 
 export type PerAmount = {
   servings: number
@@ -20,33 +43,47 @@ export type VegetableChoice = {
 
 export type DayEntry = {
   id: number
+  foodId: number
   name: string
   vegetableKey: string | null
+  meal: Meal | null
   portion: string
   quantity: number
-  vegetables: number
-  kcal: number
+  grams: number
+  amounts: Amounts
 }
 
-export type DayTotals = {
-  vegetables: number
-  fruits: number
-  dairy: number
-  wholeGrains: number
-  healthyFats: number
-  proteinG: number
-  kcal: number
-  sodiumMg: number
-  satFatG: number
-  fiberG: number
-  potassiumMg: number
-  vitaminCMg: number
-}
+export type DayTotals = Amounts
 
 export type Day = {
   date: string
   entries: DayEntry[]
   totals: DayTotals
+}
+
+export type FoodHit = {
+  id: number
+  name: string
+  category: string | null
+  portion: string | null
+  portionGrams: number | null
+  kcal: number | null
+}
+
+export type FoodPortion = {
+  id: number
+  description: string
+  grams: number
+  increment: number
+  isDefault: boolean
+}
+
+export type FoodDetail = {
+  id: number
+  name: string
+  categories: string[]
+  portions: FoodPortion[]
+  per100g: Amounts
 }
 
 function lang(): string {
@@ -61,10 +98,32 @@ export function getDay(date: string): Promise<Day> {
   return apiFetch<Day>(`/supertracker/days/${date}?lang=${lang()}`)
 }
 
-export function addVegetable(date: string, key: string, cups: number): Promise<{ id: number }> {
+export function searchFoods(q: string, category: string | null): Promise<FoodHit[]> {
+  const params = new URLSearchParams({ q })
+  if (category) params.set('category', category)
+  return apiFetch<FoodHit[]>(`/supertracker/foods/search?${params.toString()}`)
+}
+
+export function getFood(id: number): Promise<FoodDetail> {
+  return apiFetch<FoodDetail>(`/supertracker/foods/${id}`)
+}
+
+export function addFood(
+  date: string,
+  input: { foodId: number; portionId: number; quantity: number; meal: Meal },
+): Promise<{ id: number }> {
+  return apiFetch<{ id: number }>(`/supertracker/days/${date}/foods`, { method: 'POST', body: input })
+}
+
+export function addVegetable(
+  date: string,
+  key: string,
+  cups: number,
+  meal: Meal | null = null,
+): Promise<{ id: number }> {
   return apiFetch<{ id: number }>(`/supertracker/days/${date}/vegetables`, {
     method: 'POST',
-    body: { key, cups },
+    body: { key, cups, meal },
   })
 }
 

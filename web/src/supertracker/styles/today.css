@@ -1,16 +1,20 @@
-/* SuperTracker2 tabs, Today and Add vegetables. Uses the VeggieBook
-   tokens. Mobile first; 900px and wider centers the content. */
+/* SuperTracker2 tabs, Today, Add food and Add vegetables. Uses only the
+   VeggieBook tokens. Mobile first; 900px and wider centers the content. */
 
-.st2-home {
+.st2-home,
+.st2-today,
+.st2-addfood {
   display: flex;
   flex-direction: column;
   gap: var(--sp-5);
 }
 
+/* --- tabs ------------------------------------------------------------- */
+
 .st2-tabs {
   display: flex;
   gap: var(--sp-2);
-  padding: 4px;
+  padding: var(--sp-1);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
@@ -19,7 +23,6 @@
 .st2-tab {
   flex: 1 1 0;
   min-height: 44px;
-  font: inherit;
   font-size: var(--font-row);
   font-weight: var(--weight-bold);
   color: var(--text-muted);
@@ -34,16 +37,55 @@
   background: var(--green-action);
 }
 
-.st2-today {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-5);
-}
-
 .st2-today header {
   display: flex;
   flex-direction: column;
   gap: var(--sp-1);
+}
+
+/* --- calories card ---------------------------------------------------- */
+
+.st2-cal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--green-tint);
+  border: 1px solid var(--green-light);
+  border-radius: var(--r-lg);
+}
+
+.st2-cal-big {
+  margin: 0;
+  font-size: var(--font-title);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+}
+
+.st2-cal-big span {
+  font-size: var(--font-row);
+  color: var(--text);
+}
+
+/* --- bars ------------------------------------------------------------- */
+
+.st2-bar {
+  height: 10px;
+  overflow: hidden;
+  background: var(--line);
+  border-radius: var(--r-pill);
+}
+
+.st2-cal .st2-bar {
+  background: var(--surface);
+}
+
+.st2-bar span {
+  display: block;
+  height: 100%;
+  background: var(--green-action);
+  border-radius: var(--r-pill);
+  transition: width 0.3s ease;
 }
 
 .st2-progress {
@@ -63,36 +105,145 @@
   gap: var(--sp-3);
 }
 
-.st2-bar {
-  height: 12px;
-  overflow: hidden;
-  background: var(--green-tint);
-  border-radius: var(--r-pill);
-}
+/* --- actions ---------------------------------------------------------- */
 
-.st2-bar span {
-  display: block;
-  height: 100%;
-  background: var(--green-action);
-  border-radius: var(--r-pill);
-  transition: width 0.3s ease;
-}
-
-.st2-entries {
+.st2-today-actions {
   display: flex;
   flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: var(--sp-2);
+}
+
+.st2-secondary {
+  min-height: 48px;
+  padding: 0 var(--sp-5);
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: var(--surface);
+  border: 1px solid var(--green-light);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+
+.st2-secondary:hover {
+  background: var(--green-tint);
+}
+
+/* --- food group rows -------------------------------------------------- */
+
+.st2-grows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
 }
 
+.st2-grow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.st2-grow-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.st2-grow-name {
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+
+.st2-grow-text {
+  font-size: var(--font-label);
+  color: var(--text-muted);
+}
+
+.st2-grow.is-met .st2-grow-text {
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+}
+
+.st2-summary-row.is-over dd {
+  color: var(--danger);
+}
+
+/* --- meals ------------------------------------------------------------ */
+
+.st2-meals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.st2-meal {
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.st2-meal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--page);
+  border-bottom: 1px solid var(--line);
+}
+
+.st2-meal-title {
+  margin: 0;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--green-deep);
+}
+
+.st2-meal-kcal {
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+}
+
+.st2-meal-empty {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--font-label);
+  color: var(--text-muted);
+}
+
+.st2-meal-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.st2-meal-add {
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  text-align: left;
+  color: var(--green-action);
+  background: var(--surface);
+  border: 0;
+  border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.st2-meal-add:hover {
+  background: var(--green-tint);
+}
+
+/* --- entries ---------------------------------------------------------- */
+
 .st2-entry {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
   border-bottom: 1px solid var(--line);
@@ -104,6 +255,7 @@
 
 .st2-entry-text {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
@@ -114,12 +266,17 @@
   color: var(--text);
 }
 
+.st2-entry-kcal {
+  flex: 0 0 auto;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+
 .st2-entry-remove {
   flex: 0 0 auto;
   width: 36px;
   height: 36px;
-  font: inherit;
-  font-size: 1.4rem;
+  font-size: var(--font-section);
   line-height: 1;
   color: var(--text-muted);
   background: transparent;
@@ -129,8 +286,84 @@
 }
 
 .st2-entry-remove:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* --- add food ---------------------------------------------------------- */
+
+.st2-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.st2-chip {
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
   color: var(--text);
-  border-color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+
+.st2-chip.is-on {
+  color: var(--green-action);
+  background: var(--green-tint);
+  border-color: var(--green-light);
+}
+
+.st2-results {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.st2-result {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  background: var(--surface);
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.st2-results li:last-child .st2-result {
+  border-bottom: 0;
+}
+
+.st2-result:hover {
+  background: var(--green-tint);
+}
+
+.st2-result-name {
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+
+.st2-back {
+  align-self: flex-start;
+  padding-left: 0;
+}
+
+.st2-food-name {
+  margin: 0;
+  font-size: var(--font-section);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+}
+
+.st2-field-small {
+  flex: 0 0 120px;
 }
 
 .st2-amounts {
@@ -148,8 +381,14 @@
   border-radius: var(--r-md);
 }
 
+/* --- focus ------------------------------------------------------------ */
+
 .st2-tab:focus-visible,
-.st2-entry-remove:focus-visible {
+.st2-secondary:focus-visible,
+.st2-meal-add:focus-visible,
+.st2-entry-remove:focus-visible,
+.st2-chip:focus-visible,
+.st2-result:focus-visible {
   outline: 2px solid var(--green);
   outline-offset: 2px;
 }
@@ -160,14 +399,27 @@
   }
 }
 
+/* --- website layout --------------------------------------------------- */
+
 @media (min-width: 900px) {
-  .st2-home {
+  .st2-home,
+  .st2-addfood {
     max-width: 960px;
     margin: 0 auto;
+    width: 100%;
   }
 
-  .st2-today .st2-start {
-    align-self: flex-start;
+  .st2-today-actions {
+    flex-direction: row;
+  }
+
+  .st2-today-actions .st2-start,
+  .st2-today-actions .st2-secondary {
     min-width: 240px;
+  }
+
+  .st2-meals {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 }

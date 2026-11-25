@@ -1,4 +1,4 @@
-/* SuperTracker2 "My plan". Uses the VeggieBook tokens. Mobile first;
+/* SuperTracker2 "My plan". Uses only the VeggieBook tokens. Mobile first;
    900px and wider puts the food groups in two columns. */
 
 .st2-plan {
@@ -26,7 +26,7 @@
 
 .st2-plan-big {
   margin: 0;
-  font-size: 2rem;
+  font-size: var(--font-title);
   font-weight: var(--weight-bold);
   color: var(--green-action);
 }
@@ -44,7 +44,7 @@
 
 .st2-plan-h2 {
   margin: 0;
-  font-size: var(--font-row);
+  font-size: var(--font-section);
   font-weight: var(--weight-bold);
   color: var(--text);
 }

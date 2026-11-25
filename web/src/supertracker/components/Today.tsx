@@ -1,12 +1,15 @@
 import { useStrings } from '../../i18n/useStrings'
-import type { Day } from '../api/foodLogApi'
+import { MEALS, type Day, type DayTotals, type Meal } from '../api/foodLogApi'
 import type { Plan } from '../api/superTrackerApi'
-import { ST_TODAY } from '../strings/today'
-import { count, tenth } from '../utils/format'
+import { ST_TRACKER } from '../strings/tracker'
+import { count, servings, tenth } from '../utils/format'
 import { longDate } from '../utils/dates'
-import { VegetableProgress } from './VegetableProgress'
+import { mealNow } from '../utils/meals'
+import { GroupBar } from './GroupBar'
+import { MealSection } from './MealSection'
 
-// Today: vegetable progress, what was logged, and a nutrient estimate.
+// Today: calories left, food groups against My plan, daily limits, and
+// the day's foods by meal. Matches the "Today" mockup.
 
 type Props = {
   date: string
@@ -14,12 +17,29 @@ type Props = {
   day: Day | null
   error: string | null
   onRetry: () => void
-  onAdd: () => void
+  onAddFood: (meal: Meal) => void
+  onQuickVegetables: () => void
   onRemove: (id: number) => void
 }
 
-export function Today({ date, plan, day, error, onRetry, onAdd, onRemove }: Props) {
-  const t = useStrings(ST_TODAY)
+const EMPTY: DayTotals = {
+  kcal: 0,
+  vegetables: 0,
+  fruits: 0,
+  dairy: 0,
+  wholeGrains: 0,
+  healthyFats: 0,
+  proteinG: 0,
+  sodiumMg: 0,
+  satFatG: 0,
+  addedSugarG: 0,
+  fiberG: 0,
+  potassiumMg: 0,
+  vitaminCMg: 0,
+}
+
+export function Today({ date, plan, day, error, onRetry, onAddFood, onQuickVegetables, onRemove }: Props) {
+  const t = useStrings(ST_TRACKER)
 
   if (error !== null) {
     return (
@@ -32,8 +52,26 @@ export function Today({ date, plan, day, error, onRetry, onAdd, onRemove }: Prop
     )
   }
 
-  const totals = day?.totals
+  const totals = day?.totals ?? EMPTY
   const entries = day?.entries ?? []
+  const left = plan.calories - totals.kcal
+  const calPct = plan.calories > 0 ? Math.min(100, Math.round((totals.kcal / plan.calories) * 100)) : 0
+
+  function servingRow(label: string, have: number, goal: number) {
+    return (
+      <GroupBar
+        key={label}
+        label={label}
+        have={have}
+        goal={goal}
+        met={have >= goal}
+        text={`${tenth(have)} ${t.of} ${servings(goal)} ${t.servings}${have >= goal ? `, ${t.met}` : ''}`}
+      />
+    )
+  }
+
+  const s = plan.servings
+  const quick = entries.filter((e) => e.meal === null)
 
   return (
     <div className="st2-today">
@@ -42,66 +80,81 @@ export function Today({ date, plan, day, error, onRetry, onAdd, onRemove }: Prop
         <p className="st2-hint">{longDate(date, t.locale)}</p>
       </header>
 
-      <VegetableProgress have={totals?.vegetables ?? 0} goal={plan.servings.vegetables.min} />
-
-      <button type="button" className="st2-start" onClick={onAdd}>
-        {t.addVegetables}
-      </button>
-
-      <section className="st2-plan-section">
-        <h2 className="st2-plan-h2">{t.logged}</h2>
-        {entries.length === 0 ? (
-          <p className="st2-hint">{t.nothingYet}</p>
-        ) : (
-          <ul className="st2-entries">
-            {entries.map((e) => (
-              <li key={e.id} className="st2-entry">
-                <div className="st2-entry-text">
-                  <span className="st2-entry-name">{e.name}</span>
-                  <span className="st2-hint">
-                    {tenth(e.quantity)} {e.quantity === 1 ? t.cup : t.cups}, {tenth(e.vegetables)}{' '}
-                    {t.servingsWord}, {count(e.kcal)} {t.calories.toLowerCase()}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="st2-entry-remove"
-                  aria-label={`${t.remove} ${e.name}`}
-                  onClick={() => onRemove(e.id)}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+      <section className="st2-cal">
+        <p className="st2-cal-big">
+          {count(Math.abs(left))} <span>{left >= 0 ? t.caloriesLeft : t.caloriesOver}</span>
+        </p>
+        <div className="st2-bar" aria-hidden="true">
+          <span style={{ width: `${calPct}%` }} />
+        </div>
+        <p className="st2-hint">
+          {count(totals.kcal)} {t.of} {count(plan.calories)} {t.eaten}
+        </p>
       </section>
 
-      {totals && entries.length > 0 && (
-        <section className="st2-plan-section">
-          <h2 className="st2-plan-h2">{t.nutrientsTitle}</h2>
-          <dl className="st2-summary">
-            <div className="st2-summary-row">
-              <dt>{t.calories}</dt>
-              <dd>{count(totals.kcal)}</dd>
-            </div>
-            <div className="st2-summary-row">
-              <dt>{t.fiber}</dt>
-              <dd>{tenth(totals.fiberG)} g</dd>
-            </div>
-            <div className="st2-summary-row">
-              <dt>{t.vitaminC}</dt>
-              <dd>{count(totals.vitaminCMg)} mg</dd>
-            </div>
-            <div className="st2-summary-row">
-              <dt>{t.potassium}</dt>
-              <dd>{count(totals.potassiumMg)} mg</dd>
-            </div>
-          </dl>
-        </section>
-      )}
+      <div className="st2-today-actions">
+        <button type="button" className="st2-start" onClick={() => onAddFood(mealNow())}>
+          {t.addFood}
+        </button>
+        <button type="button" className="st2-secondary" onClick={onQuickVegetables}>
+          {t.quickVeg}
+        </button>
+      </div>
 
-      <p className="st2-plan-source">{t.moreSoon}</p>
+      <section className="st2-plan-section">
+        <h2 className="st2-plan-h2">{t.groupsTitle}</h2>
+        <ul className="st2-grows">
+          {servingRow(t.vegetables, totals.vegetables, s.vegetables.min)}
+          {servingRow(t.fruits, totals.fruits, s.fruits.min)}
+          {servingRow(t.dairy, totals.dairy, s.dairy.min)}
+          {servingRow(t.wholeGrains, totals.wholeGrains, s.wholeGrains.min)}
+          <GroupBar
+            label={t.protein}
+            have={totals.proteinG}
+            goal={plan.proteinGrams.min}
+            met={totals.proteinG >= plan.proteinGrams.min}
+            text={`${count(totals.proteinG)} ${t.of} ${plan.proteinGrams.min} ${t.grams}`}
+          />
+          {servingRow(t.healthyFats, totals.healthyFats, s.healthyFats.min)}
+        </ul>
+      </section>
+
+      <section className="st2-plan-section">
+        <h2 className="st2-plan-h2">{t.limitsTitle}</h2>
+        <dl className="st2-summary">
+          <div className={`st2-summary-row${totals.sodiumMg > plan.limits.sodiumMg ? ' is-over' : ''}`}>
+            <dt>{t.sodium}</dt>
+            <dd>
+              {count(totals.sodiumMg)} / {count(plan.limits.sodiumMg)} mg
+            </dd>
+          </div>
+          <div className={`st2-summary-row${totals.satFatG > plan.limits.saturatedFatG ? ' is-over' : ''}`}>
+            <dt>{t.satFat}</dt>
+            <dd>
+              {tenth(totals.satFatG)} / {plan.limits.saturatedFatG} g
+            </dd>
+          </div>
+          <div className="st2-summary-row">
+            <dt>{t.addedSugars}</dt>
+            <dd>{tenth(totals.addedSugarG)} g</dd>
+          </div>
+        </dl>
+        <p className="st2-hint">{t.limitNote}</p>
+      </section>
+
+      <div className="st2-meals">
+        {MEALS.map((meal) => (
+          <MealSection
+            key={meal}
+            title={t.meals[meal]}
+            entries={entries.filter((e) => e.meal === meal)}
+            onAdd={() => onAddFood(meal)}
+            addLabel={`${t.addTo} ${t.meals[meal].toLowerCase()}`}
+            onRemove={onRemove}
+          />
+        ))}
+        {quick.length > 0 && <MealSection title={t.quickAdded} entries={quick} onRemove={onRemove} />}
+      </div>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-/* SuperTracker2 setup form, summary and plain panels. Uses the
+/* SuperTracker2 setup form, summary and plain panels. Uses only the
    VeggieBook tokens. Mobile first; 900px and wider widens the form. */
 
 .st2-setup,
@@ -47,7 +47,7 @@
 }
 
 .st2-input[aria-invalid='true'] {
-  border-color: var(--warn, #c0392b);
+  border-color: var(--danger);
 }
 
 .st2-units {
@@ -76,7 +76,7 @@
 .st2-error {
   margin: 0;
   font-size: var(--font-label);
-  color: var(--warn, #c0392b);
+  color: var(--danger);
 }
 
 /* Two-choice pills: units and sex. */
@@ -88,7 +88,6 @@
 
 .st2-pill {
   min-height: 48px;
-  font: inherit;
   font-size: var(--font-row);
   font-weight: var(--weight-bold);
   color: var(--text);
@@ -117,7 +116,6 @@
   align-items: flex-start;
   gap: 2px;
   padding: var(--sp-3) var(--sp-4);
-  font: inherit;
   text-align: left;
   color: var(--text);
   background: var(--surface);
@@ -148,7 +146,7 @@
   margin-top: var(--sp-2);
 }
 
-/* Saved answers. */
+/* Saved answers and amount lists. */
 .st2-summary {
   margin: 0;
   padding: var(--sp-2) var(--sp-4);
