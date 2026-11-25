@@ -2,21 +2,26 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useStrings } from '../../i18n/useStrings'
 import { addFood, MEALS, type Meal } from '../api/foodLogApi'
 import { useFood } from '../hooks/useFood'
+import { useFoodLists } from '../hooks/useFoodLists'
 import { useFoodSearch } from '../hooks/useFoodSearch'
 import { ST_TRACKER } from '../strings/tracker'
 import { count, tenth } from '../utils/format'
 import { scale } from '../utils/meals'
+import { FoodList } from './FoodList'
 import '../styles/setup.css'
 
-// "Add food": search the USDA foods, pick an amount, portion and meal, see
-// what it adds, then add it. Matches the "Add food" mockup.
+// "Add food": recent foods and favorites first, then search the USDA
+// foods; pick an amount, portion and meal, see what it adds, then add it.
 
 type Props = {
   date: string
+  dayName: string
   initialMeal: Meal
   onAdded: () => void
   onDone: () => void
 }
+
+type ListTab = 'recent' | 'favorites'
 
 const CHIPS = [
   'all',
@@ -39,11 +44,12 @@ function parseAmount(text: string): number | null {
   return text.trim() !== '' && Number.isFinite(n) ? n : null
 }
 
-export function AddFood({ date, initialMeal, onAdded, onDone }: Props) {
+export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) {
   const t = useStrings(ST_TRACKER)
 
   const [query, setQuery] = useState('')
   const [chip, setChip] = useState('all')
+  const [listTab, setListTab] = useState<ListTab>('recent')
   const [selected, setSelected] = useState<number | null>(null)
   const [meal, setMeal] = useState<Meal>(initialMeal)
   const [portionId, setPortionId] = useState<number | null>(null)
@@ -53,12 +59,14 @@ export function AddFood({ date, initialMeal, onAdded, onDone }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   const search = useFoodSearch(query, chip === 'all' ? null : chip)
-  const { food, error: foodError } = useFood(selected)
+  const lists = useFoodLists()
+  const { food, error: foodError, toggleFavorite } = useFood(selected)
 
   useEffect(() => {
     if (food) {
-      setPortionId(food.portions[0]?.id ?? null)
-      setAmountText('1')
+      setPortionId((current) =>
+        food.portions.some((p) => p.id === current) ? current : (food.portions[0]?.id ?? null),
+      )
       setError(null)
     }
   }, [food])
@@ -67,6 +75,18 @@ export function AddFood({ date, initialMeal, onAdded, onDone }: Props) {
   const amount = parseAmount(amountText)
   const validAmount = amount !== null && amount >= 0.1 && amount <= 50
   const preview = food && portion && validAmount && amount !== null ? scale(food.per100g, portion.grams * amount) : null
+
+  function pick(id: number) {
+    setSelected(id)
+    setPortionId(null)
+    setAmountText('1')
+    setAdded(null)
+  }
+
+  function closeFood() {
+    setSelected(null)
+    void lists.reload()
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -81,7 +101,7 @@ export function AddFood({ date, initialMeal, onAdded, onDone }: Props) {
       await addFood(date, { foodId: food.id, portionId: portion.id, quantity: amount, meal })
       setAdded(`${t.added}: ${food.name}, ${tenth(amount)} ${portion.description} (${t.meals[meal]})`)
       onAdded()
-      setSelected(null)
+      closeFood()
     } catch (err) {
       setError(err instanceof Error ? err.message : '')
     } finally {
@@ -103,12 +123,15 @@ export function AddFood({ date, initialMeal, onAdded, onDone }: Props) {
       ] as [string, string][]).filter(([, v]) => v !== '')
     : []
 
+  const searching = query.trim().length >= 2
+  const listItems = listTab === 'recent' ? lists.recent : lists.favorites
+
   return (
     <div className="st2-addfood">
       <header className="st2-setup-head">
         <h1 className="library-title st2-title">{t.addTitle}</h1>
         <p className="st2-hint">
-          {t.addTo} {t.meals[meal].toLowerCase()}
+          {t.addTo} {t.meals[meal].toLowerCase()}, {dayName}
         </p>
       </header>
 
@@ -135,53 +158,56 @@ export function AddFood({ date, initialMeal, onAdded, onDone }: Props) {
             />
           </div>
 
-          <div className="st2-chips" role="group" aria-label={t.searchLabel}>
-            {CHIPS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={`st2-chip${chip === c ? ' is-on' : ''}`}
-                aria-pressed={chip === c}
-                onClick={() => setChip(c)}
-              >
-                {t.categories[c]}
-              </button>
-            ))}
-          </div>
-
-          {query.trim().length < 2 ? (
-            <p className="st2-hint">{t.searchHint}</p>
-          ) : search.loading && search.results.length === 0 ? (
-            <p className="st2-hint">{t.searching}</p>
-          ) : search.error !== null ? (
-            <p className="st2-error">{search.error}</p>
-          ) : search.results.length === 0 ? (
-            <p className="st2-hint">{t.noResults}</p>
-          ) : (
-            <ul className="st2-results">
-              {search.results.map((r) => (
-                <li key={r.id}>
+          {searching ? (
+            <>
+              <div className="st2-chips" role="group" aria-label={t.searchLabel}>
+                {CHIPS.map((c) => (
                   <button
+                    key={c}
                     type="button"
-                    className="st2-result"
-                    onClick={() => {
-                      setSelected(r.id)
-                      setAdded(null)
-                    }}
+                    className={`st2-chip${chip === c ? ' is-on' : ''}`}
+                    aria-pressed={chip === c}
+                    onClick={() => setChip(c)}
                   >
-                    <span className="st2-result-name">{r.name}</span>
-                    <span className="st2-hint">
-                      {[
-                        r.category ? t.categories[r.category] : null,
-                        r.portion && r.kcal !== null ? `1 ${r.portion}, ${count(r.kcal)} ${t.cal}` : null,
-                      ]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </span>
+                    {t.categories[c]}
                   </button>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+
+              {search.loading && search.results.length === 0 ? (
+                <p className="st2-hint">{t.searching}</p>
+              ) : search.error !== null ? (
+                <p className="st2-error">{search.error}</p>
+              ) : search.results.length === 0 ? (
+                <p className="st2-hint">{t.noResults}</p>
+              ) : (
+                <FoodList items={search.results} onPick={pick} />
+              )}
+            </>
+          ) : (
+            <>
+              <p className="st2-hint">{t.searchHint}</p>
+              <div className="st2-tabs st2-list-tabs" role="group">
+                {(['recent', 'favorites'] as ListTab[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    className={`st2-tab${listTab === tab ? ' is-on' : ''}`}
+                    aria-pressed={listTab === tab}
+                    onClick={() => setListTab(tab)}
+                  >
+                    {tab === 'recent' ? t.recent : t.favorites}
+                  </button>
+                ))}
+              </div>
+              {lists.error !== null ? (
+                <p className="st2-error">{lists.error}</p>
+              ) : listItems.length === 0 ? (
+                <p className="st2-hint">{listTab === 'recent' ? t.noRecent : t.noFavorites}</p>
+              ) : (
+                <FoodList items={listItems} onPick={pick} />
+              )}
+            </>
           )}
           <p className="st2-plan-source">{t.source}</p>
         </>
@@ -189,10 +215,20 @@ export function AddFood({ date, initialMeal, onAdded, onDone }: Props) {
         <p className="st2-hint">{foodError ?? t.loadingFood}</p>
       ) : (
         <form className="st2-setup" onSubmit={submit} noValidate>
-          <button type="button" className="st2-guide st2-back" onClick={() => setSelected(null)}>
+          <button type="button" className="st2-guide st2-back" onClick={closeFood}>
             ‹ {t.back}
           </button>
-          <h2 className="st2-food-name">{food.name}</h2>
+          <div className="st2-food-top">
+            <h2 className="st2-food-name">{food.name}</h2>
+            <button
+              type="button"
+              className={`st2-star${food.isFavorite ? ' is-on' : ''}`}
+              aria-pressed={food.isFavorite}
+              onClick={() => void toggleFavorite()}
+            >
+              {food.isFavorite ? t.favoriteOn : t.favoriteOff}
+            </button>
+          </div>
 
           <div className="st2-row">
             <div className="st2-field st2-field-small">

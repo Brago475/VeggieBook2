@@ -1,6 +1,6 @@
 namespace VeggieBook.Api.SuperTracker;
 
-// Food tables. See db/migrations/034, 035 and 036. Values are per 100 g.
+// Food tables. See db/migrations/034 to 037. Values are per 100 g.
 
 public sealed class St2Food
 {
@@ -70,4 +70,13 @@ public sealed class St2FoodEntry
     public decimal Quantity { get; set; }
     public decimal Grams { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
+}
+
+public sealed class St2FavoriteFood
+{
+    public Guid UserId { get; set; }
+    public int FoodId { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? RemovedAt { get; set; }
 }

@@ -14,14 +14,17 @@ namespace VeggieBook.Api.SuperTracker;
 //   GET    /api/supertracker/days/{yyyy-MM-dd}?lang=         one day's entries and totals
 //   POST   /api/supertracker/days/{yyyy-MM-dd}/foods         { foodId, portionId, quantity, meal }
 //   POST   /api/supertracker/days/{yyyy-MM-dd}/vegetables    { key, cups, meal }
-//   DELETE /api/supertracker/entries/{id}
+//   POST   /api/supertracker/days/{yyyy-MM-dd}/copy          { fromDate, meal }
+//   DELETE /api/supertracker/entries/{id}                    hides the entry (deleted_at)
 //
 // Dates are the account's own calendar day, sent by the app. Every query is
-// limited to the signed-in account.
+// limited to the signed-in account. Entries are never erased.
 
 public record AddFoodRequest(int? FoodId, int? PortionId, decimal? Quantity, string? Meal);
 
 public record AddVegetableRequest(string? Key, decimal? Cups, string? Meal);
+
+public record CopyMealRequest(string? FromDate, string? Meal);
 
 [ApiController]
 [Route("api/supertracker")]
@@ -179,7 +182,43 @@ public class FoodLogController(SuperTrackerContext db, AccountsContext accounts)
         return Ok(new { id = entry.Id });
     }
 
-    // Removes one of the account's own log entries (the person's own food diary).
+    // Copies one meal's entries from another day into this day.
+    [HttpPost("days/{date}/copy")]
+    public async Task<IActionResult> CopyMeal(string date, [FromBody] CopyMealRequest req)
+    {
+        var uid = CurrentUserId;
+        if (await SuperTrackerAccess.IsGuestAsync(accounts, uid)) return SuperTrackerAccess.AccountRequired();
+        if (!TryDay(date, out var day) || !TryDay(req.FromDate ?? "", out var from) || from == day) return BadDate();
+        if (req.Meal is null || !Meals.Contains(req.Meal))
+            return BadRequest(new { error = "Choose a meal.", code = "invalidMeal" });
+
+        var source = await db.FoodEntries.AsNoTracking()
+            .Where(e => e.UserId == uid && e.EatenOn == from && e.Meal == req.Meal)
+            .OrderBy(e => e.CreatedAt)
+            .ToListAsync();
+
+        var now = DateTime.UtcNow;
+        foreach (var e in source)
+        {
+            db.FoodEntries.Add(new St2FoodEntry
+            {
+                UserId = uid,
+                EatenOn = day,
+                Meal = e.Meal,
+                FoodId = e.FoodId,
+                VegetableKey = e.VegetableKey,
+                Portion = e.Portion,
+                Quantity = e.Quantity,
+                Grams = e.Grams,
+                CreatedAt = now
+            });
+        }
+        await db.SaveChangesAsync();
+
+        return Ok(new { copied = source.Count });
+    }
+
+    // Hides one of the account's own entries. The row is kept.
     [HttpDelete("entries/{id:long}")]
     public async Task<IActionResult> DeleteEntry(long id)
     {
@@ -189,7 +228,7 @@ public class FoodLogController(SuperTrackerContext db, AccountsContext accounts)
         var entry = await db.FoodEntries.FirstOrDefaultAsync(e => e.Id == id && e.UserId == uid);
         if (entry is null) return NotFound();
 
-        db.FoodEntries.Remove(entry);
+        entry.DeletedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return NoContent();
     }

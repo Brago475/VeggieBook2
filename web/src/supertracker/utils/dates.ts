@@ -7,11 +7,29 @@ export function todayKey(now: Date = new Date()): string {
   return `${y}-${m}-${d}`
 }
 
-export function longDate(key: string, locale: string): string {
+function toDate(key: string): Date {
   const [y, m, d] = key.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString(locale, {
+  return new Date(y, m - 1, d)
+}
+
+export function addDays(key: string, days: number): string {
+  const date = toDate(key)
+  date.setDate(date.getDate() + days)
+  return todayKey(date)
+}
+
+export function longDate(key: string, locale: string): string {
+  return toDate(key).toLocaleDateString(locale, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
   })
+}
+
+// "Today", "Yesterday", or the weekday and date.
+export function dayLabel(key: string, locale: string, words: { today: string; yesterday: string }): string {
+  const today = todayKey()
+  if (key === today) return words.today
+  if (key === addDays(today, -1)) return words.yesterday
+  return longDate(key, locale)
 }

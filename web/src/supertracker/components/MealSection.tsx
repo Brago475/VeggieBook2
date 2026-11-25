@@ -3,17 +3,20 @@ import type { DayEntry } from '../api/foodLogApi'
 import { ST_TRACKER } from '../strings/tracker'
 import { count, tenth } from '../utils/format'
 
-// One meal on Today: its foods, calories, and an Add button.
+// One meal on Today: its foods, calories, Add, and Copy from previous day
+// while it is empty.
 
 type Props = {
   title: string
   entries: DayEntry[]
   onAdd?: () => void
   addLabel?: string
+  onCopy?: () => void
+  copying?: boolean
   onRemove: (id: number) => void
 }
 
-export function MealSection({ title, entries, onAdd, addLabel, onRemove }: Props) {
+export function MealSection({ title, entries, onAdd, addLabel, onCopy, copying, onRemove }: Props) {
   const t = useStrings(ST_TRACKER)
   const kcal = entries.reduce((sum, e) => sum + e.amounts.kcal, 0)
 
@@ -27,7 +30,14 @@ export function MealSection({ title, entries, onAdd, addLabel, onRemove }: Props
       </header>
 
       {entries.length === 0 ? (
-        <p className="st2-meal-empty">{t.nothing}</p>
+        <div className="st2-meal-empty-row">
+          <p className="st2-meal-empty">{t.nothing}</p>
+          {onCopy && (
+            <button type="button" className="st2-meal-copy" onClick={onCopy} disabled={copying}>
+              {copying ? t.copying : t.copyPrev}
+            </button>
+          )}
+        </div>
       ) : (
         <ul className="st2-meal-list">
           {entries.map((e) => (

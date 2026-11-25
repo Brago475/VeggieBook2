@@ -4,7 +4,8 @@ namespace VeggieBook.Api.SuperTracker;
 
 // Database context for SuperTracker2 data only, kept apart from
 // AccountsContext. Same rules: no EF migrations, snake_case names, and
-// db/migrations is the source of truth.
+// db/migrations is the source of truth. Hidden food entries (deleted_at
+// set) are filtered out of every query.
 
 public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) : DbContext(options)
 {
@@ -16,6 +17,7 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
     public DbSet<St2FoodValue> FoodValues => Set<St2FoodValue>();
     public DbSet<St2Vegetable> Vegetables => Set<St2Vegetable>();
     public DbSet<St2FoodEntry> FoodEntries => Set<St2FoodEntry>();
+    public DbSet<St2FavoriteFood> FavoriteFoods => Set<St2FavoriteFood>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -127,6 +129,20 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.Quantity).HasColumnName("quantity");
             e.Property(x => x.Grams).HasColumnName("grams");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.DeletedAt).HasColumnName("deleted_at");           // 037
+
+            e.HasQueryFilter(x => x.DeletedAt == null);
+        });
+
+        // See db/migrations/037_supertracker_favorites.sql.
+        b.Entity<St2FavoriteFood>(e =>
+        {
+            e.ToTable("st2_favorite_food");
+            e.HasKey(x => new { x.UserId, x.FoodId });
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.FoodId).HasColumnName("food_id");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.RemovedAt).HasColumnName("removed_at");
         });
     }
 }

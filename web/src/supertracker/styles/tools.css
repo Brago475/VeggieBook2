@@ -1,0 +1,99 @@
+/* SuperTracker2 day arrows, recent and favorites tabs, favorite star and
+   copy button. Uses only the VeggieBook tokens. */
+
+.st2-daynav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.st2-daynav-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+  text-align: center;
+}
+
+.st2-daynav-btn {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  font-size: var(--font-title);
+  line-height: 1;
+  color: var(--green-action);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.st2-daynav-btn:hover:not(:disabled) {
+  background: var(--green-tint);
+}
+
+.st2-daynav-btn:disabled {
+  color: var(--line);
+  cursor: default;
+}
+
+.st2-list-tabs {
+  align-self: stretch;
+}
+
+.st2-food-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.st2-star {
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+
+.st2-star.is-on {
+  color: var(--green-action);
+  background: var(--green-tint);
+  border-color: var(--green-light);
+}
+
+.st2-meal-empty-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding-right: var(--sp-4);
+}
+
+.st2-meal-copy {
+  padding: var(--sp-1) 0;
+  font-size: var(--font-label);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.st2-meal-copy:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.st2-daynav-btn:focus-visible,
+.st2-star:focus-visible,
+.st2-meal-copy:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}

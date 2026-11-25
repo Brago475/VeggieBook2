@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import { getFood, type FoodDetail } from '../api/foodLogApi'
+import { useCallback, useEffect, useState } from 'react'
+import { getFood, setFavorite, type FoodDetail } from '../api/foodLogApi'
 
-// One food's portions and per-100 g amounts, loaded when an id is set.
+// One food's portions, per-100 g amounts and favorite star.
 
 export function useFood(id: number | null) {
   const [food, setFood] = useState<FoodDetail | null>(null)
@@ -21,5 +21,11 @@ export function useFood(id: number | null) {
     }
   }, [id])
 
-  return { food, error }
+  const toggleFavorite = useCallback(async () => {
+    if (!food) return
+    const res = await setFavorite(food.id, !food.isFavorite)
+    setFood({ ...food, isFavorite: res.isFavorite })
+  }, [food])
+
+  return { food, error, toggleFavorite }
 }

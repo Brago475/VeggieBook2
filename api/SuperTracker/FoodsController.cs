@@ -6,11 +6,18 @@ using VeggieBook.Api.Data;
 
 namespace VeggieBook.Api.SuperTracker;
 
-// SuperTracker2 food search and details, from the USDA SuperTracker foods
-// database. Food names are in English only (USDA data).
+// SuperTracker2 food search, details, recent foods and favorites, from the
+// USDA SuperTracker foods database. Food names are in English only.
 //
 //   GET /api/supertracker/foods/search?q=&category=   up to 30 matches
-//   GET /api/supertracker/foods/{id}                  portions and per-100 g amounts
+//   GET /api/supertracker/foods/recent                 the account's last 15 foods
+//   GET /api/supertracker/foods/favorites              the account's starred foods
+//   GET /api/supertracker/foods/{id}                   portions, per-100 g amounts, favorite
+//   PUT /api/supertracker/foods/{id}/favorite          { on }
+//
+// Un-starring sets removed_at; favorite rows are never deleted.
+
+public record FavoriteRequest(bool On);
 
 [ApiController]
 [Route("api/supertracker/foods")]
@@ -18,6 +25,7 @@ namespace VeggieBook.Api.SuperTracker;
 public class FoodsController(SuperTrackerContext db, AccountsContext accounts) : ControllerBase
 {
     private const int MaxResults = 30;
+    private const int MaxRecent = 15;
 
     // Category slugs from db/supertracker/foods_fndds_2011.sql.
     private static readonly string[] Categories =
@@ -38,7 +46,7 @@ public class FoodsController(SuperTrackerContext db, AccountsContext accounts) :
             .Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Take(6)
             .ToArray();
-        if (words.Length == 0 || words.Sum(w => w.Length) < 2) return Ok(Array.Empty<object>());
+        if (words.Length == 0 || words.Sum(w => w.Length) < 2) return Ok(Array.Empty<FoodHit>());
 
         IQueryable<St2FoodName> names = db.FoodNames.AsNoTracking();
         foreach (var word in words)
@@ -51,7 +59,7 @@ public class FoodsController(SuperTrackerContext db, AccountsContext accounts) :
             names = names.Where(n => db.Foods.Any(f => f.Id == n.FoodId && f.Categories.Contains(category)));
         }
 
-        var hits = await names
+        var found = await names
             .OrderBy(n => n.Priority)
             .Select(n => new { n.FoodId, n.Name, n.Priority })
             .Take(300)
@@ -59,49 +67,60 @@ public class FoodsController(SuperTrackerContext db, AccountsContext accounts) :
 
         // Names that start with the first word come first, then shorter names.
         var first = words[0];
-        var best = hits
+        var best = found
             .OrderBy(h => h.Name.StartsWith(first, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
             .ThenBy(h => h.Priority == 1 ? 0 : 1)
             .ThenBy(h => h.Name.Length)
             .GroupBy(h => h.FoodId)
             .Select(g => g.First())
             .Take(MaxResults)
+            .Select(h => (h.FoodId, (string?)h.Name))
             .ToList();
 
-        var ids = best.Select(b => b.FoodId).ToArray();
-        var portions = await db.FoodPortions.AsNoTracking()
-            .Where(p => ids.Contains(p.FoodId))
-            .OrderByDescending(p => p.IsDefault)
-            .ThenBy(p => p.Id)
+        Response.Headers.CacheControl = "no-store";
+        return Ok(await FoodHits.BuildAsync(db, best));
+    }
+
+    [HttpGet("recent")]
+    public async Task<IActionResult> Recent()
+    {
+        var uid = CurrentUserId;
+        if (await SuperTrackerAccess.IsGuestAsync(accounts, uid)) return SuperTrackerAccess.AccountRequired();
+
+        var latest = await db.FoodEntries.AsNoTracking()
+            .Where(e => e.UserId == uid && e.VegetableKey == null)
+            .OrderByDescending(e => e.CreatedAt)
+            .Select(e => e.FoodId)
+            .Take(200)
             .ToListAsync();
-        var values = await db.FoodValues.AsNoTracking()
-            .Where(v => ids.Contains(v.FoodId))
-            .ToDictionaryAsync(v => v.FoodId);
-        var foods = await db.Foods.AsNoTracking()
-            .Where(f => ids.Contains(f.Id))
-            .ToDictionaryAsync(f => f.Id);
+
+        var items = latest.Distinct().Take(MaxRecent).Select(id => (id, (string?)null)).ToList();
 
         Response.Headers.CacheControl = "no-store";
-        return Ok(best.Select(b =>
-        {
-            var portion = portions.FirstOrDefault(p => p.FoodId == b.FoodId);
-            var value = values.GetValueOrDefault(b.FoodId);
-            return new
-            {
-                id = b.FoodId,
-                name = b.Name,
-                category = foods.TryGetValue(b.FoodId, out var f) ? f.Categories.FirstOrDefault(c => c != "recipe_ingredients") : null,
-                portion = portion?.Description,
-                portionGrams = portion?.Grams,
-                kcal = portion is not null && value is not null ? Math.Round(value.Kcal * portion.Grams / 100m, 0) : (decimal?)null
-            };
-        }));
+        return Ok(await FoodHits.BuildAsync(db, items));
+    }
+
+    [HttpGet("favorites")]
+    public async Task<IActionResult> Favorites()
+    {
+        var uid = CurrentUserId;
+        if (await SuperTrackerAccess.IsGuestAsync(accounts, uid)) return SuperTrackerAccess.AccountRequired();
+
+        var ids = await db.FavoriteFoods.AsNoTracking()
+            .Where(f => f.UserId == uid && f.RemovedAt == null)
+            .OrderByDescending(f => f.CreatedAt)
+            .Select(f => f.FoodId)
+            .ToListAsync();
+
+        Response.Headers.CacheControl = "no-store";
+        return Ok(await FoodHits.BuildAsync(db, ids.Select(id => (id, (string?)null)).ToList()));
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
-        if (await SuperTrackerAccess.IsGuestAsync(accounts, CurrentUserId)) return SuperTrackerAccess.AccountRequired();
+        var uid = CurrentUserId;
+        if (await SuperTrackerAccess.IsGuestAsync(accounts, uid)) return SuperTrackerAccess.AccountRequired();
 
         var food = await db.Foods.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
         var value = await db.FoodValues.AsNoTracking().FirstOrDefaultAsync(v => v.FoodId == id);
@@ -112,6 +131,8 @@ public class FoodsController(SuperTrackerContext db, AccountsContext accounts) :
             .OrderByDescending(p => p.IsDefault)
             .ThenBy(p => p.Id)
             .ToListAsync();
+        var favorite = await db.FavoriteFoods.AsNoTracking()
+            .AnyAsync(f => f.UserId == uid && f.FoodId == id && f.RemovedAt == null);
 
         Response.Headers.CacheControl = "no-store";
         return Ok(new
@@ -119,6 +140,7 @@ public class FoodsController(SuperTrackerContext db, AccountsContext accounts) :
             id = food.Id,
             name = food.Name,
             categories = food.Categories,
+            isFavorite = favorite,
             portions = portions.Select(p => new
             {
                 id = p.Id,
@@ -129,6 +151,37 @@ public class FoodsController(SuperTrackerContext db, AccountsContext accounts) :
             }),
             per100g = FoodAmounts.For(value, 100m)
         });
+    }
+
+    [HttpPut("{id:int}/favorite")]
+    public async Task<IActionResult> SetFavorite(int id, [FromBody] FavoriteRequest req)
+    {
+        var uid = CurrentUserId;
+        if (await SuperTrackerAccess.IsGuestAsync(accounts, uid)) return SuperTrackerAccess.AccountRequired();
+        if (!await db.Foods.AnyAsync(f => f.Id == id)) return NotFound();
+
+        var row = await db.FavoriteFoods.FirstOrDefaultAsync(f => f.UserId == uid && f.FoodId == id);
+        var now = DateTime.UtcNow;
+
+        if (row is null)
+        {
+            if (req.On)
+            {
+                db.FavoriteFoods.Add(new St2FavoriteFood { UserId = uid, FoodId = id, CreatedAt = now });
+            }
+        }
+        else if (req.On && row.RemovedAt is not null)
+        {
+            row.RemovedAt = null;
+            row.CreatedAt = now;
+        }
+        else if (!req.On && row.RemovedAt is null)
+        {
+            row.RemovedAt = now;
+        }
+
+        await db.SaveChangesAsync();
+        return Ok(new { isFavorite = req.On });
     }
 
     // Postgres LIKE treats backslash as the escape character.

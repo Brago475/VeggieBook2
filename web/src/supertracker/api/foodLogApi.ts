@@ -82,6 +82,7 @@ export type FoodDetail = {
   id: number
   name: string
   categories: string[]
+  isFavorite: boolean
   portions: FoodPortion[]
   per100g: Amounts
 }
@@ -104,8 +105,23 @@ export function searchFoods(q: string, category: string | null): Promise<FoodHit
   return apiFetch<FoodHit[]>(`/supertracker/foods/search?${params.toString()}`)
 }
 
+export function getRecentFoods(): Promise<FoodHit[]> {
+  return apiFetch<FoodHit[]>('/supertracker/foods/recent')
+}
+
+export function getFavoriteFoods(): Promise<FoodHit[]> {
+  return apiFetch<FoodHit[]>('/supertracker/foods/favorites')
+}
+
 export function getFood(id: number): Promise<FoodDetail> {
   return apiFetch<FoodDetail>(`/supertracker/foods/${id}`)
+}
+
+export function setFavorite(id: number, on: boolean): Promise<{ isFavorite: boolean }> {
+  return apiFetch<{ isFavorite: boolean }>(`/supertracker/foods/${id}/favorite`, {
+    method: 'PUT',
+    body: { on },
+  })
 }
 
 export function addFood(
@@ -124,6 +140,13 @@ export function addVegetable(
   return apiFetch<{ id: number }>(`/supertracker/days/${date}/vegetables`, {
     method: 'POST',
     body: { key, cups, meal },
+  })
+}
+
+export function copyMeal(date: string, fromDate: string, meal: Meal): Promise<{ copied: number }> {
+  return apiFetch<{ copied: number }>(`/supertracker/days/${date}/copy`, {
+    method: 'POST',
+    body: { fromDate, meal },
   })
 }
 
