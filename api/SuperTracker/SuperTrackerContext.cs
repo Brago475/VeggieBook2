@@ -24,6 +24,7 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.WeightKg).HasColumnName("weight_kg");
             e.Property(x => x.Activity).HasColumnName("activity");
             e.Property(x => x.Units).HasColumnName("units");
+            e.Property(x => x.CalorieGoal).HasColumnName("calorie_goal");   // 033
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
             e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         });

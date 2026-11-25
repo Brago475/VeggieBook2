@@ -1,6 +1,6 @@
 namespace VeggieBook.Api.SuperTracker;
 
-// SuperTracker2 tables. See db/migrations/032_supertracker.sql.
+// SuperTracker2 tables. See db/migrations/032 and 033.
 
 public sealed class St2Profile
 {
@@ -11,6 +11,7 @@ public sealed class St2Profile
     public decimal WeightKg { get; set; }
     public string Activity { get; set; } = "";
     public string Units { get; set; } = "us";
+    public short? CalorieGoal { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

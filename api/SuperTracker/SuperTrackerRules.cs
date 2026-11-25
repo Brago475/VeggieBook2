@@ -1,7 +1,7 @@
 namespace VeggieBook.Api.SuperTracker;
 
 // Terms version and the limits for setup answers. The limits match the
-// CHECK rules in db/migrations/032_supertracker.sql.
+// CHECK rules in db/migrations/032 and 033.
 
 public static class SuperTrackerRules
 {
@@ -14,7 +14,10 @@ public static class SuperTrackerRules
     public const decimal MaxHeightCm = 250m;
     public const decimal MinWeightKg = 30m;
     public const decimal MaxWeightKg = 350m;
+    public const int MinCalorieGoal = 1000;
+    public const int MaxCalorieGoal = 5000;
 
+    // sedentary, moderate and active are shown as Light, Moderate and Very active.
     public static readonly string[] Sexes = ["female", "male"];
     public static readonly string[] Activities = ["sedentary", "moderate", "active"];
     public static readonly string[] Units = ["us", "metric"];
@@ -28,6 +31,7 @@ public static class SuperTrackerRules
         if (r.WeightKg is not decimal w || w < MinWeightKg || w > MaxWeightKg) return "weight";
         if (r.Activity is null || !Activities.Contains(r.Activity)) return "activity";
         if (r.Units is not null && !Units.Contains(r.Units)) return "units";
+        if (r.CalorieGoal is int c && (c < MinCalorieGoal || c > MaxCalorieGoal)) return "calorieGoal";
         return null;
     }
 }
