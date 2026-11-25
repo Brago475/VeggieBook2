@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStrings } from '../../i18n/useStrings'
+import { saveComboFromMeal } from '../api/combosApi'
 import { copyMeal, MEALS, type Day, type DayTotals, type Meal } from '../api/foodLogApi'
 import type { Plan } from '../api/superTrackerApi'
 import { ST_TRACKER } from '../strings/tracker'
@@ -190,6 +191,9 @@ export function Today({
                 addLabel={`${t.addTo} ${t.meals[meal].toLowerCase()}`}
                 onCopy={() => void copy(meal)}
                 copying={copying === meal}
+                onSaveCombo={async (name) => {
+                  await saveComboFromMeal(date, meal, name)
+                }}
                 onRemove={onRemove}
               />
             ))}

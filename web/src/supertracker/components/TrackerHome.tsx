@@ -12,6 +12,7 @@ import { TabBar, type Tab } from './TabBar'
 import { Today } from './Today'
 import '../styles/today.css'
 import '../styles/tools.css'
+import '../styles/combos.css'
 
 // SuperTracker2 after setup: the day view and My plan tabs, Add food, and
 // the quick vegetables shortcut, for the day being viewed.

@@ -1,0 +1,56 @@
+/* SuperTracker2 My Combo: combo rows and the Save as combo form. Uses only
+   the VeggieBook tokens. */
+
+.st2-combo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.st2-combo:last-child {
+  border-bottom: 0;
+}
+
+.st2-combo-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.st2-combo-items {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.st2-combo-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-1);
+}
+
+.st2-meal-combo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--line);
+}
+
+.st2-combo-form {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.st2-combo-form .st2-input {
+  flex: 1 1 auto;
+  min-height: 40px;
+}

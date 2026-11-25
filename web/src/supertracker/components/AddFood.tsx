@@ -1,17 +1,21 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useStrings } from '../../i18n/useStrings'
+import { addCombo, type Combo } from '../api/combosApi'
 import { addFood, MEALS, type Meal } from '../api/foodLogApi'
+import { useCombos } from '../hooks/useCombos'
 import { useFood } from '../hooks/useFood'
 import { useFoodLists } from '../hooks/useFoodLists'
 import { useFoodSearch } from '../hooks/useFoodSearch'
+import { ST_COMBOS } from '../strings/combos'
 import { ST_TRACKER } from '../strings/tracker'
 import { count, tenth } from '../utils/format'
 import { scale } from '../utils/meals'
+import { ComboList } from './ComboList'
 import { FoodList } from './FoodList'
 import '../styles/setup.css'
 
-// "Add food": recent foods and favorites first, then search the USDA
-// foods; pick an amount, portion and meal, see what it adds, then add it.
+// "Add food": recent foods, favorites and combos first, then search the
+// USDA foods; pick an amount, portion and meal, see what it adds, then add it.
 
 type Props = {
   date: string
@@ -21,7 +25,7 @@ type Props = {
   onDone: () => void
 }
 
-type ListTab = 'recent' | 'favorites'
+type ListTab = 'recent' | 'favorites' | 'combos'
 
 const CHIPS = [
   'all',
@@ -46,6 +50,7 @@ function parseAmount(text: string): number | null {
 
 export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) {
   const t = useStrings(ST_TRACKER)
+  const c = useStrings(ST_COMBOS)
 
   const [query, setQuery] = useState('')
   const [chip, setChip] = useState('all')
@@ -60,6 +65,7 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
 
   const search = useFoodSearch(query, chip === 'all' ? null : chip)
   const lists = useFoodLists()
+  const combos = useCombos()
   const { food, error: foodError, toggleFavorite } = useFood(selected)
 
   useEffect(() => {
@@ -109,6 +115,31 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
     }
   }
 
+  async function addSavedCombo(combo: Combo) {
+    setSaving(true)
+    setError(null)
+    try {
+      await addCombo(combo.id, date, meal)
+      setAdded(`${c.comboAdded}: ${combo.name} (${t.meals[meal]})`)
+      onAdded()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function removeSavedCombo(combo: Combo) {
+    setSaving(true)
+    try {
+      await combos.remove(combo.id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const previewRows: [string, string][] = preview
     ? ([
         [t.calories, count(preview.kcal)],
@@ -124,7 +155,27 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
     : []
 
   const searching = query.trim().length >= 2
-  const listItems = listTab === 'recent' ? lists.recent : lists.favorites
+  const tabLabels: Record<ListTab, string> = { recent: t.recent, favorites: t.favorites, combos: c.combos }
+
+  // Meal picker shared by the food form and the combo list.
+  const mealPicker = (
+    <div className="st2-field">
+      <span className="st2-label">{t.meal}</span>
+      <div className="st2-amounts" role="group" aria-label={t.meal}>
+        {MEALS.map((m) => (
+          <button
+            key={m}
+            type="button"
+            className={`st2-pill${meal === m ? ' is-on' : ''}`}
+            aria-pressed={meal === m}
+            onClick={() => setMeal(m)}
+          >
+            {t.meals[m]}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
     <div className="st2-addfood">
@@ -138,6 +189,11 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
       {added !== null && (
         <p className="st2-added" role="status">
           {added}
+        </p>
+      )}
+      {error !== null && selected === null && (
+        <p className="st2-error" role="alert">
+          {error}
         </p>
       )}
 
@@ -161,15 +217,15 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
           {searching ? (
             <>
               <div className="st2-chips" role="group" aria-label={t.searchLabel}>
-                {CHIPS.map((c) => (
+                {CHIPS.map((chipKey) => (
                   <button
-                    key={c}
+                    key={chipKey}
                     type="button"
-                    className={`st2-chip${chip === c ? ' is-on' : ''}`}
-                    aria-pressed={chip === c}
-                    onClick={() => setChip(c)}
+                    className={`st2-chip${chip === chipKey ? ' is-on' : ''}`}
+                    aria-pressed={chip === chipKey}
+                    onClick={() => setChip(chipKey)}
                   >
-                    {t.categories[c]}
+                    {t.categories[chipKey]}
                   </button>
                 ))}
               </div>
@@ -188,7 +244,7 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
             <>
               <p className="st2-hint">{t.searchHint}</p>
               <div className="st2-tabs st2-list-tabs" role="group">
-                {(['recent', 'favorites'] as ListTab[]).map((tab) => (
+                {(['recent', 'favorites', 'combos'] as ListTab[]).map((tab) => (
                   <button
                     key={tab}
                     type="button"
@@ -196,16 +252,31 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
                     aria-pressed={listTab === tab}
                     onClick={() => setListTab(tab)}
                   >
-                    {tab === 'recent' ? t.recent : t.favorites}
+                    {tabLabels[tab]}
                   </button>
                 ))}
               </div>
-              {lists.error !== null ? (
+
+              {listTab === 'combos' ? (
+                <>
+                  {mealPicker}
+                  {combos.error !== null ? (
+                    <p className="st2-error">{combos.error}</p>
+                  ) : (
+                    <ComboList
+                      combos={combos.combos}
+                      busy={saving}
+                      onAdd={(combo) => void addSavedCombo(combo)}
+                      onRemove={(combo) => void removeSavedCombo(combo)}
+                    />
+                  )}
+                </>
+              ) : lists.error !== null ? (
                 <p className="st2-error">{lists.error}</p>
-              ) : listItems.length === 0 ? (
+              ) : (listTab === 'recent' ? lists.recent : lists.favorites).length === 0 ? (
                 <p className="st2-hint">{listTab === 'recent' ? t.noRecent : t.noFavorites}</p>
               ) : (
-                <FoodList items={listItems} onPick={pick} />
+                <FoodList items={listTab === 'recent' ? lists.recent : lists.favorites} onPick={pick} />
               )}
             </>
           )}
@@ -263,22 +334,7 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
             </div>
           </div>
 
-          <div className="st2-field">
-            <span className="st2-label">{t.meal}</span>
-            <div className="st2-amounts" role="group" aria-label={t.meal}>
-              {MEALS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  className={`st2-pill${meal === m ? ' is-on' : ''}`}
-                  aria-pressed={meal === m}
-                  onClick={() => setMeal(m)}
-                >
-                  {t.meals[m]}
-                </button>
-              ))}
-            </div>
-          </div>
+          {mealPicker}
 
           {previewRows.length > 0 && (
             <dl className="st2-summary">

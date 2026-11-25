@@ -1,10 +1,12 @@
+import { useState, type FormEvent } from 'react'
 import { useStrings } from '../../i18n/useStrings'
 import type { DayEntry } from '../api/foodLogApi'
+import { ST_COMBOS } from '../strings/combos'
 import { ST_TRACKER } from '../strings/tracker'
 import { count, tenth } from '../utils/format'
 
-// One meal on Today: its foods, calories, Add, and Copy from previous day
-// while it is empty.
+// One meal on Today: its foods, calories, Add, Copy from previous day
+// while it is empty, and Save as combo once it has foods.
 
 type Props = {
   title: string
@@ -13,12 +15,36 @@ type Props = {
   addLabel?: string
   onCopy?: () => void
   copying?: boolean
+  onSaveCombo?: (name: string) => Promise<void>
   onRemove: (id: number) => void
 }
 
-export function MealSection({ title, entries, onAdd, addLabel, onCopy, copying, onRemove }: Props) {
+export function MealSection({ title, entries, onAdd, addLabel, onCopy, copying, onSaveCombo, onRemove }: Props) {
   const t = useStrings(ST_TRACKER)
+  const c = useStrings(ST_COMBOS)
   const kcal = entries.reduce((sum, e) => sum + e.amounts.kcal, 0)
+
+  const [naming, setNaming] = useState(false)
+  const [name, setName] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+
+  async function save(e: FormEvent) {
+    e.preventDefault()
+    if (!onSaveCombo || name.trim() === '') return
+    setSaving(true)
+    setMessage(null)
+    try {
+      await onSaveCombo(name.trim())
+      setMessage(`${c.saved}: ${name.trim()}`)
+      setNaming(false)
+      setName('')
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <section className="st2-meal">
@@ -60,6 +86,49 @@ export function MealSection({ title, entries, onAdd, addLabel, onCopy, copying, 
             </li>
           ))}
         </ul>
+      )}
+
+      {onSaveCombo && entries.length > 0 && (
+        <div className="st2-meal-combo">
+          {naming ? (
+            <form className="st2-combo-form" onSubmit={save}>
+              <label className="visually-hidden" htmlFor={`st2-combo-${title}`}>
+                {c.comboName}
+              </label>
+              <input
+                id={`st2-combo-${title}`}
+                className="st2-input"
+                maxLength={60}
+                placeholder={c.namePlaceholder}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+              />
+              <button type="submit" className="st2-chip is-on" disabled={saving || name.trim() === ''}>
+                {saving ? c.saving : c.save}
+              </button>
+              <button type="button" className="st2-meal-copy" onClick={() => setNaming(false)}>
+                {c.cancel}
+              </button>
+            </form>
+          ) : (
+            <button
+              type="button"
+              className="st2-meal-copy"
+              onClick={() => {
+                setNaming(true)
+                setMessage(null)
+              }}
+            >
+              {c.saveAsCombo}
+            </button>
+          )}
+          {message !== null && (
+            <p className="st2-hint" role="status">
+              {message}
+            </p>
+          )}
+        </div>
       )}
 
       {onAdd && (

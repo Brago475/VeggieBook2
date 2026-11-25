@@ -18,6 +18,8 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
     public DbSet<St2Vegetable> Vegetables => Set<St2Vegetable>();
     public DbSet<St2FoodEntry> FoodEntries => Set<St2FoodEntry>();
     public DbSet<St2FavoriteFood> FavoriteFoods => Set<St2FavoriteFood>();
+    public DbSet<St2Combo> Combos => Set<St2Combo>();
+    public DbSet<St2ComboItem> ComboItems => Set<St2ComboItem>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -143,6 +145,34 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.FoodId).HasColumnName("food_id");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
             e.Property(x => x.RemovedAt).HasColumnName("removed_at");
+        });
+
+        // See db/migrations/038_supertracker_combos.sql.
+        b.Entity<St2Combo>(e =>
+        {
+            e.ToTable("st2_combo");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Name).HasColumnName("name");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.RemovedAt).HasColumnName("removed_at");
+
+            e.HasMany(x => x.Items).WithOne().HasForeignKey(x => x.ComboId);
+        });
+
+        b.Entity<St2ComboItem>(e =>
+        {
+            e.ToTable("st2_combo_item");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.ComboId).HasColumnName("combo_id");
+            e.Property(x => x.Position).HasColumnName("position");
+            e.Property(x => x.FoodId).HasColumnName("food_id");
+            e.Property(x => x.VegetableKey).HasColumnName("vegetable_key");
+            e.Property(x => x.Portion).HasColumnName("portion");
+            e.Property(x => x.Quantity).HasColumnName("quantity");
+            e.Property(x => x.Grams).HasColumnName("grams");
         });
     }
 }
