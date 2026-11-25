@@ -14,11 +14,6 @@ const en = {
   ],
   separate:
     'SuperTracker2 is separate from your VeggieBooks. What you enter here is not part of any research study.',
-  viewLabel: 'How do you want to see it?',
-  viewApp: 'App view',
-  viewAppText: 'A narrow column, like on a phone.',
-  viewSite: 'Website view',
-  viewSiteText: 'Wider pages that use the whole screen.',
   getStarted: 'Get started',
   guide: 'How SuperTracker2 works',
   comingSoon: 'Coming soon',
@@ -38,11 +33,6 @@ const es: typeof en = {
   ],
   separate:
     'SuperTracker2 es aparte de tus VeggieBooks. Lo que anotes aquí no forma parte de ningún estudio de investigación.',
-  viewLabel: '¿Cómo quieres verlo?',
-  viewApp: 'Vista de app',
-  viewAppText: 'Una columna angosta, como en un teléfono.',
-  viewSite: 'Vista de sitio web',
-  viewSiteText: 'Páginas más anchas que usan toda la pantalla.',
   getStarted: 'Empezar',
   guide: 'Cómo funciona SuperTracker2',
   comingSoon: 'Próximamente',
