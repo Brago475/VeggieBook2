@@ -11,6 +11,8 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
     public DbSet<St2Profile> Profiles => Set<St2Profile>();
     public DbSet<St2TermsAcceptance> TermsAcceptances => Set<St2TermsAcceptance>();
     public DbSet<St2Food> Foods => Set<St2Food>();
+    public DbSet<St2FoodName> FoodNames => Set<St2FoodName>();
+    public DbSet<St2FoodPortion> FoodPortions => Set<St2FoodPortion>();
     public DbSet<St2FoodValue> FoodValues => Set<St2FoodValue>();
     public DbSet<St2Vegetable> Vegetables => Set<St2Vegetable>();
     public DbSet<St2FoodEntry> FoodEntries => Set<St2FoodEntry>();
@@ -51,6 +53,29 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(x => x.FoodCode).HasColumnName("food_code");
             e.Property(x => x.Name).HasColumnName("name");
+            e.Property(x => x.Categories).HasColumnName("categories");
+        });
+
+        b.Entity<St2FoodName>(e =>
+        {
+            e.ToTable("st2_food_name");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.FoodId).HasColumnName("food_id");
+            e.Property(x => x.Name).HasColumnName("name");
+            e.Property(x => x.Priority).HasColumnName("priority");
+        });
+
+        b.Entity<St2FoodPortion>(e =>
+        {
+            e.ToTable("st2_food_portion");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.FoodId).HasColumnName("food_id");
+            e.Property(x => x.Description).HasColumnName("description");
+            e.Property(x => x.Grams).HasColumnName("grams");
+            e.Property(x => x.Increment).HasColumnName("increment");
+            e.Property(x => x.IsDefault).HasColumnName("is_default");
         });
 
         b.Entity<St2FoodValue>(e =>
@@ -63,6 +88,7 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.DairyTotal).HasColumnName("dairy_total");
             e.Property(x => x.GrainWhole).HasColumnName("grain_whole");
             e.Property(x => x.OilsTsp).HasColumnName("oils_tsp");
+            e.Property(x => x.AddedSugarG).HasColumnName("added_sugar_g");
             e.Property(x => x.Kcal).HasColumnName("kcal");
             e.Property(x => x.ProteinG).HasColumnName("protein_g");
             e.Property(x => x.SatFatG).HasColumnName("sat_fat_g");
@@ -72,7 +98,7 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.VitaminCMg).HasColumnName("vitamin_c_mg");
         });
 
-        // See db/migrations/035_supertracker_food_log.sql.
+        // See db/migrations/035 and 036.
         b.Entity<St2Vegetable>(e =>
         {
             e.ToTable("st2_vegetable");
@@ -84,6 +110,7 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.FoodId).HasColumnName("food_id");
             e.Property(x => x.CupGrams).HasColumnName("cup_grams");
             e.Property(x => x.Position).HasColumnName("position");
+            e.Property(x => x.Active).HasColumnName("active");                   // 036
         });
 
         b.Entity<St2FoodEntry>(e =>

@@ -10,15 +10,18 @@ namespace VeggieBook.Api.SuperTracker;
 
 // SuperTracker2 food log for the signed-in account. Not research tracked.
 //
-//   GET    /api/supertracker/vegetables?lang=           VeggieBook vegetables with per-cup amounts
-//   GET    /api/supertracker/days/{yyyy-MM-dd}?lang=    one day's entries and totals
-//   POST   /api/supertracker/days/{yyyy-MM-dd}/vegetables  { key, cups }
+//   GET    /api/supertracker/vegetables?lang=                VeggieBook vegetables with per-cup amounts
+//   GET    /api/supertracker/days/{yyyy-MM-dd}?lang=         one day's entries and totals
+//   POST   /api/supertracker/days/{yyyy-MM-dd}/foods         { foodId, portionId, quantity, meal }
+//   POST   /api/supertracker/days/{yyyy-MM-dd}/vegetables    { key, cups, meal }
 //   DELETE /api/supertracker/entries/{id}
 //
 // Dates are the account's own calendar day, sent by the app. Every query is
 // limited to the signed-in account.
 
-public record AddVegetableRequest(string? Key, decimal? Cups);
+public record AddFoodRequest(int? FoodId, int? PortionId, decimal? Quantity, string? Meal);
+
+public record AddVegetableRequest(string? Key, decimal? Cups, string? Meal);
 
 [ApiController]
 [Route("api/supertracker")]
@@ -27,6 +30,10 @@ public class FoodLogController(SuperTrackerContext db, AccountsContext accounts)
 {
     private const decimal MinCups = 0.25m;
     private const decimal MaxCups = 10m;
+    private const decimal MinQuantity = 0.1m;
+    private const decimal MaxQuantity = 50m;
+
+    public static readonly string[] Meals = ["breakfast", "lunch", "dinner", "snack"];
 
     private Guid CurrentUserId =>
         AuthSetup.UserId(User) ?? throw new InvalidOperationException("Signed-in user has no id.");
@@ -39,6 +46,7 @@ public class FoodLogController(SuperTrackerContext db, AccountsContext accounts)
 
         var rows = await (
                 from g in db.Vegetables
+                where g.Active
                 join v in db.FoodValues on g.FoodId equals v.FoodId
                 orderby g.Position
                 select new { g, v })
@@ -90,15 +98,51 @@ public class FoodLogController(SuperTrackerContext db, AccountsContext accounts)
             entries = rows.Select(r => new
             {
                 id = r.e.Id,
+                foodId = r.e.FoodId,
                 name = r.e.VegetableKey is string key && names.TryGetValue(key, out var n) ? n : r.Name,
                 vegetableKey = r.e.VegetableKey,
+                meal = r.e.Meal,
                 portion = r.e.Portion,
                 quantity = r.e.Quantity,
-                vegetables = Amount(r.v.VegTotal, r.e.Grams, 2),
-                kcal = Amount(r.v.Kcal, r.e.Grams, 0)
+                grams = r.e.Grams,
+                amounts = FoodAmounts.For(r.v, r.e.Grams)
             }),
             totals = DayTotals.Sum(rows.Select(r => (r.e.Grams, r.v)))
         });
+    }
+
+    [HttpPost("days/{date}/foods")]
+    public async Task<IActionResult> AddFood(string date, [FromBody] AddFoodRequest req)
+    {
+        var uid = CurrentUserId;
+        if (await SuperTrackerAccess.IsGuestAsync(accounts, uid)) return SuperTrackerAccess.AccountRequired();
+        if (!TryDay(date, out var day)) return BadDate();
+
+        if (req.Meal is null || !Meals.Contains(req.Meal))
+            return BadRequest(new { error = "Choose a meal.", code = "invalidMeal" });
+        if (req.Quantity is not decimal qty || qty < MinQuantity || qty > MaxQuantity)
+            return BadRequest(new { error = "Choose an amount from 0.1 to 50.", code = "invalidAmount" });
+
+        var portion = await db.FoodPortions.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == req.PortionId && p.FoodId == req.FoodId);
+        if (portion is null)
+            return BadRequest(new { error = "Choose a food and portion.", code = "invalidFood" });
+
+        var entry = new St2FoodEntry
+        {
+            UserId = uid,
+            EatenOn = day,
+            Meal = req.Meal,
+            FoodId = portion.FoodId,
+            Portion = portion.Description,
+            Quantity = Math.Round(qty, 2),
+            Grams = Math.Round(portion.Grams * qty, 2),
+            CreatedAt = DateTime.UtcNow
+        };
+        db.FoodEntries.Add(entry);
+        await db.SaveChangesAsync();
+
+        return Ok(new { id = entry.Id });
     }
 
     [HttpPost("days/{date}/vegetables")]
@@ -110,8 +154,10 @@ public class FoodLogController(SuperTrackerContext db, AccountsContext accounts)
 
         if (req.Cups is not decimal cups || cups < MinCups || cups > MaxCups)
             return BadRequest(new { error = "Choose an amount from ¼ cup to 10 cups.", code = "invalidAmount" });
+        if (req.Meal is not null && !Meals.Contains(req.Meal))
+            return BadRequest(new { error = "Choose a meal.", code = "invalidMeal" });
 
-        var veg = await db.Vegetables.AsNoTracking().FirstOrDefaultAsync(g => g.Key == req.Key);
+        var veg = await db.Vegetables.AsNoTracking().FirstOrDefaultAsync(g => g.Key == req.Key && g.Active);
         if (veg is null)
             return BadRequest(new { error = "Choose a vegetable.", code = "invalidVegetable" });
 
@@ -119,6 +165,7 @@ public class FoodLogController(SuperTrackerContext db, AccountsContext accounts)
         {
             UserId = uid,
             EatenOn = day,
+            Meal = req.Meal,
             FoodId = veg.FoodId,
             VegetableKey = veg.Key,
             Portion = "cup",
@@ -132,6 +179,7 @@ public class FoodLogController(SuperTrackerContext db, AccountsContext accounts)
         return Ok(new { id = entry.Id });
     }
 
+    // Removes one of the account's own log entries (the person's own food diary).
     [HttpDelete("entries/{id:long}")]
     public async Task<IActionResult> DeleteEntry(long id)
     {

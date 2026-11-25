@@ -1,12 +1,31 @@
 namespace VeggieBook.Api.SuperTracker;
 
-// Food tables. See db/migrations/034 and 035. Values are per 100 g.
+// Food tables. See db/migrations/034, 035 and 036. Values are per 100 g.
 
 public sealed class St2Food
 {
     public int Id { get; set; }
     public int FoodCode { get; set; }
     public string Name { get; set; } = "";
+    public string[] Categories { get; set; } = [];
+}
+
+public sealed class St2FoodName
+{
+    public int Id { get; set; }
+    public int FoodId { get; set; }
+    public string Name { get; set; } = "";
+    public int Priority { get; set; }
+}
+
+public sealed class St2FoodPortion
+{
+    public int Id { get; set; }
+    public int FoodId { get; set; }
+    public string Description { get; set; } = "";
+    public decimal Grams { get; set; }
+    public decimal Increment { get; set; }
+    public bool IsDefault { get; set; }
 }
 
 public sealed class St2FoodValue
@@ -17,6 +36,7 @@ public sealed class St2FoodValue
     public decimal DairyTotal { get; set; }
     public decimal GrainWhole { get; set; }
     public decimal OilsTsp { get; set; }
+    public decimal AddedSugarG { get; set; }
     public decimal Kcal { get; set; }
     public decimal ProteinG { get; set; }
     public decimal SatFatG { get; set; }
@@ -35,6 +55,7 @@ public sealed class St2Vegetable
     public int FoodId { get; set; }
     public decimal CupGrams { get; set; }
     public short Position { get; set; }
+    public bool Active { get; set; }
 }
 
 public sealed class St2FoodEntry
