@@ -6,7 +6,8 @@ import { ST_TRACKER } from '../strings/tracker'
 import { count, tenth } from '../utils/format'
 
 // One meal on Today: its foods, calories, Add, Copy from previous day
-// while it is empty, and Save as combo once it has foods.
+// while it is empty, and Save as combo once it has foods. Tapping a food
+// opens Edit food.
 
 type Props = {
   title: string
@@ -17,9 +18,10 @@ type Props = {
   copying?: boolean
   onSaveCombo?: (name: string) => Promise<void>
   onRemove: (id: number) => void
+  onEdit?: (entry: DayEntry) => void
 }
 
-export function MealSection({ title, entries, onAdd, addLabel, onCopy, copying, onSaveCombo, onRemove }: Props) {
+export function MealSection({ title, entries, onAdd, addLabel, onCopy, copying, onSaveCombo, onRemove, onEdit }: Props) {
   const t = useStrings(ST_TRACKER)
   const c = useStrings(ST_COMBOS)
   const kcal = entries.reduce((sum, e) => sum + e.amounts.kcal, 0)
@@ -68,12 +70,23 @@ export function MealSection({ title, entries, onAdd, addLabel, onCopy, copying, 
         <ul className="st2-meal-list">
           {entries.map((e) => (
             <li key={e.id} className="st2-entry">
-              <div className="st2-entry-text">
-                <span className="st2-entry-name">{e.name}</span>
-                <span className="st2-hint">
-                  {tenth(e.quantity)} {e.portion}
-                </span>
-              </div>
+              {onEdit ? (
+                <button type="button" className="st2-entry-edit" onClick={() => onEdit(e)}>
+                  <span className="st2-entry-text">
+                    <span className="st2-entry-name">{e.name}</span>
+                    <span className="st2-hint">
+                      {tenth(e.quantity)} {e.portion}
+                    </span>
+                  </span>
+                </button>
+              ) : (
+                <div className="st2-entry-text">
+                  <span className="st2-entry-name">{e.name}</span>
+                  <span className="st2-hint">
+                    {tenth(e.quantity)} {e.portion}
+                  </span>
+                </div>
+              )}
               <span className="st2-entry-kcal">{count(e.amounts.kcal)}</span>
               <button
                 type="button"

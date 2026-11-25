@@ -1,21 +1,24 @@
 import { useState } from 'react'
 import { useStrings } from '../../i18n/useStrings'
-import type { Meal } from '../api/foodLogApi'
+import type { DayEntry, Meal } from '../api/foodLogApi'
 import type { Plan, Profile } from '../api/superTrackerApi'
 import { useDay } from '../hooks/useDay'
 import { ST_TRACKER } from '../strings/tracker'
 import { dayLabel, todayKey } from '../utils/dates'
 import { AddFood } from './AddFood'
 import { AddVegetables } from './AddVegetables'
+import { EditEntry } from './EditEntry'
+import { FoodLookup } from './FoodLookup'
 import { MyPlan } from './MyPlan'
 import { TabBar, type Tab } from './TabBar'
 import { Today } from './Today'
 import '../styles/today.css'
 import '../styles/tools.css'
 import '../styles/combos.css'
+import '../styles/lookup.css'
 
-// SuperTracker2 after setup: the day view and My plan tabs, Add food, and
-// the quick vegetables shortcut, for the day being viewed.
+// SuperTracker2 after setup: the Today, Look up and My plan tabs, Add food,
+// Edit food and the quick vegetables shortcut, for the day being viewed.
 
 type Props = {
   profile: Profile
@@ -23,7 +26,11 @@ type Props = {
   onEdit: () => void
 }
 
-type Screen = { kind: 'home' } | { kind: 'food'; meal: Meal } | { kind: 'vegetables' }
+type Screen =
+  | { kind: 'home' }
+  | { kind: 'food'; meal: Meal }
+  | { kind: 'vegetables' }
+  | { kind: 'edit'; entry: DayEntry }
 
 export function TrackerHome({ profile, plan, onEdit }: Props) {
   const t = useStrings(ST_TRACKER)
@@ -42,6 +49,20 @@ export function TrackerHome({ profile, plan, onEdit }: Props) {
         initialMeal={screen.meal}
         onAdded={() => void day.reload()}
         onDone={home}
+      />
+    )
+  }
+
+  if (screen.kind === 'edit') {
+    return (
+      <EditEntry
+        key={screen.entry.id}
+        entry={screen.entry}
+        onSaved={() => {
+          void day.reload()
+          home()
+        }}
+        onCancel={home}
       />
     )
   }
@@ -73,7 +94,10 @@ export function TrackerHome({ profile, plan, onEdit }: Props) {
           onAddFood={(meal) => setScreen({ kind: 'food', meal })}
           onQuickVegetables={() => setScreen({ kind: 'vegetables' })}
           onRemove={(id) => void day.remove(id)}
+          onEdit={(entry) => setScreen({ kind: 'edit', entry })}
         />
+      ) : tab === 'lookup' ? (
+        <FoodLookup date={date} dayName={dayName} onAdded={() => void day.reload()} />
       ) : (
         <MyPlan profile={profile} plan={plan} onEdit={onEdit} />
       )}

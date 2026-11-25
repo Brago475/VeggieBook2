@@ -1,9 +1,10 @@
 import { useStrings } from '../../i18n/useStrings'
+import { ST_LOOKUP } from '../strings/lookup'
 import { ST_TODAY } from '../strings/today'
 
 // SuperTracker2 sections. More tabs join as screens are built.
 
-export type Tab = 'today' | 'plan'
+export type Tab = 'today' | 'lookup' | 'plan'
 
 type Props = {
   value: Tab
@@ -12,8 +13,10 @@ type Props = {
 
 export function TabBar({ value, onChange }: Props) {
   const t = useStrings(ST_TODAY)
+  const l = useStrings(ST_LOOKUP)
   const tabs: [Tab, string][] = [
     ['today', t.tabToday],
+    ['lookup', l.tab],
     ['plan', t.tabPlan],
   ]
 

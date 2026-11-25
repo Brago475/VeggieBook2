@@ -1,0 +1,101 @@
+/* SuperTracker2 Food-A-Pedia tables, compare cards, and tappable food rows
+   on Today. Uses only the VeggieBook tokens. */
+
+.st2-entry-edit {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.st2-entry-edit:hover .st2-entry-name {
+  color: var(--green-action);
+}
+
+.st2-entry-edit:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.st2-entry-edit .st2-entry-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.st2-compare {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--font-label);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.st2-compare th,
+.st2-compare td {
+  padding: var(--sp-2) var(--sp-3);
+  text-align: right;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.st2-compare tbody th {
+  font-weight: var(--weight-regular);
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.st2-compare thead th {
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  background: var(--green-tint);
+}
+
+.st2-compare thead th:first-child {
+  text-align: left;
+}
+
+.st2-compare tbody tr:last-child th,
+.st2-compare tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.st2-compare-foods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+.st2-compare-food {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.st2-compare-food .st2-row {
+  flex-direction: column;
+}
+
+.st2-compare-food .st2-food-name {
+  font-size: var(--font-row);
+}
+
+@media (max-width: 420px) {
+  .st2-compare-foods {
+    grid-template-columns: 1fr;
+  }
+}

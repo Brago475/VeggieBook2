@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStrings } from '../../i18n/useStrings'
 import { saveComboFromMeal } from '../api/combosApi'
-import { copyMeal, MEALS, type Day, type DayTotals, type Meal } from '../api/foodLogApi'
+import { copyMeal, MEALS, type Day, type DayEntry, type DayTotals, type Meal } from '../api/foodLogApi'
 import type { Plan } from '../api/superTrackerApi'
 import { ST_TRACKER } from '../strings/tracker'
 import { addDays } from '../utils/dates'
@@ -12,7 +12,8 @@ import { GroupBar } from './GroupBar'
 import { MealSection } from './MealSection'
 
 // One day: calories left, food groups against My plan, daily limits, and
-// the day's foods by meal. Matches the "Today" mockup.
+// the day's foods by meal. Tap a food to edit it. Matches the "Today"
+// mockup.
 
 type Props = {
   date: string
@@ -25,6 +26,7 @@ type Props = {
   onAddFood: (meal: Meal) => void
   onQuickVegetables: () => void
   onRemove: (id: number) => void
+  onEdit: (entry: DayEntry) => void
 }
 
 const EMPTY: DayTotals = {
@@ -54,6 +56,7 @@ export function Today({
   onAddFood,
   onQuickVegetables,
   onRemove,
+  onEdit,
 }: Props) {
   const t = useStrings(ST_TRACKER)
   const [copying, setCopying] = useState<Meal | null>(null)
@@ -195,9 +198,12 @@ export function Today({
                   await saveComboFromMeal(date, meal, name)
                 }}
                 onRemove={onRemove}
+                onEdit={onEdit}
               />
             ))}
-            {quick.length > 0 && <MealSection title={t.quickAdded} entries={quick} onRemove={onRemove} />}
+            {quick.length > 0 && (
+              <MealSection title={t.quickAdded} entries={quick} onRemove={onRemove} onEdit={onEdit} />
+            )}
           </div>
         </>
       )}
