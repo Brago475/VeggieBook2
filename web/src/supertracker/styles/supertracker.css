@@ -1,19 +1,11 @@
 /* SuperTracker2 (web/src/supertracker). Colors, type and spacing come
-   from the VeggieBook tokens in styles/tokens.css. */
+   from the VeggieBook tokens in styles/tokens.css.
+   Mobile first: one column; 900px and wider uses the website layout. */
 
 .st2 {
-  padding: var(--sp-5) 0 var(--sp-6);
-}
-
-/* App view: a narrow centered column, like on a phone. */
-.st2.is-app {
   max-width: var(--app-max);
   margin: 0 auto;
-}
-
-/* Website view: the full width of the page column. */
-.st2.is-site {
-  width: 100%;
+  padding: var(--sp-5) 0 var(--sp-6);
 }
 
 .st2-welcome {
@@ -23,15 +15,6 @@
     'hero'
     'side'
     'actions';
-}
-
-.is-site .st2-welcome {
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  grid-template-areas:
-    'hero side'
-    'actions side';
-  align-items: start;
-  column-gap: var(--sp-6);
 }
 
 /* --- intro ------------------------------------------------------------ */
@@ -72,13 +55,6 @@
   gap: var(--sp-4);
 }
 
-.is-site .st2-side {
-  padding: var(--sp-5);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-}
-
 .st2-steps {
   display: flex;
   flex-direction: column;
@@ -105,10 +81,6 @@
   background: var(--surface);
   border: 1px solid var(--green-light);
   border-radius: 50%;
-}
-
-.is-site .st2-step-num {
-  background: var(--green-tint);
 }
 
 .st2-step-text {
@@ -139,99 +111,6 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-md);
-}
-
-.is-site .st2-note {
-  background: var(--page);
-}
-
-/* --- view choice (ViewChoice.tsx) ------------------------------------- */
-
-.st2-view {
-  min-width: 0;
-  margin: 0 0 var(--sp-2);
-  padding: 0;
-  border: 0;
-}
-
-.st2-view-label {
-  margin-bottom: var(--sp-2);
-  padding: 0;
-  font-size: var(--font-label);
-  font-weight: var(--weight-bold);
-  color: var(--text-muted);
-}
-
-.st2-view-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--sp-3);
-}
-
-.st2-view-opt {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: var(--sp-3);
-  font: inherit;
-  text-align: left;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  cursor: pointer;
-}
-
-.st2-view-opt:hover {
-  border-color: var(--green-light);
-}
-
-.st2-view-opt.is-on {
-  background: var(--green-tint);
-  border-color: var(--green-action);
-  box-shadow: 0 0 0 1px var(--green-action);
-}
-
-.st2-view-pic {
-  display: flex;
-  width: 100%;
-  height: 40px;
-  margin-bottom: var(--sp-1);
-  padding: 4px;
-  background: var(--page);
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-}
-
-.st2-view-pic span {
-  display: block;
-  background: var(--green-light);
-  border-radius: 3px;
-}
-
-.st2-view-pic.is-app {
-  justify-content: center;
-}
-
-.st2-view-pic.is-app span {
-  width: 24%;
-}
-
-.st2-view-pic.is-site span {
-  width: 100%;
-  box-shadow: inset 14px 0 0 var(--green-action);
-}
-
-.st2-view-title {
-  font-size: var(--font-row);
-  font-weight: var(--weight-bold);
-}
-
-.st2-view-text {
-  font-size: var(--font-label);
-  line-height: 1.4;
-  color: var(--text-muted);
 }
 
 /* --- buttons ---------------------------------------------------------- */
@@ -300,20 +179,52 @@
   color: var(--text-muted);
 }
 
-.is-site .st2-start {
-  align-self: flex-start;
-  min-width: 240px;
-}
+/* --- website layout (900px and wider) --------------------------------- */
 
-.is-site .st2-guide,
-.is-site .st2-soon {
-  align-self: flex-start;
-  text-align: left;
+@media (min-width: 900px) {
+  .st2 {
+    max-width: 1040px;
+    padding: var(--sp-6) var(--sp-5);
+  }
+
+  .st2-welcome {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'hero side'
+      'actions side';
+    align-items: start;
+    column-gap: var(--sp-6);
+  }
+
+  .st2-side {
+    padding: var(--sp-5);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+  }
+
+  .st2-step-num {
+    background: var(--green-tint);
+  }
+
+  .st2-note {
+    background: var(--page);
+  }
+
+  .st2-start {
+    align-self: flex-start;
+    min-width: 240px;
+  }
+
+  .st2-guide,
+  .st2-soon {
+    align-self: flex-start;
+    text-align: left;
+  }
 }
 
 /* --- focus ------------------------------------------------------------ */
 
-.st2-view-opt:focus-visible,
 .st2-start:focus-visible,
 .st2-guide:focus-visible {
   outline: 2px solid var(--green);
