@@ -1,0 +1,173 @@
+/* SuperTracker2 tabs, Today and Add vegetables. Uses the VeggieBook
+   tokens. Mobile first; 900px and wider centers the content. */
+
+.st2-home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.st2-tabs {
+  display: flex;
+  gap: var(--sp-2);
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+}
+
+.st2-tab {
+  flex: 1 1 0;
+  min-height: 44px;
+  font: inherit;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+}
+
+.st2-tab.is-on {
+  color: var(--surface);
+  background: var(--green-action);
+}
+
+.st2-today {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.st2-today header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.st2-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.st2-progress-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.st2-bar {
+  height: 12px;
+  overflow: hidden;
+  background: var(--green-tint);
+  border-radius: var(--r-pill);
+}
+
+.st2-bar span {
+  display: block;
+  height: 100%;
+  background: var(--green-action);
+  border-radius: var(--r-pill);
+  transition: width 0.3s ease;
+}
+
+.st2-entries {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.st2-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.st2-entry:last-child {
+  border-bottom: 0;
+}
+
+.st2-entry-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.st2-entry-name {
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+
+.st2-entry-remove {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  font: inherit;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.st2-entry-remove:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.st2-amounts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2);
+}
+
+.st2-added {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  background: var(--green-tint);
+  border-radius: var(--r-md);
+}
+
+.st2-tab:focus-visible,
+.st2-entry-remove:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st2-bar span {
+    transition: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .st2-home {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .st2-today .st2-start {
+    align-self: flex-start;
+    min-width: 240px;
+  }
+}

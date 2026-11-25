@@ -10,6 +10,10 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
 {
     public DbSet<St2Profile> Profiles => Set<St2Profile>();
     public DbSet<St2TermsAcceptance> TermsAcceptances => Set<St2TermsAcceptance>();
+    public DbSet<St2Food> Foods => Set<St2Food>();
+    public DbSet<St2FoodValue> FoodValues => Set<St2FoodValue>();
+    public DbSet<St2Vegetable> Vegetables => Set<St2Vegetable>();
+    public DbSet<St2FoodEntry> FoodEntries => Set<St2FoodEntry>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -37,6 +41,65 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.UserId).HasColumnName("user_id");
             e.Property(x => x.Version).HasColumnName("version");
             e.Property(x => x.AcceptedAt).HasColumnName("accepted_at");
+        });
+
+        // See db/migrations/034_supertracker_foods.sql.
+        b.Entity<St2Food>(e =>
+        {
+            e.ToTable("st2_food");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(x => x.FoodCode).HasColumnName("food_code");
+            e.Property(x => x.Name).HasColumnName("name");
+        });
+
+        b.Entity<St2FoodValue>(e =>
+        {
+            e.ToTable("st2_food_value");
+            e.HasKey(x => x.FoodId);
+            e.Property(x => x.FoodId).HasColumnName("food_id").ValueGeneratedNever();
+            e.Property(x => x.VegTotal).HasColumnName("veg_total");
+            e.Property(x => x.FruitTotal).HasColumnName("fruit_total");
+            e.Property(x => x.DairyTotal).HasColumnName("dairy_total");
+            e.Property(x => x.GrainWhole).HasColumnName("grain_whole");
+            e.Property(x => x.OilsTsp).HasColumnName("oils_tsp");
+            e.Property(x => x.Kcal).HasColumnName("kcal");
+            e.Property(x => x.ProteinG).HasColumnName("protein_g");
+            e.Property(x => x.SatFatG).HasColumnName("sat_fat_g");
+            e.Property(x => x.FiberG).HasColumnName("fiber_g");
+            e.Property(x => x.SodiumMg).HasColumnName("sodium_mg");
+            e.Property(x => x.PotassiumMg).HasColumnName("potassium_mg");
+            e.Property(x => x.VitaminCMg).HasColumnName("vitamin_c_mg");
+        });
+
+        // See db/migrations/035_supertracker_food_log.sql.
+        b.Entity<St2Vegetable>(e =>
+        {
+            e.ToTable("st2_vegetable");
+            e.HasKey(x => x.Key);
+            e.Property(x => x.Key).HasColumnName("key");
+            e.Property(x => x.VegetableCode).HasColumnName("vegetable_code");
+            e.Property(x => x.NameEn).HasColumnName("name_en");
+            e.Property(x => x.NameEs).HasColumnName("name_es");
+            e.Property(x => x.FoodId).HasColumnName("food_id");
+            e.Property(x => x.CupGrams).HasColumnName("cup_grams");
+            e.Property(x => x.Position).HasColumnName("position");
+        });
+
+        b.Entity<St2FoodEntry>(e =>
+        {
+            e.ToTable("st2_food_entry");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.EatenOn).HasColumnName("eaten_on");
+            e.Property(x => x.Meal).HasColumnName("meal");
+            e.Property(x => x.FoodId).HasColumnName("food_id");
+            e.Property(x => x.VegetableKey).HasColumnName("vegetable_key");
+            e.Property(x => x.Portion).HasColumnName("portion");
+            e.Property(x => x.Quantity).HasColumnName("quantity");
+            e.Property(x => x.Grams).HasColumnName("grams");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
     }
 }

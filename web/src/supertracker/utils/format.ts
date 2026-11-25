@@ -14,5 +14,10 @@ export function range(min: number, max: number, to: string): string {
 }
 
 export function count(value: number): string {
-  return value.toLocaleString('en-US')
+  return Math.round(value).toLocaleString('en-US')
+}
+
+// One decimal at most: 2.46 shows as 2.5, 3.0 as 3.
+export function tenth(value: number): string {
+  return String(Math.round(value * 10) / 10)
 }
