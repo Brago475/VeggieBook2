@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using VeggieBook.Api.Admin;
 using VeggieBook.Api.Auth;
 using VeggieBook.Api.Data;
+using VeggieBook.Api.SuperTracker;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,10 @@ builder.Services.AddDbContext<VeggieBookContext>(options =>
 // User data: accounts, roles, and saved books. Same database, separate
 // context. Tracking stays on because this context writes.
 builder.Services.AddDbContext<AccountsContext>(options =>
+    options.UseNpgsql(connectionString));
+
+// SuperTracker2 data, kept apart from VeggieBook. See api/SuperTracker.
+builder.Services.AddDbContext<SuperTrackerContext>(options =>
     options.UseNpgsql(connectionString));
 
 // Accounts, sessions, roles, recovery, and rate limits. See Auth/AuthSetup.cs.
