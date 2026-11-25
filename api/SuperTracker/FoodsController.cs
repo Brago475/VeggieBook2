@@ -88,9 +88,9 @@ public class FoodsController(SuperTrackerContext db, AccountsContext accounts) :
         if (await SuperTrackerAccess.IsGuestAsync(accounts, uid)) return SuperTrackerAccess.AccountRequired();
 
         var latest = await db.FoodEntries.AsNoTracking()
-            .Where(e => e.UserId == uid && e.VegetableKey == null)
+            .Where(e => e.UserId == uid && e.VegetableKey == null && e.FoodId != null)
             .OrderByDescending(e => e.CreatedAt)
-            .Select(e => e.FoodId)
+            .Select(e => e.FoodId!.Value)
             .Take(200)
             .ToListAsync();
 

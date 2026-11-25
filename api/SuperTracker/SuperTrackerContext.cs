@@ -20,6 +20,7 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
     public DbSet<St2FavoriteFood> FavoriteFoods => Set<St2FavoriteFood>();
     public DbSet<St2Combo> Combos => Set<St2Combo>();
     public DbSet<St2ComboItem> ComboItems => Set<St2ComboItem>();
+    public DbSet<St2CustomFood> CustomFoods => Set<St2CustomFood>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -126,6 +127,7 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.EatenOn).HasColumnName("eaten_on");
             e.Property(x => x.Meal).HasColumnName("meal");
             e.Property(x => x.FoodId).HasColumnName("food_id");
+            e.Property(x => x.CustomFoodId).HasColumnName("custom_food_id");    // 039
             e.Property(x => x.VegetableKey).HasColumnName("vegetable_key");
             e.Property(x => x.Portion).HasColumnName("portion");
             e.Property(x => x.Quantity).HasColumnName("quantity");
@@ -147,7 +149,7 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.RemovedAt).HasColumnName("removed_at");
         });
 
-        // See db/migrations/038_supertracker_combos.sql.
+        // See db/migrations/038 and 039.
         b.Entity<St2Combo>(e =>
         {
             e.ToTable("st2_combo");
@@ -169,10 +171,37 @@ public class SuperTrackerContext(DbContextOptions<SuperTrackerContext> options) 
             e.Property(x => x.ComboId).HasColumnName("combo_id");
             e.Property(x => x.Position).HasColumnName("position");
             e.Property(x => x.FoodId).HasColumnName("food_id");
+            e.Property(x => x.CustomFoodId).HasColumnName("custom_food_id");    // 039
             e.Property(x => x.VegetableKey).HasColumnName("vegetable_key");
             e.Property(x => x.Portion).HasColumnName("portion");
             e.Property(x => x.Quantity).HasColumnName("quantity");
             e.Property(x => x.Grams).HasColumnName("grams");
+        });
+
+        // See db/migrations/039_supertracker_custom_foods.sql.
+        b.Entity<St2CustomFood>(e =>
+        {
+            e.ToTable("st2_custom_food");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            e.Property(x => x.UserId).HasColumnName("user_id");
+            e.Property(x => x.Name).HasColumnName("name");
+            e.Property(x => x.Serving).HasColumnName("serving");
+            e.Property(x => x.ServingGrams).HasColumnName("serving_grams");
+            e.Property(x => x.Kcal).HasColumnName("kcal");
+            e.Property(x => x.ProteinG).HasColumnName("protein_g");
+            e.Property(x => x.SatFatG).HasColumnName("sat_fat_g");
+            e.Property(x => x.SodiumMg).HasColumnName("sodium_mg");
+            e.Property(x => x.AddedSugarG).HasColumnName("added_sugar_g");
+            e.Property(x => x.FiberG).HasColumnName("fiber_g");
+            e.Property(x => x.Vegetables).HasColumnName("vegetables");
+            e.Property(x => x.Fruits).HasColumnName("fruits");
+            e.Property(x => x.Dairy).HasColumnName("dairy");
+            e.Property(x => x.WholeGrains).HasColumnName("whole_grains");
+            e.Property(x => x.HealthyFats).HasColumnName("healthy_fats");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            e.Property(x => x.RemovedAt).HasColumnName("removed_at");
         });
     }
 }

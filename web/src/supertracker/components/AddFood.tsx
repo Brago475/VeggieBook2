@@ -7,15 +7,18 @@ import { useFood } from '../hooks/useFood'
 import { useFoodLists } from '../hooks/useFoodLists'
 import { useFoodSearch } from '../hooks/useFoodSearch'
 import { ST_COMBOS } from '../strings/combos'
+import { ST_CUSTOM } from '../strings/customFoods'
 import { ST_TRACKER } from '../strings/tracker'
 import { count, tenth } from '../utils/format'
 import { scale } from '../utils/meals'
 import { ComboList } from './ComboList'
 import { FoodList } from './FoodList'
+import { MyFoodsPanel } from './MyFoodsPanel'
 import '../styles/setup.css'
 
-// "Add food": recent foods, favorites and combos first, then search the
-// USDA foods; pick an amount, portion and meal, see what it adds, then add it.
+// "Add food": recent foods, favorites, combos and My foods first, then
+// search the USDA foods; pick an amount, portion and meal, see what it
+// adds, then add it.
 
 type Props = {
   date: string
@@ -25,7 +28,7 @@ type Props = {
   onDone: () => void
 }
 
-type ListTab = 'recent' | 'favorites' | 'combos'
+type ListTab = 'recent' | 'favorites' | 'combos' | 'mine'
 
 const CHIPS = [
   'all',
@@ -51,6 +54,7 @@ function parseAmount(text: string): number | null {
 export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) {
   const t = useStrings(ST_TRACKER)
   const c = useStrings(ST_COMBOS)
+  const cf = useStrings(ST_CUSTOM)
 
   const [query, setQuery] = useState('')
   const [chip, setChip] = useState('all')
@@ -155,9 +159,14 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
     : []
 
   const searching = query.trim().length >= 2
-  const tabLabels: Record<ListTab, string> = { recent: t.recent, favorites: t.favorites, combos: c.combos }
+  const tabLabels: Record<ListTab, string> = {
+    recent: t.recent,
+    favorites: t.favorites,
+    combos: c.combos,
+    mine: cf.myFoods,
+  }
 
-  // Meal picker shared by the food form and the combo list.
+  // Meal picker shared by the food form, combos and My foods.
   const mealPicker = (
     <div className="st2-field">
       <span className="st2-label">{t.meal}</span>
@@ -176,6 +185,43 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
       </div>
     </div>
   )
+
+  function listBody() {
+    if (listTab === 'mine') {
+      return (
+        <MyFoodsPanel
+          date={date}
+          meal={meal}
+          mealPicker={mealPicker}
+          onAdded={(message) => {
+            setAdded(message)
+            onAdded()
+          }}
+        />
+      )
+    }
+    if (listTab === 'combos') {
+      return (
+        <>
+          {mealPicker}
+          {combos.error !== null ? (
+            <p className="st2-error">{combos.error}</p>
+          ) : (
+            <ComboList
+              combos={combos.combos}
+              busy={saving}
+              onAdd={(combo) => void addSavedCombo(combo)}
+              onRemove={(combo) => void removeSavedCombo(combo)}
+            />
+          )}
+        </>
+      )
+    }
+    const items = listTab === 'recent' ? lists.recent : lists.favorites
+    if (lists.error !== null) return <p className="st2-error">{lists.error}</p>
+    if (items.length === 0) return <p className="st2-hint">{listTab === 'recent' ? t.noRecent : t.noFavorites}</p>
+    return <FoodList items={items} onPick={pick} />
+  }
 
   return (
     <div className="st2-addfood">
@@ -244,7 +290,7 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
             <>
               <p className="st2-hint">{t.searchHint}</p>
               <div className="st2-tabs st2-list-tabs" role="group">
-                {(['recent', 'favorites', 'combos'] as ListTab[]).map((tab) => (
+                {(['recent', 'favorites', 'combos', 'mine'] as ListTab[]).map((tab) => (
                   <button
                     key={tab}
                     type="button"
@@ -256,28 +302,7 @@ export function AddFood({ date, dayName, initialMeal, onAdded, onDone }: Props) 
                   </button>
                 ))}
               </div>
-
-              {listTab === 'combos' ? (
-                <>
-                  {mealPicker}
-                  {combos.error !== null ? (
-                    <p className="st2-error">{combos.error}</p>
-                  ) : (
-                    <ComboList
-                      combos={combos.combos}
-                      busy={saving}
-                      onAdd={(combo) => void addSavedCombo(combo)}
-                      onRemove={(combo) => void removeSavedCombo(combo)}
-                    />
-                  )}
-                </>
-              ) : lists.error !== null ? (
-                <p className="st2-error">{lists.error}</p>
-              ) : (listTab === 'recent' ? lists.recent : lists.favorites).length === 0 ? (
-                <p className="st2-hint">{listTab === 'recent' ? t.noRecent : t.noFavorites}</p>
-              ) : (
-                <FoodList items={listTab === 'recent' ? lists.recent : lists.favorites} onPick={pick} />
-              )}
+              {listBody()}
             </>
           )}
           <p className="st2-plan-source">{t.source}</p>

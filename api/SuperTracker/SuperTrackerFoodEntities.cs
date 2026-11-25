@@ -1,6 +1,6 @@
 namespace VeggieBook.Api.SuperTracker;
 
-// Food tables. See db/migrations/034 to 037. Values are per 100 g.
+// Food tables. See db/migrations/034 to 039. Values are per 100 g.
 
 public sealed class St2Food
 {
@@ -58,13 +58,17 @@ public sealed class St2Vegetable
     public bool Active { get; set; }
 }
 
+// Either FoodId (USDA food) or CustomFoodId is set, never both. For a
+// custom food, Quantity is servings and Grams is the serving weight times
+// servings (or the servings when no weight was given).
 public sealed class St2FoodEntry
 {
     public long Id { get; set; }
     public Guid UserId { get; set; }
     public DateOnly EatenOn { get; set; }
     public string? Meal { get; set; }
-    public int FoodId { get; set; }
+    public int? FoodId { get; set; }
+    public long? CustomFoodId { get; set; }
     public string? VegetableKey { get; set; }
     public string Portion { get; set; } = "";
     public decimal Quantity { get; set; }

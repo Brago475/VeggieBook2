@@ -41,9 +41,11 @@ export type VegetableChoice = {
   perCup: PerAmount
 }
 
+// foodId is set for USDA foods, customFoodId for the account's own foods.
 export type DayEntry = {
   id: number
-  foodId: number
+  foodId: number | null
+  customFoodId: number | null
   name: string
   vegetableKey: string | null
   meal: Meal | null
@@ -148,6 +150,13 @@ export function copyMeal(date: string, fromDate: string, meal: Meal): Promise<{ 
     method: 'POST',
     body: { fromDate, meal },
   })
+}
+
+export function editEntry(
+  id: number,
+  input: { quantity: number; portionId: number | null; meal: Meal | null },
+): Promise<{ id: number }> {
+  return apiFetch<{ id: number }>(`/supertracker/entries/${id}`, { method: 'PUT', body: input })
 }
 
 export function deleteEntry(id: number): Promise<void> {

@@ -1,5 +1,5 @@
-/* SuperTracker2 My Combo: combo rows and the Save as combo form. Uses only
-   the VeggieBook tokens. */
+/* SuperTracker2 My Combo and My foods rows, the Save as combo form, and
+   two-column number fields. Uses only the VeggieBook tokens. */
 
 .st2-combo {
   display: flex;
@@ -53,4 +53,10 @@
 .st2-combo-form .st2-input {
   flex: 1 1 auto;
   min-height: 40px;
+}
+
+.st2-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
 }

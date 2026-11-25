@@ -42,23 +42,22 @@ public class CombosController(SuperTrackerContext db, AccountsContext accounts) 
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
 
-        var foodIds = combos.SelectMany(c => c.Items).Select(i => i.FoodId).Distinct().ToArray();
-        var values = await db.FoodValues.AsNoTracking()
-            .Where(v => foodIds.Contains(v.FoodId))
-            .ToDictionaryAsync(v => v.FoodId);
-        var names = await db.Foods.AsNoTracking()
-            .Where(f => foodIds.Contains(f.Id))
-            .ToDictionaryAsync(f => f.Id, f => f.Name);
+        // Combo items read like food entries, so the same lookup gives names and amounts.
+        var asEntries = combos.SelectMany(c => c.Items).Select(ToEntry).ToList();
+        var lookup = await EntryLookup.LoadAsync(db, asEntries, spanish: false);
 
         Response.Headers.CacheControl = "no-store";
-        return Ok(combos.Select(c => new
+        return Ok(combos.Select(c =>
         {
-            id = c.Id,
-            name = c.Name,
-            itemCount = c.Items.Count,
-            kcal = Math.Round(c.Items.Sum(i =>
-                values.TryGetValue(i.FoodId, out var v) ? v.Kcal * i.Grams / 100m : 0m), 0),
-            items = c.Items.OrderBy(i => i.Position).Select(i => names.GetValueOrDefault(i.FoodId, ""))
+            var items = c.Items.OrderBy(i => i.Position).Select(ToEntry).ToList();
+            return new
+            {
+                id = c.Id,
+                name = c.Name,
+                itemCount = items.Count,
+                kcal = Math.Round(items.Sum(i => lookup.AmountOf(i).Kcal), 0),
+                items = items.Select(lookup.NameOf)
+            };
         }));
     }
 
@@ -95,6 +94,7 @@ public class CombosController(SuperTrackerContext db, AccountsContext accounts) 
             {
                 Position = position++,
                 FoodId = e.FoodId,
+                CustomFoodId = e.CustomFoodId,
                 VegetableKey = e.VegetableKey,
                 Portion = e.Portion,
                 Quantity = e.Quantity,
@@ -131,6 +131,7 @@ public class CombosController(SuperTrackerContext db, AccountsContext accounts) 
                 EatenOn = day,
                 Meal = req.Meal,
                 FoodId = i.FoodId,
+                CustomFoodId = i.CustomFoodId,
                 VegetableKey = i.VegetableKey,
                 Portion = i.Portion,
                 Quantity = i.Quantity,
@@ -157,4 +158,14 @@ public class CombosController(SuperTrackerContext db, AccountsContext accounts) 
         await db.SaveChangesAsync();
         return NoContent();
     }
+
+    private static St2FoodEntry ToEntry(St2ComboItem i) => new()
+    {
+        FoodId = i.FoodId,
+        CustomFoodId = i.CustomFoodId,
+        VegetableKey = i.VegetableKey,
+        Portion = i.Portion,
+        Quantity = i.Quantity,
+        Grams = i.Grams
+    };
 }
