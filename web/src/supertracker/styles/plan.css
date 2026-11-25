@@ -1,0 +1,111 @@
+/* SuperTracker2 "My plan". Uses the VeggieBook tokens. Mobile first;
+   900px and wider puts the food groups in two columns. */
+
+.st2-plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.st2-plan-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.st2-plan-calories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--green-tint);
+  border: 1px solid var(--green-light);
+  border-radius: var(--r-lg);
+}
+
+.st2-plan-big {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+}
+
+.st2-plan-big span {
+  font-size: var(--font-row);
+  color: var(--text);
+}
+
+.st2-plan-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.st2-plan-h2 {
+  margin: 0;
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+
+.st2-groups {
+  display: grid;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.st2-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.st2-group-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.st2-group-name {
+  font-size: var(--font-row);
+  font-weight: var(--weight-bold);
+  color: var(--text);
+}
+
+.st2-group-amount {
+  font-weight: var(--weight-bold);
+  color: var(--green-action);
+  white-space: nowrap;
+}
+
+.st2-group-size {
+  margin: 0;
+  font-size: var(--font-label);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.st2-plan-source {
+  margin: 0;
+  font-size: var(--font-label);
+  color: var(--text-muted);
+}
+
+@media (min-width: 900px) {
+  .st2-plan {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .st2-groups {
+    grid-template-columns: 1fr 1fr;
+  }
+}

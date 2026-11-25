@@ -20,11 +20,27 @@ export type Profile = {
 
 export type ProfileInput = Omit<Profile, 'updatedAt'>
 
+export type Range = { min: number; max: number }
+
+export type FoodGroup = 'vegetables' | 'fruits' | 'dairy' | 'wholeGrains' | 'protein' | 'healthyFats'
+
+export type Plan = {
+  estimatedCalories: number
+  calories: number
+  level: number
+  fromGoal: boolean
+  servings: Record<FoodGroup, Range>
+  proteinGrams: Range
+  limits: { sodiumMg: number; saturatedFatG: number }
+  activityMinutesPerWeek: number
+}
+
 export type Me = {
   termsVersion: string
   termsRequired: boolean
   termsAccepted: boolean
   profile: Profile | null
+  plan: Plan | null
 }
 
 export function getMe(): Promise<Me> {

@@ -6,10 +6,11 @@ using VeggieBook.Api.Data;
 
 namespace VeggieBook.Api.SuperTracker;
 
-// SuperTracker2 setup for the signed-in account. Not research tracked.
-// Real accounts only: a guest gets 403 with code "accountRequired".
+// SuperTracker2 setup and daily plan for the signed-in account. Not
+// research tracked. Real accounts only: a guest gets 403 with code
+// "accountRequired".
 //
-//   GET  /api/supertracker/me        Terms status and the saved profile
+//   GET  /api/supertracker/me        Terms status, saved profile and daily plan
 //   POST /api/supertracker/terms     { version }
 //   PUT  /api/supertracker/profile   { age, sex, heightCm, weightKg, activity, units, calorieGoal }
 //
@@ -50,7 +51,8 @@ public class SuperTrackerController(SuperTrackerContext db, AccountsContext acco
             termsVersion = SuperTrackerRules.TermsVersion,
             termsRequired = SuperTrackerRules.RequireTerms,
             termsAccepted = accepted,
-            profile = profile is null ? null : View(profile)
+            profile = profile is null ? null : ProfileView(profile),
+            plan = profile is null ? null : PlanView(CaloriePlan.Build(profile))
         });
     }
 
@@ -107,7 +109,7 @@ public class SuperTrackerController(SuperTrackerContext db, AccountsContext acco
         profile.UpdatedAt = now;
 
         await db.SaveChangesAsync();
-        return Ok(View(profile));
+        return Ok(ProfileView(profile));
     }
 
     private async Task<bool> IsGuestAsync(Guid uid)
@@ -122,7 +124,7 @@ public class SuperTrackerController(SuperTrackerContext db, AccountsContext acco
     private Task<bool> HasAcceptedAsync(Guid uid) =>
         db.TermsAcceptances.AnyAsync(t => t.UserId == uid && t.Version == SuperTrackerRules.TermsVersion);
 
-    private static object View(St2Profile p) => new
+    private static object ProfileView(St2Profile p) => new
     {
         age = p.Age,
         sex = p.Sex,
@@ -132,5 +134,31 @@ public class SuperTrackerController(SuperTrackerContext db, AccountsContext acco
         units = p.Units,
         calorieGoal = p.CalorieGoal,
         updatedAt = p.UpdatedAt
+    };
+
+    private static object Range(ServingRange r) => new { min = r.Min, max = r.Max };
+
+    private static object PlanView(PlanResult plan) => new
+    {
+        estimatedCalories = plan.EstimatedCalories,
+        calories = plan.Calories,
+        level = plan.Servings.Level,
+        fromGoal = plan.FromGoal,
+        servings = new
+        {
+            vegetables = Range(plan.Servings.Vegetables),
+            fruits = Range(plan.Servings.Fruits),
+            dairy = Range(plan.Servings.Dairy),
+            wholeGrains = Range(plan.Servings.WholeGrains),
+            protein = Range(plan.Servings.Protein),
+            healthyFats = Range(plan.Servings.HealthyFats)
+        },
+        proteinGrams = new { min = plan.ProteinGramsMin, max = plan.ProteinGramsMax },
+        limits = new
+        {
+            sodiumMg = CaloriePlan.SodiumMgMax,
+            saturatedFatG = plan.SaturatedFatGramsMax
+        },
+        activityMinutesPerWeek = CaloriePlan.ActivityMinutesPerWeek
     };
 }

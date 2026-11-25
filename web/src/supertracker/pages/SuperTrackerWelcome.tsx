@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStrings } from '../../i18n/useStrings'
 import { AccountRequired } from '../components/AccountRequired'
-import { SetupDone } from '../components/SetupDone'
+import { MyPlan } from '../components/MyPlan'
 import { SetupForm } from '../components/SetupForm'
 import { WelcomeScreen } from '../components/WelcomeScreen'
 import { LOCKED } from '../config'
@@ -10,7 +10,7 @@ import { ST_SETUP } from '../strings/setup'
 import '../styles/supertracker.css'
 
 // SuperTracker2 entry, opened from the VeggieBook menu. Guests see the
-// account screen; accounts see Welcome, then Setup, then their summary.
+// account screen; accounts see Welcome, then Setup, then My plan.
 
 export function SuperTrackerWelcome() {
   const t = useStrings(ST_SETUP)
@@ -31,7 +31,7 @@ export function SuperTrackerWelcome() {
       )
     }
 
-    const profile = state.me.profile
+    const { profile, plan } = state.me
     if (editing) {
       return (
         <SetupForm
@@ -44,7 +44,7 @@ export function SuperTrackerWelcome() {
         />
       )
     }
-    if (profile) return <SetupDone profile={profile} onEdit={() => setEditing(true)} />
+    if (profile && plan) return <MyPlan profile={profile} plan={plan} onEdit={() => setEditing(true)} />
     return <WelcomeScreen onStart={() => !LOCKED && setEditing(true)} />
   }
 

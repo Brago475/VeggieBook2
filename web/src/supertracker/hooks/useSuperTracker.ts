@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { ApiError } from '../../utils/api'
 import { getMe, saveProfile, type Me, type ProfileInput } from '../api/superTrackerApi'
 
-// Loads the account's SuperTracker2 status. A 403 means a guest, who
-// needs a real account to use SuperTracker2.
+// Loads the account's SuperTracker2 status and plan. A 403 means a guest,
+// who needs a real account to use SuperTracker2.
 
 type State =
   | { status: 'loading' }
@@ -31,9 +31,10 @@ export function useSuperTracker() {
     void load()
   }, [load])
 
+  // Saves, then reloads so the plan matches the new answers.
   const save = useCallback(async (input: ProfileInput) => {
-    const profile = await saveProfile(input)
-    setState((s) => (s.status === 'ready' ? { status: 'ready', me: { ...s.me, profile } } : s))
+    await saveProfile(input)
+    setState({ status: 'ready', me: await getMe() })
   }, [])
 
   return { state, reload: load, save }
